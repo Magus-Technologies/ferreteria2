@@ -65,6 +65,21 @@ export interface CantidadVendidaItem {
   num_ventas: number;
 }
 
+export interface DemandaCategoriaItem {
+  label: string;
+  value: number;
+}
+
+export interface ProductosRotados {
+  rotados: number;
+  total: number;
+}
+
+export interface InventarioPorAnio {
+  inicial: number;
+  final: number;
+}
+
 export interface InventarioReporteFilters {
   almacen_id?: number;
   desde?: string;
@@ -76,6 +91,7 @@ export interface InventarioReporteFilters {
   con_stock?: boolean;
   per_page?: number;
   page?: number;
+  anio?: number;
 }
 
 // ============= HELPERS =============
@@ -113,5 +129,25 @@ export const inventarioReporteApi = {
 
   getCantidadesVendidas: async (filters?: InventarioReporteFilters): Promise<ApiResponse<{ data: CantidadVendidaItem[]; total: number }>> => {
     return apiRequest<{ data: CantidadVendidaItem[]; total: number }>(`/inventario-reportes/cantidades-vendidas${buildParams(filters)}`);
+  },
+
+  getDemandaPorCategoria: async (filters?: InventarioReporteFilters): Promise<ApiResponse<{ data: DemandaCategoriaItem[] }>> => {
+    return apiRequest<{ data: DemandaCategoriaItem[] }>(`/inventario-reportes/demanda-por-categoria${buildParams(filters)}`);
+  },
+
+  getCostoAjuste: async (filters?: InventarioReporteFilters): Promise<ApiResponse<{ data: { costo_ajuste: number } }>> => {
+    return apiRequest<{ data: { costo_ajuste: number } }>(`/inventario-reportes/costo-ajuste${buildParams(filters)}`);
+  },
+
+  getProductosRotados: async (filters?: InventarioReporteFilters): Promise<ApiResponse<{ data: ProductosRotados }>> => {
+    return apiRequest<{ data: ProductosRotados }>(`/inventario-reportes/productos-rotados${buildParams(filters)}`);
+  },
+
+  getInventarioPorAnio: async (filters?: InventarioReporteFilters): Promise<ApiResponse<{ data: InventarioPorAnio }>> => {
+    return apiRequest<{ data: InventarioPorAnio }>(`/inventario-reportes/inventario-por-anio${buildParams(filters)}`);
+  },
+
+  getProductosSinRotar: async (filters?: InventarioReporteFilters): Promise<ApiResponse<{ data: StockBajoItem[]; total: number }>> => {
+    return apiRequest<{ data: StockBajoItem[]; total: number }>(`/inventario-reportes/productos-sin-rotar${buildParams(filters)}`);
   },
 };

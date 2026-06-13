@@ -157,8 +157,7 @@ export default function Home() {
               { required: true, message: 'Por favor, ingresa tu contraseña' },
             ]}
           >
-            <Input
-              type='password'
+            <Input.Password
               prefix={<RiLockPasswordFill className='text-cyan-500 mx-2 text-base sm:text-lg' />}
               placeholder='Contraseña'
               className='text-sm sm:text-base'

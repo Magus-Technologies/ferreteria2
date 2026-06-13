@@ -191,6 +191,19 @@ export default function FiltersMisCompras() {
                 }}
               />
             </ConfigurableElement>
+            <ConfigurableElement componentId='gestion-comercial.mis-compras.boton-crear-compra' label='Botón Crear Compra'>
+              <Link href='/ui/gestion-comercial-e-inventario/mis-compras/crear-compra'>
+                <ButtonBase
+                  color='success'
+                  size='md'
+                  type='button'
+                  className='flex items-center gap-2 whitespace-nowrap'
+                >
+                  <FaPlusCircle />
+                  Crear Compra
+                </ButtonBase>
+              </Link>
+            </ConfigurableElement>
           </div>
 
           {/* Mobile/Tablet: Solo almacén y botones */}

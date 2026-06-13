@@ -13,9 +13,14 @@ import SelectAlmacen from '../../_components/form/selects/select-almacen'
 import RangePickerBase from '~/app/_components/form/fechas/range-picker-base'
 import YearPicker from '~/app/_components/form/fechas/year-picker'
 import { usePermission } from '~/hooks/use-permission'
-import { Suspense, lazy } from 'react'
+import { Suspense, lazy, useState, useMemo } from 'react'
 import { Spin } from 'antd'
+import dayjs, { type Dayjs } from 'dayjs'
+import { useQuery } from '@tanstack/react-query'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
+import { inventarioReporteApi } from '~/lib/api/inventario-reporte'
+import { useStoreAlmacen } from '~/store/store-almacen'
+import { useStoreDashboardFiltrosGCI } from './_store/store-dashboard-filtros'
 
 const DemandaPorCategoriaDeProductos = lazy(() => import('./_components/charts/demanda-por-categoria-de-productos'))
 const TableProductosPorVencer = lazy(() => import('./_components/tables/table-productos-por-vencer'))
@@ -27,6 +32,77 @@ const ComponentLoading = () => <div className="flex items-center justify-center 
 
 export default function GestionComercialEInventario() {
   const canAccess = usePermission(permissions.GESTION_COMERCIAL_E_INVENTARIO_INDEX)
+
+  const { almacen_id } = useStoreAlmacen()
+  const desde = useStoreDashboardFiltrosGCI((s) => s.desde)
+  const hasta = useStoreDashboardFiltrosGCI((s) => s.hasta)
+  const setRango = useStoreDashboardFiltrosGCI((s) => s.setRango)
+
+  // Periodo (rango del filtro) para costo de ajuste y productos rotados.
+  const periodo = { almacen_id, desde, hasta }
+
+  // Memoizado para no resetear la selección en curso del RangePicker.
+  const rangoValue = useMemo<[Dayjs, Dayjs]>(() => [dayjs(desde), dayjs(hasta)], [desde, hasta])
+
+  // Año de cada card de inventario inicial/final (YearPicker).
+  const [anioInicial, setAnioInicial] = useState(dayjs())
+  const [anioFinal, setAnioFinal] = useState(dayjs())
+
+  const { data: resumenInventario } = useQuery({
+    queryKey: ['inventario-resumen', almacen_id],
+    queryFn: async () => {
+      const res = await inventarioReporteApi.getResumen({ almacen_id })
+      if (res.error) throw new Error(res.error.message)
+      return res.data?.data ?? null
+    },
+    staleTime: 5 * 60 * 1000,
+    enabled: !!almacen_id,
+  })
+
+  const { data: costoAjuste } = useQuery({
+    queryKey: ['inventario-costo-ajuste', periodo],
+    queryFn: async () => {
+      const res = await inventarioReporteApi.getCostoAjuste(periodo)
+      if (res.error) throw new Error(res.error.message)
+      return res.data?.data?.costo_ajuste ?? 0
+    },
+    staleTime: 5 * 60 * 1000,
+    enabled: !!almacen_id,
+  })
+
+  const { data: rotados } = useQuery({
+    queryKey: ['inventario-productos-rotados', periodo],
+    queryFn: async () => {
+      const res = await inventarioReporteApi.getProductosRotados(periodo)
+      if (res.error) throw new Error(res.error.message)
+      return res.data?.data ?? { rotados: 0, total: 0 }
+    },
+    staleTime: 5 * 60 * 1000,
+    enabled: !!almacen_id,
+  })
+
+  const { data: invInicial } = useQuery({
+    queryKey: ['inventario-por-anio', 'inicial', almacen_id, anioInicial.year()],
+    queryFn: async () => {
+      const res = await inventarioReporteApi.getInventarioPorAnio({ almacen_id, anio: anioInicial.year() })
+      if (res.error) throw new Error(res.error.message)
+      return res.data?.data?.inicial ?? 0
+    },
+    staleTime: 5 * 60 * 1000,
+    enabled: !!almacen_id,
+  })
+
+  const { data: invFinal } = useQuery({
+    queryKey: ['inventario-por-anio', 'final', almacen_id, anioFinal.year()],
+    queryFn: async () => {
+      const res = await inventarioReporteApi.getInventarioPorAnio({ almacen_id, anio: anioFinal.year() })
+      if (res.error) throw new Error(res.error.message)
+      return res.data?.data?.final ?? 0
+    },
+    staleTime: 5 * 60 * 1000,
+    enabled: !!almacen_id,
+  })
+
   if (!canAccess) return <NoAutorizado />
 
   return (
@@ -37,7 +113,18 @@ export default function GestionComercialEInventario() {
             componentId='gestion-comercial.dashboard.filtro-fecha'
             label='Filtro de Fechas'
           >
-            <RangePickerBase variant='filled' size='large' className='w-full sm:w-auto' />
+            <RangePickerBase
+              variant='filled'
+              size='large'
+              className='w-full sm:w-auto'
+              allowClear={false}
+              value={rangoValue}
+              onChange={(rango) => {
+                if (rango && rango[0] && rango[1]) {
+                  setRango(rango[0].format('YYYY-MM-DD'), rango[1].format('YYYY-MM-DD'))
+                }
+              }}
+            />
           </ConfigurableElement>
           {/* SelectAlmacen ahora se configura desde el dropdown global de Sucursales */}
           {/* <ConfigurableElement
@@ -53,16 +140,16 @@ export default function GestionComercialEInventario() {
         {/* 4 Cards superiores */}
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 shrink-0'>
           <ConfigurableElement componentId='gestion-comercial.dashboard.card-costo-inventario' label='Card Costo Total de Inventario'>
-            <CardDashboard title='Costo Total de Inventario' value={250000000} prefix='S/. ' icon={<FaMoneyBills size={16} />} />
+            <CardDashboard title='Costo Total de Inventario' value={resumenInventario?.valorizacion_total ?? 0} prefix='S/. ' icon={<FaMoneyBills size={16} />} />
           </ConfigurableElement>
           <ConfigurableElement componentId='gestion-comercial.dashboard.card-costo-ajuste' label='Card Costo de Ajuste de Inventario'>
-            <CardDashboard title='Costo de Ajuste de Inventario' value={50000} prefix='S/. ' icon={<BsWrenchAdjustableCircleFill size={16} />} />
+            <CardDashboard title='Costo de Ajuste de Inventario' value={costoAjuste ?? 0} prefix='S/. ' icon={<BsWrenchAdjustableCircleFill size={16} />} />
           </ConfigurableElement>
           <ConfigurableElement componentId='gestion-comercial.dashboard.card-productos-rotados' label='Card Productos Rotados'>
-            <CardDashboard title='Productos Rotados' value={500000} prefix='S/. ' suffix=' / 100' icon={<FaRotate size={16} />} />
+            <CardDashboard title='Productos Rotados' value={rotados?.rotados ?? 0} suffix={` / ${rotados?.total ?? 0}`} decimal={0} icon={<FaRotate size={16} />} />
           </ConfigurableElement>
           <ConfigurableElement componentId='gestion-comercial.dashboard.card-cantidad-productos' label='Card Cantidad de Productos'>
-            <CardDashboard title='Cantidad de Productos' value={29} icon={<FaBoxesStacked size={16} />} decimal={0} />
+            <CardDashboard title='Cantidad de Productos' value={resumenInventario?.total_productos ?? 0} icon={<FaBoxesStacked size={16} />} decimal={0} />
           </ConfigurableElement>
         </div>
 
@@ -72,17 +159,17 @@ export default function GestionComercialEInventario() {
           <div className='flex flex-col gap-4 min-h-0'>
             <ConfigurableElement componentId='gestion-comercial.dashboard.card-inventario-inicial' label='Card Inventario Inicial por Año'>
               <div className='shrink-0'>
-                <CardDashboard title='Inventario Inicial por Año' value={250000000} prefix='S/. ' icon={<FaMoneyBillTrendUp size={14} />} iconRight={<YearPicker />} />
+                <CardDashboard title='Inventario Inicial por Año' value={invInicial ?? 0} prefix='S/. ' icon={<FaMoneyBillTrendUp size={14} />} iconRight={<YearPicker value={anioInicial} onChange={(d) => d && setAnioInicial(d)} allowClear={false} />} />
               </div>
             </ConfigurableElement>
             <ConfigurableElement componentId='gestion-comercial.dashboard.card-inventario-final' label='Card Inventario Final por Año'>
               <div className='shrink-0'>
-                <CardDashboard title='Inventario Final por Año' value={250000000} prefix='S/. ' icon={<FaMoneyBillWave size={14} />} iconRight={<YearPicker />} />
+                <CardDashboard title='Inventario Final por Año' value={invFinal ?? 0} prefix='S/. ' icon={<FaMoneyBillWave size={14} />} iconRight={<YearPicker value={anioFinal} onChange={(d) => d && setAnioFinal(d)} allowClear={false} />} />
               </div>
             </ConfigurableElement>
             <ConfigurableElement componentId='gestion-comercial.dashboard.chart-demanda' label='Gráfico Demanda por Categoría'>
-              <div className='flex flex-col h-[clamp(200px,24dvh,280px)] shrink-0'>
-                <div className='font-semibold text-slate-700 text-sm mb-0.5'>Demanda por Categoría de Productos</div>
+              <div className='flex flex-col h-[clamp(240px,30dvh,360px)] shrink-0 mt-5'>
+                <div className='font-semibold text-slate-700 text-sm mb-2'>Demanda por Categoría de Productos</div>
                 <div className='flex-1'><Suspense fallback={<ComponentLoading />}><DemandaPorCategoriaDeProductos /></Suspense></div>
               </div>
             </ConfigurableElement>

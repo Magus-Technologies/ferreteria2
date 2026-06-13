@@ -17,7 +17,8 @@ import RangePickerBase from "~/app/_components/form/fechas/range-picker-base";
 import { usePermission } from "~/hooks/use-permission";
 import { Spin } from "antd";
 import dynamic from "next/dynamic";
-import dayjs from "dayjs";
+import dayjs, { type Dayjs } from "dayjs";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
 import { dashboardFacturacionApi, dashboardFacturacionKeys } from "~/lib/api/dashboard-facturacion";
@@ -64,6 +65,13 @@ export default function FacturacionElectronica() {
   const hasta = useStoreDashboardFiltros((s) => s.hasta);
   const setRango = useStoreDashboardFiltros((s) => s.setRango);
 
+  // Memoizado: si recreamos el array en cada render, antd resetea la selección
+  // en curso del RangePicker cuando otra query termina de cargar.
+  const rangoValue = useMemo<[Dayjs, Dayjs]>(
+    () => [dayjs(desde), dayjs(hasta)],
+    [desde, hasta],
+  );
+
   const { data: resumen } = useQuery({
     queryKey: dashboardFacturacionKeys.resumen(filtros),
     queryFn: async () => {
@@ -92,7 +100,7 @@ export default function FacturacionElectronica() {
               size="large"
               className="w-full sm:w-auto"
               allowClear={false}
-              value={[dayjs(desde), dayjs(hasta)]}
+              value={rangoValue}
               onChange={(rango) => {
                 if (rango && rango[0] && rango[1]) {
                   setRango(

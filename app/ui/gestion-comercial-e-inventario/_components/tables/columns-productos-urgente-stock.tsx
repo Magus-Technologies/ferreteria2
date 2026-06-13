@@ -1,54 +1,47 @@
 import { ColDef } from 'ag-grid-community'
-
-interface ProductosUrgenteStockProps {
-  name: string
-  cantidad: string
-  stock_min: number
-  almacen: string
-  vencimiento: string
-}
+import type { StockBajoItem } from '~/lib/api/inventario-reporte'
 
 export function useColumnsProductosUrgenteStock() {
-  const columns: ColDef<ProductosUrgenteStockProps>[] = [
+  const columns: ColDef<StockBajoItem>[] = [
+    {
+      colId: 'cod_producto',
+      headerName: 'Código',
+      field: 'cod_producto',
+      width: 110,
+      minWidth: 90,
+      filter: true,
+    },
     {
       colId: 'producto',
       headerName: 'Producto',
-      field: 'name',
+      field: 'producto',
       minWidth: 150,
       filter: true,
       flex: 2,
     },
     {
-      colId: 'cantidad',
-      headerName: 'Cantidad',
-      field: 'cantidad',
-      minWidth: 80,
+      colId: 'categoria',
+      headerName: 'Categoría',
+      field: 'categoria',
+      minWidth: 120,
       filter: true,
-      width: 130,
+      width: 140,
+    },
+    {
+      colId: 'stock',
+      headerName: 'Stock Actual',
+      field: 'stock',
+      minWidth: 90,
+      filter: 'agNumberColumnFilter',
+      width: 120,
     },
     {
       colId: 'stock_min',
       headerName: 'Stock Mínimo',
       field: 'stock_min',
-      minWidth: 80,
+      minWidth: 90,
       filter: 'agNumberColumnFilter',
-      width: 130,
-    },
-    {
-      colId: 'almacen',
-      headerName: 'Almacén',
-      field: 'almacen',
-      minWidth: 80,
-      filter: true,
-      width: 130,
-    },
-    {
-      colId: 'vencimiento',
-      headerName: 'Vencimiento',
-      field: 'vencimiento',
-      minWidth: 80,
-      filter: 'agDateColumnFilter',
-      width: 130,
+      width: 120,
     },
   ]
 

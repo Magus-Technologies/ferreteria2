@@ -369,4 +369,22 @@ export const prestamoApi = {
       body: JSON.stringify(data),
     });
   },
+
+  // Resumen para el dashboard: Préstamos (PRESTAR) vs Prestés (PEDIR_PRESTADO)
+  resumenDashboard: async (filters?: { almacen_id?: number; desde?: string; hasta?: string }): Promise<ApiResponse<{ data: PrestamoResumenDashboardItem[] }>> => {
+    const params = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') params.append(key, String(value));
+      });
+    }
+    const qs = params.toString();
+    return apiRequest<{ data: PrestamoResumenDashboardItem[] }>(`/prestamos-resumen-dashboard${qs ? `?${qs}` : ''}`);
+  },
 };
+
+export interface PrestamoResumenDashboardItem {
+  label: string;
+  value: number;
+  pendiente: number;
+}
