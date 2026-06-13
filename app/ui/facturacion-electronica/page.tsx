@@ -195,7 +195,7 @@ export default function FacturacionElectronica() {
             </div>
             <div>
               <div className="text-center font-semibold mt-2 mb-2 text-[10px] xs:text-xs sm:text-sm md:text-base text-slate-700">
-                Ingresos / Pedidos por Canal y Despacho
+                Ingresos / Pedidos por Tipo de Canal
               </div>
                 <IngresosPedidosPorTipoDeCanal />
             </div>
