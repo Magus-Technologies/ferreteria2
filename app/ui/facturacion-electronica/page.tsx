@@ -137,6 +137,7 @@ export default function FacturacionElectronica() {
               title="Total de Ventas por Facturas"
               value={resumen?.total_facturas ?? 0}
               prefix="S/. "
+              suffix={` / ${resumen?.num_facturas ?? 0}`}
               icon={<MdFactCheck size={20} />}
             />
           </ConfigurableElement>
@@ -148,6 +149,7 @@ export default function FacturacionElectronica() {
               title="Total de Ventas por Boletas"
               value={resumen?.total_boletas ?? 0}
               prefix="S/. "
+              suffix={` / ${resumen?.num_boletas ?? 0}`}
               icon={<MdDocumentScanner size={20} />}
             />
           </ConfigurableElement>
@@ -159,6 +161,7 @@ export default function FacturacionElectronica() {
               title="Total de Ventas por Notas de Venta"
               value={resumen?.total_notas ?? 0}
               prefix="S/. "
+              suffix={` / ${resumen?.num_notas ?? 0}`}
               icon={<IoDocumentText size={20} />}
             />
           </ConfigurableElement>

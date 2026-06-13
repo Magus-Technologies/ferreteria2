@@ -17,8 +17,11 @@ export interface ResumenDashboard {
   total_ventas: number
   num_ventas: number
   total_facturas: number
+  num_facturas: number
   total_boletas: number
+  num_boletas: number
   total_notas: number
+  num_notas: number
 }
 
 export interface TipoDocumentoItem extends LabelValue {
