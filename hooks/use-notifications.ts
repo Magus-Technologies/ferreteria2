@@ -91,6 +91,31 @@ export function useNotifications() {
         queryClient.invalidateQueries({ queryKey: autorizacionesKeys.misSolicitudes() })
       }
 
+      // Mostrar TAMBIÉN la notificación a nivel sistema (toast de Windows).
+      // FCM en primer plano NO la muestra automáticamente — solo el service
+      // worker lo hace en background. Sin esto, con la pestaña activa el
+      // usuario solo ve el toast de antd y cree que "no llegan a Windows".
+      if (
+        typeof Notification !== 'undefined' &&
+        Notification.permission === 'granted' &&
+        'serviceWorker' in navigator
+      ) {
+        navigator.serviceWorker.ready
+          .then((reg) =>
+            reg.showNotification(payload.notification?.title || 'Nueva Notificación', {
+              body: payload.notification?.body,
+              icon: '/icon-192x192.png',
+              badge: '/icon-72x72.png',
+              data: payload.data,
+              // tag: dedup — si llega el mismo evento dos veces, reemplaza
+              tag: payload.data?.entrega_id
+                ? `entrega-${payload.data.entrega_id}-${payload.data?.type ?? ''}`
+                : undefined,
+            })
+          )
+          .catch(() => {})
+      }
+
       // Mostrar notificación usando Ant Design
       notification.info({
         message: payload.notification?.title || 'Nueva Notificación',
