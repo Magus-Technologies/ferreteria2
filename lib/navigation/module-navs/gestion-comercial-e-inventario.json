@@ -74,6 +74,7 @@
           {
             "key": "crear-proveedor",
             "label": "Crear Proveedor",
+            "action": "openCrearProveedor",
             "route": "/ui/gestion-comercial-e-inventario/mis-proveedores",
             "permission": "proveedor.create"
           }

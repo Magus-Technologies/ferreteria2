@@ -15,6 +15,7 @@ import ModalRequerimientoCompra from "../modals/modal-requerimiento-compra";
 import ModalRequerimientoServicio from "../modals/modal-requerimiento-servicio";
 import ModalTransferirStock from "../modals/modal-transferir-stock";
 import ModalCreateProducto from "../../mi-almacen/_components/modals/modal-create-producto";
+import ModalCreateProveedor from "../../mis-proveedores/_components/modals/modal-create-proveedor";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   MdSpaceDashboard,
@@ -31,12 +32,14 @@ export default function TopNav({ className }: { className?: string }) {
   const [openServicioModal, setOpenServicioModal] = useState(false);
   const [openTransferirStock, setOpenTransferirStock] = useState(false);
   const [openCrearProducto, setOpenCrearProducto] = useState(false);
+  const [openCrearProveedor, setOpenCrearProveedor] = useState(false);
 
   const actionHandlers: Record<string, () => void> = {
     openTransferirStock: () => setOpenTransferirStock(true),
     openNuevaCompra: () => setOpenCompraModal(true),
     openNuevoServicio: () => setOpenServicioModal(true),
     openCrearProducto: () => setOpenCrearProducto(true),
+    openCrearProveedor: () => setOpenCrearProveedor(true),
   };
 
   const moduleId = "gestion-comercial-e-inventario";
@@ -129,6 +132,7 @@ export default function TopNav({ className }: { className?: string }) {
       <ModalRequerimientoServicio open={openServicioModal} onClose={() => setOpenServicioModal(false)} />
       <ModalTransferirStock open={openTransferirStock} setOpen={setOpenTransferirStock} />
       <ModalCreateProducto open={openCrearProducto} setOpen={setOpenCrearProducto} />
+      <ModalCreateProveedor open={openCrearProveedor} setOpen={setOpenCrearProveedor} />
     </>
   );
 }
