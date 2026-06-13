@@ -11,8 +11,12 @@ import { GiPayMoney, GiReceiveMoney } from 'react-icons/gi'
 import RangePickerBase from '~/app/_components/form/fechas/range-picker-base'
 import SelectAlmacen from '~/app/_components/form/selects/select-almacen'
 import { usePermission } from '~/hooks/use-permission'
-import { Suspense, lazy } from 'react'
+import { Suspense, lazy, useMemo } from 'react'
 import { Spin } from 'antd'
+import dayjs, { type Dayjs } from 'dayjs'
+import { useQuery } from '@tanstack/react-query'
+import { useStoreDashboardFiltrosGCF, useFiltrosDashboardGCF } from './_store/store-dashboard-filtros'
+import { dashboardContableApi } from '~/lib/api/dashboard-contable'
 
 // Lazy loading de componentes pesados
 const VentasPorMetodosDePago = lazy(() => import('./_components/charts/ventas-por-metodos-de-pago'))
@@ -32,6 +36,23 @@ const ChartLoading = () => (
 export default function GestionContableYFinanciera() {
   const canAccess = usePermission(permissions.GESTION_CONTABLE_Y_FINANCIERA_INDEX)
 
+  const desde = useStoreDashboardFiltrosGCF((s) => s.desde)
+  const hasta = useStoreDashboardFiltrosGCF((s) => s.hasta)
+  const setRango = useStoreDashboardFiltrosGCF((s) => s.setRango)
+  const rangoValue = useMemo<[Dayjs, Dayjs]>(() => [dayjs(desde), dayjs(hasta)], [desde, hasta])
+
+  const filtros = useFiltrosDashboardGCF()
+  const { data: cards } = useQuery({
+    queryKey: ['contable-resumen-cards', filtros],
+    queryFn: async () => {
+      const res = await dashboardContableApi.resumenCards(filtros)
+      if (res.error) throw new Error(res.error.message)
+      return res.data?.data ?? null
+    },
+    staleTime: 5 * 60 * 1000,
+    enabled: !!filtros.almacen_id,
+  })
+
   if (!canAccess) return <NoAutorizado />
 
   return (
@@ -41,7 +62,18 @@ export default function GestionContableYFinanciera() {
         icon={<MdSpaceDashboard className='text-cyan-600' />}
       >
         <div className='flex flex-col sm:flex-row gap-2 sm:gap-4 md:gap-6 lg:gap-8 items-stretch sm:items-center w-full sm:w-auto'>
-          <RangePickerBase variant='filled' size='large' className='w-full sm:w-auto' />
+          <RangePickerBase
+            variant='filled'
+            size='large'
+            className='w-full sm:w-auto'
+            allowClear={false}
+            value={rangoValue}
+            onChange={(rango) => {
+              if (rango && rango[0] && rango[1]) {
+                setRango(rango[0].format('YYYY-MM-DD'), rango[1].format('YYYY-MM-DD'))
+              }
+            }}
+          />
           {/* SelectAlmacen ahora se configura desde el dropdown global de Sucursales */}
           {/* <SelectAlmacen className='w-full sm:w-auto' /> */}
         </div>
@@ -53,9 +85,9 @@ export default function GestionContableYFinanciera() {
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 lg:gap-8 xl:gap-12'>
           <CardDashboard
             title='Total de Ganancias | Total de Capital'
-            value={250000}
+            value={cards?.ganancias ?? 0}
             prefix='S/. '
-            suffix={` | S/. ${(1000).toLocaleString('en-US', {
+            suffix={` | S/. ${(cards?.capital ?? 0).toLocaleString('en-US', {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })}`}
@@ -64,21 +96,21 @@ export default function GestionContableYFinanciera() {
           />
           <CardDashboard
             title='Compras por Pagar'
-            value={250000}
+            value={cards?.compras_por_pagar ?? 0}
             prefix='S/. '
             icon={<GiPayMoney size={20} />}
             href='/ui/gestion-contable-y-financiera/compras-por-pagar'
           />
           <CardDashboard
             title='Ventas por Cobrar'
-            value={50000}
+            value={cards?.ventas_por_cobrar ?? 0}
             prefix='S/. '
             icon={<GiReceiveMoney size={20} />}
             href='/ui/gestion-contable-y-financiera/ventas-por-cobrar'
           />
           <CardDashboard
             title='Caja'
-            value={0}
+            value={cards?.caja ?? 0}
             prefix='S/. '
             icon={<FaMoneyBills size={20} />}
             href='/ui/gestion-contable-y-financiera/gestion-cajas'

@@ -1,19 +1,16 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import dayjs from 'dayjs'
 import ChartPie from '~/components/charts/chart-pie'
 import { redColors } from '~/lib/colors'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { comisionApi } from '~/lib/api/comision'
+import { useFiltrosDashboardGCF } from '../../_store/store-dashboard-filtros'
 
 const colors = redColors
 
 export default function ComisionPorVendedor() {
-  const filtros = {
-    desde: dayjs().startOf('month').format('YYYY-MM-DD'),
-    hasta: dayjs().endOf('month').format('YYYY-MM-DD'),
-  }
+  const filtros = useFiltrosDashboardGCF()
 
   const { data } = useQuery({
     queryKey: [QueryKeys.COMISIONES_POR_VENDEDOR, 'dashboard', filtros],
