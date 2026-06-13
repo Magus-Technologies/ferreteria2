@@ -69,15 +69,19 @@ export default function GestionComercialEInventario() {
         {/* Grid de 4 columnas */}
         <div className='grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 flex-1 min-h-0 xl:h-[clamp(540px,calc(100dvh-330px),820px)]'>
           {/* Columna 1: Cards verticales + Demanda */}
-          <div className='flex flex-col gap-3 min-h-0'>
+          <div className='flex flex-col gap-4 min-h-0'>
             <ConfigurableElement componentId='gestion-comercial.dashboard.card-inventario-inicial' label='Card Inventario Inicial por Año'>
-              <CardDashboard title='Inventario Inicial por Año' value={250000000} prefix='S/. ' icon={<FaMoneyBillTrendUp size={14} />} iconRight={<YearPicker />} />
+              <div className='shrink-0'>
+                <CardDashboard title='Inventario Inicial por Año' value={250000000} prefix='S/. ' icon={<FaMoneyBillTrendUp size={14} />} iconRight={<YearPicker />} />
+              </div>
             </ConfigurableElement>
             <ConfigurableElement componentId='gestion-comercial.dashboard.card-inventario-final' label='Card Inventario Final por Año'>
-              <CardDashboard title='Inventario Final por Año' value={250000000} prefix='S/. ' icon={<FaMoneyBillWave size={14} />} iconRight={<YearPicker />} />
+              <div className='shrink-0'>
+                <CardDashboard title='Inventario Final por Año' value={250000000} prefix='S/. ' icon={<FaMoneyBillWave size={14} />} iconRight={<YearPicker />} />
+              </div>
             </ConfigurableElement>
             <ConfigurableElement componentId='gestion-comercial.dashboard.chart-demanda' label='Gráfico Demanda por Categoría'>
-              <div className='flex flex-col h-[clamp(220px,28dvh,360px)] xl:flex-1 xl:min-h-[220px]'>
+              <div className='flex flex-col h-[clamp(200px,24dvh,280px)] shrink-0'>
                 <div className='font-semibold text-slate-700 text-sm mb-0.5'>Demanda por Categoría de Productos</div>
                 <div className='flex-1'><Suspense fallback={<ComponentLoading />}><DemandaPorCategoriaDeProductos /></Suspense></div>
               </div>
