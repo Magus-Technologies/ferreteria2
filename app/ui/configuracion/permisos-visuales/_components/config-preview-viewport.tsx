@@ -48,17 +48,20 @@ export default function ConfigPreviewViewport({ children }: { children: ReactNod
         {width && <span className="text-xs text-gray-400 w-12 text-right">{width}px</span>}
       </div>
 
-      {/* Lienzo con scroll: nada se recorta, solo se desplaza */}
-      <div className="flex-1 overflow-auto bg-slate-100 p-3 flex justify-center">
+      {/* Lienzo: centra el marco horizontalmente. min-h-0 deja que el marco maneje
+          su propio scroll (un único scrollbar, como el shell real de la app). */}
+      <div className="flex-1 min-h-0 bg-slate-100 p-3 flex justify-center overflow-x-auto">
         <div
-          className="bg-white shadow-sm rounded-lg min-h-full"
+          className="bg-white shadow-sm rounded-lg h-full overflow-auto"
           style={{
             width: width ? `${width}px` : '100%',
             maxWidth: '100%',
             flexShrink: 0,
           }}
         >
-          {children}
+          {/* Contexto de alto definido para las vistas que usan cadenas de `h-full`
+              (ej. Crear Guía / Crear Venta) y así su layout flex-fill no se colapse. */}
+          <div className="h-full">{children}</div>
         </div>
       </div>
     </div>

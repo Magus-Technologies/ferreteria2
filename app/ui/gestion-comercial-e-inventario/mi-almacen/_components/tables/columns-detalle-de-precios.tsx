@@ -214,49 +214,50 @@ export function useColumnsDetalleDePrecios() {
           )
         }
 
-        // Si solo queda un lote (un único costo), mostrarlo como texto plano: no
-        // tiene sentido un desplegable con una sola opción.
-        if (lotes.length === 1) {
-          const l = lotes[0]
-          const total = Number(l.costo) * factor
-          return (
-            <span className='text-sm'>
-              S/. {total.toFixed(4)} (
-              <GetStock
-                stock_fraccion={Number(l.cantidad_restante)}
-                unidades_contenidas={unidadesContenidas}
-              />
-              )
-            </span>
-          )
+        // Helper: renderiza "S/. costo (stock)" de un lote.
+        const renderCosto = (l: { costo: any; cantidad_restante: any }) => (
+          <span className='text-sm'>
+            S/. {(Number(l.costo) * factor).toFixed(4)} (
+            <GetStock
+              stock_fraccion={Number(l.cantidad_restante)}
+              unidades_contenidas={unidadesContenidas}
+            />
+            )
+          </span>
+        )
+
+        // El primer lote SIEMPRE se muestra como texto en la celda (es el costo
+        // actual principal). El resto, si existe, va dentro del desplegable.
+        const [primero, ...resto] = lotes
+
+        // Un solo costo → texto plano, sin select (no tiene sentido un
+        // desplegable con una sola opción).
+        if (resto.length === 0) {
+          return renderCosto(primero)
         }
 
-        const options = lotes.map((l) => {
-          const total = Number(l.costo) * factor
-          return {
-            value: l.id,
-            label: (
-              <span className='text-sm'>
-                S/. {total.toFixed(4)} (
-                <GetStock
-                  stock_fraccion={Number(l.cantidad_restante)}
-                  unidades_contenidas={unidadesContenidas}
-                />
-                )
-              </span>
-            ),
-          }
-        })
+        // 2+ costos → el primero queda como texto en la celda y SOLO los demás
+        // (resto) se listan en el select, para no duplicar el que ya se ve.
+        const options = resto.map((l) => ({
+          value: l.id,
+          label: renderCosto(l),
+        }))
 
         return (
-          <Select
-            size='small'
-            variant='borderless'
-            popupMatchSelectWidth={false}
-            defaultValue={lotes[0].id}
-            options={options}
-            className='w-full'
-          />
+          <div className='flex items-center gap-1'>
+            {renderCosto(primero)}
+            <Select
+              size='small'
+              variant='borderless'
+              popupMatchSelectWidth={false}
+              // value controlado en null: el select es solo un visor de las
+              // capas extra. Al abrirlo muestra los otros costos sin cambiar lo
+              // que ya se ve en la celda (el primero).
+              value={null}
+              placeholder={`+${resto.length}`}
+              options={options}
+            />
+          </div>
         )
       },
       width: 200,
