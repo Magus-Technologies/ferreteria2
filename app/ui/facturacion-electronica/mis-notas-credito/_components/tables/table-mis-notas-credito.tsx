@@ -13,6 +13,20 @@ import { FaFilePdf, FaPaperPlane, FaCheckCircle } from "react-icons/fa";
 import { facturacionElectronicaApi } from "~/lib/api/facturacion-electronica";
 import TableWithTitle from "~/components/tables/table-with-title";
 import { useStoreModalPdfNotaCredito } from "../../_store/store-modal-pdf-nota-credito";
+import { create } from "zustand";
+import { orangeColors } from "~/lib/colors";
+
+// Store de la nota seleccionada — lo lee TableDetalleNotaCredito para mostrar
+// los items del comprobante afectado (master-detail, igual que ventas/cotiz.).
+type UseStoreNotaCreditoSeleccionada = {
+  nota?: any;
+  setNota: (nota: any) => void;
+};
+export const useStoreNotaCreditoSeleccionada =
+  create<UseStoreNotaCreditoSeleccionada>((set) => ({
+    nota: undefined,
+    setNota: (nota) => set({ nota }),
+  }));
 
 export default function TableMisNotasCredito() {
   const gridRef = useRef<AgGridReact>(null);
@@ -20,6 +34,7 @@ export default function TableMisNotasCredito() {
   const { response, isLoading, refetch } = useGetNotasCredito({ where: filtros });
   const [enviandoId, setEnviandoId] = useState<number | null>(null);
   const openModalPdf = useStoreModalPdfNotaCredito((state) => state.openModal);
+  const setNotaSeleccionada = useStoreNotaCreditoSeleccionada((state) => state.setNota);
 
   const handleEnviarSunat = async (id: number) => {
     try {
@@ -235,17 +250,20 @@ export default function TableMisNotasCredito() {
   );
 
   return (
-    <div style={{ height: 500, width: "100%" }}>
+    <div style={{ height: "100%", width: "100%" }}>
       <TableWithTitle
         id="mis-notas-credito"
-        title="Mis Notas de Crédito"
+        title="N° DE NOTAS DE CRÉDITO"
         tableRef={gridRef}
         rowData={response}
         columnDefs={columnDefs}
         loading={isLoading}
-        pagination={true}
-        paginationPageSize={20}
         persistColumnState={true}
+        selectionColor={orangeColors[10]}
+        onRowClicked={(event) => event.node.setSelected(true)}
+        onSelectionChanged={({ selectedNodes }) =>
+          setNotaSeleccionada(selectedNodes?.[0]?.data)
+        }
       />
     </div>
   );

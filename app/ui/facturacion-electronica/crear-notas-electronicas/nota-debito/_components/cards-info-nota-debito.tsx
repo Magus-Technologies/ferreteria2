@@ -2,10 +2,11 @@
 
 import { Form, FormInstance } from "antd";
 import ButtonBase from "~/components/buttons/button-base";
-import { FaSave } from "react-icons/fa";
+import { FaSave, FaFileInvoiceDollar } from "react-icons/fa";
 import { useMemo } from "react";
 import CardInfoVenta from "~/app/ui/facturacion-electronica/mis-ventas/crear-venta/_components/cards/card-info-venta";
 import { TipoMoneda } from "~/lib/api/venta";
+import { useStoreBuscarComprobanteDebito } from "../_store/store-buscar-comprobante";
 
 interface CardsInfoNotaDebitoProps {
   form: FormInstance;
@@ -14,6 +15,7 @@ interface CardsInfoNotaDebitoProps {
 export default function CardsInfoNotaDebito({ form }: CardsInfoNotaDebitoProps) {
   const productos = Form.useWatch("productos", form) || [];
   const tipo_moneda = Form.useWatch("tipo_moneda", form) || "PEN";
+  const abrirBuscarComprobante = useStoreBuscarComprobanteDebito((s) => s.setOpen);
 
   // IMPORTANTE: precio_venta ya incluye IGV (es el precio final con impuesto)
   // Por lo tanto, primero calculamos el TOTAL con IGV, luego extraemos el subtotal e IGV
@@ -69,15 +71,16 @@ export default function CardsInfoNotaDebito({ form }: CardsInfoNotaDebitoProps) 
         className="flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance"
       >
         <FaSave className="min-w-fit" size={30} />
-        Guardar [F10]
+        Guardar
       </ButtonBase>
-      
+
       <ButtonBase
         type="button"
-        color="default"
-        className="flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance"
+        onClick={() => abrirBuscarComprobante(true)}
+        className="flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance border-blue-500"
       >
-        Buscar ND
+        <FaFileInvoiceDollar className="text-blue-600 min-w-fit" size={28} />
+        Cargar Factura/Boleta
       </ButtonBase>
     </div>
   );

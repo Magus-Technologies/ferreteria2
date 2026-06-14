@@ -4,6 +4,7 @@ import { FormInstance } from 'antd'
 import { FormCreateNotaCredito } from '../_components/body-crear-nota-credito'
 import useApp from 'antd/es/app/useApp'
 import { useDebounce } from 'use-debounce'
+import { useStoreBuscarComprobanteCredito } from '../_store/store-buscar-comprobante'
 
 /**
  * Hook para búsqueda inteligente de comprobantes
@@ -13,7 +14,10 @@ import { useDebounce } from 'use-debounce'
 export default function useBuscarComprobanteInteligente(form: FormInstance<FormCreateNotaCredito>) {
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedQuery] = useDebounce(searchQuery, 800)
-  const [modalOpen, setModalOpen] = useState(false)
+  // Modal en store: lo comparten el campo de búsqueda y el botón "Cargar
+  // Factura/Boleta" del panel lateral (ver store-buscar-comprobante).
+  const modalOpen = useStoreBuscarComprobanteCredito((s) => s.open)
+  const setModalOpen = useStoreBuscarComprobanteCredito((s) => s.setOpen)
   const [isSearching, setIsSearching] = useState(false)
   const { notification } = useApp()
 

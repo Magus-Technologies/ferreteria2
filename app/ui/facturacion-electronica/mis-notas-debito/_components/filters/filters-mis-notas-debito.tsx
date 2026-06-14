@@ -1,7 +1,8 @@
 "use client";
 
 import { Form } from "antd";
-import { FaSearch, FaFileInvoice } from "react-icons/fa";
+import { FaSearch, FaFileInvoice, FaPlus } from "react-icons/fa";
+import { useRouter } from "next/navigation";
 import TituloModulos from "~/app/_components/others/titulo-modulos";
 import ButtonBase from "~/components/buttons/button-base";
 import FormBase from "~/components/form/form-base";
@@ -21,6 +22,7 @@ interface ValuesFilters {
 
 export default function FiltersMisNotasDebito() {
   const [form] = Form.useForm<ValuesFilters>();
+  const router = useRouter();
   const setFiltros = useStoreFiltrosMisNotasDebito((state) => state.setFiltros);
 
   const handleFinish = (values: ValuesFilters) => {
@@ -63,7 +65,17 @@ export default function FiltersMisNotasDebito() {
       <TituloModulos
         title="Mis Notas de Débito"
         icon={<FaFileInvoice className="text-orange-600" />}
-      />
+      >
+        <ButtonBase
+          color="success"
+          size="md"
+          onClick={() => router.push('/ui/facturacion-electronica/crear-notas-electronicas/nota-debito')}
+          className="flex items-center gap-2"
+        >
+          <FaPlus />
+          Crear Nota de Débito
+        </ButtonBase>
+      </TituloModulos>
       <div className="mt-4 grid grid-cols-12 gap-x-3 gap-y-2.5">
         <div className="col-span-6 flex gap-3">
           <FilterDateRangeFields fromName="desde" toName="hasta" fromLabel="Desde:" toLabel="Hasta:" />

@@ -13,12 +13,26 @@ import { FaFilePdf, FaPaperPlane, FaCheckCircle } from "react-icons/fa";
 import { useStoreModalPdfNotaDebito } from "../../_store/store-modal-pdf-nota-debito";
 import { facturacionElectronicaApi } from "~/lib/api/facturacion-electronica";
 import TableWithTitle from "~/components/tables/table-with-title";
+import { create } from "zustand";
+import { orangeColors } from "~/lib/colors";
+
+// Store de la nota seleccionada — lo lee TableDetalleNotaDebito (master-detail).
+type UseStoreNotaDebitoSeleccionada = {
+  nota?: any;
+  setNota: (nota: any) => void;
+};
+export const useStoreNotaDebitoSeleccionada =
+  create<UseStoreNotaDebitoSeleccionada>((set) => ({
+    nota: undefined,
+    setNota: (nota) => set({ nota }),
+  }));
 
 export default function TableMisNotasDebito() {
   const gridRef = useRef<AgGridReact>(null);
   const filtros = useStoreFiltrosMisNotasDebito((state) => state.filtros);
   const { response, isLoading, refetch } = useGetNotasDebito({ where: filtros });
   const [enviandoId, setEnviandoId] = useState<string | null>(null);
+  const setNotaSeleccionada = useStoreNotaDebitoSeleccionada((state) => state.setNota);
 
   const handleEnviarSunat = async (id: string) => {
     try {
@@ -237,17 +251,20 @@ export default function TableMisNotasDebito() {
   );
 
   return (
-    <div style={{ height: 500, width: "100%" }}>
+    <div style={{ height: "100%", width: "100%" }}>
       <TableWithTitle
         id="mis-notas-debito"
-        title="Mis Notas de Débito"
+        title="N° DE NOTAS DE DÉBITO"
         tableRef={gridRef}
         rowData={response}
         columnDefs={columnDefs}
         loading={isLoading}
-        pagination={true}
-        paginationPageSize={20}
         persistColumnState={true}
+        selectionColor={orangeColors[10]}
+        onRowClicked={(event) => event.node.setSelected(true)}
+        onSelectionChanged={({ selectedNodes }) =>
+          setNotaSeleccionada(selectedNodes?.[0]?.data)
+        }
       />
     </div>
   );

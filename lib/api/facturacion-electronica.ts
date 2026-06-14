@@ -237,6 +237,8 @@ export const facturacionElectronicaApi = {
     tipo?: "01" | "03"; // 01=Factura, 03=Boleta
     limit?: number;
     para_nota_debito?: boolean; // Filtrar comprobantes sin ND aceptada
+    fecha_desde?: string; // YYYY-MM-DD
+    fecha_hasta?: string; // YYYY-MM-DD
   }) {
     const queryString = new URLSearchParams(
       Object.entries(params).reduce((acc, [key, value]) => {
