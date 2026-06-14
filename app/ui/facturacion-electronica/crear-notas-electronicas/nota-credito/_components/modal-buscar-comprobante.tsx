@@ -1,11 +1,12 @@
 "use client";
 
-import { Modal, DatePicker } from "antd";
+import { Modal, Form } from "antd";
 import InputBase from "~/app/_components/form/inputs/input-base";
 import { useEffect, useRef, useState } from "react";
 import { useDebounce } from "use-debounce";
 import dayjs, { Dayjs } from "dayjs";
 import SelectBase from "~/app/_components/form/selects/select-base";
+import FilterDateRangeFields from "~/app/_components/filters/filter-date-range-fields";
 import TableComprobanteSearch, {
   RefTableComprobanteSearchProps,
 } from "~/app/_components/tables/table-comprobante-search";
@@ -106,14 +107,23 @@ export default function ModalBuscarComprobante({
       }}
     >
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 flex-wrap">
-        <div className="flex items-center gap-1">
-          <span className="text-sm font-medium whitespace-nowrap">Desde:</span>
-          <DatePicker value={desde} onChange={setDesde} format="DD/MM/YYYY" allowClear={false} />
-        </div>
-        <div className="flex items-center gap-1">
-          <span className="text-sm font-medium whitespace-nowrap">Hasta:</span>
-          <DatePicker value={hasta} onChange={setHasta} format="DD/MM/YYYY" allowClear={false} />
-        </div>
+        <Form
+          initialValues={{ desde: dayjs(), hasta: dayjs() }}
+          onValuesChange={(changed) => {
+            if ("desde" in changed) setDesde(changed.desde ?? null);
+            if ("hasta" in changed) setHasta(changed.hasta ?? null);
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <FilterDateRangeFields
+              fromName="desde"
+              toName="hasta"
+              fromLabel="Desde:"
+              itemClassName="flex items-center gap-1"
+              fromPlaceholder="Fecha"
+            />
+          </div>
+        </Form>
         <SelectBase
           className="w-full sm:!min-w-[160px] sm:!w-[160px] sm:!max-w-[160px]"
           onChange={setTipoDocumento}
