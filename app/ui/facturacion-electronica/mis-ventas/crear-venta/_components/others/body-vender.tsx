@@ -172,7 +172,13 @@ function FormVentaInternal({
       form={form}
       name='venta'
       className='flex flex-col xl:flex-row gap-4 xl:gap-6 w-full xl:h-full'
-      onFinish={handleSubmit}
+      onFinish={(values) => handleSubmit({
+          ...values,
+          // form.getFieldValue reads the FieldStore directly (where setFieldValue writes).
+          // Native <input type="hidden"> children don't relay setFieldValue back through
+          // onFinish reliably, so we inject this field explicitly.
+          direccion_seleccionada: form.getFieldValue('direccion_seleccionada') || undefined,
+        })}
     >
       <div className='xl:flex-1 flex flex-col gap-4 xl:gap-6 min-w-0 xl:min-h-0'>
         <AlertaPreciosActualizados form={form} />

@@ -2,12 +2,11 @@
 
 import { Form } from "antd";
 import { FaSearch, FaFileInvoice } from "react-icons/fa";
-import { FaCalendar } from "react-icons/fa6";
 import TituloModulos from "~/app/_components/others/titulo-modulos";
 import ButtonBase from "~/components/buttons/button-base";
 import FormBase from "~/components/form/form-base";
-import DatePickerBase from "~/app/_components/form/fechas/date-picker-base";
 import InputBase from "~/app/_components/form/inputs/input-base";
+import FilterDateRangeFields from "~/app/_components/filters/filter-date-range-fields";
 import { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import { useStoreFiltrosMisNotasCredito } from "../../_store/store-filtros-mis-notas-credito";
@@ -66,13 +65,8 @@ export default function FiltersMisNotasCredito() {
         icon={<FaFileInvoice className="text-green-600" />}
       />
       <div className="mt-4 grid grid-cols-12 gap-x-3 gap-y-2.5">
-        <div className="col-span-3 flex items-center gap-2">
-          <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">Desde:</label>
-          <DatePickerBase propsForm={{ name: "desde", hasFeedback: false, className: "!w-full" }} placeholder="Fecha" formWithMessage={false} prefix={<FaCalendar size={15} className="text-green-600 mx-1" />} allowClear />
-        </div>
-        <div className="col-span-3 flex items-center gap-2">
-          <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">Hasta:</label>
-          <DatePickerBase propsForm={{ name: "hasta", hasFeedback: false, className: "!w-full" }} placeholder="Hasta" formWithMessage={false} prefix={<FaCalendar size={15} className="text-green-600 mx-1" />} allowClear />
+        <div className="col-span-6 flex gap-3">
+          <FilterDateRangeFields fromName="desde" toName="hasta" fromLabel="Desde:" toLabel="Hasta:" />
         </div>
         <div className="col-span-3 flex items-center gap-2">
           <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">Estado:</label>
