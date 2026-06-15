@@ -144,18 +144,29 @@ export default function CardAgregarProductoCompra({
   )
 
   useEffect(() => {
-    if (autoFillPrecioCompraWithCosto && unidad_derivada_seleccionada && producto_en_almacen) {
+    // Solo autocompletar el costo cuando ya se ingresó una cantidad (> 0) y el
+    // costo aún está vacío (para no pisar un valor escrito manualmente).
+    if (
+      autoFillPrecioCompraWithCosto &&
+      unidad_derivada_seleccionada &&
+      producto_en_almacen &&
+      Number(values.cantidad ?? 0) > 0 &&
+      !values.precio_compra
+    ) {
       // Autocompletar con el PRECIO CRUDO de la última compra (el registro de compra
-      // guarda el costo sin flete). NO usar producto_en_almacen.costo, que ya incluye
-      // el flete → evita que cada compra acumule flete (compounding).
+      // guarda el costo sin flete). NO usar producto_en_almacen.costo cuando hay
+      // historial, porque ya incluye el flete → evita que cada compra acumule flete.
       const compras = (producto_en_almacen as any)?.compras ?? []
       const ultimoCostoCrudo = Number(compras?.[0]?.costo ?? 0)
-      const costo = Number(unidad_derivada_seleccionada.factor ?? 0) * ultimoCostoCrudo
+      // Fallback: si el producto no tiene compras previas, usar su costo actual para
+      // que el costo SIEMPRE se autocomplete al elegir el producto.
+      const costoBase = ultimoCostoCrudo > 0 ? ultimoCostoCrudo : Number(producto_en_almacen?.costo ?? 0)
+      const costo = Number(unidad_derivada_seleccionada.factor ?? 0) * costoBase
       if (costo > 0) {
         handleChange(costo, 'precio_compra')
       }
     }
-  }, [autoFillPrecioCompraWithCosto, unidad_derivada_seleccionada, producto_en_almacen])
+  }, [autoFillPrecioCompraWithCosto, unidad_derivada_seleccionada, producto_en_almacen, values.cantidad])
 
   useEffect(() => {
     onChangeValues?.(values)
