@@ -197,7 +197,11 @@ export default function TableProductoSearch({
 
         if (filtroStock === FiltroStock.STOCK_MINIMO) {
           const stockMin = Number(p.stock_min ?? 0);
-          return stockActual <= stockMin;
+          // El stock_min está en UNIDADES ENTERAS, no en fracción. Convertimos el
+          // stock (que viene en fracción) a enteros: trunc(fraccion / unidades_contenidas).
+          const unidadesContenidas = Number(p.unidades_contenidas ?? 0) || 1;
+          const stockEnteros = Math.trunc(stockActual / unidadesContenidas);
+          return stockEnteros <= stockMin;
         }
         if (filtroStock === FiltroStock.CON_STOCK) {
           return stockActual >= STOCK_THRESHOLD;
