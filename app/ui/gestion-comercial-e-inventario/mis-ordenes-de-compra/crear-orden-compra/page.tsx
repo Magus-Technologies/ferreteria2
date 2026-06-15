@@ -61,6 +61,10 @@ export default function CrearOrdenCompraPage() {
   const { message } = App.useApp()
   const searchParams = useSearchParams()
   const [form] = Form.useForm()
+  // Moneda / tipo de cambio para las columnas de conversión a dólares.
+  const tipo_moneda = Form.useWatch('tipo_moneda', form)
+  const tipo_de_cambio = Number(Form.useWatch('tipo_de_cambio', form)) || 1
+  const esDolar = tipo_moneda === 'd'
   const [reqSeleccionado, setReqSeleccionado] = useState<RequerimientoInterno | null>(null)
   const [productos, setProductos] = useState<ProductoEnOC[]>([])
   const [submitting, setSubmitting] = useState(false)
@@ -465,6 +469,31 @@ export default function CrearOrdenCompraPage() {
       ),
     },
     {
+      // Solo visible en DÓLAR: editas el precio en USD y se guarda en soles.
+      colId: 'precio_dolar',
+      headerName: 'Precio ($)',
+      minWidth: 100,
+      width: 110,
+      hide: !esDolar,
+      cellRenderer: ({ data, node }: ICellRendererParams) => (
+        <div className='flex items-center h-full'>
+          <InputNumberBase
+            size="small"
+            prefix="$ "
+            min={0}
+            precision={4}
+            value={tipo_de_cambio > 0 ? Number(data?.precio_compra ?? 0) / tipo_de_cambio : 0}
+            formWithMessage={false}
+            onChange={val => {
+              const dolares = Math.max(0, Number(val ?? 0))
+              const soles = dolares * tipo_de_cambio
+              setProductos(prev => prev.map((p, i) => i === node.rowIndex! ? { ...p, precio_compra: soles, subtotal: p.cantidad * soles } : p))
+            }}
+          />
+        </div>
+      ),
+    },
+    {
       headerName: 'SubTotal',
       field: 'subtotal',
       minWidth: 100,
@@ -477,6 +506,27 @@ export default function CrearOrdenCompraPage() {
             prefix="S/. "
             readOnly
             value={data?.cantidad * data?.precio_compra}
+            formWithMessage={false}
+            precision={2}
+          />
+        </div>
+      ),
+    },
+    {
+      // Solo visible en DÓLAR: subtotal convertido a USD (informativo).
+      colId: 'subtotal_dolar',
+      headerName: 'SubTotal ($)',
+      minWidth: 100,
+      width: 110,
+      hide: !esDolar,
+      cellRenderer: ({ data }: ICellRendererParams) => (
+        <div className='flex items-center h-full'>
+          <InputNumberBase
+            size="small"
+            variant="borderless"
+            prefix="$ "
+            readOnly
+            value={tipo_de_cambio > 0 ? (Number(data?.cantidad ?? 0) * Number(data?.precio_compra ?? 0)) / tipo_de_cambio : 0}
             formWithMessage={false}
             precision={2}
           />
@@ -560,7 +610,7 @@ export default function CrearOrdenCompraPage() {
         </div>
       ),
     },
-  ], [handleRemoveProducto])
+  ], [handleRemoveProducto, esDolar, tipo_de_cambio])
 
   const handleAddProductFromSidebar = async (product: ProductoSidebarSelection) => {
     // Si el producto no existe en el sistema (producto_id es null o undefined), intentar buscarlo
