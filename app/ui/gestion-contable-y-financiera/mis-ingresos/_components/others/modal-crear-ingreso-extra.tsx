@@ -97,7 +97,10 @@ export default function ModalCrearIngresoExtra({ open, onClose, ingresoEdit }: M
 
     return (
         <>
-        <AperturaGuard />
+        {/* El guard de apertura SOLO debe exigir caja cuando el modal está abierto.
+            Antes se montaba siempre y, como el top-nav (que lo incluye) está en el
+            layout, forzaba el modal de apertura en TODO el módulo, incluido el Dashboard. */}
+        {open && <AperturaGuard />}
         <ModalForm
             open={open}
             setOpen={(val) => { if (!val) handleClose() }}
