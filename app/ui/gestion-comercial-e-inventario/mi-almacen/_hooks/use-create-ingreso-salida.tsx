@@ -65,10 +65,24 @@ export default function useCreateIngresoSalida({
       queryClient.invalidateQueries({
         queryKey: ["productos-infinite"],
       });
-
-      // También invalidar el cache de productos por almacén (si existe)
       queryClient.invalidateQueries({
         queryKey: ["productos-by-almacen"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["productos-listado-completo"],
+      });
+      // Invalidar cache del dashboard de inventario (total_stock, valorización)
+      queryClient.invalidateQueries({
+        queryKey: ["inventario-resumen"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["inventario-por-anio"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["inventario-costo-ajuste"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["inventario-productos-rotados"],
       });
 
       // Actualizar el producto en el store local para reflejar el nuevo stock
