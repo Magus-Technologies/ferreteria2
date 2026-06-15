@@ -31,7 +31,6 @@ export default function BodyCrearPrestamo() {
   const setTipoEntidad = useStoreProductoAgregadoPrestamo((s) => s.setTipoEntidad);
   const setTipoMoneda = useStoreProductoAgregadoPrestamo((s) => s.setTipoMoneda);
   const setProductosPrefill = useStoreProductoAgregadoPrestamo((s) => s.setProductosPrefill);
-  const setProveedorSearchText = useStoreProveedorSeleccionado((s) => s.setSearchText);
   const setClienteSearchText = useStoreClienteSeleccionado((s) => s.setSearchText);
 
   // Precargar datos del préstamo en modo edición
@@ -98,7 +97,6 @@ export default function BodyCrearPrestamo() {
       const cli = pAny.cliente;
       if (p.tipo_entidad === "PROVEEDOR" && prov) {
         form.setFieldValue("proveedor_nombre" as any, prov.razon_social ?? "");
-        if (prov.ruc) setProveedorSearchText(String(prov.ruc));
       } else if (p.tipo_entidad === "CLIENTE" && cli) {
         const nombreCli =
           cli.razon_social ||
@@ -212,7 +210,6 @@ export default function BodyCrearPrestamo() {
         setTipoEntidad(TipoEntidad.CLIENTE);
         setTipoMoneda(TipoMoneda.SOLES);
         setProductosPrefill([]);
-        setProveedorSearchText('');
         setClienteSearchText('');
         router.push("/ui/facturacion-electronica/mis-prestamos/crear-prestamo");
         return;

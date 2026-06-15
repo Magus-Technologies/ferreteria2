@@ -43,9 +43,8 @@ export default function SelectProveedores({
   ...props
 }: SelectProveedoresProps) {
   const selectProveedoresRef = useRef<RefSelectBaseProps>(null)
-  const text = useStoreProveedorSeleccionado(store => store.searchText)
-  const setText = useStoreProveedorSeleccionado(store => store.setSearchText)
-  const [lastSelectedDocument, setLastSelectedDocument] = useState('')
+  const [text, setText] = useState('')
+  const lastSelectedDocumentRef = useRef('')
   const [isSelecting, setIsSelecting] = useState(false) // Flag para evitar limpieza durante selección
 
   const [openModalProveedorSearch, setOpenModalProveedorSearch] =
@@ -64,26 +63,42 @@ export default function SelectProveedores({
 
   const [textDefault, setTextDefault] = useState('')
 
+  // Prefill RUC from form if available and local text is empty
+  useEffect(() => {
+    if (props.form && !text) {
+      const ruc = props.form.getFieldValue('ruc_dni') || props.form.getFieldValue('proveedor_ruc')
+      if (ruc) {
+        lastSelectedDocumentRef.current = ruc
+        setText(ruc)
+      }
+    }
+  }, [props.form, text])
+
   // Setear texto inicial cuando se pasa desde fuera (ej: al duplicar una orden)
   useEffect(() => {
     if (initialSearchText) {
+      lastSelectedDocumentRef.current = initialSearchText
       setText(initialSearchText)
-      setLastSelectedDocument(initialSearchText)
     }
   }, [initialSearchText])
 
   // Reflejar de forma DETERMINISTA un proveedor entregado por defecto (ej. al
   // recuperar una orden de compra), sin depender de la búsqueda/autoselección.
+  // Setea TODO junto (texto del RUC + lastSelectedDocument + valor) para que se
+  // rellene a la primera y el efecto de limpieza no lo borre (text===lastSelected).
   useEffect(() => {
-    if (!initialSearchText || proveedorOptionsDefault.length === 0) return
+    if (proveedorOptionsDefault.length === 0) return
     const prov =
-      proveedorOptionsDefault.find(p => p.ruc === initialSearchText) ??
+      (initialSearchText &&
+        proveedorOptionsDefault.find(p => p.ruc === initialSearchText)) ||
       proveedorOptionsDefault[0]
-    if (prov) {
-      setProveedorSeleccionado(prov as Proveedor)
-      setLastSelectedDocument(prov.ruc ?? '')
-      iterarChangeValue({ refObject: selectProveedoresRef, value: prov.id })
+    if (!prov) return
+    setProveedorSeleccionado(prov as Proveedor)
+    if (showOnlyDocument && prov.ruc) {
+      lastSelectedDocumentRef.current = prov.ruc
+      setText(prov.ruc)
     }
+    iterarChangeValue({ refObject: selectProveedoresRef, value: prov.id })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialSearchText, proveedorOptionsDefault])
 
@@ -97,7 +112,7 @@ export default function SelectProveedores({
     // NO limpiar si estamos en proceso de selección
     if (isSelecting) return
     
-    if (showOnlyDocument && lastSelectedDocument && text !== lastSelectedDocument) {
+    if (showOnlyDocument && lastSelectedDocumentRef.current && text !== lastSelectedDocumentRef.current) {
       // El usuario modificó el RUC de un proveedor ya seleccionado
       if (props.form) {
         props.form.setFieldValue('proveedor_razon_social', '')
@@ -109,7 +124,7 @@ export default function SelectProveedores({
         value: undefined,
       })
     }
-  }, [text, lastSelectedDocument, showOnlyDocument, props.form, isSelecting])
+  }, [text, showOnlyDocument, props.form, isSelecting])
 
   function handleSelect({ data }: { data?: Proveedor } = {}) {
     const proveedor = data || proveedorSeleccionadoStore
@@ -119,7 +134,7 @@ export default function SelectProveedores({
       
       // Guardar el RUC seleccionado para detectar cambios
       if (showOnlyDocument && proveedor.ruc) {
-        setLastSelectedDocument(proveedor.ruc)
+        lastSelectedDocumentRef.current = proveedor.ruc
         setText(proveedor.ruc)
       } else {
         setText('')
@@ -171,9 +186,11 @@ export default function SelectProveedores({
         uppercase={true}
         filterOption={false}
         onSearch={(val) => {
-          // Ant Design llama onSearch("") después de seleccionar una opción.
-          // Si estamos en proceso de selección, ignorar el borrado.
-          if (!val && isSelecting) return
+          // Ant Design llama onSearch("") internamente cuando el valor del
+          // Select cambia programáticamente (vía form.setFieldValue). Esto
+          // NO debe limpiar el searchText del store global porque rompe la
+          // visualización del RUC cuando se recupera una orden de compra.
+          if (!val && (isSelecting || props.form?.getFieldValue('proveedor_id'))) return
           setText(val)
           props.onSearch?.(val)
         }}
@@ -182,7 +199,7 @@ export default function SelectProveedores({
           setIsSelecting(true)
           setTimeout(() => setIsSelecting(false), 150)
         }}
-        searchValue={text}
+        {...(text ? { searchValue: text } : {})}
         prefix={<FaTruck className={classNameIcon} size={sizeIcon} />}
         variant={variant}
         placeholder={placeholder}
