@@ -65,6 +65,9 @@ export default function CrearOrdenCompraPage() {
   const tipo_moneda = Form.useWatch('tipo_moneda', form)
   const tipo_de_cambio = Number(Form.useWatch('tipo_de_cambio', form)) || 1
   const esDolar = tipo_moneda === 'd'
+  // Fecha de la orden: para traer el tipo de cambio de ese día.
+  const fechaWatch = Form.useWatch('fecha', form)
+  const fechaTipoCambio = fechaWatch ? dayjs(fechaWatch).format('YYYY-MM-DD') : undefined
   const [reqSeleccionado, setReqSeleccionado] = useState<RequerimientoInterno | null>(null)
   const [productos, setProductos] = useState<ProductoEnOC[]>([])
   const [submitting, setSubmitting] = useState(false)
@@ -1034,6 +1037,7 @@ export default function CrearOrdenCompraPage() {
                       name: 'tipo_moneda',
                       rules: [{ required: true, message: 'Selecciona el tipo de moneda' }],
                     }}
+                    fecha={fechaTipoCambio}
                     onChangeTipoDeCambio={value => form.setFieldValue('tipo_de_cambio', value)}
                   />
                 </LabelBase>

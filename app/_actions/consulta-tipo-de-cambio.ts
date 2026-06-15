@@ -1,9 +1,12 @@
 "use server";
 
-async function consultaTipoDeCambio() {
+async function consultaTipoDeCambio(fecha?: string) {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-    const response = await fetch(`${baseUrl}/tipo-cambio`, {
+    const url = fecha
+      ? `${baseUrl}/tipo-cambio?fecha=${encodeURIComponent(fecha)}`
+      : `${baseUrl}/tipo-cambio`;
+    const response = await fetch(url, {
       next: { revalidate: 3600 },
     });
 

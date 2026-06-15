@@ -3,6 +3,7 @@ import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import LabelBase from '~/components/form/label-base'
 import SelectTipoMoneda from '~/app/_components/form/selects/select-tipo-moneda'
 import { FormInstance, Form } from 'antd'
+import dayjs from 'dayjs'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import SelectProveedores from '~/app/_components/form/selects/select-proveedores'
 import SelectTipoDocumento from '~/app/_components/form/selects/select-tipo-documento'
@@ -26,6 +27,9 @@ export default function FormCrearCompra({
   initialSearchTextProveedor?: string
   onProveedorChange?: (proveedorId: number | undefined) => void
 }) {
+  // Fecha de la compra: para traer el tipo de cambio de ese día.
+  const fechaWatch = Form.useWatch('fecha', form)
+  const fechaTipoCambio = fechaWatch ? dayjs(fechaWatch).format('YYYY-MM-DD') : undefined
   return (
     <div className='flex flex-col'>
       <ConfigurableElement componentId='gestion-comercial.crear-compra.campos-fecha-moneda-proveedor' label='Campos Fecha, Moneda y Proveedor'>
@@ -59,6 +63,7 @@ export default function FormCrearCompra({
                   },
                 ],
               }}
+              fecha={fechaTipoCambio}
               onChangeTipoDeCambio={value =>
                 form.setFieldValue('tipo_de_cambio', value)
               }
