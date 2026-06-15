@@ -138,7 +138,7 @@ export default function A4Guia({ ctx }: { ctx: PreviewContext }) {
         {/* Consulta URL */}
         <div style={{ textAlign: "center", marginTop: 8, paddingTop: 5, borderTop: "1px solid #ddd" }}>
           <span style={{ ...bloqueACSS(b.consulta_leyenda) }}>Consulte su documento en: </span>
-          <span style={{ ...bloqueACSS(b.consulta_url) }}>http://localhost:3000/consulta</span>
+          <span style={{ ...bloqueACSS(b.consulta_url) }}>{process.env.NEXT_PUBLIC_API_URL?.replace(/\/api(\/api)?$/, '') || 'http://localhost:3000'}/consulta</span>
         </div>
       </div>
     </>
