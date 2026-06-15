@@ -22,6 +22,7 @@ import { useStoreProductoAgregadoVenta } from '../../_store/store-producto-agreg
 import SelectDescuentoTipo from '~/app/_components/form/selects/select-descuento-tipo'
 import { DescuentoTipo, TipoMoneda } from '~/lib/api/venta'
 import SelectPrecios from '~/app/_components/form/selects/select-precios'
+import InfoActivadoresPrecios from '../others/info-activadores-precios'
 import { calcularSubtotalVenta } from '../tables/columns-vender'
 import { parseCantidadFraccion, formatCantidadFraccion, GetStock } from '~/app/_utils/get-stock'
 
@@ -366,23 +367,30 @@ export default function CardAgregarProductoVenta({
         />
       </LabelBase>
       <LabelBase label='Precio Venta:' orientation='column'>
-        <SelectPrecios
-          unidadDerivada={unidad_derivada_seleccionada}
-          cantidad={Number(values.cantidad || 0)}
-          ref={precio_ventaRef}
-          placeholder='Precio Venta'
-          onChange={(precio, key) => {
-            handleChange(precio, 'precio_venta')
-            handleChange(key, 'precio_venta_key')
-          }}
-          className='w-full'
-          classNameIcon='text-rose-700'
-          value={(values as any).precio_venta_key ?? null}
-          nextInEnter={false}
-          onKeyUp={(e) => {
-            if (e.key === 'Enter') buttom_masRef.current?.focus()
-          }}
-        />
+        <div className='flex items-center gap-2'>
+          <SelectPrecios
+            unidadDerivada={unidad_derivada_seleccionada}
+            cantidad={Number(values.cantidad || 0)}
+            ref={precio_ventaRef}
+            placeholder='Precio Venta'
+            onChange={(precio, key) => {
+              handleChange(precio, 'precio_venta')
+              handleChange(key, 'precio_venta_key')
+            }}
+            className='w-full flex-1'
+            classNameIcon='text-rose-700'
+            value={(values as any).precio_venta_key ?? null}
+            nextInEnter={false}
+            onKeyUp={(e) => {
+              if (e.key === 'Enter') buttom_masRef.current?.focus()
+            }}
+          />
+          {/* ℹ️ Resumen de precios y desde qué cantidad se activa cada uno */}
+          <InfoActivadoresPrecios
+            unidadDerivada={unidad_derivada_seleccionada}
+            cantidad={Number(values.cantidad || 0)}
+          />
+        </div>
       </LabelBase>
       <LabelBase label='Recargo:' orientation='column'>
         <InputNumberBase

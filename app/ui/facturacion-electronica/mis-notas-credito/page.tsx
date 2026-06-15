@@ -7,6 +7,7 @@ import { Spin } from "antd";
 
 const FiltersMisNotasCredito = lazy(() => import("./_components/filters/filters-mis-notas-credito"));
 const TableMisNotasCredito = lazy(() => import("./_components/tables/table-mis-notas-credito"));
+const TableDetalleNotaCredito = lazy(() => import("./_components/tables/table-detalle-nota-credito"));
 const CardsInfoNotasCredito = lazy(() => import("./_components/others/cards-info-notas-credito"));
 const ModalPdfNotaCreditoWrapper = dynamic(() => import("./_components/modals/modal-pdf-nota-credito-wrapper"), { ssr: false });
 
@@ -29,9 +30,14 @@ export default function MisNotasCreditoPage() {
           <div className="w-full mt-4">
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 sm:gap-5 md:gap-6 lg:gap-8">
               <div className="flex flex-col gap-4 sm:gap-5 md:gap-6 min-w-0">
-                <div className="h-[500px]">
+                <div className="h-[300px]">
                   <Suspense fallback={<ComponentLoading />}>
                     <TableMisNotasCredito />
+                  </Suspense>
+                </div>
+                <div>
+                  <Suspense fallback={<ComponentLoading />}>
+                    <TableDetalleNotaCredito />
                   </Suspense>
                 </div>
               </div>

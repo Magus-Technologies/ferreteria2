@@ -419,24 +419,21 @@ export default function useCreateVenta({
         clienteApi.update(clienteIdFinal, datosContacto).catch(() => {})
       }
 
-      // Si hay cliente y dirección, actualizar esa dirección en el backend.
-      // `direccion_seleccionada` puede llegar undefined porque el input hidden nativo
-      // no se registra en el store de AntD; en ese caso defaulteamos a D1.
+      // Actualizar la dirección del cliente ANTES de emitir el evento de venta creada,
+      // para que el ticket PDF que se genera al abrir el modal use la dirección actualizada.
       if (clienteIdFinal && direccion) {
         const tipoDirActiva = (direccion_seleccionada as TipoDireccion) || TipoDireccion.D1
         const cid = clienteIdFinal
-        clienteApi.listarDirecciones(cid).then((resp) => {
+        try {
+          const resp = await clienteApi.listarDirecciones(cid)
           const dirs = resp.data?.data ?? []
           const found = dirs.find((d) => d.tipo === tipoDirActiva)
           if (found) {
-            clienteApi.actualizarDireccion(found.id, { direccion }).catch(() => {})
+            await clienteApi.actualizarDireccion(found.id, { direccion })
           } else {
-            clienteApi.crearDireccion(cid, {
-              direccion,
-              tipo: tipoDirActiva,
-            } as any).catch(() => {})
+            await clienteApi.crearDireccion(cid, { direccion, tipo: tipoDirActiva } as any)
           }
-        }).catch(() => {})
+        } catch (_) { /* non-critical — venta ya creada */ }
       }
 
       // En modo edición, invalidar queries y seguir el flujo normal (mostrar PDF → limpiar)

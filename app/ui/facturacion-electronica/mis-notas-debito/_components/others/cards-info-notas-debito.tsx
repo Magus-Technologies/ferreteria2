@@ -27,10 +27,10 @@ export default function CardsInfoNotasDebito() {
 
   return (
     <>
-      <CardMiniInfo title="Total ND" value={totales.total} className="h-full" valueColor="text-orange-600" />
-      <CardMiniInfo title="Aceptadas" value={totales.aceptadas} className="h-full" valueColor="text-green-600" />
-      <CardMiniInfo title="Pendientes" value={totales.pendientes} className="h-full" valueColor="text-orange-600" />
-      <CardMiniInfo title="Rechazadas" value={totales.rechazadas} className="h-full" valueColor="text-red-600" />
+      <CardMiniInfo title="Total ND" value={totales.total} valueColor="text-orange-600" />
+      <CardMiniInfo title="Aceptadas" value={totales.aceptadas} valueColor="text-green-600" />
+      <CardMiniInfo title="Pendientes" value={totales.pendientes} valueColor="text-orange-600" />
+      <CardMiniInfo title="Rechazadas" value={totales.rechazadas} valueColor="text-red-600" />
     </>
   );
 }

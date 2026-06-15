@@ -1,10 +1,12 @@
 "use client";
 
-import { Modal } from "antd";
+import { Modal, Form } from "antd";
 import InputBase from "~/app/_components/form/inputs/input-base";
 import { useEffect, useRef, useState } from "react";
 import { useDebounce } from "use-debounce";
+import dayjs, { Dayjs } from "dayjs";
 import SelectBase from "~/app/_components/form/selects/select-base";
+import FilterDateRangeFields from "~/app/_components/filters/filter-date-range-fields";
 import TableComprobanteSearch, {
   RefTableComprobanteSearchProps,
 } from "~/app/_components/tables/table-comprobante-search";
@@ -31,6 +33,8 @@ export default function ModalBuscarComprobante({
   const [text, setText] = useState(searchQueryProp);
   const [tipoDocumento, setTipoDocumento] = useState<"01" | "03" | undefined>(tipoDocumentoInicial);
   const [value] = useDebounce(text, 1000);
+  const [desde, setDesde] = useState<Dayjs | null>(dayjs());
+  const [hasta, setHasta] = useState<Dayjs | null>(dayjs());
   const [comprobanteSeleccionado, setComprobanteSeleccionado] = useState<ComprobanteElectronico | null>(null);
 
   // Sincronizar con el prop cuando cambie
@@ -102,9 +106,26 @@ export default function ModalBuscarComprobante({
         },
       }}
     >
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 flex-wrap">
+        <Form
+          initialValues={{ desde: dayjs(), hasta: dayjs() }}
+          onValuesChange={(changed) => {
+            if ("desde" in changed) setDesde(changed.desde ?? null);
+            if ("hasta" in changed) setHasta(changed.hasta ?? null);
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <FilterDateRangeFields
+              fromName="desde"
+              toName="hasta"
+              fromLabel="Desde:"
+              itemClassName="flex items-center gap-1"
+              fromPlaceholder="Fecha"
+            />
+          </div>
+        </Form>
         <SelectBase
-          className="w-full sm:!min-w-[180px] sm:!w-[180px] sm:!max-w-[180px]"
+          className="w-full sm:!min-w-[160px] sm:!w-[160px] sm:!max-w-[160px]"
           onChange={setTipoDocumento}
           value={tipoDocumento}
           placeholder="Todos los tipos"
@@ -118,12 +139,12 @@ export default function ModalBuscarComprobante({
           placeholder="Buscar por serie-número o cliente..."
           value={text}
           onChange={(e) => setText(e.target.value)}
-          className="w-full sm:max-w-[500px]"
+          className="w-full sm:max-w-[400px]"
           onPressEnter={() => tableRef.current?.handleRefetch()}
           uppercase={false}
         />
       </div>
-      
+
       <div className="flex flex-col gap-4 mt-4">
         {/* Tabla de comprobantes */}
         <div className="h-[400px] w-full">
@@ -133,6 +154,8 @@ export default function ModalBuscarComprobante({
             onRowClicked={handleRowClicked}
             onRowDoubleClicked={handleRowDoubleClicked}
             tipoDocumento={tipoDocumento}
+            fechaDesde={desde?.format("YYYY-MM-DD")}
+            fechaHasta={hasta?.format("YYYY-MM-DD")}
             isVisible={open}
           />
         </div>

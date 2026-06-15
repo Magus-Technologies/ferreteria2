@@ -20,24 +20,31 @@ interface TableComprobanteSearchProps {
   ref?: RefObject<RefTableComprobanteSearchProps | null>;
   isVisible?: boolean;
   paraNotaDebito?: boolean; // Nuevo parámetro para filtrar comprobantes sin ND aceptada
+  fechaDesde?: string; // YYYY-MM-DD — filtra por rango aunque no haya texto
+  fechaHasta?: string; // YYYY-MM-DD
 }
 
 const TableComprobanteSearch = forwardRef<RefTableComprobanteSearchProps, TableComprobanteSearchProps>(
-  ({ value, onRowClicked, onRowDoubleClicked, tipoDocumento, isVisible, paraNotaDebito }, ref) => {
+  ({ value, onRowClicked, onRowDoubleClicked, tipoDocumento, isVisible, paraNotaDebito, fechaDesde, fechaHasta }, ref) => {
     const tableGridRef = useRef<any>(null);
 
+    // Hay criterio si hay texto O un rango de fechas (como el modal de cotizaciones).
+    const hayCriterio = (value?.length ?? 0) >= 1 || !!fechaDesde || !!fechaHasta;
+
     const { data, isLoading, refetch } = useQuery({
-      queryKey: ["comprobantes-search", value, tipoDocumento, paraNotaDebito],
+      queryKey: ["comprobantes-search", value, tipoDocumento, paraNotaDebito, fechaDesde, fechaHasta],
       queryFn: async () => {
-        if (!value || value.length < 1) {
+        if (!hayCriterio) {
           return [];
         }
 
         const response = await facturacionElectronicaApi.buscarComprobantes({
-          query: value,
+          query: value || "",
           tipo: tipoDocumento,
           limit: 50,
           para_nota_debito: paraNotaDebito,
+          fecha_desde: fechaDesde,
+          fecha_hasta: fechaHasta,
         });
 
         if (response.error) {
@@ -46,7 +53,7 @@ const TableComprobanteSearch = forwardRef<RefTableComprobanteSearchProps, TableC
 
         return response.data?.data || [];
       },
-      enabled: isVisible && value.length >= 1,
+      enabled: isVisible && hayCriterio,
       staleTime: 1000 * 30,
     });
 

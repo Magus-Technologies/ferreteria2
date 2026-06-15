@@ -89,6 +89,10 @@ export default function ModalDetallesEntregaCompleto({
   )
   const entregaTieneEntregaFisica =
     entregaView?.estado_entrega === 'en' || entregaFueEntregadaAntes
+  const ultimaEdicion = entregaFueEntregadaAntes
+    ? (venta as any)?.historial?.find?.((h: any) => h.accion === 'edicion')
+    : undefined
+  const mostrarRecibido = entregaFueEntregadaAntes && Boolean(ultimaEdicion)
   const estado = ESTADO_LABEL[entregaView.estado_entrega] || {
     label: entregaView.estado_entrega,
     color: 'default',
@@ -123,6 +127,7 @@ export default function ModalDetallesEntregaCompleto({
     pedida: number
     programada: number
     entregada: number
+    recibido: number
     pendiente: number
   }
 
@@ -131,10 +136,30 @@ export default function ModalDetallesEntregaCompleto({
     { field: 'nombre', headerName: 'Producto', flex: 1, minWidth: 140 },
     { field: 'unidad', headerName: 'Unidad', width: 90 },
     { field: 'pedida', headerName: 'Pedida', width: 78 },
+  ]
+  if (mostrarRecibido) {
+    productosColDefs.push({
+      field: 'recibido',
+      headerName: 'Recibido',
+      width: 90,
+      cellStyle: { color: '#b45309', fontWeight: 'bold' },
+    })
+  }
+  productosColDefs.push(
     { field: 'programada', headerName: 'Programado', width: 105 },
     { field: 'entregada', headerName: 'Entregado', width: 98 },
     { field: 'pendiente', headerName: 'Pendiente', width: 95 },
-  ]
+  )
+
+  const prevQuantities = new Map<string, number>()
+  if (mostrarRecibido && ultimaEdicion) {
+    for (const ph of (ultimaEdicion.datos_anteriores?.productos || [])) {
+      for (const ud of (ph.unidades || [])) {
+        const k = `${String(ph.codigo || '').trim().toLowerCase()}|${String(ud.unidad || '').trim().toLowerCase()}`
+        prevQuantities.set(k, Number(ud.cantidad ?? 0))
+      }
+    }
+  }
 
   const productosRowData: ProdRow[] = esParcialAgrupada
     ? productosParcialAgrupado.map(r => ({
@@ -144,26 +169,33 @@ export default function ModalDetallesEntregaCompleto({
         pedida: (r as any).total,
         programada: (r as any).programado,
         entregada: (r as any).entregado,
+        recibido: 0,
         pendiente: (r as any).pendiente,
       }))
     : productos.map((p: any) => {
         const udv = p.unidad_derivada_venta
         const prod = udv?.producto_almacen_venta?.producto_almacen?.producto
-        const cantidadTotal = Number(udv?.cantidad || 0)
-        const cantidadEntregadaPersistida = Number(p.cantidad_entregada || 0)
-        const cantidadPendientePersistida = Number(udv?.cantidad_pendiente || 0)
-        const cantidadProgramada = entregaTieneEntregaFisica
-          ? 0
-          : Math.max(0, cantidadTotal - cantidadPendientePersistida)
+        const cantidadActual = Number(udv?.cantidad || 0)
+        const codigo = prod?.cod_producto || ''
+        const unidad = udv?.unidad_derivada_inmutable?.name || ''
+        const prevKey = `${codigo.trim().toLowerCase()}|${unidad.trim().toLowerCase()}`
+        const cantidadAnterior = prevQuantities.get(prevKey) ?? cantidadActual
+        const recibido = mostrarRecibido ? Math.max(cantidadAnterior - cantidadActual, 0) : 0
+        const pedida = mostrarRecibido ? Math.max(cantidadAnterior, cantidadActual) : cantidadActual
+        const rawEntregada = Number(p.cantidad_entregada || 0)
+        const cantidadEntregadaPersistida = mostrarRecibido ? cantidadActual : rawEntregada
+        const cantidadProgramada = entregaTieneEntregaFisica ? 0 : rawEntregada
         const cantidadEntregada = entregaTieneEntregaFisica ? cantidadEntregadaPersistida : 0
+        const cantidadPendiente = mostrarRecibido ? 0 : Math.max(0, cantidadActual - cantidadEntregada)
         return {
-          codigo: prod?.cod_producto || '',
+          codigo,
           nombre: prod?.name || 'Producto',
-          unidad: udv?.unidad_derivada_inmutable?.name || '',
-          pedida: cantidadTotal,
+          unidad,
+          pedida,
           programada: cantidadProgramada,
           entregada: cantidadEntregada,
-          pendiente: cantidadPendientePersistida,
+          recibido,
+          pendiente: cantidadPendiente,
         }
       })
 
