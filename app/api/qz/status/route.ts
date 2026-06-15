@@ -6,14 +6,14 @@ import { NextResponse } from 'next/server'
  */
 export async function GET() {
   try {
-    const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL
     if (!backendUrl) {
       return NextResponse.json(
-        { error: 'NEXT_PUBLIC_API_BASE_URL no está configurado' },
+        { error: 'NEXT_PUBLIC_API_URL no está configurado' },
         { status: 500 }
       )
     }
-    const response = await fetch(`${backendUrl}/api/qz/status`)
+    const response = await fetch(`${backendUrl}/qz/status`)
     
     if (!response.ok) {
       throw new Error(`Error al obtener estado: ${response.status}`)
