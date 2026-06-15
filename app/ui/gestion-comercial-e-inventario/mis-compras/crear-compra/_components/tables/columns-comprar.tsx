@@ -350,6 +350,13 @@ export function useColumnsComprar({
         return (
           <div className='flex items-center h-full'>
             <InputNumberBase
+              // defaultValue no es reactivo: si precio_compra/tipo_de_cambio
+              // cambian programaticamente (seleccionar producto, cambiar unidad
+              // derivada), el input no controlado conserva el valor del montaje
+              // y queda desfasado del SubTotal($). El key fuerza el remount con
+              // la conversion vigente. Mientras se teclea, el valor vive en un
+              // ref (no en el form), asi que el key no cambia y no roba el foco.
+              key={`usd-${value}-${precioUsd}`}
               prefix='$ '
               size='small'
               type='text'
@@ -484,6 +491,10 @@ export function useColumnsComprar({
               </Tooltip>
             )}
             <InputNumberBase
+              // Mismo motivo que Precio($): defaultValue no es reactivo. El key
+              // remonta el input cuando precio_compra cambia por fuera (unidad
+              // derivada, recalculo de costos) sin afectar el foco al teclear.
+              key={`soles-${value}-${precioCompra}`}
               prefix="S/. "
               size='small'
               type='text'
