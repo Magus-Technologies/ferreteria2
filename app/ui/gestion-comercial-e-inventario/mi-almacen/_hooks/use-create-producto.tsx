@@ -114,7 +114,9 @@ export default function useCreateProducto({
       await queryClient.invalidateQueries({
         predicate: (query) =>
           query.queryKey[0] === 'productos-by-almacen' ||
-          query.queryKey[0] === 'productos-search',
+          query.queryKey[0] === 'productos-search' ||
+          query.queryKey[0] === 'productos-listado-completo' ||
+          query.queryKey[0] === 'productos-infinite',
         refetchType: 'active',
       })
 
