@@ -194,10 +194,6 @@ export default function TableDetalleEntrega() {
     if (!mostrarRecibido) {
       return [...actualesAgrupados.values()].map((producto) => {
         const total = Number(producto.cantidad ?? 0)
-        const pendientePersistido = Math.max(
-          0,
-          Number((producto as ProductoFila).cantidadPendiente ?? 0),
-        )
 
         // Find the UDV id for this product row to look up cumulative totals
         const detalleActual = (entregaSeleccionada?.productos_entregados || []).find((detalle: any) => {
@@ -214,6 +210,12 @@ export default function TableDetalleEntrega() {
         const programadoAcumulado = acumulado?.programado ?? 0
         const estaEntrega = Number(detalleActual?.cantidad_entregada ?? 0)
 
+        // Pendiente = lo que aún NO se ha ENTREGADO (confirmado), calculado por
+        // cobertura (total − entregado acumulado). NO usar cantidad_pendiente:
+        // las auto-entregas "en tienda" la dejan en 0 al crear, así que una
+        // entrega pendiente mostraba 0 aunque no se haya entregado nada.
+        const pendiente = Math.max(0, total - entregadoAcumulado)
+
         return {
           producto: producto.producto,
           codigo: producto.codigo,
@@ -224,7 +226,7 @@ export default function TableDetalleEntrega() {
           estaEntrega,
           programado: programadoAcumulado,
           entregado: entregadoAcumulado,
-          pendiente: pendientePersistido,
+          pendiente,
         }
       })
     }
@@ -248,11 +250,11 @@ export default function TableDetalleEntrega() {
         codigo: actual.codigo,
         marca: actual.marca || '—',
         unidad: actual.unidad,
-        total: cantidadActual,
+        total: Math.max(cantidadAnterior, cantidadActual),
         recibido: Math.max(cantidadAnterior - cantidadActual, 0),
         estaEntrega: 0,
         programado: 0,
-        entregado: 0,
+        entregado: cantidadActual,
         pendiente: Math.max(cantidadActual - cantidadAnterior, 0),
       })
     }
@@ -356,7 +358,7 @@ export default function TableDetalleEntrega() {
         Number(params.value) > 0
           ? { color: '#d97706', fontWeight: 'bold' }
           : { color: '#94a3b8', fontWeight: 'normal' },
-      headerTooltip: 'Cantidad aún sin programar para esta venta',
+      headerTooltip: 'Cantidad aún sin entregar (total − entregado) de esta venta',
     })
 
     return defs
