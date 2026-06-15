@@ -4,31 +4,23 @@ import CardMiniInfo from '../cards/card-mini-info'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import { useStoreFiltrosProductos } from '../../_store/store-filtros-productos'
 import { useMemo } from 'react'
-import { useProductosInfiniteScroll } from '../../_hooks/useProductosInfiniteScroll'
+import { useProductosListadoCompleto } from '../../_hooks/useProductosListadoCompleto'
 
 export default function CardsInfo() {
   const filtros = useStoreFiltrosProductos(state => state.filtros)
   const almacen_id = useStoreAlmacen(store => store.almacen_id)
+  const almacenActual = filtros?.almacen_id || almacen_id || 1
 
-  // Reutilizar el mismo hook y queryKey que la tabla principal para evitar peticiones duplicadas
-  const { data: response } = useProductosInfiniteScroll({
-    filtros: {
-      ...filtros,
-      almacen_id: filtros?.almacen_id || almacen_id || 1,
-    },
-    enabled: !!filtros?.almacen_id,
-    perPage: 1000,
-  })
+  const { data: productos } = useProductosListadoCompleto(almacenActual)
 
-  // Memoizar los cálculos para evitar recálculos innecesarios
   const { inversion, precio_venta } = useMemo(() => {
-    if (!Array.isArray(response) || response.length === 0) {
+    if (!Array.isArray(productos) || productos.length === 0) {
       return { inversion: 0, precio_venta: 0 }
     }
 
-    const inversionTotal = response.reduce((acc, producto) => {
+    const inversionTotal = productos.reduce((acc, producto) => {
       const producto_en_almacen = producto.producto_en_almacenes?.find(
-        item => item.almacen_id === almacen_id
+        item => item.almacen_id === almacenActual
       )
       return (
         acc +
@@ -37,9 +29,9 @@ export default function CardsInfo() {
       )
     }, 0)
 
-    const precioVentaTotal = response.reduce((acc, producto) => {
+    const precioVentaTotal = productos.reduce((acc, producto) => {
       const producto_en_almacen = producto.producto_en_almacenes?.find(
-        item => item.almacen_id === almacen_id
+        item => item.almacen_id === almacenActual
       )
 
       const unidad_derivada =
@@ -62,7 +54,7 @@ export default function CardsInfo() {
     }, 0)
 
     return { inversion: inversionTotal, precio_venta: precioVentaTotal }
-  }, [response, almacen_id])
+  }, [productos, almacenActual])
 
   return (
     <>
