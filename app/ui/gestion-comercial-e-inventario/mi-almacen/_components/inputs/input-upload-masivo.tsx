@@ -188,6 +188,7 @@ function useUploadMasivo() {
       queryClient.invalidateQueries({ queryKey: [QueryKeys.PRODUCTOS] })
       queryClient.invalidateQueries({ queryKey: ['productos-by-almacen'] })
       queryClient.invalidateQueries({ queryKey: ['productos-infinite'] })
+      queryClient.invalidateQueries({ queryKey: ['productos-listado-completo'] })
       
     } catch (error) {
       setShowProgress(false)
