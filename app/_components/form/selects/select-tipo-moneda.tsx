@@ -2,7 +2,7 @@ import { TipoMoneda } from '~/lib/api/venta'
 import SelectBase, { SelectBaseProps } from './select-base'
 import { consultaTipoDeCambio } from '~/app/_actions/consulta-tipo-de-cambio'
 import { useStoreTipoDeCambio } from '~/store/store-tipo-de-cambio'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useServerQuery } from '~/hooks/use-server-query'
 import { RiExchangeDollarFill } from 'react-icons/ri'
 import { QueryKeys } from '~/app/_lib/queryKeys'
@@ -29,6 +29,9 @@ export default function SelectTipoMoneda({
   const [selectedMoneda, setSelectedMoneda] = useState(
     props.value ?? props.propsForm?.initialValue ?? TipoMoneda.SOLES,
   )
+  // Evita sobrescribir el tipo de cambio YA GUARDADO al cargar (ej. recuperar una
+  // orden/compra existente): solo auto-actualiza en cambios posteriores de fecha.
+  const primeraRespuesta = useRef(true)
   const { response, refetch } = useServerQuery({
     action: consultaTipoDeCambio,
     propsQuery: {
@@ -43,8 +46,14 @@ export default function SelectTipoMoneda({
     if (response) {
       setTipoDeCambio(response)
     }
-    // Si estamos en DÓLARES y cambió el tipo de cambio (por cambiar la fecha),
-    // propagar el nuevo valor al formulario padre.
+    // En la PRIMERA respuesta (carga inicial) no tocamos el valor del formulario,
+    // para respetar el tipo de cambio guardado de una orden/compra recuperada.
+    if (primeraRespuesta.current) {
+      primeraRespuesta.current = false
+      return
+    }
+    // En cambios posteriores: si estamos en DÓLARES y cambió la fecha (y por ende
+    // el tipo de cambio), propagar el nuevo valor al formulario padre.
     if (response && selectedMoneda === TipoMoneda.DOLARES) {
       onChangeTipoDeCambio?.(response)
     }

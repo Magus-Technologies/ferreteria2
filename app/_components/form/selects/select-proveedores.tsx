@@ -72,6 +72,21 @@ export default function SelectProveedores({
     }
   }, [initialSearchText])
 
+  // Reflejar de forma DETERMINISTA un proveedor entregado por defecto (ej. al
+  // recuperar una orden de compra), sin depender de la búsqueda/autoselección.
+  useEffect(() => {
+    if (!initialSearchText || proveedorOptionsDefault.length === 0) return
+    const prov =
+      proveedorOptionsDefault.find(p => p.ruc === initialSearchText) ??
+      proveedorOptionsDefault[0]
+    if (prov) {
+      setProveedorSeleccionado(prov as Proveedor)
+      setLastSelectedDocument(prov.ruc ?? '')
+      iterarChangeValue({ refObject: selectProveedoresRef, value: prov.id })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialSearchText, proveedorOptionsDefault])
+
   // Notificar al componente padre del cambio de texto
   useEffect(() => {
     onSearchChange?.(text)
