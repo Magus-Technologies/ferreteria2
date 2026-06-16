@@ -142,6 +142,7 @@ export default function ConsultaPage() {
               placeholder="Seleccione el tipo de documento"
               className="w-full"
               size="large"
+              getPopupContainer={() => document.body}
               options={[
                 { value: '01', label: 'Factura Electrónica' },
                 { value: '03', label: 'Boleta de Venta Electrónica' },
