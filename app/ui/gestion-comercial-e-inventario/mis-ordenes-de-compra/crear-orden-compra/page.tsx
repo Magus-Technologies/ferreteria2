@@ -43,6 +43,7 @@ interface ProductoEnOC {
   stock_max?: number | null
   stock_actual?: number
   unidad_factor?: number
+  unidades_contenidas?: number
 }
 import type { RequerimientoInterno } from '~/lib/api/requerimiento-interno'
 import { ColDef, ICellRendererParams } from 'ag-grid-community'
@@ -213,6 +214,7 @@ export default function CrearOrdenCompraPage() {
       stock_max: (p as any).stock_max,
       stock_actual: (p as any).stock_fraccion,
       unidad_factor: (p as any).unidad_derivada_factor,
+      unidades_contenidas: Number((p as any).unidades_contenidas ?? 1),
     }
 
     setProductos(prev => {
@@ -433,13 +435,17 @@ export default function CrearOrdenCompraPage() {
             const addedFraccion = Number(data.cantidad || 0) * Number(data.unidad_factor || 1);
             const stockActual = Number(data.stock_actual || 0);
             const stockTotalPostCompra = stockActual + addedFraccion;
-            const stockMax = Number(data.stock_max);
-            
-            if (stockTotalPostCompra > stockMax) {
+            // stock_max está en unidades enteras; lo convertimos a fracción para comparar.
+            const unidadesContenidas = Number(data.unidades_contenidas || 1) || 1;
+            const stockMaxConfig = Number(data.stock_max);
+            const stockMaxFraccion = stockMaxConfig * unidadesContenidas;
+
+            if (stockTotalPostCompra > stockMaxFraccion) {
+              const totalEnUnidades = stockTotalPostCompra / unidadesContenidas;
               return (
                 <div className='text-red-600 text-[11px] mt-1 font-medium leading-tight text-center'>
-                  <Tooltip title={`Stock: ${Math.round(stockTotalPostCompra)} excede máximo: ${Math.round(stockMax)}`}>
-                    <span className='cursor-help'>⚠️ Stock Máx: {Math.round(stockMax)}</span>
+                  <Tooltip title={`El stock quedaría en ${totalEnUnidades.toFixed(2)} und y excede el máximo: ${stockMaxConfig}`}>
+                    <span className='cursor-help'>⚠️ Stock Máx: {stockMaxConfig}</span>
                   </Tooltip>
                 </div>
               );
@@ -657,6 +663,7 @@ export default function CrearOrdenCompraPage() {
             stock_max: productoMatch.stock_max,
             stock_actual: Number(productoMatch.producto_en_almacenes?.[0]?.stock_fraccion ?? 0),
             unidad_factor: Number(productoMatch.unidades_contenidas ?? 1),
+            unidades_contenidas: Number(productoMatch.unidades_contenidas ?? 1),
           }
           
           setProductos(prev => {
@@ -715,6 +722,7 @@ export default function CrearOrdenCompraPage() {
         (product as any).stock_max = prodData.stock_max;
         (product as any).stock_actual = Number(stockAlmacen?.stock_fraccion ?? 0);
         (product as any).unidad_factor = Number(prodData.unidades_contenidas ?? 1);
+        (product as any).unidades_contenidas = Number(prodData.unidades_contenidas ?? 1);
       }
       message.destroy('cargandoExtra')
     } catch (e) {
@@ -738,6 +746,7 @@ export default function CrearOrdenCompraPage() {
       stock_max: (product as any).stock_max,
       stock_actual: (product as any).stock_actual,
       unidad_factor: (product as any).unidad_factor,
+      unidades_contenidas: (product as any).unidades_contenidas,
     }
     
     setProductos(prev => {

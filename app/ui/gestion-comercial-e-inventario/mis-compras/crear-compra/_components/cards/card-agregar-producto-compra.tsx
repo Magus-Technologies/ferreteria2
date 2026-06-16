@@ -115,6 +115,7 @@ export default function CardAgregarProductoCompra({
       precio_compra: values.bonificacion ? 0 : values.precio_compra,
       costo_actual: Number(producto_en_almacen?.costo ?? 0),
       stock_max: productoSeleccionadoSearchStore?.stock_max,
+      unidades_contenidas: Number(productoSeleccionadoSearchStore?.unidades_contenidas ?? 1),
       stock_fraccion: Number(producto_en_almacen?.stock_fraccion ?? 0),
       unidades_derivadas_disponibles: unidades_derivadas,
     }
@@ -200,10 +201,15 @@ export default function CardAgregarProductoCompra({
         } as DetalleDePreciosProps)
       : null
 
-  // Calcular si se excede el stock máximo
+  // Calcular si se excede el stock máximo.
+  // stock_max está configurado en unidades enteras; el stock y las cantidades se manejan
+  // en fracción, así que convertimos el máximo a fracción (× unidades_contenidas) para comparar.
   const stockMax = productoSeleccionadoSearchStore?.stock_max
+  const unidadesContenidas = Number(productoSeleccionadoSearchStore?.unidades_contenidas ?? 1) || 1
+  const stockMaxFraccion = Number(stockMax) * unidadesContenidas
+  const stockActualFraccion = Number(producto_en_almacen?.stock_fraccion ?? 0)
   const cantidadAgregada = Number(values.cantidad ?? 0) * Number(unidad_derivada_seleccionada?.factor ?? 1)
-  const excedeStockMax = showStockMaxWarning && stockMax && cantidadAgregada > stockMax
+  const excedeStockMax = showStockMaxWarning && !!stockMax && (stockActualFraccion + cantidadAgregada) > stockMaxFraccion
 
   return (
     <div className='flex flex-col gap-2'>
