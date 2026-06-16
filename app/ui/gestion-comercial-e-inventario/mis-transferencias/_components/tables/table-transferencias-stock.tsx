@@ -268,20 +268,24 @@ export default function TableTransferenciasStock({
               <FaEdit size={12} />
             </ButtonBase>
           )}
-          {params.data.estado && (
-            <ButtonBase
-              color="success"
-              size="sm"
-              type="button"
-              title="Crear Guía de Remisión"
-              onClick={() => {
-                setTransferenciaParaGuia(params.data)
-                router.push(`/ui/facturacion-electronica/mis-guias/crear-guia?from_transferencia=true&motivo_codigo=08&transferencia_id=${params.data.id}`)
-              }}
-            >
-              <FaTruck size={12} />
-            </ButtonBase>
-          )}
+          <ButtonBase
+            color="success"
+            size="sm"
+            type="button"
+            disabled={!params.data.estado}
+            title={
+              params.data.estado
+                ? 'Crear Guía de Remisión'
+                : 'No se puede generar la guía: transferencia anulada'
+            }
+            onClick={() => {
+              if (!params.data.estado) return
+              setTransferenciaParaGuia(params.data)
+              router.push(`/ui/facturacion-electronica/mis-guias/crear-guia?from_transferencia=true&motivo_codigo=08&transferencia_id=${params.data.id}`)
+            }}
+          >
+            <FaTruck size={12} />
+          </ButtonBase>
           <ButtonBase
             color="info"
             size="sm"
