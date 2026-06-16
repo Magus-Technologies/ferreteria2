@@ -91,6 +91,15 @@ export function useColumnsRecepcionesAlmacen({
       flex: 1,
     },
     {
+      colId: 'almacen_recepcion',
+      headerName: 'Almacén Receptor',
+      width: 160,
+      minWidth: 140,
+      filter: true,
+      valueGetter: ({ data }) =>
+        data?.productos_por_almacen?.[0]?.producto_almacen?.almacen?.name ?? '',
+    },
+    {
       colId: 'compra_orden',
       headerName: 'Compra / Orden',
       width: 90,

@@ -25,6 +25,7 @@ import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_compo
 
 interface ValuesFiltersMisRecepciones {
   almacen_id: number
+  almacen_recepcion_id?: number
   desde?: Dayjs
   hasta?: Dayjs
   user_id?: string
@@ -72,9 +73,10 @@ export default function FiltersMisRecepciones() {
         form.submit()
       }}
       onFinish={values => {
-        const { desde, hasta, almacen_id, estado, user_id, proveedor_id, tipo_documento } = values
+        const { desde, hasta, almacen_id, almacen_recepcion_id, estado, user_id, proveedor_id, tipo_documento } = values
         const data: RecepcionAlmacenFilters = {
           almacen_id,
+          almacen_recepcion_id,
           fecha_desde: desde ? toUTCBD({ date: desde.startOf('day') }) : undefined,
           fecha_hasta: hasta ? toUTCBD({ date: hasta.endOf('day') }) : undefined,
           user_id,
@@ -142,6 +144,19 @@ export default function FiltersMisRecepciones() {
             }}
             className='w-full'
             formWithMessage={false}
+            allowClear
+          />
+        </LabelBase>
+        <LabelBase label='Almacén Rec.:'>
+          <SelectAlmacen
+            propsForm={{
+              name: 'almacen_recepcion_id',
+              hasFeedback: false,
+              className: '!min-w-[180px] !w-[180px] !max-w-[180px]',
+            }}
+            className='w-full'
+            formWithMessage={false}
+            afecta_store={false}
             allowClear
           />
         </LabelBase>

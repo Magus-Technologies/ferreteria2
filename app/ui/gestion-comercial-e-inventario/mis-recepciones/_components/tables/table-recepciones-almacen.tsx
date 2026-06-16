@@ -105,6 +105,7 @@ export default function TableRecepcionesAlmacen() {
               'Fecha',
               'Registrador',
               'Proveedor',
+              'Almacén Receptor',
               'Compra',
               'Activo',
               'Acciones',

@@ -98,6 +98,7 @@ export interface ProductoAlmacenResponse {
   stock_fraccion: number
   costo: number
   producto: ProductoResponse
+  almacen?: AlmacenResponse
 }
 
 export interface ProductoAlmacenRecepcionResponse {
@@ -173,6 +174,7 @@ export interface RecepcionAlmacenResponse {
 export interface RecepcionAlmacenFilters {
   compra_id?: string
   almacen_id?: number
+  almacen_recepcion_id?: number
   fecha_desde?: string
   fecha_hasta?: string
   user_id?: string
