@@ -19,6 +19,7 @@ import { PiWarehouseFill } from 'react-icons/pi'
 import { GetStock } from '~/app/_utils/get-stock'
 import { paqueteApi, type Paquete } from '~/lib/api/paquete'
 import ModalBuscarPaquete from '~/app/_components/modals/modal-buscar-paquete'
+import { calcularSubtotalVenta } from './calcular-subtotal-venta'
 import { useStorePaqueteSeleccionado } from '~/app/ui/facturacion-electronica/mis-ventas/store/store-paquete-seleccionado'
 import { getStorageUrl } from '~/utils/upload'
 
@@ -1238,30 +1239,6 @@ function calcularSubtotalForm({
         form.getFieldValue(['productos', value, 'cantidad']) ?? 0
       ),
     })
-  )
-}
-
-export function calcularSubtotalVenta({
-  precio_venta,
-  recargo,
-  descuento_tipo,
-  descuento,
-  cantidad,
-}: {
-  precio_venta: number
-  recargo: number
-  descuento_tipo: DescuentoTipo
-  descuento: number
-  cantidad: number
-}) {
-  return (
-    (Number(precio_venta) + Number(recargo)) * Number(cantidad) -
-    (descuento_tipo === DescuentoTipo.PORCENTAJE
-      ? ((Number(precio_venta) + Number(recargo)) *
-          Number(descuento) *
-          Number(cantidad)) /
-        100
-      : Number(descuento))
   )
 }
 

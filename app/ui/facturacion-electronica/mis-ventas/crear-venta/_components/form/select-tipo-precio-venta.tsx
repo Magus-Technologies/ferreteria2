@@ -5,7 +5,7 @@ import SelectBase from '~/app/_components/form/selects/select-base'
 import { MdPriceChange } from 'react-icons/md'
 import { DescuentoTipo } from '~/lib/api/venta'
 import { useStoreProductoAgregadoVenta } from '../../_store/store-producto-agregado-venta'
-import { calcularSubtotalVenta } from '../tables/columns-vender'
+import { calcularSubtotalVenta } from '../tables/calcular-subtotal-venta'
 
 type TipoPrecio = 'publico' | 'especial' | 'minimo' | 'ultimo'
 

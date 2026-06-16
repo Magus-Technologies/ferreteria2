@@ -23,7 +23,7 @@ import SelectDescuentoTipo from '~/app/_components/form/selects/select-descuento
 import { DescuentoTipo, TipoMoneda } from '~/lib/api/venta'
 import SelectPrecios from '~/app/_components/form/selects/select-precios'
 import InfoActivadoresPrecios from '../others/info-activadores-precios'
-import { calcularSubtotalVenta } from '../tables/columns-vender'
+import { calcularSubtotalVenta } from '../tables/calcular-subtotal-venta'
 import { parseCantidadFraccion, formatCantidadFraccion, GetStock } from '~/app/_utils/get-stock'
 
 function InputCantidadFraccion({
@@ -306,6 +306,10 @@ export default function CardAgregarProductoVenta({
     onChangeValues?.(values)
   }, [values])
 
+  const unidad_derivada_seleccionada = unidades_derivadas?.find(
+    (item) => item.unidad_derivada.id === values?.unidad_derivada_id
+  )
+
   // Auto-seleccionar el mejor precio según la cantidad y los activadores
   useEffect(() => {
     const cant = Number(values.cantidad || 0)
@@ -327,10 +331,6 @@ export default function CardAgregarProductoVenta({
       }
     }
   }, [values.cantidad, unidad_derivada_seleccionada])
-
-  const unidad_derivada_seleccionada = unidades_derivadas?.find(
-    (item) => item.unidad_derivada.id === values?.unidad_derivada_id
-  )
 
   return (
     <div className='flex flex-col gap-2'>

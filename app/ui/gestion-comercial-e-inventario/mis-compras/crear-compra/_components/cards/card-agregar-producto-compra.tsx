@@ -221,6 +221,17 @@ export default function CardAgregarProductoCompra({
             if (e.key === 'Enter') precio_compraRef.current?.focus()
           }}
         />
+        {unidad_derivada_seleccionada && producto_en_almacen && (() => {
+          const stockDisponible = Number(producto_en_almacen.stock_fraccion)
+          const cantidadEnFraccion = Number(values.cantidad ?? 0) * Number(unidad_derivada_seleccionada.factor)
+          const excede = !!values.cantidad && cantidadEnFraccion > stockDisponible
+          return (
+            <div className={`text-xs mt-1 font-medium flex items-center gap-1 ${excede ? 'text-red-600' : 'text-gray-400'}`}>
+              {excede ? '⚠️' : ''} Stock:{' '}
+              <GetStock stock_fraccion={stockDisponible} unidades_contenidas={Number(unidad_derivada_seleccionada.factor)} />
+            </div>
+          )
+        })()}
         {excedeStockMax && (
           <div className='text-red-600 text-[11px] mt-1 font-medium leading-tight text-center'>
             ⚠️ Stock Máx: {Math.round(stockMax)}
