@@ -23,18 +23,21 @@ export default function useCreateRecepcionAlmacen({
   const user_id = user?.id
 
   const { notification, message } = useApp()
-  const almacen_id = useStoreAlmacen(store => store.almacen_id)
+  const almacen_id_store = useStoreAlmacen(store => store.almacen_id)
   const queryClient = useQueryClient()
   const [loading, setLoading] = useState(false)
 
   const mutation = useMutation({
     mutationFn: async (values: FormCreateRecepcionAlmacen) => {
       if (!user_id) throw new Error('No hay un usuario seleccionado')
-      if (!almacen_id) throw new Error('No hay un almacen seleccionado')
       if (!compra_id && !orden_compra_id)
         throw new Error('No hay una compra u orden seleccionada')
 
-      const { productos, fecha, ...rest } = values
+      const { productos, fecha, almacen_id: almacen_id_form, ...rest } = values
+
+      // Almacén de destino elegido en el modal; cae al global si faltara.
+      const almacen_id = almacen_id_form ?? almacen_id_store
+      if (!almacen_id) throw new Error('No hay un almacen seleccionado')
 
       // Agrupar productos por producto_id
       const productos_agrupados = agruparProductos({ productos })
@@ -103,7 +106,7 @@ export default function useCreateRecepcionAlmacen({
   async function handleSubmit(values: FormCreateRecepcionAlmacen) {
     if (!user_id)
       return notification.error({ message: 'No hay un usuario seleccionado' })
-    if (!almacen_id)
+    if (!(values.almacen_id ?? almacen_id_store))
       return notification.error({ message: 'No hay un almacen seleccionado' })
     if (!compra_id && !orden_compra_id)
       return notification.error({

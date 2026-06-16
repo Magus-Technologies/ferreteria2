@@ -9,6 +9,7 @@ import { FormCreateCompra } from '../../crear-compra/_components/others/body-com
 import { useEffect } from 'react'
 import dayjs from 'dayjs'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
+import SelectAlmacen from '~/app/_components/form/selects/select-almacen'
 import { FaCalendar } from 'react-icons/fa'
 import useCreateRecepcionAlmacen from '../../_hooks/use-create-recepcion-almacen'
 import FormCrearRecepcionAlmacen from '../form/form-crear-recepcion-almacen'
@@ -21,6 +22,7 @@ export type FormCreateRecepcionAlmacen = Pick<
   FormCreateCompra,
   'productos' | 'fecha'
 > & {
+  almacen_id: number
   proveedor_id: number
   transportista_ruc: string
   transportista_razon_social: string
@@ -205,6 +207,9 @@ export default function ModalCrearRecepcionAlmacen({
       }
 
       form.setFieldValue('fecha', dayjs())
+
+      // Almacén de destino por defecto: el seleccionado globalmente.
+      form.setFieldValue('almacen_id', useStoreAlmacen.getState().almacen_id)
     }
 
     load()
@@ -246,6 +251,23 @@ export default function ModalCrearRecepcionAlmacen({
                 placeholder='Fecha'
                 className='!w-[160px] !min-w-[160px] !max-w-[160px] font-normal!'
                 prefix={<FaCalendar size={15} className='text-rose-700 mx-1' />}
+              />
+              <SelectAlmacen
+                form={form}
+                afecta_store={false}
+                propsForm={{
+                  name: 'almacen_id',
+                  rules: [
+                    {
+                      required: true,
+                      message: 'Selecciona el almacén',
+                    },
+                  ],
+                }}
+                formWithMessage={false}
+                size='middle'
+                sizeIcon={16}
+                className='!w-[240px] !min-w-[240px] !max-w-[240px] font-normal!'
               />
             </div>
           </TitleForm>
