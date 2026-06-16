@@ -12,7 +12,7 @@ import SelectClientes from "~/app/_components/form/selects/select-clientes";
 import SelectBase from "~/app/_components/form/selects/select-base";
 import InputBase from "~/app/_components/form/inputs/input-base";
 import { BsGeoAltFill } from "react-icons/bs";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import RadioDireccionCliente from "~/app/_components/form/radio-direccion-cliente";
 import RadioTelefonoCliente from "~/app/_components/form/radio-telefono-cliente";
 import HiddenDireccionesFormItems from "~/app/_components/form/hidden-direcciones-form-items";
@@ -90,9 +90,10 @@ export default function FormCrearVenta({
   // socket cuando otra sesión crea una venta o cambia la config de series.
   const almacenId = useStoreAlmacen((s) => s.almacen_id);
   const esEdicion = Boolean(venta?.serie && venta?.numero);
+  const tipoDocOriginalRef = useRef(venta?.tipo_documento);
 
   const cargarSiguienteNumero = useCallback(() => {
-    if (esEdicion || !tipoDocumento || !almacenId) return;
+    if (!tipoDocumento || !almacenId) return;
     serieDocumentoApi
       .siguienteNumero(tipoDocumento, almacenId)
       .then((resp) => {
@@ -103,14 +104,19 @@ export default function FormCrearVenta({
         );
       })
       .catch(() => form.setFieldValue("numero", ""));
-  }, [form, tipoDocumento, almacenId, esEdicion]);
+  }, [form, tipoDocumento, almacenId]);
 
   useEffect(() => {
     if (esEdicion) {
-      form.setFieldValue(
-        "numero",
-        `${venta!.serie}-${String(venta!.numero).padStart(8, "0")}`,
-      );
+      // Si el tipo de documento cambió respecto al original, refrescar serie
+      if (tipoDocOriginalRef.current && tipoDocOriginalRef.current !== tipoDocumento) {
+        cargarSiguienteNumero();
+      } else {
+        form.setFieldValue(
+          "numero",
+          `${venta!.serie}-${String(venta!.numero).padStart(8, "0")}`,
+        );
+      }
       return;
     }
     cargarSiguienteNumero();
@@ -124,7 +130,7 @@ export default function FormCrearVenta({
       offCreada();
       offRealtime();
     };
-  }, [cargarSiguienteNumero, esEdicion, form, venta]);
+  }, [cargarSiguienteNumero, esEdicion, form, venta, tipoDocumento]);
 
   // Guardar form en store para que el header pueda acceder
   const setValeForm = useStoreValeForm((s) => s.setForm);
