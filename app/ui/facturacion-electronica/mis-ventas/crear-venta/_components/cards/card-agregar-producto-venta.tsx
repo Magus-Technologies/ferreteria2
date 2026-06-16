@@ -306,6 +306,28 @@ export default function CardAgregarProductoVenta({
     onChangeValues?.(values)
   }, [values])
 
+  // Auto-seleccionar el mejor precio según la cantidad y los activadores
+  useEffect(() => {
+    const cant = Number(values.cantidad || 0)
+    if (!unidad_derivada_seleccionada || cant < 1) return
+    const tiers = [
+      { key: 'precio_ultimo', activadorKey: 'activador_ultimo' },
+      { key: 'precio_minimo', activadorKey: 'activador_minimo' },
+      { key: 'precio_especial', activadorKey: 'activador_especial' },
+    ]
+    const best = tiers.find((t) => {
+      const activador = Number((unidad_derivada_seleccionada as any)[t.activadorKey] ?? 0)
+      return activador > 0 && cant >= activador
+    })
+    if (best) {
+      const precio = Number((unidad_derivada_seleccionada as any)[best.key] ?? 0)
+      if (precio > 0) {
+        handleChange(precio, 'precio_venta')
+        handleChange(best.key, 'precio_venta_key')
+      }
+    }
+  }, [values.cantidad, unidad_derivada_seleccionada])
+
   const unidad_derivada_seleccionada = unidades_derivadas?.find(
     (item) => item.unidad_derivada.id === values?.unidad_derivada_id
   )
