@@ -63,6 +63,42 @@ function fletePorUnidadBase(compra: any): number {
   return base > 0 ? flete / base : 0
 }
 
+// Lotes "actuales" (capas PEPS): excluye el tramo inicial cuyo costo coincide con
+// el lote más viejo (grupo "anterior"), SOLO si después hay un costo distinto.
+// Si todos comparten costo, todo es "actual". Misma lógica que el backend y la
+// columna "Costo Actual".
+export function getLotesActuales<T extends { costo: any }>(
+  todosLotes: T[] | undefined | null,
+): T[] {
+  if (!todosLotes?.length) return []
+  const costoRef = Number(todosLotes[0].costo)
+  const idxDistinto = todosLotes.findIndex(
+    (l) => Math.abs(Number(l.costo) - costoRef) > 0.0001,
+  )
+  return idxDistinto > 0 ? todosLotes.slice(idxDistinto) : todosLotes
+}
+
+// Costo ACTUAL por unidad base (SIN multiplicar por el factor): el costo del primer
+// lote "actual" en orden FIFO o, si no hay lotes cargados, el `costo_actual` simple
+// (con fallback al `costo`). Es exactamente el valor que muestra la columna
+// "Costo Actual" del detalle de precios.
+export function getCostoActualBase(
+  producto_almacen:
+    | {
+        costo_actual?: Decimal | null
+        costo?: Decimal
+        lotes?: Array<{ costo: Decimal; cantidad_restante: Decimal; secuencia: number }>
+      }
+    | null
+    | undefined,
+): number {
+  if (!producto_almacen) return 0
+  const lotes = getLotesActuales(producto_almacen.lotes)
+  if (lotes.length) return Number(lotes[0].costo)
+  if (producto_almacen.costo_actual != null) return Number(producto_almacen.costo_actual)
+  return Number(producto_almacen.costo ?? 0)
+}
+
 export function useColumnsDetalleDePrecios() {
   const columns: ColDef<DetalleDePreciosProps>[] = useMemo(() => [
     {
@@ -186,16 +222,7 @@ export function useColumnsDetalleDePrecios() {
         // Excluir el grupo "anterior" (mismos criterios que el backend): tramo
         // inicial de lotes con el mismo costo que el más viejo, solo si después
         // hay un costo distinto. Si todos comparten costo, todo es "actual".
-        let lotes = todosLotes
-        if (todosLotes?.length) {
-          const costoRef = Number(todosLotes[0].costo)
-          const idxDistinto = todosLotes.findIndex(
-            (l) => Math.abs(Number(l.costo) - costoRef) > 0.0001,
-          )
-          if (idxDistinto > 0) {
-            lotes = todosLotes.slice(idxDistinto)
-          }
-        }
+        const lotes = getLotesActuales(todosLotes)
 
         // Fallback (sin lotes cargados): mostrar el costo_actual simple.
         if (!lotes?.length) {

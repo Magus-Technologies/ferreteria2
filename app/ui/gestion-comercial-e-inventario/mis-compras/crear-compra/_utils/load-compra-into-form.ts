@@ -43,6 +43,16 @@ export const loadCompraIntoForm = async (
     // Cargar tipo de documento y forma de pago
     form.setFieldValue('tipo_documento', ordenCompra.tipo_documento)
     form.setFieldValue('forma_de_pago', ordenCompra.forma_de_pago)
+    // Datos de crédito: deben jalarse junto con la forma de pago, de lo
+    // contrario al recuperar una OC a crédito el N° días y la fecha de
+    // vencimiento quedan vacíos.
+    form.setFieldValue('numero_dias', ordenCompra.numero_dias ?? undefined)
+    form.setFieldValue(
+      'fecha_vencimiento',
+      ordenCompra.fecha_vencimiento
+        ? dayjs(ordenCompra.fecha_vencimiento)
+        : undefined
+    )
     form.setFieldValue('tipo_moneda', ordenCompra.tipo_moneda)
     form.setFieldValue('tipo_de_cambio', ordenCompra.tipo_de_cambio)
     form.setFieldValue('percepcion', ordenCompra.percepcion)
