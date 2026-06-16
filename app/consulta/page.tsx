@@ -1,9 +1,9 @@
 'use client'
 
-import { Form, Input, Select, message } from 'antd'
+import { Form, Input, Select } from 'antd'
 import FormBase from '~/components/form/form-base'
 import Image from 'next/image'
-import { FaSearch, FaSpinner, FaFileInvoice } from 'react-icons/fa'
+import { FaSearch, FaSpinner, FaFileInvoice, FaLock } from 'react-icons/fa'
 import { RainbowButton } from '~/components/magicui/rainbow-button'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -13,15 +13,25 @@ interface ConsultaValues {
   serie: string
   correlativo: string
   tipo_documento: string
+  monto: string
 }
 
 export default function ConsultaPage() {
   const router = useRouter()
   const [form] = Form.useForm<ConsultaValues>()
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleConsultar = async (values: ConsultaValues) => {
+    const monto = values.monto?.trim()
+    if (!monto) {
+      setError('Debe ingresar el monto neto del comprobante')
+      return
+    }
+
     setLoading(true)
+    setError(null)
+
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
       const params = new URLSearchParams({
@@ -35,12 +45,12 @@ export default function ConsultaPage() {
       const data = await res.json()
 
       if (data.error) {
-        message.error(data.error.message || 'Documento no encontrado')
+        setError(data.error.message || 'Documento no encontrado')
       } else if (data.data) {
-        router.push(`/consulta/${data.data.tipo}/${data.data.id}`)
+        router.push(`/consulta/${data.data.tipo}/${data.data.id}?monto=${encodeURIComponent(monto)}`)
       }
     } catch {
-      message.error('Error al consultar. Intente nuevamente.')
+      setError('Error al consultar. Intente nuevamente.')
     } finally {
       setLoading(false)
     }
@@ -140,6 +150,25 @@ export default function ConsultaPage() {
               ]}
             />
           </Form.Item>
+
+          <Form.Item
+            name="monto"
+            rules={[{ required: true, message: 'Ingrese el monto neto' }]}
+          >
+            <Input
+              prefix={<FaLock className="text-cyan-500 mx-2 text-base" />}
+              placeholder="Monto neto del comprobante (S/)"
+              className="text-sm sm:text-base"
+              type="text"
+              inputMode="decimal"
+            />
+          </Form.Item>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-3 mb-4 text-center">
+              {error}
+            </div>
+          )}
 
           <RainbowButton
             type="submit"

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Spin, Tag, Divider } from 'antd'
 import Image from 'next/image'
@@ -73,6 +73,28 @@ export default function ConsultaDocumentoPage() {
   const [showForm, setShowForm] = useState(true)
   const [monto, setMonto] = useState('')
   const [montoError, setMontoError] = useState<string | null>(null)
+
+  // Auto-validar si viene monto en la URL (desde la página de búsqueda)
+  useEffect(() => {
+    const urlMonto = new URLSearchParams(window.location.search).get('monto')
+    if (urlMonto) {
+      setMonto(urlMonto)
+      setShowForm(false)
+      setLoading(true)
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
+      fetch(`${apiUrl}/consulta-documento/${tipo}/${id}?monto=${encodeURIComponent(urlMonto)}`)
+        .then(res => res.json())
+        .then(json => {
+          if (json.error) {
+            setError(json.error.message || 'Documento no encontrado')
+          } else {
+            setData(json.data)
+          }
+        })
+        .catch(() => setError('Error al consultar el documento'))
+        .finally(() => setLoading(false))
+    }
+  }, [tipo, id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleConsultar = async () => {
     const trimmed = monto.trim()
