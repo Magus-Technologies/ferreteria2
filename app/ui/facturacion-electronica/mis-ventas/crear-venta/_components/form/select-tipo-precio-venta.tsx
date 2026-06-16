@@ -57,9 +57,11 @@ export default function SelectTipoPrecioVenta({
 
     if (activadorKey) {
       const activador = Number((unidadDerivadaActual as any)[activadorKey] ?? 0)
-      if (activador > 0 && cantidad < activador) {
-        disabled = true
-        label += ` (mín. ${activador})`
+      if (activador > 0) {
+        label += ` (${activador} und)`
+        if (cantidad < activador) {
+          disabled = true
+        }
       }
     }
 

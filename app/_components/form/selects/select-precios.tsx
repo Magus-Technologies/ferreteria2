@@ -65,11 +65,13 @@ const SelectPrecios = forwardRef<RefSelectBaseProps, SelectPreciosProps>(functio
                 maximumFractionDigits: 2,
               })}`
 
-              if (activadorKey && cantidad !== undefined) {
+              if (activadorKey) {
                 const activador = Number(unidadDerivada[activadorKey as keyof ProductoAlmacenUnidadDerivada] ?? 0)
-                if (activador > 0 && cantidad < activador) {
-                  disabled = true
-                  labelFinal += ` (mín. ${activador})`
+                if (activador > 0) {
+                  labelFinal += ` (${activador} und)`
+                  if (cantidad !== undefined && cantidad < activador) {
+                    disabled = true
+                  }
                 }
               }
 
