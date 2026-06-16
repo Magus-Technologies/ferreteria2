@@ -63,7 +63,13 @@ function InputCantidadFraccion({
       placeholder="Cantidad"
       prefix={<FaBoxes size={15} className="text-rose-700 mx-1" />}
       value={disp}
-      onChange={(e) => setDisp(e.target.value)}
+      onChange={(e) => {
+        setDisp(e.target.value)
+        const parsed = parseCantidadFraccion(e.target.value, factor)
+        if (parsed !== null && parsed > 0) {
+          onChange(parsed)
+        }
+      }}
       onBlur={() => commit(disp)}
       onKeyUp={(e) => {
         if (e.key === 'Enter') commit(disp)
@@ -328,6 +334,12 @@ export default function CardAgregarProductoVenta({
       if (precio > 0) {
         handleChange(precio, 'precio_venta')
         handleChange(best.key, 'precio_venta_key')
+      }
+    } else {
+      const precioPublico = Number((unidad_derivada_seleccionada as any).precio_publico ?? 0)
+      if (precioPublico > 0) {
+        handleChange(precioPublico, 'precio_venta')
+        handleChange('precio_publico', 'precio_venta_key')
       }
     }
   }, [values.cantidad, unidad_derivada_seleccionada])
