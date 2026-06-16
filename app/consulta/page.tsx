@@ -23,12 +23,6 @@ export default function ConsultaPage() {
   const [error, setError] = useState<string | null>(null)
 
   const handleConsultar = async (values: ConsultaValues) => {
-    const monto = values.monto?.trim()
-    if (!monto) {
-      setError('Debe ingresar el monto neto del comprobante')
-      return
-    }
-
     setLoading(true)
     setError(null)
 
@@ -38,6 +32,7 @@ export default function ConsultaPage() {
         serie: values.serie,
         correlativo: values.correlativo,
         tipo_documento: values.tipo_documento,
+        monto: values.monto,
         ...(values.ruc_emisor && { ruc_emisor: values.ruc_emisor }),
       })
 
@@ -47,7 +42,7 @@ export default function ConsultaPage() {
       if (data.error) {
         setError(data.error.message || 'Documento no encontrado')
       } else if (data.data) {
-        router.push(`/consulta/${data.data.tipo}/${data.data.id}?monto=${encodeURIComponent(monto)}`)
+        router.push(`/consulta/${data.data.tipo}/${data.data.id}?monto=${encodeURIComponent(values.monto)}`)
       }
     } catch {
       setError('Error al consultar. Intente nuevamente.')
