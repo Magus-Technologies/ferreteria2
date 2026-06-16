@@ -82,6 +82,19 @@ export default function FiltersMisVentas() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Cuando el usuario cambia de sucursal desde el dropdown global del nav,
+  // actualizar el campo del form y re-buscar automáticamente.
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    if (!almacen_id) return;
+    form.setFieldValue("almacen_id", almacen_id);
+    form.submit();
+  }, [almacen_id, form]);
+
   // Trigger real-time search when debounced values change
   useEffect(() => {
     if (skipInitialSubmitRef.current) {

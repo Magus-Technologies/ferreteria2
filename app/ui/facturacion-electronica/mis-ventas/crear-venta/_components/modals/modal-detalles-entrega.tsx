@@ -13,6 +13,7 @@ import dayjs from 'dayjs'
 import 'dayjs/locale/es'
 import type { TipoDireccion } from '~/lib/api/cliente'
 import { ventaApi } from '~/lib/api/venta'
+import { TipoPedido } from '~/lib/api/entrega-producto'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import ModalCalendarioSlot from './modal-calendario-slot'
 
@@ -804,8 +805,37 @@ function ModalDetallesEntregaInner({
     restoDespachadorId,
     vehiculoId,
     restoVehiculoId,
+    direccionEntrega,
+    cargoDestino,
+    restoCargoDestino,
     restoDireccionEntrega,
   } = useValidaciones({ tipoDespacho, form, totalAProgramar })
+
+  const { tipoPedido, slotDomicilio, tipoPedidoResto, slotResto } = useDetallesEntrega()
+
+  const faltantes = useMemo(() => {
+    const items: string[] = []
+    if (tipoDespacho === 'Domicilio') {
+      if (!slotDomicilio) items.push('Elegir fecha y hora en el calendario')
+      if (!direccionEntrega?.trim()) items.push('Dirección de entrega')
+      if (!vehiculoId) items.push('Vehículo')
+      if (tipoPedido === TipoPedido.INTERNO && !despachadorId) items.push('Despachador')
+      if (tipoPedido === TipoPedido.EXTERNO && !cargoDestino) items.push('Cargo de destino')
+    }
+    if (tipoDespacho === 'Parcial') {
+      if (!slotDomicilio) items.push('Elegir fecha y hora en el calendario')
+      if (!direccionEntrega?.trim()) items.push('Dirección de entrega')
+      if (!vehiculoId) items.push('Vehículo')
+      if (tipoPedido === TipoPedido.INTERNO && !despachadorId) items.push('Despachador')
+      if (tipoPedido === TipoPedido.EXTERNO && !cargoDestino) items.push('Cargo de destino')
+      if (programarResto && totalAProgramar > 0) {
+        if (!slotResto) items.push('Elegir fecha y hora del resto en el calendario')
+        if (!restoDireccionEntrega?.trim()) items.push('Dirección de entrega del resto')
+        if (tipoPedidoResto === TipoPedido.EXTERNO && !restoCargoDestino) items.push('Cargo de destino del resto')
+      }
+    }
+    return items
+  }, [tipoDespacho, slotDomicilio, direccionEntrega, vehiculoId, tipoPedido, despachadorId, cargoDestino, programarResto, totalAProgramar, slotResto, restoDireccionEntrega, tipoPedidoResto, restoCargoDestino])
 
   // Sincronizar despachadorId (del SelectDespachadores) con el form
   // para que los guards de "ya tiene" funcionen correctamente
@@ -902,7 +932,18 @@ function ModalDetallesEntregaInner({
       width={tipoDespacho === 'Parcial' || tipoDespacho === 'Domicilio' ? 950 : 800}
       centered
       footer={
-        <div className="flex justify-end gap-2">
+        <div className="flex flex-col gap-2">
+          {faltantes.length > 0 && (
+            <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+              <p className="text-xs font-semibold text-red-700 mb-1">Campos requeridos para programar:</p>
+              <ul className="list-disc list-inside text-xs text-red-600 space-y-0.5">
+                {faltantes.map((f, i) => (
+                  <li key={i}>{f}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          <div className="flex justify-end gap-2">
           <ButtonBase
             color="default"
             size="md"
@@ -959,6 +1000,7 @@ function ModalDetallesEntregaInner({
               ? 'Entregar'
               : 'Programar Entrega'}
           </ButtonBase>
+        </div>
         </div>
       }
     >
