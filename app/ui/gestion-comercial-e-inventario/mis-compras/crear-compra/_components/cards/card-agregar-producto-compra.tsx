@@ -27,7 +27,10 @@ import { calcularNuevoStock } from '~/app/ui/gestion-comercial-e-inventario/mi-a
 import { useStoreProductoAgregadoCompra } from '~/app/_stores/store-producto-agregado-compra'
 import { FormCreateCompra } from '../others/body-comprar'
 import ModalEditarPreciosProducto from '~/app/_components/modals/modal-editar-precios-producto'
-import { DetalleDePreciosProps } from '~/app/ui/gestion-comercial-e-inventario/mi-almacen/_components/tables/columns-detalle-de-precios'
+import {
+  DetalleDePreciosProps,
+  getCostoActualBase,
+} from '~/app/ui/gestion-comercial-e-inventario/mi-almacen/_components/tables/columns-detalle-de-precios'
 
 export type ValuesCardAgregarProductoCompra = Partial<
   FormCreateCompra['productos'][number]
@@ -146,14 +149,13 @@ export default function CardAgregarProductoCompra({
   useEffect(() => {
     // Autocompletar el costo al seleccionar el producto / unidad derivada.
     if (autoFillPrecioCompraWithCosto && unidad_derivada_seleccionada && producto_en_almacen) {
-      // Autocompletar con el PRECIO CRUDO de la última compra (el registro de compra
-      // guarda el costo sin flete). NO usar producto_en_almacen.costo cuando hay
-      // historial, porque ya incluye el flete → evita que cada compra acumule flete.
-      const compras = (producto_en_almacen as any)?.compras ?? []
-      const ultimoCostoCrudo = Number(compras?.[0]?.costo ?? 0)
-      // Fallback: si el producto no tiene compras previas, usar su costo actual para
-      // que el costo SIEMPRE se autocomplete al elegir el producto.
-      const costoBase = ultimoCostoCrudo > 0 ? ultimoCostoCrudo : Number(producto_en_almacen?.costo ?? 0)
+      // Se autocompleta con el "Costo Actual" del detalle de precios (capa PEPS
+      // vigente). Se usa el MISMO cálculo que la columna "Costo Actual" para que
+      // el Precio Compra coincida exactamente con lo que ve el usuario en esa tabla.
+      const costoActualBase = getCostoActualBase(producto_en_almacen as any)
+      // Fallback: si no se pudo resolver el costo actual, usar el costo del almacén
+      // para que el precio SIEMPRE se autocomplete al elegir el producto.
+      const costoBase = costoActualBase > 0 ? costoActualBase : Number(producto_en_almacen?.costo ?? 0)
       const costo = Number(unidad_derivada_seleccionada.factor ?? 0) * costoBase
       if (costo > 0) {
         handleChange(costo, 'precio_compra')
