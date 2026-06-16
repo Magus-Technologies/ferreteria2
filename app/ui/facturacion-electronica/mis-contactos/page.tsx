@@ -4,7 +4,6 @@ import { useEffect } from "react";
 import ContenedorGeneral from "~/app/_components/containers/contenedor-general";
 import NoAutorizado from "~/components/others/no-autorizado";
 import { usePermission } from "~/hooks/use-permission";
-import { useRealtime } from "~/hooks/use-realtime";
 import { permissions } from "~/lib/permissions";
 import FiltersMisContactos from "./_components/filters/filters-mis-contactos";
 import TableMisContactos from "./_components/tables/table-mis-contactos";
@@ -16,7 +15,8 @@ import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_compo
 export default function MisContactosPage() {
   const canAccess = usePermission(permissions.FACTURACION_ELECTRONICA_MIS_CONTACTOS_INDEX);
   const { setClienteId } = useStoreClienteSeleccionado();
-  useRealtime();
+  // El tiempo real lo gestiona el RealtimeProvider global (/ui/layout); no llamar
+  // useRealtime() aquí porque su cleanup desconectaría el WebSocket compartido.
 
   // Limpiar cliente seleccionado al desmontar
   useEffect(() => {

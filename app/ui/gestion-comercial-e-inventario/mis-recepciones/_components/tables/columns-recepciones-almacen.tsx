@@ -191,7 +191,18 @@ export function useColumnsRecepcionesAlmacen({
             propsDelete={{
               action: eliminarRecepcionAction,
               msgSuccess: 'Recepción deshecha correctamente',
-              queryKey: [QueryKeys.RECEPCIONES_ALMACEN],
+              // Deshacer revierte stock en el almacén receptor: invalidar también
+              // las queries de productos (incl. "Mi Almacén") para que el cambio se
+              // refleje de inmediato sin depender del WebSocket.
+              queryKey: [
+                QueryKeys.RECEPCIONES_ALMACEN,
+                QueryKeys.PRODUCTOS,
+                QueryKeys.PRODUCTOS_BY_ALMACEN,
+                QueryKeys.PRODUCTOS_LISTADO_COMPLETO,
+                QueryKeys.PRODUCTOS_SEARCH,
+                QueryKeys.PRODUCTOS_TABLE_SEARCH,
+                QueryKeys.KARDEX,
+              ],
             }}
             showEdit={false}
           >

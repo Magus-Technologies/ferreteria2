@@ -90,8 +90,23 @@ export default function useCreateRecepcionAlmacen({
       return result.data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.COMPRAS] })
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.ORDENES_COMPRA] })
+      // La recepción mueve stock al almacén receptor: invalidar también las queries
+      // de productos (incl. el listado de "Mi Almacén") para que el stock se refleje
+      // de inmediato para quien recepciona, sin depender del round-trip de WebSocket.
+      const keysToInvalidate = [
+        QueryKeys.COMPRAS,
+        QueryKeys.ORDENES_COMPRA,
+        QueryKeys.RECEPCIONES_ALMACEN,
+        QueryKeys.PRODUCTOS,
+        QueryKeys.PRODUCTOS_BY_ALMACEN,
+        QueryKeys.PRODUCTOS_LISTADO_COMPLETO,
+        QueryKeys.PRODUCTOS_SEARCH,
+        QueryKeys.PRODUCTOS_TABLE_SEARCH,
+        QueryKeys.KARDEX,
+      ]
+      keysToInvalidate.forEach(key =>
+        queryClient.invalidateQueries({ queryKey: [key] })
+      )
       message.success('Recepción de almacén creada exitosamente')
       onSuccess?.()
     },
