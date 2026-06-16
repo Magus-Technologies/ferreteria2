@@ -57,26 +57,22 @@ const SelectPrecios = forwardRef<RefSelectBaseProps, SelectPreciosProps>(functio
                 unidadDerivada[key as keyof ProductoAlmacenUnidadDerivada] ?? 0
               )
 
-              // Verificar activador: si la cantidad no alcanza el umbral, deshabilitar
               const activadorKey = activadorMap[key]
-              let disabled = false
               let labelFinal = `${label}: S/. ${precio.toLocaleString('en-US', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               })}`
 
-              if (activadorKey && cantidad !== undefined) {
+              if (activadorKey) {
                 const activador = Number(unidadDerivada[activadorKey as keyof ProductoAlmacenUnidadDerivada] ?? 0)
-                if (activador > 0 && cantidad < activador) {
-                  disabled = true
-                  labelFinal += ` (mín. ${activador})`
+                if (activador > 0) {
+                  labelFinal += ` (${activador} und)`
                 }
               }
 
               return {
                 value: key,
                 label: labelFinal,
-                disabled,
               }
             })
           : []

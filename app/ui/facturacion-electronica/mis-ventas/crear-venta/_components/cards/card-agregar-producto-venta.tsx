@@ -23,7 +23,7 @@ import SelectDescuentoTipo from '~/app/_components/form/selects/select-descuento
 import { DescuentoTipo, TipoMoneda } from '~/lib/api/venta'
 import SelectPrecios from '~/app/_components/form/selects/select-precios'
 import InfoActivadoresPrecios from '../others/info-activadores-precios'
-import { calcularSubtotalVenta } from '../tables/columns-vender'
+import { calcularSubtotalVenta } from '../tables/calcular-subtotal-venta'
 import { parseCantidadFraccion, formatCantidadFraccion, GetStock } from '~/app/_utils/get-stock'
 
 function InputCantidadFraccion({
@@ -310,6 +310,28 @@ export default function CardAgregarProductoVenta({
     (item) => item.unidad_derivada.id === values?.unidad_derivada_id
   )
 
+  // Auto-seleccionar el mejor precio según la cantidad y los activadores
+  useEffect(() => {
+    const cant = Number(values.cantidad || 0)
+    if (!unidad_derivada_seleccionada || cant < 1) return
+    const tiers = [
+      { key: 'precio_ultimo', activadorKey: 'activador_ultimo' },
+      { key: 'precio_minimo', activadorKey: 'activador_minimo' },
+      { key: 'precio_especial', activadorKey: 'activador_especial' },
+    ]
+    const best = tiers.find((t) => {
+      const activador = Number((unidad_derivada_seleccionada as any)[t.activadorKey] ?? 0)
+      return activador > 0 && cant >= activador
+    })
+    if (best) {
+      const precio = Number((unidad_derivada_seleccionada as any)[best.key] ?? 0)
+      if (precio > 0) {
+        handleChange(precio, 'precio_venta')
+        handleChange(best.key, 'precio_venta_key')
+      }
+    }
+  }, [values.cantidad, unidad_derivada_seleccionada])
+
   return (
     <div className='flex flex-col gap-2'>
       <LabelBase label='Cantidad:' orientation='column'>
@@ -366,7 +388,36 @@ export default function CardAgregarProductoVenta({
           }
         />
       </LabelBase>
-      <LabelBase label='Precio Venta:' orientation='column'>
+      <LabelBase
+        label={
+          <div className='flex items-center gap-2'>
+            <span>Precio Venta:</span>
+            {(() => {
+              const cant = Number(values.cantidad || 0)
+              if (!unidad_derivada_seleccionada || cant < 1) return null
+              const activadores = [
+                { key: 'precio_especial', activadorKey: 'activador_especial' },
+                { key: 'precio_minimo', activadorKey: 'activador_minimo' },
+                { key: 'precio_ultimo', activadorKey: 'activador_ultimo' },
+              ] as const
+              const next = activadores
+                .map((a) => ({
+                  ...a,
+                  activador: Number((unidad_derivada_seleccionada as any)[a.activadorKey] ?? 0),
+                  precio: Number((unidad_derivada_seleccionada as any)[a.key] ?? 0),
+                }))
+                .find((a) => a.activador > 0 && cant < a.activador)
+              if (!next) return null
+              return (
+                <span className='text-xs text-emerald-600 font-normal'>
+                  Llevando {next.activador} te llevas a S/{next.precio.toFixed(2)}
+                </span>
+              )
+            })()}
+          </div>
+        }
+        orientation='column'
+      >
         <div className='flex items-center gap-2'>
           <SelectPrecios
             unidadDerivada={unidad_derivada_seleccionada}

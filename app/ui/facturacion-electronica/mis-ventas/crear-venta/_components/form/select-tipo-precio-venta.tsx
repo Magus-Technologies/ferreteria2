@@ -5,7 +5,7 @@ import SelectBase from '~/app/_components/form/selects/select-base'
 import { MdPriceChange } from 'react-icons/md'
 import { DescuentoTipo } from '~/lib/api/venta'
 import { useStoreProductoAgregadoVenta } from '../../_store/store-producto-agregado-venta'
-import { calcularSubtotalVenta } from '../tables/columns-vender'
+import { calcularSubtotalVenta } from '../tables/calcular-subtotal-venta'
 
 type TipoPrecio = 'publico' | 'especial' | 'minimo' | 'ultimo'
 
@@ -57,9 +57,11 @@ export default function SelectTipoPrecioVenta({
 
     if (activadorKey) {
       const activador = Number((unidadDerivadaActual as any)[activadorKey] ?? 0)
-      if (activador > 0 && cantidad < activador) {
-        disabled = true
-        label += ` (mín. ${activador})`
+      if (activador > 0) {
+        label += ` (${activador} und)`
+        if (cantidad < activador) {
+          disabled = true
+        }
       }
     }
 

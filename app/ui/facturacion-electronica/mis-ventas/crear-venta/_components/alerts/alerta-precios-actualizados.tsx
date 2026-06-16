@@ -9,7 +9,7 @@ import { useStoreProductoAgregadoVenta } from '../../_store/store-producto-agreg
 import { useStoreAlmacen } from '~/store/store-almacen'
 import { productosApiV2 } from '~/lib/api/producto'
 import { DescuentoTipo } from '~/lib/api/venta'
-import { calcularSubtotalVenta } from '../tables/columns-vender'
+import { calcularSubtotalVenta } from '../tables/calcular-subtotal-venta'
 import type { Producto, ProductoAlmacenUnidadDerivada } from '~/app/_types/producto'
 import type { FormCreateVenta } from '../others/body-vender'
 

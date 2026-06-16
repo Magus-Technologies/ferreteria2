@@ -12,9 +12,10 @@ import { permissions } from '~/lib/permissions'
 import StockIngresoSalida from '../others/stock-ingreso-salida'
 import { useStoreProductoSeleccionado } from '../../_store/store-producto-seleccionado'
 import { TipoDocumento } from '~/types'
-import { FormInstance } from 'antd'
+import { Form, FormInstance } from 'antd'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import type { Producto } from '~/app/_types/producto'
+import { GetStock } from '~/app/_utils/get-stock'
 
 export default function FormSelectUnidadDerivadaProducto({
   form,
@@ -51,6 +52,7 @@ export default function FormSelectUnidadDerivadaProducto({
       : Number(pa?.costo_actual ?? pa?.costo ?? 0)
 
   const [factor, setFactor] = useState(0)
+  const cantidadWatched = Form.useWatch('cantidad', form)
 
   useEffect(() => {
     form.setFieldValue(
@@ -147,6 +149,17 @@ export default function FormSelectUnidadDerivadaProducto({
             min={0.001}
             prefix={<FaBox size={15} className='text-rose-600 mx-1' />}
           />
+          {factor > 0 && producto_en_almacen && (() => {
+            const stockDisponible = Number(producto_en_almacen.stock_fraccion)
+            const cantidadEnFraccion = Number(cantidadWatched ?? 0) * factor
+            const excede = !!cantidadWatched && cantidadEnFraccion > stockDisponible
+            return (
+              <div className={`text-xs mt-1 font-medium flex items-center gap-1 ${excede ? 'text-red-600' : 'text-gray-400'}`}>
+                {excede ? '⚠️' : ''} Stock:{' '}
+                <GetStock stock_fraccion={stockDisponible} unidades_contenidas={factor} />
+              </div>
+            )
+          })()}
         </LabelBase>
         <LabelBase label='Costo Actual:' orientation='column'>
           <div className='mb-9 font-bold text-nowrap text-xl'>

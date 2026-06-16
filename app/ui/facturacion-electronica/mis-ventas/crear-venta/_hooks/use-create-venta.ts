@@ -564,6 +564,7 @@ export default function useCreateVenta({
                   cliente_nombre: clienteNombre,
                 })
               } catch (notifError) {
+                console.warn('No se pudo enviar notificación al despachador:', notifError)
               }
             }
           }

@@ -14,6 +14,7 @@ export interface InventarioResumen {
   total_productos: number;
   total_stock: number;
   valorizacion_total: number;
+  valorizacion_venta: number;
   productos_sin_stock: number;
   productos_stock_bajo: number;
 }
