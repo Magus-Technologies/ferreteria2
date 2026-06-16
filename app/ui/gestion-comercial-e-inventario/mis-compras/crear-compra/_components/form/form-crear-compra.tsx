@@ -30,6 +30,9 @@ export default function FormCrearCompra({
   // Fecha de la compra: para traer el tipo de cambio de ese día.
   const fechaWatch = Form.useWatch('fecha', form)
   const fechaTipoCambio = fechaWatch ? dayjs(fechaWatch).format('YYYY-MM-DD') : undefined
+  // Moneda real del form: necesaria para que el tipo de cambio se refresque al
+  // cambiar la fecha incluso cuando la moneda se fijó programáticamente.
+  const tipoMonedaWatch = Form.useWatch('tipo_moneda', form)
   return (
     <div className='flex flex-col'>
       <ConfigurableElement componentId='gestion-comercial.crear-compra.campos-fecha-moneda-proveedor' label='Campos Fecha, Moneda y Proveedor'>
@@ -64,6 +67,7 @@ export default function FormCrearCompra({
                 ],
               }}
               fecha={fechaTipoCambio}
+              monedaActual={tipoMonedaWatch}
               onChangeTipoDeCambio={value =>
                 form.setFieldValue('tipo_de_cambio', value)
               }

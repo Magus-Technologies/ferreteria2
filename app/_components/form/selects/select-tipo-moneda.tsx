@@ -13,6 +13,14 @@ interface SelectTipoMonedaProps extends SelectBaseProps {
   onChangeTipoDeCambio?: (value: number) => void
   /** Fecha (YYYY-MM-DD) para traer el tipo de cambio de ese día (ej. fecha pasada). */
   fecha?: string
+  /**
+   * Moneda vigente del formulario. Necesaria cuando el valor se fija
+   * programáticamente (ej. al editar/recuperar una orden en dólares): el
+   * `onChange` interno NO se dispara en esos casos, así que sin esto el
+   * componente cree que sigue en soles y NO refresca el tipo de cambio al
+   * cambiar la fecha. Ver gotcha de SelectBase/onChange.
+   */
+  monedaActual?: string
 }
 
 export default function SelectTipoMoneda({
@@ -23,6 +31,7 @@ export default function SelectTipoMoneda({
   onChange,
   onChangeTipoDeCambio,
   fecha,
+  monedaActual,
   ...props
 }: SelectTipoMonedaProps) {
   const setTipoDeCambio = useStoreTipoDeCambio(store => store.setTipoDeCambio)
@@ -54,7 +63,10 @@ export default function SelectTipoMoneda({
     }
     // En cambios posteriores: si estamos en DÓLARES y cambió la fecha (y por ende
     // el tipo de cambio), propagar el nuevo valor al formulario padre.
-    if (response && selectedMoneda === TipoMoneda.DOLARES) {
+    // Se prioriza `monedaActual` (valor real del form) sobre el estado interno,
+    // que no se actualiza cuando la moneda se fija programáticamente.
+    const monedaEfectiva = monedaActual ?? selectedMoneda
+    if (response && monedaEfectiva === TipoMoneda.DOLARES) {
       onChangeTipoDeCambio?.(response)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

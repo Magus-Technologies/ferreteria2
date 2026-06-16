@@ -1038,6 +1038,7 @@ export default function CrearOrdenCompraPage() {
                       rules: [{ required: true, message: 'Selecciona el tipo de moneda' }],
                     }}
                     fecha={fechaTipoCambio}
+                    monedaActual={tipo_moneda}
                     onChangeTipoDeCambio={value => form.setFieldValue('tipo_de_cambio', value)}
                   />
                 </LabelBase>
