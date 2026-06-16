@@ -92,6 +92,7 @@ export interface InventarioReporteFilters {
   per_page?: number;
   page?: number;
   anio?: number;
+  search?: string;
 }
 
 // ============= HELPERS =============
