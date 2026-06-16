@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Spin, Tag, Divider } from 'antd'
 import Image from 'next/image'
-import { FaFilePdf, FaPrint, FaArrowLeft } from 'react-icons/fa'
+import { FaFilePdf, FaPrint, FaArrowLeft, FaLock, FaFileCode } from 'react-icons/fa'
 import { RainbowButton } from '~/components/magicui/rainbow-button'
 import ButtonBase from '~/components/buttons/button-base'
 
@@ -55,6 +55,7 @@ interface DocumentoData {
   peso_total?: number
   observaciones?: string | null
   pdf_url: string
+  xml_url?: string | null
 }
 
 const ESTADO_COLORS: Record<string, string> = { cr: 'blue', pr: 'green', an: 'red', ee: 'orange' }
@@ -67,20 +68,124 @@ export default function ConsultaDocumentoPage() {
   const id = params.id as string
 
   const [data, setData] = useState<DocumentoData | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showForm, setShowForm] = useState(true)
+  const [monto, setMonto] = useState('')
+  const [montoError, setMontoError] = useState<string | null>(null)
 
-  useEffect(() => {
+  const handleConsultar = async () => {
+    const trimmed = monto.trim()
+    if (!trimmed) {
+      setMontoError('Debe ingresar el monto neto del comprobante')
+      return
+    }
+
+    setMontoError(null)
+    setLoading(true)
+    setError(null)
+
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
-    fetch(`${apiUrl}/consulta-documento/${tipo}/${id}`)
-      .then(res => res.json())
-      .then(res => {
-        if (res.error) setError(res.error.message || 'Documento no encontrado')
-        else setData(res.data)
-      })
-      .catch(() => setError('Error al consultar el documento'))
-      .finally(() => setLoading(false))
-  }, [tipo, id])
+    try {
+      const res = await fetch(`${apiUrl}/consulta-documento/${tipo}/${id}?monto=${encodeURIComponent(trimmed)}`)
+      const json = await res.json()
+      if (json.error) {
+        setError(json.error.message || 'Documento no encontrado')
+      } else {
+        setData(json.data)
+        setShowForm(false)
+      }
+    } catch {
+      setError('Error al consultar el documento')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (showForm) {
+    return (
+      <div className="bg-[url('/fondo-login.webp')] bg-cover bg-center bg-no-repeat h-dvh w-dvw flex items-center justify-center relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-black/30 via-black/20 to-black/30 backdrop-blur-[2px]" />
+
+        <div className="relative z-10 w-full max-w-sm mx-4">
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8">
+            <div className="flex justify-center mb-6">
+              <div className="w-14 h-14 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-2xl flex items-center justify-center shadow-lg">
+                <FaLock className="text-white text-xl" />
+              </div>
+            </div>
+
+            <h1 className="text-lg font-bold text-gray-800 text-center mb-1">Consulta de Documento</h1>
+            <p className="text-sm text-gray-400 text-center mb-6">
+              Ingrese el monto neto del comprobante para visualizarlo
+            </p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                  Tipo de Documento
+                </label>
+                <div className="text-sm font-medium text-gray-800 bg-gray-50 rounded-lg px-3 py-2.5 border border-gray-200">
+                  {tipo === 'venta' ? 'Venta' : 'Guía de Remisión'} #{id}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                  Monto Neto <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-semibold">S/</span>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    autoFocus
+                    value={monto}
+                    onChange={e => { setMonto(e.target.value); setMontoError(null) }}
+                    onKeyDown={e => e.key === 'Enter' && handleConsultar()}
+                    placeholder="0.00"
+                    className={`w-full pl-9 pr-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 transition-all ${
+                      montoError
+                        ? 'border-red-300 focus:ring-red-200 bg-red-50'
+                        : 'border-gray-200 focus:ring-cyan-200 bg-white'
+                    }`}
+                  />
+                </div>
+                {montoError && (
+                  <p className="text-xs text-red-500 mt-1.5">{montoError}</p>
+                )}
+              </div>
+
+              <RainbowButton
+                onClick={handleConsultar}
+                disabled={loading}
+                size="lg"
+                className="w-full active:scale-95"
+              >
+                {loading ? 'Validando...' : 'Consultar Documento'}
+              </RainbowButton>
+
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-3 text-center">
+                  {error}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-gray-100 text-center">
+              <button
+                onClick={() => router.push('/consulta')}
+                className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <FaArrowLeft className="inline mr-1.5" />
+                Buscar otro documento
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   if (loading) {
     return (
@@ -298,6 +403,16 @@ export default function ConsultaDocumentoPage() {
             >
               <FaPrint /> Ver Ticket
             </ButtonBase>
+            {data.xml_url && (
+              <ButtonBase
+                color="warning"
+                size="md"
+                className="flex items-center gap-2"
+                onClick={() => window.open(data.xml_url!, '_blank')}
+              >
+                <FaFileCode /> Descargar XML
+              </ButtonBase>
+            )}
           </div>
         </div>
       </div>

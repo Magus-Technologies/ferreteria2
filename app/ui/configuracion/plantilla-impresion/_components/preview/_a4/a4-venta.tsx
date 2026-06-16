@@ -158,7 +158,7 @@ export default function A4Venta({ ctx }: { ctx: PreviewContext }) {
                     )}
                     <div style={{ marginTop: 12 }}>
                       <div style={bloqueACSS(b.consulta_leyenda)}>{m.leyenda_consulta}</div>
-                      <div style={bloqueACSS(b.consulta_url)}>http://localhost:3000/consulta</div>
+                      <div style={bloqueACSS(b.consulta_url)}>{process.env.NEXT_PUBLIC_API_URL?.replace(/\/api(\/api)?$/, '') || 'http://localhost:3000'}/consulta</div>
                     </div>
                   </div>
                 </td>
