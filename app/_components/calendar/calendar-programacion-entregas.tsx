@@ -404,7 +404,7 @@ export default function CalendarProgramacionEntregas({
   // dibuje y ROTULE la hora "8 PM" (solo etiqueta el inicio de cada grupo, nunca
   // el borde inferior; con max=20:00 la última etiqueta quedaba en "7 PM").
   const minTime = useMemo(() => new Date(1970, 1, 1, 5, 0, 0), [])
-  const maxTime = useMemo(() => new Date(1970, 1, 1, 20, 30, 0), [])
+  const maxTime = useMemo(() => new Date(1970, 1, 1, 20, 45, 0), [])
 
   // Comprobar si un slot es pasado (antes del momento actual)
   const slotEsPassado = useCallback((start: Date) => {
@@ -513,7 +513,7 @@ export default function CalendarProgramacionEntregas({
       if (!disabledRanges || disabledRanges.length === 0) return {}
 
       const slotStart = dayjs(date)
-      const slotEnd = slotStart.add(30, 'minute')
+      const slotEnd = slotStart.add(15, 'minute')
       const dentroRango = disabledRanges.some((range) => {
         const disabledStart = dayjs(range.start)
         const disabledEnd = dayjs(range.end)
@@ -591,8 +591,8 @@ export default function CalendarProgramacionEntregas({
         onSelectSlot={handleSelectSlot}
         onSelecting={soloSeleccion ? handleSelecting : undefined}
         onSelectEvent={handleSelectEvent}
-        step={30}
-        timeslots={2}
+        step={15}
+        timeslots={4}
         min={minTime}
         max={maxTime}
         slotPropGetter={slotPropGetter}
