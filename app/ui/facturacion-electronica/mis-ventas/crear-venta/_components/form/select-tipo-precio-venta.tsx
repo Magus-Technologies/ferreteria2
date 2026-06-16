@@ -1,6 +1,6 @@
 'use client'
 
-import { Form, FormInstance } from 'antd'
+import { Form, FormInstance, Tooltip } from 'antd'
 import SelectBase from '~/app/_components/form/selects/select-base'
 import { MdPriceChange } from 'react-icons/md'
 import { DescuentoTipo } from '~/lib/api/venta'
@@ -52,20 +52,16 @@ export default function SelectTipoPrecioVenta({
   // Generar opciones con lógica de activadores
   const opciones = (['publico', 'especial', 'minimo', 'ultimo'] as TipoPrecio[]).map((tipo) => {
     const activadorKey = activadorMap[tipo]
-    let disabled = false
     let label = tipo === 'publico' ? 'Público' : tipo === 'especial' ? 'Ferretería' : tipo === 'minimo' ? 'Mínimo' : 'Final'
 
     if (activadorKey) {
       const activador = Number((unidadDerivadaActual as any)[activadorKey] ?? 0)
       if (activador > 0) {
         label += ` (${activador} und)`
-        if (cantidad < activador) {
-          disabled = true
-        }
       }
     }
 
-    return { value: tipo, label, disabled }
+    return { value: tipo, label }
   })
 
   const handleChange = (nuevoTipo: TipoPrecio) => {
@@ -110,15 +106,40 @@ export default function SelectTipoPrecioVenta({
     form.setFieldValue(['productos', fieldIndex, 'subtotal'], nuevoSubtotal)
   }
 
+  const nextHint = (() => {
+    const cant = Number(cantidad || 0)
+    if (!unidadDerivadaActual || cant < 1) return null
+    const tiers = [
+      { key: 'precio_especial', activadorKey: 'activador_especial' },
+      { key: 'precio_minimo', activadorKey: 'activador_minimo' },
+      { key: 'precio_ultimo', activadorKey: 'activador_ultimo' },
+    ] as const
+    const next = tiers
+      .map((t) => ({
+        activador: Number((unidadDerivadaActual as any)[t.activadorKey] ?? 0),
+        precio: Number((unidadDerivadaActual as any)[t.key] ?? 0),
+      }))
+      .find((t) => t.activador > 0 && cant < t.activador)
+    if (!next) return null
+    return `Llevando ${next.activador} → S/${next.precio.toFixed(2)}`
+  })()
+
   return (
-    <SelectBase
-      size='small'
-      variant='borderless'
-      className='w-full'
-      value={tipoPrecioActual}
-      options={opciones}
-      onChange={handleChange}
-      prefix={<MdPriceChange size={14} className='text-emerald-600' />}
-    />
+    <div className='flex items-center gap-0.5'>
+      <SelectBase
+        size='small'
+        variant='borderless'
+        className='w-full'
+        value={tipoPrecioActual}
+        options={opciones}
+        onChange={handleChange}
+        prefix={<MdPriceChange size={14} className='text-emerald-600' />}
+      />
+      {nextHint && (
+        <Tooltip title={nextHint}>
+          <span className='text-emerald-500 text-xs cursor-help flex-shrink-0'>↗</span>
+        </Tooltip>
+      )}
+    </div>
   )
 }
