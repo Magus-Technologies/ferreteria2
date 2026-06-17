@@ -24,8 +24,7 @@ import { useDebounce } from 'use-debounce'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 
 interface ValuesFiltersMisRecepciones {
-  almacen_id: number
-  almacen_recepcion_id?: number
+  almacen_recepcion_id: number
   desde?: Dayjs
   hasta?: Dayjs
   user_id?: string
@@ -52,7 +51,7 @@ export default function FiltersMisRecepciones() {
 
   useEffect(() => {
     const data: RecepcionAlmacenFilters = {
-      almacen_id,
+      almacen_recepcion_id: almacen_id,
       fecha_desde: toUTCBD({ date: dayjs().startOf('day') }),
       fecha_hasta: toUTCBD({ date: dayjs().endOf('day') }),
     }
@@ -73,9 +72,8 @@ export default function FiltersMisRecepciones() {
         form.submit()
       }}
       onFinish={values => {
-        const { desde, hasta, almacen_id, almacen_recepcion_id, estado, user_id, proveedor_id, tipo_documento } = values
+        const { desde, hasta, almacen_recepcion_id, estado, user_id, proveedor_id, tipo_documento } = values
         const data: RecepcionAlmacenFilters = {
-          almacen_id,
           almacen_recepcion_id,
           fecha_desde: desde ? toUTCBD({ date: desde.startOf('day') }) : undefined,
           fecha_hasta: hasta ? toUTCBD({ date: hasta.endOf('day') }) : undefined,
@@ -92,11 +90,13 @@ export default function FiltersMisRecepciones() {
       <TituloModulos
         title='Mis Recepciones'
         icon={<FaTruckLoading className='text-cyan-600' />}
-      >
-        <div className='flex items-center gap-4'>
+      />
+      <ConfigurableElement componentId='mis-recepciones.filtros' label='Filtros de Recepciones'>
+      <div className='flex items-center gap-4 mt-4'>
+        <LabelBase label='Almacén:'>
           <SelectAlmacen
             propsForm={{
-              name: 'almacen_id',
+              name: 'almacen_recepcion_id',
               hasFeedback: false,
               className: '!min-w-[220px] !w-[220px] !max-w-[220px]',
               rules: [{ required: true, message: '' }],
@@ -105,10 +105,7 @@ export default function FiltersMisRecepciones() {
             formWithMessage={false}
             form={form}
           />
-        </div>
-      </TituloModulos>
-      <ConfigurableElement componentId='mis-recepciones.filtros' label='Filtros de Recepciones'>
-      <div className='flex items-center gap-4 mt-4'>
+        </LabelBase>
         <LabelBase label='Desde:'>
           <DatePickerBase
             propsForm={{
@@ -144,19 +141,6 @@ export default function FiltersMisRecepciones() {
             }}
             className='w-full'
             formWithMessage={false}
-            allowClear
-          />
-        </LabelBase>
-        <LabelBase label='Almacén Rec.:'>
-          <SelectAlmacen
-            propsForm={{
-              name: 'almacen_recepcion_id',
-              hasFeedback: false,
-              className: '!min-w-[180px] !w-[180px] !max-w-[180px]',
-            }}
-            className='w-full'
-            formWithMessage={false}
-            afecta_store={false}
             allowClear
           />
         </LabelBase>
