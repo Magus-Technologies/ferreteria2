@@ -72,7 +72,7 @@ export default function useInitVenta({
           tipoDespachoVentaMap[venta.tipo_despacho ?? ''] ??
           (entrega ? tipoEntregaMap[entrega.tipo_entrega] : 'EnTienda'),
         despachador_id: entrega?.chofer_id || undefined,
-        fecha_programada: entrega?.fecha_programada ? dayjs(entrega.fecha_programada) : undefined,
+        fecha_programada: entrega?.fecha_programada ? dayjs(entrega.fecha_programada).format('YYYY-MM-DD') : undefined,
         hora_inicio: entrega?.hora_inicio || undefined,
         hora_fin: entrega?.hora_fin || undefined,
         direccion_entrega: entrega?.direccion_entrega || undefined,

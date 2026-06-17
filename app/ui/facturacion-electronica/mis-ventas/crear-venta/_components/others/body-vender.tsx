@@ -101,7 +101,7 @@ export type FormCreateVenta = ClienteDireccionFormFields & {
   // ✅ Campos de entrega
   tipo_despacho?: 'EnTienda' | 'Domicilio' | 'Parcial' | 'Omitir'
   despachador_id?: string
-  fecha_programada?: Dayjs
+  fecha_programada?: string
   hora_inicio?: string
   hora_fin?: string
   direccion_entrega?: string

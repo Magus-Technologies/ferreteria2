@@ -117,8 +117,9 @@ export function SeccionDomicilio({
     if (!fecha) return
     const horaI = form.getFieldValue('hora_inicio') || '00:00'
     const horaF = form.getFieldValue('hora_fin') || horaI
-    const start = dayjs(`${fecha} ${horaI}`).toDate()
-    const end = dayjs(`${fecha} ${horaF}`).toDate()
+    const fechaStr = dayjs.isDayjs(fecha) ? fecha.format('YYYY-MM-DD') : String(fecha)
+    const start = dayjs(`${fechaStr} ${horaI}`).toDate()
+    const end = dayjs(`${fechaStr} ${horaF}`).toDate()
     setSlotDomicilio({ start, end })
   }, [fechaProgramadaWatch, horaInicioWatch, horaFinWatch, slotDomicilio, setSlotDomicilio, form])
 
