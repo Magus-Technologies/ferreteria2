@@ -126,6 +126,16 @@ export default function useCreateCliente({
           } else if (dirExistente) {
             // D1 es obligatorio para RUC — no eliminarla aunque esté vacía en el form
             if (values.tipo_cliente === TipoCliente.EMPRESA && dirNueva.tipo === TipoDireccion.D1) continue
+
+            // Si la dirección es la principal, reassignar principal a otra antes de eliminar
+            if (dirExistente.es_principal) {
+              const otraDir = direccionesExistentes.find((d) => d.id !== dirExistente.id)
+              if (otraDir) {
+                const res = await clienteApi.marcarDireccionPrincipal(otraDir.id)
+                if (res.error) throw new Error(res.error.message)
+              }
+            }
+
             const res = await clienteApi.eliminarDireccion(dirExistente.id)
             if (res.error) throw new Error(res.error.message)
           }
