@@ -20,6 +20,7 @@ interface MetodoPagoItem {
   sobrecargo_porcentaje: number
   adicional: number
   mostrar: boolean
+  distribuir_en_precios: boolean
   tiene_numero_celular: boolean
   numero_celular?: string
   esExistente?: boolean
@@ -87,6 +88,7 @@ export default function ModalRegistroCompleto({
           sobrecargo_porcentaje: m.sobrecargo_porcentaje,
           adicional: m.adicional,
           mostrar: m.mostrar,
+          distribuir_en_precios: m.distribuir_en_precios ?? false,
           tiene_numero_celular: !!m.numero_celular,
           numero_celular: m.numero_celular || '',
           esExistente: true,
@@ -108,6 +110,7 @@ export default function ModalRegistroCompleto({
       sobrecargo_porcentaje: 0,
       adicional: 0,
       mostrar: true,
+      distribuir_en_precios: false,
       tiene_numero_celular: false,
       numero_celular: '',
     }
@@ -202,6 +205,7 @@ export default function ModalRegistroCompleto({
                   sobrecargo_porcentaje: metodo.sobrecargo_porcentaje,
                   adicional: metodo.adicional,
                   mostrar: metodo.mostrar,
+                  distribuir_en_precios: metodo.distribuir_en_precios,
                   numero_celular: metodo.tiene_numero_celular ? (metodo.numero_celular || null) : null,
                 }),
               })
@@ -229,6 +233,7 @@ export default function ModalRegistroCompleto({
                 sobrecargo_porcentaje: metodo.sobrecargo_porcentaje,
                 adicional: metodo.adicional,
                 mostrar: metodo.mostrar,
+                distribuir_en_precios: metodo.distribuir_en_precios,
                 numero_celular: metodo.tiene_numero_celular ? (metodo.numero_celular || null) : null,
               }),
             })
@@ -515,6 +520,20 @@ export default function ModalRegistroCompleto({
                         value={metodo.adicional}
                         onChange={(value) => actualizarMetodo(metodo.id, 'adicional', value || 0)}
                       />
+                    </LabelBase>
+                  )}
+
+                  {metodo.tipo_sobrecargo !== 'ninguno' && (
+                    <LabelBase label='Distribuir sobrecargo en precios del ticket' orientation='column'>
+                      <Switch
+                        checked={metodo.distribuir_en_precios}
+                        onChange={(checked) => actualizarMetodo(metodo.id, 'distribuir_en_precios', checked)}
+                        checkedChildren="Sí"
+                        unCheckedChildren="No"
+                      />
+                      <p className='text-xs text-slate-500 mt-1'>
+                        Activo: el sobrecargo se suma al precio unitario (como Izipay/Culqui). Inactivo: aparece como línea aparte en el ticket.
+                      </p>
                     </LabelBase>
                   )}
                 </div>
