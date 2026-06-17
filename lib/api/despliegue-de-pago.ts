@@ -12,6 +12,7 @@ export interface DespliegueDePago {
   requiere_numero_serie: boolean;
   sobrecargo_porcentaje: number;
   tipo_sobrecargo: 'porcentaje' | 'monto_fijo' | 'ninguno';
+  distribuir_en_precios: boolean;
   numero_celular?: string;
   activo: boolean;
   metodo_de_pago?: {

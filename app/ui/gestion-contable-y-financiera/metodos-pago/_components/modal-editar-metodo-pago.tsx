@@ -35,6 +35,7 @@ export default function ModalEditarMetodoPago({
         sobrecargo_porcentaje: metodo.sobrecargo_porcentaje,
         adicional: metodo.adicional,
         mostrar: metodo.mostrar,
+        distribuir_en_precios: metodo.distribuir_en_precios ?? false,
       })
       setTipoSobrecargo(metodo.tipo_sobrecargo)
     }
@@ -159,6 +160,18 @@ export default function ModalEditarMetodoPago({
           />
           <p className='text-xs text-slate-500 mt-1'>
             Se cobrará este monto fijo adicional en cada transacción.
+          </p>
+        </LabelBase>
+      )}
+
+      {tipoSobrecargo !== 'ninguno' && (
+        <LabelBase label='Distribuir sobrecargo en precios del ticket' className='mt-4' orientation='column'>
+          <Form.Item name='distribuir_en_precios' valuePropName='checked' noStyle>
+            <Switch checkedChildren="Sí" unCheckedChildren="No" />
+          </Form.Item>
+          <p className='text-xs text-slate-500 mt-1'>
+            Activo: el sobrecargo se suma al precio unitario de cada producto (como Izipay/Culqui — sin línea separada en el ticket).<br />
+            Inactivo: el sobrecargo aparece como línea aparte en el ticket.
           </p>
         </LabelBase>
       )}
