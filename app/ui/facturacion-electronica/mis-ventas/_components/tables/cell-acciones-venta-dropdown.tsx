@@ -1,7 +1,7 @@
 "use client";
 
 import { ICellRendererParams } from "ag-grid-community";
-import { FaFilePdf, FaFileCode, FaPaperPlane, FaDownload, FaEdit, FaHistory, FaBan, FaTruck } from "react-icons/fa";
+import { FaFilePdf, FaFileCode, FaPaperPlane, FaDownload, FaEdit, FaHistory, FaBan, FaTruck, FaStickyNote, FaClipboardList } from "react-icons/fa";
 import { MoreOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
 import { Dropdown, message } from "antd";
@@ -286,6 +286,18 @@ export default function CellAccionesVentaDropdown(
           onClick: () => setEntregarVentaOpen(true),
         } as const]
       : []),
+    {
+      key: 'nota-credito',
+      label: <span className="flex items-center gap-2"><FaClipboardList className="text-rose-600" /> Crear Nota de Crédito</span>,
+      onClick: () => router.push('/ui/facturacion-electronica/mis-notas-credito'),
+      disabled: !tieneXml,
+    },
+    {
+      key: 'nota-debito',
+      label: <span className="flex items-center gap-2"><FaStickyNote className="text-orange-600" /> Crear Nota de Débito</span>,
+      onClick: () => router.push('/ui/facturacion-electronica/crear-notas-electronicas/nota-debito'),
+      disabled: !tieneXml,
+    },
     {
       key: 'pdf',
       label: <span className="flex items-center gap-2"><FaFilePdf className="text-red-600" /> Ver PDF</span>,
