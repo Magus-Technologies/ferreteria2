@@ -60,7 +60,7 @@ export default function BarConvertirNotas() {
   return (
     <div className="flex items-center gap-3 px-3 py-2 mb-2 rounded-md border border-amber-200 bg-amber-50">
       <span className="text-sm font-semibold text-amber-800">
-        {ids.length} nota{ids.length === 1 ? '' : 's'} seleccionada
+        {ids.length} documento{ids.length === 1 ? '' : 's'} seleccionado
         {ids.length === 1 ? '' : 's'}
       </span>
       <ButtonBase
