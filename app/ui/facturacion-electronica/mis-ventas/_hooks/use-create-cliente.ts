@@ -127,22 +127,31 @@ export default function useCreateCliente({
             // D1 es obligatorio para RUC — no eliminarla aunque esté vacía en el form
             if (values.tipo_cliente === TipoCliente.EMPRESA && dirNueva.tipo === TipoDireccion.D1) continue
 
-            // Si la dirección es la principal, reassignar principal a otra antes de eliminar
             if (dirExistente.es_principal) {
               const otraDir = direccionesExistentes.find((d) => d.id !== dirExistente.id)
-              if (!otraDir) {
-                throw new Error('No se puede eliminar la única dirección del cliente.')
+              if (otraDir) {
+                // Reasignar principal a otra dirección y eliminar esta
+                const res = await clienteApi.marcarDireccionPrincipal(otraDir.id)
+                if (res.error) throw new Error(res.error.message)
+                otraDir.es_principal = true
+                dirExistente.es_principal = false
+                const delRes = await clienteApi.eliminarDireccion(dirExistente.id)
+                if (delRes.error) throw new Error(delRes.error.message)
+              } else {
+                // Es la única dirección — el backend no permite eliminarla.
+                // La actualizamos con un espacio para limpiar los datos.
+                const updRes = await clienteApi.actualizarDireccion(dirExistente.id, {
+                  direccion: ' ',
+                  referencia: null,
+                  latitud: undefined,
+                  longitud: undefined,
+                })
+                if (updRes.error) throw new Error(updRes.error.message)
               }
-              const res = await clienteApi.marcarDireccionPrincipal(otraDir.id)
-              if (res.error) throw new Error(res.error.message)
-              // Sincronizar estado local para que iteraciones posteriores
-              // sepan que esta dirección ahora es la principal
-              otraDir.es_principal = true
-              dirExistente.es_principal = false
+            } else {
+              const delRes = await clienteApi.eliminarDireccion(dirExistente.id)
+              if (delRes.error) throw new Error(delRes.error.message)
             }
-
-            const res = await clienteApi.eliminarDireccion(dirExistente.id)
-            if (res.error) throw new Error(res.error.message)
           }
         }
       } else {
