@@ -103,6 +103,8 @@ export function SeccionDomicilio({
   // obligatorio mientras esté vacío (despachador interno y vehículo).
   const despachadorIdWatch = Form.useWatch('despachador_id', form) as string | undefined
   const vehiculoIdWatch = Form.useWatch('vehiculo_id', form) as number | undefined
+  const calendarioDeshabilitado =
+    (tipoPedido === TipoPedido.INTERNO && !despachadorIdWatch) || !vehiculoIdWatch
 
   useEffect(() => {
     if (slotDomicilio) return
@@ -321,19 +323,22 @@ export function SeccionDomicilio({
                   {dayjs(slotDomicilio.end).format('HH:mm')}
                 </span>
               </div>
-              <button
-                type="button"
-                onClick={() => setModalCalendarioDomicilio(true)}
-                className="text-slate-400 hover:text-slate-600 text-xs underline whitespace-nowrap"
-              >
-                Cambiar
-              </button>
+              {!calendarioDeshabilitado && (
+                <button
+                  type="button"
+                  onClick={() => setModalCalendarioDomicilio(true)}
+                  className="text-slate-400 hover:text-slate-600 text-xs underline whitespace-nowrap"
+                >
+                  Cambiar
+                </button>
+              )}
             </div>
           ) : (
             <ButtonBase
               color="info"
               size="md"
               type="button"
+              disabled={calendarioDeshabilitado}
               className="w-full flex items-center justify-center gap-2"
               onClick={() => setModalCalendarioDomicilio(true)}
             >

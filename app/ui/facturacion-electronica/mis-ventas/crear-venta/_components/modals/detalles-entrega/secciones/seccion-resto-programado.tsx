@@ -86,6 +86,10 @@ export function SeccionRestoProgramado({
     setModalCalendarioResto,
   } = useDetallesEntrega()
 
+  const restoDespachadorIdWatch = Form.useWatch('_resto_despachador_id', form) as string | undefined
+  const calendarioRestoDeshabilitado =
+    tipoPedidoResto === TipoPedido.INTERNO && !restoDespachadorIdWatch
+
   // Reverse geocoding propio que escribe en `ubicacionGpsResto`.
   const obtenerUbicacionGpsResto = useReverseGeocoding(setUbicacionGpsResto)
 
@@ -290,19 +294,22 @@ export function SeccionRestoProgramado({
                       {dayjs(slotResto.end).format('HH:mm')}
                     </span>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setModalCalendarioResto(true)}
-                    className="text-slate-400 hover:text-slate-600 text-xs underline whitespace-nowrap"
-                  >
-                    Cambiar
-                  </button>
+                  {!calendarioRestoDeshabilitado && (
+                    <button
+                      type="button"
+                      onClick={() => setModalCalendarioResto(true)}
+                      className="text-slate-400 hover:text-slate-600 text-xs underline whitespace-nowrap"
+                    >
+                      Cambiar
+                    </button>
+                  )}
                 </div>
               ) : (
                 <ButtonBase
                   color="info"
                   size="md"
                   type="button"
+                  disabled={calendarioRestoDeshabilitado}
                   className="w-full flex items-center justify-center gap-2"
                   onClick={() => setModalCalendarioResto(true)}
                 >
