@@ -508,7 +508,9 @@ export default function useCreateVenta({
             venta_id: ventaCreada.id,
             tipo_entrega: TipoEntrega.DESPACHO,
             tipo_despacho: TipoDespacho.PROGRAMADO,
-            estado_entrega: EstadoEntrega.PENDIENTE,
+            estado_entrega: descontar_stock === 'no'
+              ? EstadoEntrega.ENTREGADO
+              : EstadoEntrega.PENDIENTE,
             fecha_entrega: dayjs().format('YYYY-MM-DD'),
             fecha_programada: fecha_programada ? dayjs(fecha_programada).format('YYYY-MM-DD') : undefined,
             hora_inicio: hora_inicio,
@@ -520,7 +522,9 @@ export default function useCreateVenta({
             observaciones: observaciones,
             almacen_salida_id: almacen_id,
             chofer_id: despachador_id ? String(despachador_id) : undefined,
-            quien_entrega: despachador_id ? QuienEntrega.CHOFER : QuienEntrega.ALMACEN,
+            quien_entrega: descontar_stock === 'no'
+              ? (quien_entrega as QuienEntrega) || QuienEntrega.ALMACEN
+              : despachador_id ? QuienEntrega.CHOFER : QuienEntrega.ALMACEN,
             user_id: user_id,
             tipo_pedido: (tipo_pedido as TipoPedido) || undefined,
             cargo_destino: cargo_destino || undefined,
@@ -590,7 +594,11 @@ export default function useCreateVenta({
         // DESPACHO PARCIAL: entregar solo las cantidades especificadas
         if (cantidades_parciales && cantidades_parciales.some(c => c.entregar > 0)) {
           try {
-            const parcialConAlmacenPendiente = quien_entrega === 'almacen'
+            // Cuando descontar_stock='no' el cliente ya tiene la mercadería,
+            // la entrega se completa automáticamente sin importar quien_entrega.
+            const parcialConAlmacenPendiente = descontar_stock === 'no'
+              ? false
+              : quien_entrega === 'almacen'
             const productosVenta = ventaCreada.productos_por_almacen || []
             const unidadesDerivadas: any[] = []
 

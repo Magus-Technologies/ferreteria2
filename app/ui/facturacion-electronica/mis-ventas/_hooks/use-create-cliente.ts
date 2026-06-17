@@ -99,11 +99,7 @@ export default function useCreateCliente({
 
         for (const dirNueva of direccionesDesdeForm) {
           const dirExistente = direccionesMap.get(dirNueva.tipo)
-          const tieneDatos =
-            dirNueva.direccion.length > 0 ||
-            !!dirNueva.referencia?.trim() ||
-            dirNueva.latitud != null ||
-            dirNueva.longitud != null
+          const tieneDatos = dirNueva.direccion.length > 0
           const payload = {
             direccion: dirNueva.direccion,
             referencia: dirNueva.referencia || null,
@@ -112,30 +108,28 @@ export default function useCreateCliente({
           }
           if (tieneDatos) {
             if (dirExistente) {
-              await clienteApi.actualizarDireccion(dirExistente.id, payload)
+              const res = await clienteApi.actualizarDireccion(dirExistente.id, payload)
+              if (res.error) throw new Error(res.error.message)
             } else {
-              await clienteApi.crearDireccion(cliente.id, payload)
+              const res = await clienteApi.crearDireccion(cliente.id, payload)
+              if (res.error) throw new Error(res.error.message)
             }
           } else if (dirExistente) {
-            // Vacía y existía → eliminar.
-            await clienteApi.eliminarDireccion(dirExistente.id)
+            const res = await clienteApi.eliminarDireccion(dirExistente.id)
+            if (res.error) throw new Error(res.error.message)
           }
         }
       } else {
         // MODO CREACIÓN: solo se persisten las que tengan dirección.
         for (const dirNueva of direccionesDesdeForm) {
-          const tieneDatos =
-            dirNueva.direccion.length > 0 ||
-            !!dirNueva.referencia?.trim() ||
-            dirNueva.latitud != null ||
-            dirNueva.longitud != null
-          if (!tieneDatos) continue
-          await clienteApi.crearDireccion(cliente.id, {
+          if (!dirNueva.direccion.length) continue
+          const res = await clienteApi.crearDireccion(cliente.id, {
             direccion: dirNueva.direccion,
             referencia: dirNueva.referencia || null,
             latitud: dirNueva.latitud ?? undefined,
             longitud: dirNueva.longitud ?? undefined,
           })
+          if (res.error) throw new Error(res.error.message)
         }
       }
 
