@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import {
   clienteApi,
   TIPOS_DIRECCION_LIST,
+  TipoCliente,
   TipoDireccion,
   type Cliente,
   type CreateClienteRequest,
@@ -41,6 +42,14 @@ export default function useCreateCliente({
 
   const mutation = useMutation({
     mutationFn: async (values: FormCreateClienteValues) => {
+      // D1 (dirección) es obligatorio para RUC, opcional para DNI
+      if (values.tipo_cliente === TipoCliente.EMPRESA) {
+        const d1 = ((values as any).direccion ?? '').trim()
+        if (!d1.length) {
+          throw new Error('La dirección es obligatoria para clientes con RUC')
+        }
+      }
+
       // Paso 1: Crear/actualizar el cliente (sin direcciones en el modelo antiguo)
       const clienteData: CreateClienteRequest = {
         tipo_cliente: values.tipo_cliente,
@@ -115,6 +124,8 @@ export default function useCreateCliente({
               if (res.error) throw new Error(res.error.message)
             }
           } else if (dirExistente) {
+            // D1 es obligatorio para RUC — no eliminarla aunque esté vacía en el form
+            if (values.tipo_cliente === TipoCliente.EMPRESA && dirNueva.tipo === TipoDireccion.D1) continue
             const res = await clienteApi.eliminarDireccion(dirExistente.id)
             if (res.error) throw new Error(res.error.message)
           }
