@@ -8,7 +8,6 @@ import {
   TIPO_DESPACHO_LABEL_CON_ICON,
 } from '~/app/_lib/entrega-labels'
 import {
-  getEtiquetaTramoParcial,
   isEntregaParcialAgrupada,
 } from '../../_lib/entregas-parciales'
 
@@ -112,19 +111,6 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
     },
     */
     {
-      headerName: 'Tramo',
-      colId: 'tramo_parcial',
-      width: 170,
-      valueGetter: (params) =>
-        params.data?.tipo_entrega === 'pa'
-          ? params.data?.__tramoParcialLabel || getEtiquetaTramoParcial(params.data)
-          : '-',
-      cellStyle: (params) =>
-        params.data?.tipo_entrega === 'pa'
-          ? { color: '#9333ea', fontWeight: 'bold' }
-          : { color: '#94a3b8', fontWeight: 'normal' },
-    },
-    {
       headerName: 'Cliente',
       colId: 'cliente_nombre',
       field: 'venta.cliente',
@@ -227,18 +213,6 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
         if (tipo === 'in') return { color: '#16a34a', fontWeight: 'bold' }
         if (tipo === 'pr') return { color: '#2563eb', fontWeight: 'bold' }
         return null
-      },
-    },
-    {
-      headerName: 'Tipo Pedido',
-      field: 'tipo_pedido',
-      width: 130,
-      valueGetter: (params) => {
-        const tipoPedido = params.data?.tipo_pedido
-        const choferId = params.data?.chofer_id
-        if (tipoPedido === 'externo' && !choferId) return 'Disponible'
-        if (tipoPedido === 'externo' && choferId) return 'Aceptado'
-        return 'Asignado'
       },
     },
     {
