@@ -8,7 +8,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { autorizacionesApi, autorizacionesKeys, type TipoAutorizador } from '~/lib/api/autorizaciones';
 import SelectCargo from '~/app/_components/form/selects/select-cargo';
 import { ACCIONES, ACCION_COLORS, ACCION_LABELS, ICON_MAP, PERMISSION_TO_AUTH_MODULO } from '../_constants';
-import { COMPONENT_MAP } from '../_constants/component-map';
+import { resolveVistaComponent } from '../_constants/component-map';
 import type { NavItem, Accion } from '../_types';
 
 interface ModuloCardProps {
@@ -44,7 +44,7 @@ export default function ModuloCard({
 }: ModuloCardProps) {
   const queryClient = useQueryClient();
   const icon = ICON_MAP[item.permission!] || '📌';
-  const hasComponent = !!COMPONENT_MAP[item.permission!];
+  const hasComponent = !!resolveVistaComponent(item);
   const authModulo = PERMISSION_TO_AUTH_MODULO[item.permission!];
   const authCount = authModulo
     ? authConfigs.filter(c => c.modulo === authModulo && c.requiere_autorizacion).length

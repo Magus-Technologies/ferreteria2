@@ -18,7 +18,7 @@ import { FaUsers, FaCheck, FaLock, FaTimes } from 'react-icons/fa';
 import { permissionsApi } from '~/lib/api/permissions';
 import { autorizacionesApi, autorizacionesKeys } from '~/lib/api/autorizaciones';
 import { MODULE_LABELS } from './_constants';
-import { COMPONENT_MAP } from './_constants/component-map';
+import { resolveVistaComponent } from './_constants/component-map';
 
 import SelectorBar from './_components/selector-bar';
 import ModuloCard from './_components/modulo-card';
@@ -203,13 +203,13 @@ export default function PermisosVisualesPage() {
 
   const modulos = obtenerModulos();
 
-  const handleModuloClick = (label: string, permission: string, hasComponent: boolean) => {
+  const handleModuloClick = (item: NavItem) => {
     if (!rolId) return;
-    if (hasComponent) {
-      const component = COMPONENT_MAP[permission];
-      if (component) {
-        setVistaActiva({ label, permission, component });
-      }
+    const label = item.label || '';
+    const permission = item.permission!;
+    const component = resolveVistaComponent(item);
+    if (component) {
+      setVistaActiva({ label, permission, component });
     } else {
       setItemSeleccionado({ label, permission });
       setModalVisible(true);
@@ -243,7 +243,7 @@ export default function PermisosVisualesPage() {
           <div className="text-center text-gray-500 py-8">Selecciona un rol para empezar a configurar</div>
         </Card>
       ) : vistaActiva ? (
-        <Card>
+        <Card className="w-full">
           <div className="mb-4 flex items-center justify-between flex-wrap gap-3">
             <div className="flex items-center gap-3">
               <Button icon={<ArrowLeftOutlined />} onClick={() => setVistaActiva(null)}>
@@ -309,7 +309,7 @@ export default function PermisosVisualesPage() {
                   item={item}
                   isExpanded={expandedKey === cardKey}
                   onToggleExpand={() => setExpandedKey(expandedKey === cardKey ? null : cardKey)}
-                  onConfigurar={() => handleModuloClick(item.label || '', item.permission!, true)}
+                  onConfigurar={() => handleModuloClick(item)}
                   onVerToggle={() => { setItemSeleccionado({ label: item.label || '', permission: item.permission! }); setEsNavSeleccionado(true); setModalVisible(true); }}
                   visible={estaVisible(item.permission!)}
                   isRequiereAuth={isRequiereAuth}
@@ -340,7 +340,7 @@ export default function PermisosVisualesPage() {
                   item={item}
                   isExpanded={expandedKey === cardKey}
                   onToggleExpand={() => setExpandedKey(expandedKey === cardKey ? null : cardKey)}
-                  onConfigurar={() => handleModuloClick(item.label || '', item.permission!, true)}
+                  onConfigurar={() => handleModuloClick(item)}
                   onVerToggle={() => { setItemSeleccionado({ label: item.label || '', permission: item.permission! }); setEsNavSeleccionado(true); setModalVisible(true); }}
                   visible={estaVisible(item.permission!)}
                   isRequiereAuth={isRequiereAuth}
