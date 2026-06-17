@@ -90,7 +90,7 @@ export default function CrearVenta() {
 
       // Concatenar productos de todas las notas y mapear
       // unidad_derivada_inmutable → unidad_derivada_normal (lo que useInitVenta espera).
-      const productosMerged = ventas.flatMap((v) =>
+      const productosFlat = ventas.flatMap((v) =>
         (v.productos_por_almacen ?? []).map((ppa: any) => ({
           ...ppa,
           unidades_derivadas: (ppa.unidades_derivadas ?? []).map((ud: any) => ({
@@ -101,6 +101,32 @@ export default function CrearVenta() {
           })),
         })),
       )
+
+      // Agrupar por producto_id (+paquete) y sumar cantidades de la misma unidad derivada
+      const productosMap = new Map<string, any>()
+      for (const ppa of productosFlat) {
+        const key = `${ppa.producto_id}_${ppa.paquete_id ?? ''}`
+        if (!productosMap.has(key)) {
+          productosMap.set(key, {
+            ...ppa,
+            unidades_derivadas: ppa.unidades_derivadas.map((ud: any) => ({ ...ud })),
+          })
+        } else {
+          const existing = productosMap.get(key)
+          for (const ud of ppa.unidades_derivadas) {
+            const udKey = ud.unidad_derivada_normal?.id ?? ud.unidad_derivada_id
+            const existingUd = existing.unidades_derivadas.find(
+              (e: any) => (e.unidad_derivada_normal?.id ?? e.unidad_derivada_id) === udKey,
+            )
+            if (existingUd) {
+              existingUd.cantidad = Number(existingUd.cantidad) + Number(ud.cantidad)
+            } else {
+              existing.unidades_derivadas.push({ ...ud })
+            }
+          }
+        }
+      }
+      const productosMerged = Array.from(productosMap.values())
 
       // Tomamos la 1ra venta como base (cliente, almacen, moneda) pero limpiamos
       // id/serie/numero para que se cree una venta nueva. Tipo doc → Boleta por

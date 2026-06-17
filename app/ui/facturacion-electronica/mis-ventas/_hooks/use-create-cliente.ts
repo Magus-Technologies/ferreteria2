@@ -116,8 +116,8 @@ export default function useCreateCliente({
             } else {
               await clienteApi.crearDireccion(cliente.id, payload)
             }
-          } else if (dirExistente && dirNueva.tipo !== TipoDireccion.D1) {
-            // Vacía y existía → eliminar (excepto D1, siempre se conserva).
+          } else if (dirExistente) {
+            // Vacía y existía → eliminar.
             await clienteApi.eliminarDireccion(dirExistente.id)
           }
         }
