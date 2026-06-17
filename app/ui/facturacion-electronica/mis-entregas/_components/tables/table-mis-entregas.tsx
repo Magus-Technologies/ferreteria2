@@ -35,6 +35,8 @@ interface EntregaDB {
   chofer?: any
   almacen_salida?: any
   productos_entregados?: any[]
+  user_entregado_id?: string | null
+  detalles?: any[]
 }
 
 type AccionEntrega =

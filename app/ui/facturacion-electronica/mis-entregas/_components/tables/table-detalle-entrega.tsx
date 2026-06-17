@@ -187,6 +187,31 @@ export default function TableDetalleEntrega() {
       }))
     }
 
+    // New entrega model: data arrives as `detalles` (EntregaDetalleItemResource).
+    // When productos_entregados is absent, compute totals from udv_cantidad and
+    // cantidad_pendiente which are always up-to-date in the UDV row.
+    const rawProductosEntregados = (entregaSeleccionada as any)?.productos_entregados
+    if (!rawProductosEntregados) {
+      const detalles: any[] = (entregaSeleccionada as any)?.detalles || []
+      return detalles.map((d) => {
+        const udvTotal = Number(d.udv_cantidad ?? d.cantidad ?? 0)
+        const pendiente = Number(d.cantidad_pendiente ?? 0)
+        const entregado = Math.max(0, udvTotal - pendiente)
+        return {
+          producto: d.producto?.name || '—',
+          codigo: d.producto?.cod_producto || '',
+          marca: '—',
+          unidad: d.unidad || '',
+          total: udvTotal,
+          recibido: 0,
+          estaEntrega: Number(d.cantidad ?? 0),
+          programado: 0,
+          entregado,
+          pendiente,
+        } satisfies DetalleProductoEntrega
+      })
+    }
+
     if (!productosActuales.length) return []
 
     const actualesAgrupados = agruparProductos(productosActuales)

@@ -172,7 +172,8 @@ export default function ModalDetallesEntregaCompleto({
         recibido: 0,
         pendiente: (r as any).pendiente,
       }))
-    : productos.map((p: any) => {
+    : productos.length > 0
+    ? productos.map((p: any) => {
         const udv = p.unidad_derivada_venta
         const prod = udv?.producto_almacen_venta?.producto_almacen?.producto
         const cantidadActual = Number(udv?.cantidad || 0)
@@ -196,6 +197,21 @@ export default function ModalDetallesEntregaCompleto({
           entregada: cantidadEntregada,
           recibido,
           pendiente: cantidadPendiente,
+        }
+      })
+    : (entregaView.detalles || []).map((d: any) => {
+        const udvTotal = Number(d.udv_cantidad ?? d.cantidad ?? 0)
+        const pendiente = Number(d.cantidad_pendiente ?? 0)
+        const entregada = Math.max(0, udvTotal - pendiente)
+        return {
+          codigo: d.producto?.cod_producto || '',
+          nombre: d.producto?.name || 'Producto',
+          unidad: d.unidad || '',
+          pedida: udvTotal,
+          programada: 0,
+          entregada,
+          recibido: 0,
+          pendiente,
         }
       })
 

@@ -130,10 +130,15 @@ export default function useCreateCliente({
             // Si la dirección es la principal, reassignar principal a otra antes de eliminar
             if (dirExistente.es_principal) {
               const otraDir = direccionesExistentes.find((d) => d.id !== dirExistente.id)
-              if (otraDir) {
-                const res = await clienteApi.marcarDireccionPrincipal(otraDir.id)
-                if (res.error) throw new Error(res.error.message)
+              if (!otraDir) {
+                throw new Error('No se puede eliminar la única dirección del cliente.')
               }
+              const res = await clienteApi.marcarDireccionPrincipal(otraDir.id)
+              if (res.error) throw new Error(res.error.message)
+              // Sincronizar estado local para que iteraciones posteriores
+              // sepan que esta dirección ahora es la principal
+              otraDir.es_principal = true
+              dirExistente.es_principal = false
             }
 
             const res = await clienteApi.eliminarDireccion(dirExistente.id)
