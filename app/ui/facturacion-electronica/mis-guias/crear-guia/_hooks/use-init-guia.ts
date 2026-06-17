@@ -47,6 +47,14 @@ export default function useInitGuia({
   // hasTransferencia se basa en el URL param (persiste aunque limpiemos el store)
   const hasTransferencia = fromTransferencia && !guia && !ventaId
 
+  // Si el store tiene datos de OTRA transferencia (ej. volver atrás con navegación),
+  // limpiarlo para que el fetch por ID se active con los datos correctos.
+  useEffect(() => {
+    if (transferenciaStore && Number(transferenciaIdParam) !== transferenciaStore.id) {
+      clearTransferencia(null)
+    }
+  }, [transferenciaIdParam, transferenciaStore, clearTransferencia])
+
   // Fetch de la transferencia por ID cuando el store está vacío (ej. al refrescar)
   const { data: transferenciaApiData, isLoading: isLoadingTransferenciaApi } = useQuery({
     queryKey: [QueryKeys.TRANSFERENCIAS_STOCK, transferenciaIdParam],
@@ -305,8 +313,6 @@ export default function useInitGuia({
         })),
       })
 
-      // Liberar el store solo si venía de él (no aplica en refresh desde API)
-      if (transferenciaStore) clearTransferencia(null)
     } else if (!venta && !guia && !hasTransferencia) {
       // Valores por defecto para nueva guía sin venta ni transferencia
       const empresaSlots = buildSlotsDireccionEmpresa(empresa?.direcciones)
@@ -343,7 +349,6 @@ export default function useInitGuia({
     isLoadingAlmacenes,
     motivosList,
     almacenesData,
-    clearTransferencia,
   ])
 
   return { venta, isLoading }
