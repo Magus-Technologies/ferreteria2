@@ -31,7 +31,7 @@ export default function ConfigPreviewViewport({ children }: { children: ReactNod
   const width = DEVICE_WIDTHS[device]
 
   return (
-    <div className="flex flex-col h-[calc(100vh-250px)] min-h-[420px] border border-slate-200 rounded-lg overflow-hidden">
+    <div className="flex flex-col w-full h-[calc(100vh-250px)] min-h-[420px] border border-slate-200 rounded-lg overflow-hidden">
       {/* Barra de tamaños */}
       <div className="flex items-center justify-center gap-2 py-1.5 border-b border-slate-200 bg-slate-50">
         <span className="text-xs text-gray-500">Previsualizar en:</span>

@@ -20,6 +20,11 @@ const MisAperturasCierres = lazy(() => import('~/app/ui/facturacion-electronica/
 const MovimientosCaja = lazy(() => import('~/app/ui/facturacion-electronica/movimientos-caja/page'));
 const MisVales = lazy(() => import('~/app/ui/facturacion-electronica/vales-compra/page'));
 const CrearVale = lazy(() => import('~/app/ui/facturacion-electronica/vales-compra/crear-vale/page'));
+// Vistas que comparten permiso con otra del nav, así que se registran por RUTA
+// (ver COMPONENT_MAP_BY_ROUTE y resolveVistaComponent más abajo).
+const HistorialVentas = lazy(() => import('~/app/ui/facturacion-electronica/mis-ventas/historial/page'));
+const CalendarioEntregas = lazy(() => import('~/app/ui/facturacion-electronica/mis-ventas/calendario/page'));
+const ArqueosDiarios = lazy(() => import('~/app/ui/facturacion-electronica/arqueos-diarios/page'));
 const KardexFacturacion = lazy(() => import('~/app/ui/facturacion-electronica/mi-almacen/page'));
 const DashboardGestionComercial = lazy(() => import('~/app/ui/gestion-comercial-e-inventario/page'));
 const CrearCompraGestionComercial = lazy(() => import('~/app/ui/gestion-comercial-e-inventario/mis-compras/crear-compra/page'));
@@ -139,3 +144,25 @@ export const COMPONENT_MAP: Partial<Record<string, React.LazyExoticComponent<any
   'configuracion.series.index': ConfigSeries,
   'configuracion.impresion.index': ConfigImpresion,
 };
+
+/**
+ * Vistas registradas por RUTA, no por permiso. Sirve para las vistas que tienen
+ * página propia pero comparten `permission` con otra del nav (ej. "Historial de
+ * Ventas" comparte `mis-ventas.index` con "Mis Ventas"). Como COMPONENT_MAP está
+ * indexado por permiso, sin esto solo se podría previsualizar una de las dos.
+ */
+export const COMPONENT_MAP_BY_ROUTE: Partial<Record<string, React.LazyExoticComponent<any>>> = {
+  '/ui/facturacion-electronica/mis-ventas/historial': HistorialVentas,
+  '/ui/facturacion-electronica/mis-ventas/calendario': CalendarioEntregas,
+  '/ui/facturacion-electronica/arqueos-diarios': ArqueosDiarios,
+};
+
+/**
+ * Resuelve el componente de previsualización de un ítem del nav: primero por ruta
+ * (vistas que comparten permiso) y, si no, por permiso (caso general).
+ */
+export function resolveVistaComponent(item: { permission?: string | null; route?: string | null }) {
+  if (item.route && COMPONENT_MAP_BY_ROUTE[item.route]) return COMPONENT_MAP_BY_ROUTE[item.route];
+  if (item.permission && COMPONENT_MAP[item.permission]) return COMPONENT_MAP[item.permission];
+  return undefined;
+}
