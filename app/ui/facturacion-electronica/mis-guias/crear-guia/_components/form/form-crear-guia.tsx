@@ -182,12 +182,15 @@ export default function FormCrearGuia({
   }, [requiereComprador, form])
 
   // Limpiar campos de cliente cuando cambia a motivo 08
+  // NO limpiamos punto_partida/punto_llegada: cuando se inicializa desde
+  // transferencia, esos valores ya vienen de los almacenes y el efecto
+  // de init se ejecuta ANTES que este efecto, pisándolos con ''.
+  // Los almacen selects (handleAlmacenOrigenChange/DestinoChange) se
+  // encargan de rellenarlos si el usuario cambia de almacén.
   useEffect(() => {
     if (esEntreEstablecimientos) {
       form.setFieldValue('cliente_id', undefined)
       form.setFieldValue('cliente_nombre', undefined)
-      form.setFieldValue('punto_partida', '')
-      form.setFieldValue('punto_llegada', '')
     }
   }, [esEntreEstablecimientos, form])
 

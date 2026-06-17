@@ -291,6 +291,7 @@ export default function useInitGuia({
         referencia: `TS${String(transferencia.serie).padStart(4, '0')}-${String(transferencia.numero).padStart(8, '0')}`,
         productos: transferencia.productos.map((p) => ({
           producto_id: p.producto_almacen_origen?.producto?.id || 0,
+          producto_almacen_id: p.producto_almacen_origen_id || p.producto_almacen_origen?.id || 0,
           producto_name: p.producto_almacen_origen?.producto?.name || '',
           producto_codigo: p.producto_almacen_origen?.producto?.cod_producto || '',
           marca_name: '',

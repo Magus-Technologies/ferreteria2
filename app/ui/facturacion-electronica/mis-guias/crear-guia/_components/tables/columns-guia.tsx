@@ -33,7 +33,6 @@ export function useColumnsGuia({
           <InputBase
             propsForm={{
               name: [value, 'producto_codigo'],
-              rules: [{ required: true, message: '' }],
               hidden: true,
             }}
             readOnly
@@ -54,7 +53,6 @@ export function useColumnsGuia({
           <InputNumberBase
             propsForm={{
               name: [value, 'producto_id'],
-              rules: [{ required: true, message: '' }],
               hidden: true,
             }}
             formWithMessage={false}
@@ -70,7 +68,6 @@ export function useColumnsGuia({
           <InputBase
             propsForm={{
               name: [value, 'producto_name'],
-              rules: [{ required: true, message: '' }],
               hidden: true,
             }}
             readOnly
@@ -100,7 +97,6 @@ export function useColumnsGuia({
           <InputBase
             propsForm={{
               name: [value, 'marca_name'],
-              rules: [{ required: true, message: '' }],
               hidden: true,
             }}
             readOnly
@@ -133,7 +129,6 @@ export function useColumnsGuia({
           <InputNumberBase
             propsForm={{
               name: [value, 'unidad_derivada_id'],
-              rules: [{ required: true, message: '' }],
               hidden: true,
             }}
             formWithMessage={false}
@@ -141,7 +136,6 @@ export function useColumnsGuia({
           <InputNumberBase
             propsForm={{
               name: [value, 'unidad_derivada_factor'],
-              rules: [{ required: true, message: '' }],
               hidden: true,
             }}
             formWithMessage={false}
@@ -149,7 +143,6 @@ export function useColumnsGuia({
           <InputBase
             propsForm={{
               name: [value, 'unidad_derivada_name'],
-              rules: [{ required: true, message: '' }],
               hidden: true,
             }}
             readOnly
