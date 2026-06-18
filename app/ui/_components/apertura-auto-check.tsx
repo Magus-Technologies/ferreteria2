@@ -6,6 +6,7 @@ import { fetchCajaActivaOrNull } from '~/lib/api/caja'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useRouter } from 'next/navigation'
 import ModalAperturarCaja from '~/app/ui/facturacion-electronica/_components/modals/modal-aperturar-caja'
+import { useConfigMode } from '~/app/ui/configuracion/permisos-visuales/_components/config-mode-context'
 
 /**
  * Componente que muestra el modal de Distribución de Efectivo a Vendedores
@@ -18,18 +19,24 @@ export default function AperturaGuard() {
     const queryClient = useQueryClient()
     const successRef = useRef(false)
 
+    // En el modo Configuración (vista previa de permisos visuales) las vistas reales
+    // se renderizan solo para configurarlas: NO debe dispararse el modal de apertura
+    // de caja ni la consulta/redirección que conlleva.
+    const enModoConfig = !!useConfigMode()?.enabled
+
     const { data: cajaActiva, isSuccess } = useQuery({
         queryKey: [QueryKeys.CAJA_ACTIVA],
         queryFn: () => fetchCajaActivaOrNull(),
         staleTime: 30000,
         gcTime: 60000,
         retry: 1,
+        enabled: !enModoConfig,
     })
 
     // Abrir SOLO cuando la consulta tuvo éxito y confirmó que no hay caja (null).
     // Si la consulta falla (error transitorio) `isSuccess` es false y conservamos
     // el último valor bueno: el modal NO reaparece de forma espuria.
-    const shouldOpen = isSuccess && !cajaActiva
+    const shouldOpen = !enModoConfig && isSuccess && !cajaActiva
 
     const handleSetOpen = (val: boolean) => {
         if (!val && !successRef.current) {
