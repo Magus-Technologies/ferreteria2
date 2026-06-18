@@ -194,8 +194,14 @@ export default function TableDetalleEntrega() {
     if (!rawProductosEntregados) {
       const detalles: any[] = (entregaSeleccionada as any)?.detalles || []
       return detalles.map((d) => {
-        const udvTotal = Number(d.udv_cantidad ?? d.cantidad ?? 0)
         const pendiente = Number(d.cantidad_pendiente ?? 0)
+        // udv_cantidad is the authoritative total from the UDV row (available once
+        // the backend change is deployed). When absent, fall back to
+        // detalle.cantidad + cantidad_pendiente which is correct for the common
+        // single-delivery case and for any delivery after a venta edit.
+        const udvTotal = d.udv_cantidad != null
+          ? Number(d.udv_cantidad)
+          : Number(d.cantidad ?? 0) + pendiente
         const entregado = Math.max(0, udvTotal - pendiente)
         return {
           producto: d.producto?.name || '—',
@@ -312,8 +318,6 @@ export default function TableDetalleEntrega() {
 
   const columnDefs = useMemo<ColDef<DetalleProductoEntrega>[]>(() => {
     const mostrarProgramado = detalleProductos.some((p) => Number(p.programado || 0) > 0)
-    // Mostrar "Esta entrega" solo en el modo normal (no parcial agrupado, no recibido)
-    const mostrarEstaEntrega = !esParcialAgrupada && !mostrarRecibido
 
     const defs: ColDef<DetalleProductoEntrega>[] = [
       { headerName: 'Codigo', field: 'codigo', width: 120 },
@@ -335,18 +339,6 @@ export default function TableDetalleEntrega() {
         width: 110,
         valueFormatter: (params) => Number(params.value).toFixed(0),
         cellStyle: { color: '#b45309', fontWeight: 'bold' },
-      })
-    }
-
-    // Columna "Esta entrega": cantidad que lleva/llevó esta entrega específica
-    if (mostrarEstaEntrega) {
-      defs.push({
-        headerName: 'Esta entrega',
-        field: 'estaEntrega',
-        width: 120,
-        valueFormatter: (params) => Number(params.value || 0).toFixed(0),
-        cellStyle: { color: '#7c3aed', fontWeight: 'bold' },
-        headerTooltip: 'Cantidad de esta entrega específica',
       })
     }
 

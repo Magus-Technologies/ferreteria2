@@ -41,6 +41,9 @@ export default function useCreateCliente({
   const { notification } = App.useApp();
 
   const mutation = useMutation({
+    // No reintentar: la mutation no es idempotente (crea/actualiza/elimina
+    // direcciones). Un retry puede causar duplicados o "Dirección no encontrada".
+    retry: 0,
     mutationFn: async (values: FormCreateClienteValues) => {
       // D1 (dirección) es obligatorio para RUC, opcional para DNI
       if (values.tipo_cliente === TipoCliente.EMPRESA) {
@@ -108,7 +111,15 @@ export default function useCreateCliente({
 
         for (const dirNueva of direccionesDesdeForm) {
           const dirExistente = direccionesMap.get(dirNueva.tipo)
-          const tieneDatos = dirNueva.direccion.length > 0
+          // "Tiene datos" si alguno de los campos tiene contenido:
+          // direccion, referencia, latitud o longitud.
+          // Así, si el usuario borra solo el texto de la direccion pero
+          // deja referencia o GPS, el registro se actualiza (no se borra).
+          const tieneDatos =
+            dirNueva.direccion.length > 0 ||
+            (dirNueva.referencia != null && dirNueva.referencia.trim().length > 0) ||
+            dirNueva.latitud != null ||
+            dirNueva.longitud != null
           const payload = {
             direccion: dirNueva.direccion,
             referencia: dirNueva.referencia || null,
@@ -127,28 +138,44 @@ export default function useCreateCliente({
             // D1 es obligatorio para RUC — no eliminarla aunque esté vacía en el form
             if (values.tipo_cliente === TipoCliente.EMPRESA && dirNueva.tipo === TipoDireccion.D1) continue
 
-            // Si la dirección es la principal, reassignar principal a otra antes de eliminar
             if (dirExistente.es_principal) {
               const otraDir = direccionesExistentes.find((d) => d.id !== dirExistente.id)
-              if (!otraDir) {
-                throw new Error('No se puede eliminar la única dirección del cliente.')
+              if (otraDir) {
+                // Reasignar principal a otra dirección y eliminar esta
+                const res = await clienteApi.marcarDireccionPrincipal(otraDir.id)
+                if (res.error) throw new Error(res.error.message)
+                otraDir.es_principal = true
+                dirExistente.es_principal = false
+                const delRes = await clienteApi.eliminarDireccion(dirExistente.id)
+                if (delRes.error) throw new Error(delRes.error.message)
+              } else {
+                // Es la única dirección — el backend no permite eliminarla.
+                // La actualizamos con string vacío para limpiar los datos.
+                // El backend (con nullable|string) acepta null y lo convierte a ''.
+                const updRes = await clienteApi.actualizarDireccion(dirExistente.id, {
+                  direccion: '',
+                  referencia: null,
+                  latitud: undefined,
+                  longitud: undefined,
+                })
+                if (updRes.error) throw new Error(updRes.error.message)
               }
-              const res = await clienteApi.marcarDireccionPrincipal(otraDir.id)
-              if (res.error) throw new Error(res.error.message)
-              // Sincronizar estado local para que iteraciones posteriores
-              // sepan que esta dirección ahora es la principal
-              otraDir.es_principal = true
-              dirExistente.es_principal = false
+            } else {
+              const delRes = await clienteApi.eliminarDireccion(dirExistente.id)
+              if (delRes.error) throw new Error(delRes.error.message)
             }
-
-            const res = await clienteApi.eliminarDireccion(dirExistente.id)
-            if (res.error) throw new Error(res.error.message)
           }
         }
       } else {
-        // MODO CREACIÓN: solo se persisten las que tengan dirección.
+        // MODO CREACIÓN: solo se persisten las que tengan algún dato
+        // (direccion, referencia o GPS).
         for (const dirNueva of direccionesDesdeForm) {
-          if (!dirNueva.direccion.length) continue
+          const tieneDatos =
+            dirNueva.direccion.length > 0 ||
+            (dirNueva.referencia != null && dirNueva.referencia.trim().length > 0) ||
+            dirNueva.latitud != null ||
+            dirNueva.longitud != null
+          if (!tieneDatos) continue
           const res = await clienteApi.crearDireccion(cliente.id, {
             direccion: dirNueva.direccion,
             referencia: dirNueva.referencia || null,

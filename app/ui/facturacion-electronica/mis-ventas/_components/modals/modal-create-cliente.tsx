@@ -1,4 +1,4 @@
-import { TipoCliente, clienteApi } from "~/lib/api/cliente";
+import { TipoCliente, TipoDireccion, DireccionCliente, clienteApi } from "~/lib/api/cliente";
 import { Form } from "antd";
 import dayjs from "dayjs";
 import TitleForm from "~/components/form/title-form";
@@ -61,6 +61,11 @@ export default function ModalCreateCliente({
   // parsea automáticamente el array — este modal ya no necesita el switch
   // case D1/D2/D3/D4 que escribía 12 campos legacy uno por uno.
   const [clienteConDirecciones, setClienteConDirecciones] = useState<Cliente | undefined>(undefined);
+
+  // Ref que FormCreateCliente sincroniza en cada render con el estado
+  // actual del hook useDireccionesClienteForm. Se usa en onFinish para
+  // sobreescribir los valores del form con el estado real del hook.
+  const direccionesRef = useRef<DireccionCliente[] | null>(null);
 
   const { crearClienteForm, loading } = useCreateCliente({
     onSuccess: (cliente) => {
@@ -167,7 +172,24 @@ export default function ModalCreateCliente({
       setOpen={setOpen}
       formProps={{
         form,
-        onFinish: crearClienteForm,
+        onFinish: (values) => {
+          const direcciones = direccionesRef.current
+          if (direcciones?.length) {
+            const override: Record<string, string | null | undefined> = {}
+            for (const d of direcciones) {
+              const key =
+                d.tipo === TipoDireccion.D1 ? 'direccion'
+                : d.tipo === TipoDireccion.D2 ? 'direccion_2'
+                : d.tipo === TipoDireccion.D3 ? 'direccion_3'
+                : d.tipo === TipoDireccion.D4 ? 'direccion_4'
+                : undefined
+              if (key) override[key] = d.direccion || ''
+            }
+            crearClienteForm({ ...values, ...override })
+          } else {
+            crearClienteForm(values)
+          }
+        },
       }}
     >
       <FormCreateCliente
@@ -175,6 +197,7 @@ export default function ModalCreateCliente({
         dataEdit={clienteConDirecciones}
         direccionesListas={direccionesListas}
         mapSessionKey={mapSessionKey}
+        direccionesRef={direccionesRef}
       />
     </ModalForm>
   );

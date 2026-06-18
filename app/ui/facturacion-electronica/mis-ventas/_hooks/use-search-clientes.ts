@@ -28,8 +28,7 @@ export default function useSearchClientes({
       return res.data?.data || []
     },
     enabled: searchText.length >= 2 || !!profesionId,
-    staleTime: 0,
-    gcTime: 0,
+    staleTime: 30_000,
   })
 
   return {
