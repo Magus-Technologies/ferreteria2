@@ -41,6 +41,9 @@ export default function useCreateCliente({
   const { notification } = App.useApp();
 
   const mutation = useMutation({
+    // No reintentar: la mutation no es idempotente (crea/actualiza/elimina
+    // direcciones). Un retry puede causar duplicados o "Dirección no encontrada".
+    retry: 0,
     mutationFn: async (values: FormCreateClienteValues) => {
       // D1 (dirección) es obligatorio para RUC, opcional para DNI
       if (values.tipo_cliente === TipoCliente.EMPRESA) {
@@ -108,7 +111,15 @@ export default function useCreateCliente({
 
         for (const dirNueva of direccionesDesdeForm) {
           const dirExistente = direccionesMap.get(dirNueva.tipo)
-          const tieneDatos = dirNueva.direccion.length > 0
+          // "Tiene datos" si alguno de los campos tiene contenido:
+          // direccion, referencia, latitud o longitud.
+          // Así, si el usuario borra solo el texto de la direccion pero
+          // deja referencia o GPS, el registro se actualiza (no se borra).
+          const tieneDatos =
+            dirNueva.direccion.length > 0 ||
+            (dirNueva.referencia != null && dirNueva.referencia.trim().length > 0) ||
+            dirNueva.latitud != null ||
+            dirNueva.longitud != null
           const payload = {
             direccion: dirNueva.direccion,
             referencia: dirNueva.referencia || null,
@@ -139,9 +150,10 @@ export default function useCreateCliente({
                 if (delRes.error) throw new Error(delRes.error.message)
               } else {
                 // Es la única dirección — el backend no permite eliminarla.
-                // La actualizamos con un espacio para limpiar los datos.
+                // La actualizamos con string vacío para limpiar los datos.
+                // El backend (con nullable|string) acepta null y lo convierte a ''.
                 const updRes = await clienteApi.actualizarDireccion(dirExistente.id, {
-                  direccion: ' ',
+                  direccion: '',
                   referencia: null,
                   latitud: undefined,
                   longitud: undefined,
@@ -155,9 +167,15 @@ export default function useCreateCliente({
           }
         }
       } else {
-        // MODO CREACIÓN: solo se persisten las que tengan dirección.
+        // MODO CREACIÓN: solo se persisten las que tengan algún dato
+        // (direccion, referencia o GPS).
         for (const dirNueva of direccionesDesdeForm) {
-          if (!dirNueva.direccion.length) continue
+          const tieneDatos =
+            dirNueva.direccion.length > 0 ||
+            (dirNueva.referencia != null && dirNueva.referencia.trim().length > 0) ||
+            dirNueva.latitud != null ||
+            dirNueva.longitud != null
+          if (!tieneDatos) continue
           const res = await clienteApi.crearDireccion(cliente.id, {
             direccion: dirNueva.direccion,
             referencia: dirNueva.referencia || null,

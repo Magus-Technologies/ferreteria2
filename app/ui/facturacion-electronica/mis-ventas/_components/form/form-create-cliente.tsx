@@ -14,8 +14,8 @@ import SelectProfesion from "~/app/_components/form/selects/select-profesion";
 import ButtonCreateProfesion from "~/app/_components/form/buttons/button-create-profesion";
 import DireccionesTabsForm from "~/app/_components/form/direcciones-tabs-form";
 import { Form } from "antd";
-import { useEffect } from "react";
-import { TipoCliente, TipoDireccion, clienteApi } from "~/lib/api/cliente";
+import { useEffect, type MutableRefObject } from "react";
+import { TipoCliente, TipoDireccion, DireccionCliente, clienteApi } from "~/lib/api/cliente";
 import { useDireccionesClienteForm } from "~/hooks/use-direcciones-cliente-form";
 import dynamic from 'next/dynamic';
 
@@ -30,11 +30,13 @@ export default function FormCreateCliente({
   dataEdit,
   direccionesListas = true,
   mapSessionKey = 0,
+  direccionesRef,
 }: {
   form: FormInstance;
   dataEdit?: Cliente;
   direccionesListas?: boolean;
   mapSessionKey?: number;
+  direccionesRef?: MutableRefObject<DireccionCliente[] | null>;
 }) {
   const numero_documento = Form.useWatch("numero_documento", form);
 
@@ -48,6 +50,11 @@ export default function FormCreateCliente({
     coordenadasActivas?.lat ?? 'sin-lat',
     coordenadasActivas?.lng ?? 'sin-lng',
   ].join('-');
+
+  // Sincronizar el ref con el estado actual del hook en cada render
+  if (direccionesRef) {
+    direccionesRef.current = direccionesHook.direcciones
+  }
 
   useEffect(() => {
     if (numero_documento?.length === 8) {
@@ -111,6 +118,11 @@ export default function FormCreateCliente({
                   {
                     validator: async (_, value) => {
                       if (!value || (value.length !== 8 && value.length !== 11)) {
+                        return Promise.resolve();
+                      }
+
+                      // Skip si el documento no cambió (editando cliente existente)
+                      if (dataEdit?.id && value === dataEdit?.numero_documento) {
                         return Promise.resolve();
                       }
 

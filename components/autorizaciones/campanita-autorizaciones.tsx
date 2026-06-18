@@ -154,6 +154,7 @@ export default function CampanitaAutorizaciones() {
       return (res.data?.data || []) as CumpleanosUsuario[]
     },
     enabled: true,
+    staleTime: 60_000,
   })
 
   const cumpleItems = cumpleanosData || []
