@@ -58,6 +58,18 @@ export function mapToEntregaDB(e: EntregaNueva): any {
         // el mapa sin geocodificar cuando la entrega no tiene coords propias.
         direcciones:       venta.cliente.direcciones ?? [],
       } : null,
+      // Self-include this entrega so acumuladosPorUdv in TableDetalleEntrega can
+      // compute entregado/pendiente without needing all siblings from the server.
+      // For confirmed entregas ("en"), this makes entregado = delivery qty and
+      // pendiente = udv_total − entregado. For pending ("pe"/"ec"), entregado = 0.
+      entregas_productos: [{
+        id:              e.id,
+        estado_entrega:  e.estado_entrega_codigo,
+        productos_entregados: (e.detalles ?? []).map((d: any) => ({
+          unidad_derivada_venta_id: d.unidad_derivada_venta_id,
+          cantidad_entregada:       d.cantidad,
+        })),
+      }],
     } : null,
 
     // Chofer / vehiculo
@@ -72,7 +84,10 @@ export function mapToEntregaDB(e: EntregaNueva): any {
       unidad_derivada_venta_id: d.unidad_derivada_venta_id,
       cantidad_entregada:       d.cantidad,
       unidad_derivada_venta: {
-        cantidad:          d.cantidad,
+        // udv_cantidad is the UDV total (full venta qty); d.cantidad is only
+        // what this specific delivery covers. Using the UDV total ensures the
+        // "Total" column shows the venta quantity, not just this delivery's qty.
+        cantidad:          (d as any).udv_cantidad ?? d.cantidad,
         // cantidad_guiada POR ENTREGA (no de la línea de venta) — lo usa
         // `todoGuiado` en cell-acciones-entrega para bloquear "Crear Guía"
         // cuando ya se guió toda la cantidad de ESTA entrega.
