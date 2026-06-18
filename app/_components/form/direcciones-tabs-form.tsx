@@ -19,6 +19,7 @@ export interface DireccionesTabsFormHook {
     tipo: TipoDireccion,
     parche: Partial<DireccionCliente>,
   ) => void
+  marcarComoPrincipal: (tipo: TipoDireccion) => void
 }
 
 interface DireccionesTabsFormProps {
@@ -71,13 +72,25 @@ export default function DireccionesTabsForm({
             key: d.tipo,
             label: (
               <span
-                className="text-xs"
-                title={d.es_principal ? 'Dirección Principal' : undefined}
+                className="text-xs flex items-center gap-1"
+                title={d.es_principal ? 'Dirección Principal (clic para quitar)' : 'Marcar como principal'}
               >
                 Dirección {idxLabel}
-                {d.es_principal && (
-                  <span className="text-yellow-500 ml-1">★</span>
-                )}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    hook.marcarComoPrincipal(d.tipo)
+                  }}
+                  className={`ml-0.5 leading-none transition-colors ${
+                    d.es_principal
+                      ? 'text-yellow-500 hover:text-yellow-600'
+                      : 'text-gray-300 hover:text-yellow-400'
+                  }`}
+                  aria-label={d.es_principal ? 'Quitar como principal' : 'Marcar como principal'}
+                >
+                  ★
+                </button>
                 {tieneGps && ' 📍'}
               </span>
             ),
