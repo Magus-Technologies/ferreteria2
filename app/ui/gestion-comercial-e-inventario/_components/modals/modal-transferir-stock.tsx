@@ -21,6 +21,7 @@ import { useStoreAlmacen } from '~/store/store-almacen'
 import { transferenciaStockApi, type TransferenciaStock } from '~/lib/api/transferencia-stock'
 import { getStock } from '~/app/_utils/get-stock'
 import ModalDocTransferenciaStock from './modal-doc-transferencia-stock'
+import { patchStockListadoCompleto } from './patch-stock-listado-completo'
 import {
   useStoreProductoAgregadoTransferencia,
   type ValuesCardAgregarProductoTransferencia,
@@ -330,7 +331,15 @@ export default function ModalTransferirStock({
     },
     onSuccess: (data) => {
       message.success('Transferencia de stock creada correctamente')
+      // Update instantáneo del grid de Mi Almacén (['productos-listado-completo'])
+      // con el stock nuevo del response, sin pagar el refetch de ~12MB.
+      patchStockListadoCompleto(queryClient, data)
+      // Solo marcar stale (refetchType: 'none'): el patch ya muestra el valor
+      // correcto y el websocket reconcilia en segundo plano. Evita disparar de
+      // inmediato la recarga del listado completo.
+      queryClient.invalidateQueries({ queryKey: ['productos-listado-completo'], refetchType: 'none' })
       queryClient.invalidateQueries({ queryKey: ['productos-infinite'] })
+      queryClient.invalidateQueries({ queryKey: ['productos-search'] })
       queryClient.invalidateQueries({ queryKey: ['transferencias-stock'] })
       setOpen(false)
       form.resetFields()
