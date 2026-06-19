@@ -237,7 +237,11 @@ export default function TableTransferenciasStock({
     onSuccess: () => {
       message.success('Transferencia anulada')
       queryClient.invalidateQueries({ queryKey: [QueryKeys.TRANSFERENCIAS_STOCK] })
+      // El grid de Mi Almacén usa ['productos-listado-completo']; sin invalidarla
+      // el stock no se refresca al toque (quedaba dependiendo solo del WebSocket).
+      queryClient.invalidateQueries({ queryKey: ['productos-listado-completo'] })
       queryClient.invalidateQueries({ queryKey: ['productos-infinite'] })
+      queryClient.invalidateQueries({ queryKey: ['productos-search'] })
       setSelectedTransferencia(null)
     },
     onError: (error: any) => {

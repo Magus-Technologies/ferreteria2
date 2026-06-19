@@ -20,6 +20,7 @@ import TableBase from '~/components/tables/table-base'
 import { transferenciaStockApi, type TransferenciaStock } from '~/lib/api/transferencia-stock'
 import { getStock } from '~/app/_utils/get-stock'
 import { QueryKeys } from '~/app/_lib/queryKeys'
+import { patchStockListadoCompleto } from './patch-stock-listado-completo'
 import {
   useStoreProductoAgregadoTransferencia,
 } from '../../mis-transferencias/_store/store-producto-agregado-transferencia'
@@ -265,7 +266,12 @@ export default function ModalEditTransferenciaStock({ open, setOpen, transferenc
     onSuccess: (updated) => {
       message.success('Transferencia actualizada correctamente')
       queryClient.invalidateQueries({ queryKey: [QueryKeys.TRANSFERENCIAS_STOCK] })
+      // Update instantáneo del grid de Mi Almacén con el stock nuevo del response,
+      // sin pagar el refetch de ~12MB; el websocket reconcilia en segundo plano.
+      patchStockListadoCompleto(queryClient, updated)
+      queryClient.invalidateQueries({ queryKey: ['productos-listado-completo'], refetchType: 'none' })
       queryClient.invalidateQueries({ queryKey: ['productos-infinite'] })
+      queryClient.invalidateQueries({ queryKey: ['productos-search'] })
       onSuccess?.(updated)
       setOpen(false)
     },
