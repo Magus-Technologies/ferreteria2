@@ -77,6 +77,7 @@ export default function ModalCreateCliente({
       }, 800); // 800ms es suficiente para ver el mensaje
     },
     dataEdit,
+    direccionesRef,
   });
 
   useEffect(() => {

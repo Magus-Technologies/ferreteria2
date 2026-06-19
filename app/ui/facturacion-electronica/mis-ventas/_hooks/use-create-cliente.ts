@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { App } from "antd";
 import dayjs from "dayjs";
+import { type MutableRefObject } from "react";
 import {
   clienteApi,
   TIPOS_DIRECCION_LIST,
@@ -8,6 +9,7 @@ import {
   TipoDireccion,
   type Cliente,
   type CreateClienteRequest,
+  type DireccionCliente,
 } from "~/lib/api/cliente";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 import { FormCreateClienteValues } from "../_components/modals/modal-create-cliente";
@@ -33,9 +35,11 @@ const FORM_DIRECCION_FIELDS: Record<TipoDireccion, {
 export default function useCreateCliente({
   onSuccess,
   dataEdit,
+  direccionesRef,
 }: {
   onSuccess?: (cliente: Cliente) => void;
   dataEdit?: Cliente;
+  direccionesRef?: MutableRefObject<DireccionCliente[] | null>;
 }) {
   const queryClient = useQueryClient();
   const { notification } = App.useApp();
@@ -102,15 +106,17 @@ export default function useCreateCliente({
         }
       })
 
+      // Cargar direcciones existentes para modo edición
+      let direccionesExistentesMap: Map<TipoDireccion, DireccionCliente> | undefined
       if (dataEdit?.id) {
         // MODO EDICIÓN: comparar con las direcciones existentes y aplicar
         // create / update / delete por tipo.
         const direccionesExistentesResponse = await clienteApi.listarDirecciones(cliente.id);
         const direccionesExistentes = direccionesExistentesResponse.data?.data || [];
-        const direccionesMap = new Map(direccionesExistentes.map((d) => [d.tipo, d]))
+        direccionesExistentesMap = new Map(direccionesExistentes.map((d) => [d.tipo, d]))
 
         for (const dirNueva of direccionesDesdeForm) {
-          const dirExistente = direccionesMap.get(dirNueva.tipo)
+          const dirExistente = direccionesExistentesMap.get(dirNueva.tipo)
           // "Tiene datos" si alguno de los campos tiene contenido:
           // direccion, referencia, latitud o longitud.
           // Así, si el usuario borra solo el texto de la direccion pero
@@ -183,6 +189,28 @@ export default function useCreateCliente({
             longitud: dirNueva.longitud ?? undefined,
           })
           if (res.error) throw new Error(res.error.message)
+        }
+      }
+
+      // Sincronizar es_principal: si el usuario cambió la dirección
+      // principal via la estrella clickeable, el ref tiene el estado
+      // actualizado. Llamamos marcarDireccionPrincipal si cambió.
+      if (dataEdit?.id && direccionesRef?.current && direccionesExistentesMap) {
+        const dirPrincipalNueva = direccionesRef.current.find(
+          (d) => d.es_principal && d.direccion.length > 0,
+        )
+        const principalOriginal = [...direccionesExistentesMap.values()].find(
+          (d) => d.es_principal,
+        )
+        if (dirPrincipalNueva) {
+          const dirExistentePrincipal = direccionesExistentesMap.get(dirPrincipalNueva.tipo)
+          if (
+            dirExistentePrincipal &&
+            dirExistentePrincipal.id !== principalOriginal?.id
+          ) {
+            const res = await clienteApi.marcarDireccionPrincipal(dirExistentePrincipal.id)
+            if (res.error) throw new Error(res.error.message)
+          }
         }
       }
 

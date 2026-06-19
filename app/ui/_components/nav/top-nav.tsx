@@ -118,8 +118,22 @@ export default function TopNavUI({ className }: { className?: string }) {
                       max-w-[calc(100vw-1.5rem)] sm:max-w-none
                       truncate'
       >
-        <span className='hidden sm:inline'>Hola, {user?.empresa?.razon_social || 'Usuario'}</span>
-        <span className='inline sm:hidden'>Hola, {user?.empresa?.razon_social?.substring(0, 3) || 'GMR'}</span>
+        {(() => {
+          const sucursal = almacenes?.find(a => a.id === almacen_id)?.name
+          return (
+            <>
+              <span className='hidden sm:inline'>
+                Hola, {user?.empresa?.razon_social || 'Usuario'}
+                {sucursal && (
+                  <span className='ml-2 text-emerald-600 font-semibold'>· {sucursal}</span>
+                )}
+              </span>
+              <span className='inline sm:hidden'>
+                {sucursal ?? user?.empresa?.razon_social?.substring(0, 3) ?? 'GMR'}
+              </span>
+            </>
+          )
+        })()}
       </DropdownBase>
       <ModalProveedoresDesactivados />
       <ModalConfiguraciones />

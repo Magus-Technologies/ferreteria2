@@ -17,6 +17,8 @@ import { empresaApi } from '~/lib/api/empresa'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import { exportReporteVentasToExcel } from '~/utils/export-reporte-ventas-excel'
+import { contasisApi } from '~/lib/api/contasis'
+import { exportContasisVentasToExcel } from '~/utils/export-contasis-excel'
 
 const { RangePicker } = DatePicker
 
@@ -35,6 +37,12 @@ export default function ReporteVentasPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('dashboard')
   const [exportingExcel, setExportingExcel] = useState<string | null>(null)
   const [exportResult, setExportResult] = useState<{ type: 'success' | 'warning' | 'error'; text: string } | null>(null)
+
+  // CONTASIS export state
+  const [contasisDesde, setContasisDesde] = useState(dayjs().startOf('month').format('YYYY-MM-DD'))
+  const [contasisHasta, setContasisHasta] = useState(dayjs().endOf('month').format('YYYY-MM-DD'))
+  const [exportingContasis, setExportingContasis] = useState(false)
+  const [contasisResult, setContasisResult] = useState<{ type: 'success' | 'warning' | 'error'; text: string } | null>(null)
 
   // Filtros dashboard — último año por defecto para el gráfico
   const [dashDesde, setDashDesde] = useState(dayjs().subtract(11, 'months').startOf('month').format('YYYY-MM-DD'))
@@ -74,6 +82,30 @@ export default function ReporteVentasPage() {
     queryKey: [QueryKeys.EMPRESAS, 1],
     queryFn: () => empresaApi.getById(1),
   })
+
+  const handleExportContasis = async () => {
+    setExportingContasis(true)
+    setContasisResult(null)
+    try {
+      const res = await contasisApi.getVentas({ desde: contasisDesde, hasta: contasisHasta, almacen_id })
+      const items = res.data?.data
+      if (!items || items.length === 0) {
+        setContasisResult({ type: 'warning', text: 'No hay comprobantes electrónicos en el rango seleccionado.' })
+        return
+      }
+      exportContasisVentasToExcel(items, {
+        desde: dayjs(contasisDesde).format('DD/MM/YYYY'),
+        hasta: dayjs(contasisHasta).format('DD/MM/YYYY'),
+        empresa: empresaInfo?.razon_social,
+        nameFile: `CONTASIS_VENTAS_${dayjs(contasisDesde).format('YYYYMM')}_${dayjs(contasisHasta).format('YYYYMM')}`,
+      })
+      setContasisResult({ type: 'success', text: `${items.length} comprobantes exportados correctamente.` })
+    } catch {
+      setContasisResult({ type: 'error', text: 'Error al generar el archivo. Intente nuevamente.' })
+    } finally {
+      setExportingContasis(false)
+    }
+  }
 
   if (!canAccess) return <NoAutorizado />
 
@@ -379,6 +411,48 @@ export default function ReporteVentasPage() {
             onClick={() => setViewMode('ventas_cliente')}
             onExcel={() => { setViewMode('ventas_cliente'); setTimeout(handleExportReporte, 50) }}
           />
+        </div>
+      </div>
+
+      {/* Exportar CONTASIS */}
+      <div className='mt-8 w-full'>
+        <h3 className='font-bold text-slate-700 text-base uppercase mb-1'>Exportar CONTASIS</h3>
+        <p className='text-xs text-slate-400 mb-4'>
+          Genera el archivo Excel en formato CONTASIS (Registro de Ventas) a partir de los comprobantes electrónicos emitidos.
+        </p>
+        <div className='bg-white rounded-lg border border-slate-200 p-5 space-y-4 max-w-lg'>
+          <div>
+            <label className='block text-sm font-medium text-slate-600 mb-1'>Rango de fechas</label>
+            <RangePicker
+              value={[dayjs(contasisDesde), dayjs(contasisHasta)]}
+              onChange={(dates) => {
+                if (dates?.[0] && dates?.[1]) {
+                  setContasisDesde(dates[0].format('YYYY-MM-DD'))
+                  setContasisHasta(dates[1].format('YYYY-MM-DD'))
+                  setContasisResult(null)
+                }
+              }}
+              format='DD/MM/YYYY'
+              className='w-full'
+            />
+          </div>
+          <Button
+            type='primary'
+            onClick={handleExportContasis}
+            loading={exportingContasis}
+            className='w-full'
+          >
+            Exportar Excel CONTASIS — Ventas
+          </Button>
+          {contasisResult && (
+            <div className={`p-3 rounded-lg text-sm ${
+              contasisResult.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' :
+              contasisResult.type === 'warning' ? 'bg-yellow-50 text-yellow-700 border border-yellow-200' :
+              'bg-red-50 text-red-700 border border-red-200'
+            }`}>
+              {contasisResult.text}
+            </div>
+          )}
         </div>
       </div>
     </ContenedorGeneral>

@@ -208,6 +208,24 @@ export function useDireccionesClienteForm({
   )
 
   /**
+   * Marca una dirección como principal y desmarca las demás.
+   * Solo actualiza el state interno — el persist al backend
+   * lo hace `useCreateCliente` al comparar `es_principal` con
+   * las direcciones existentes y llamar `marcarDireccionPrincipal`.
+   */
+  const marcarComoPrincipal = useCallback(
+    (tipo: TipoDireccion) => {
+      setDirecciones((prev) =>
+        prev.map((d) => ({
+          ...d,
+          es_principal: d.tipo === tipo,
+        })),
+      )
+    },
+    [],
+  )
+
+  /**
    * Cambia la dirección "activa" del cliente — cuando un consumidor (ej:
    * crear-venta) tiene un selector D1/D2/D3/D4, esto sincroniza:
    *  - el state interno (`tipoActivo`)
@@ -265,6 +283,8 @@ export function useDireccionesClienteForm({
     actualizarDireccion,
     /** Set coords + opcional reverse-geocoding label. */
     actualizarCoordenadas,
+    /** Marca una dirección como principal (local state, se persiste al guardar). */
+    marcarComoPrincipal,
     /** Cambia tipoActivo + sincroniza form aliases (direccion, direccion_entrega, …). */
     cambiarSeleccion,
     /** Coordenadas del tipo dado (o null). */

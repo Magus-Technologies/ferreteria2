@@ -241,11 +241,17 @@ export default function TableDetalleEntrega() {
         const programadoAcumulado = acumulado?.programado ?? 0
         const estaEntrega = Number(detalleActual?.cantidad_entregada ?? 0)
 
-        // Pendiente = lo que aún NO se ha ENTREGADO (confirmado), calculado por
-        // cobertura (total − entregado acumulado). NO usar cantidad_pendiente:
-        // las auto-entregas "en tienda" la dejan en 0 al crear, así que una
-        // entrega pendiente mostraba 0 aunque no se haya entregado nada.
-        const pendiente = Math.max(0, total - entregadoAcumulado)
+        // When UDV.cantidad_pendiente > 0 the venta was edited after a prior
+        // confirmation; the backend recalculated the true remaining quantity.
+        // For fresh deliveries cantidad_pendiente = 0 (set at creation), so
+        // fall back to the acumulado path which handles that case correctly.
+        const udvCantidadPendiente = Number(producto.cantidadPendiente ?? 0)
+        const pendiente = udvCantidadPendiente > 0
+          ? udvCantidadPendiente
+          : Math.max(0, total - entregadoAcumulado)
+        const entregado = udvCantidadPendiente > 0
+          ? Math.max(0, total - udvCantidadPendiente)
+          : entregadoAcumulado
 
         return {
           producto: producto.producto,
@@ -256,7 +262,7 @@ export default function TableDetalleEntrega() {
           recibido: 0,
           estaEntrega,
           programado: programadoAcumulado,
-          entregado: entregadoAcumulado,
+          entregado,
           pendiente,
         }
       })
