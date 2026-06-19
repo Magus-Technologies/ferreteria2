@@ -806,36 +806,44 @@ function ModalDetallesEntregaInner({
     vehiculoId,
     restoVehiculoId,
     direccionEntrega,
+    latitud,
+    longitud,
     cargoDestino,
     restoCargoDestino,
     restoDireccionEntrega,
+    restoLatitud,
+    restoLongitud,
   } = useValidaciones({ tipoDespacho, form, totalAProgramar })
 
   const { tipoPedido, slotDomicilio, tipoPedidoResto, slotResto } = useDetallesEntrega()
 
   const faltantes = useMemo(() => {
     const items: string[] = []
+    // La dirección no es obligatoria si hay coordenadas GPS — el mapa
+    // muestra la ubicación y la referencia puede guiar al despachador.
+    const tieneDireccionOGps = !!direccionEntrega?.trim() || (latitud != null && longitud != null)
+    const restoTieneDireccionOGps = !!restoDireccionEntrega?.trim() || (restoLatitud != null && restoLongitud != null)
     if (tipoDespacho === 'Domicilio') {
       if (!slotDomicilio) items.push('Elegir fecha y hora en el calendario')
-      if (!direccionEntrega?.trim()) items.push('Dirección de entrega')
+      if (!tieneDireccionOGps) items.push('Dirección de entrega o ubicación GPS')
       if (!vehiculoId) items.push('Vehículo')
       if (tipoPedido === TipoPedido.INTERNO && !despachadorId) items.push('Despachador')
       if (tipoPedido === TipoPedido.EXTERNO && !cargoDestino) items.push('Cargo de destino')
     }
     if (tipoDespacho === 'Parcial') {
       if (!slotDomicilio) items.push('Elegir fecha y hora en el calendario')
-      if (!direccionEntrega?.trim()) items.push('Dirección de entrega')
+      if (!tieneDireccionOGps) items.push('Dirección de entrega o ubicación GPS')
       if (!vehiculoId) items.push('Vehículo')
       if (tipoPedido === TipoPedido.INTERNO && !despachadorId) items.push('Despachador')
       if (tipoPedido === TipoPedido.EXTERNO && !cargoDestino) items.push('Cargo de destino')
       if (programarResto && totalAProgramar > 0) {
         if (!slotResto) items.push('Elegir fecha y hora del resto en el calendario')
-        if (!restoDireccionEntrega?.trim()) items.push('Dirección de entrega del resto')
+        if (!restoTieneDireccionOGps) items.push('Dirección de entrega del resto o ubicación GPS')
         if (tipoPedidoResto === TipoPedido.EXTERNO && !restoCargoDestino) items.push('Cargo de destino del resto')
       }
     }
     return items
-  }, [tipoDespacho, slotDomicilio, direccionEntrega, vehiculoId, tipoPedido, despachadorId, cargoDestino, programarResto, totalAProgramar, slotResto, restoDireccionEntrega, tipoPedidoResto, restoCargoDestino])
+  }, [tipoDespacho, slotDomicilio, direccionEntrega, latitud, longitud, vehiculoId, tipoPedido, despachadorId, cargoDestino, programarResto, totalAProgramar, slotResto, restoDireccionEntrega, restoLatitud, restoLongitud, tipoPedidoResto, restoCargoDestino])
 
   // Sincronizar despachadorId (del SelectDespachadores) con el form
   // para que los guards de "ya tiene" funcionen correctamente

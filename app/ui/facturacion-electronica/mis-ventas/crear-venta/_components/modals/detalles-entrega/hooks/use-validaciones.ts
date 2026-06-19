@@ -27,17 +27,26 @@ export function useValidaciones({
   const vehiculoId = Form.useWatch('vehiculo_id', form) as number | undefined
   const restoVehiculoId = Form.useWatch('_resto_vehiculo_id', form) as number | undefined
   const direccionEntrega = Form.useWatch('direccion_entrega', form) as string | undefined
+  const latitud = Form.useWatch('latitud', form) as number | undefined
+  const longitud = Form.useWatch('longitud', form) as number | undefined
   const cargoDestino = Form.useWatch('cargo_destino', form) as string | undefined
   const restoCargoDestino = Form.useWatch('_resto_cargo_destino', form) as string | undefined
   const restoDireccionEntrega = Form.useWatch('_resto_direccion_entrega', form) as string | undefined
+  const restoLatitud = Form.useWatch('_resto_latitud', form) as number | undefined
+  const restoLongitud = Form.useWatch('_resto_longitud', form) as number | undefined
 
   const { slotDomicilio, slotResto, tipoPedido, tipoPedidoResto, programarResto } = useDetallesEntrega()
+
+  // La dirección no es obligatoria si hay coordenadas GPS — el mapa
+  // muestra la ubicación y la referencia puede guiar al despachador.
+  const tieneDireccionOGps = !!direccionEntrega?.trim() || (latitud != null && longitud != null)
+  const restoTieneDireccionOGps = !!restoDireccionEntrega?.trim() || (restoLatitud != null && restoLongitud != null)
 
   const domicilioInvalido =
     tipoDespacho === 'Domicilio' &&
     (
       !slotDomicilio ||
-      !direccionEntrega?.trim() ||
+      !tieneDireccionOGps ||
       !vehiculoId ||
       (tipoPedido === TipoPedido.INTERNO && !despachadorId) ||
       (tipoPedido === TipoPedido.EXTERNO && !cargoDestino)
@@ -49,7 +58,7 @@ export function useValidaciones({
     totalAProgramar > 0 &&
     (
       !slotResto ||
-      !restoDireccionEntrega?.trim() ||
+      !restoTieneDireccionOGps ||
       (tipoPedidoResto === TipoPedido.EXTERNO && !restoCargoDestino)
     )
 
@@ -62,8 +71,12 @@ export function useValidaciones({
     vehiculoId,
     restoVehiculoId,
     direccionEntrega,
+    latitud,
+    longitud,
     cargoDestino,
     restoCargoDestino,
     restoDireccionEntrega,
+    restoLatitud,
+    restoLongitud,
   }
 }

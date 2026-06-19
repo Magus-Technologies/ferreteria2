@@ -1,6 +1,6 @@
 'use client'
 
-import { Form, FormInstance, Tooltip } from 'antd'
+import { Form, FormInstance } from 'antd'
 import SelectBase from '~/app/_components/form/selects/select-base'
 import { MdPriceChange } from 'react-icons/md'
 import { DescuentoTipo } from '~/lib/api/venta'
@@ -125,7 +125,7 @@ export default function SelectTipoPrecioVenta({
   })()
 
   return (
-    <div className='flex items-center gap-0.5'>
+    <div className='flex flex-col gap-0.5 w-full'>
       <SelectBase
         size='small'
         variant='borderless'
@@ -136,9 +136,9 @@ export default function SelectTipoPrecioVenta({
         prefix={<MdPriceChange size={14} className='text-emerald-600' />}
       />
       {nextHint && (
-        <Tooltip title={nextHint}>
-          <span className='text-emerald-500 text-xs cursor-help flex-shrink-0'>↗</span>
-        </Tooltip>
+        <span className='text-emerald-600 text-[10px] leading-tight px-1'>
+          {nextHint}
+        </span>
       )}
     </div>
   )

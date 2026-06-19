@@ -241,15 +241,21 @@ export default function TableDetalleEntrega() {
         const programadoAcumulado = acumulado?.programado ?? 0
         const estaEntrega = Number(detalleActual?.cantidad_entregada ?? 0)
 
-        // When UDV.cantidad_pendiente > 0 the venta was edited after a prior
-        // confirmation; the backend recalculated the true remaining quantity.
-        // For fresh deliveries cantidad_pendiente = 0 (set at creation), so
-        // fall back to the acumulado path which handles that case correctly.
+        // Use UDV data (udv_cantidad − cantidad_pendiente) when:
+        //   • entrega is confirmed ('en') — backend ran syncLegacy and the
+        //     pendiente is authoritative (0 when fully delivered, > 0 when partial).
+        //   • entrega is still pending BUT cantidad_pendiente > 0 — means the
+        //     venta was edited after a prior confirmation; pendiente is correct.
+        // Fall back to acumuladosPorUdv only for fresh 'pe' deliveries where
+        // cantidad_pendiente = 0 (set at creation by EntregaService.aplicar),
+        // because there 0 would be misleading — nothing has been confirmed yet.
         const udvCantidadPendiente = Number(producto.cantidadPendiente ?? 0)
-        const pendiente = udvCantidadPendiente > 0
+        const esConfirmada = (entregaSeleccionada as any)?.estado_entrega === 'en'
+        const useUdvData = esConfirmada || udvCantidadPendiente > 0
+        const pendiente = useUdvData
           ? udvCantidadPendiente
           : Math.max(0, total - entregadoAcumulado)
-        const entregado = udvCantidadPendiente > 0
+        const entregado = useUdvData
           ? Math.max(0, total - udvCantidadPendiente)
           : entregadoAcumulado
 
@@ -338,15 +344,16 @@ export default function TableDetalleEntrega() {
       },
     ]
 
-    if (mostrarRecibido) {
-      defs.push({
-        headerName: 'Recibido',
-        field: 'recibido',
-        width: 110,
-        valueFormatter: (params) => Number(params.value).toFixed(0),
-        cellStyle: { color: '#b45309', fontWeight: 'bold' },
-      })
-    }
+    defs.push({
+      headerName: 'Recibido',
+      field: 'recibido',
+      width: 110,
+      valueFormatter: (params) => Number(params.value).toFixed(0),
+      cellStyle: (params) =>
+        Number(params.value) > 0
+          ? { color: '#b45309', fontWeight: 'bold' }
+          : { color: '#94a3b8', fontWeight: 'normal' },
+    })
 
     // Entregado acumulado de TODAS las entregas confirmadas de esta venta
     defs.push({

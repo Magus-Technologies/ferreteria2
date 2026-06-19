@@ -401,6 +401,9 @@ export function SeccionDomicilio({
       <div className="space-y-3">
         <div style={{ display: 'none' }}>
           <Form.Item name="direccion_entrega"><Input /></Form.Item>
+          <Form.Item name="latitud"><Input /></Form.Item>
+          <Form.Item name="longitud"><Input /></Form.Item>
+          <Form.Item name="referencia_entrega"><Input /></Form.Item>
         </div>
 
         <div className="grid grid-cols-2 gap-4">

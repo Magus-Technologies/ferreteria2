@@ -132,24 +132,37 @@ export default function ModalDetallesEntregaCompleto({
   }
 
   const productosColDefs: ColDef<ProdRow>[] = [
-    { field: 'codigo', headerName: 'Código', width: 80 },
+    { field: 'codigo', headerName: 'Codigo', width: 80 },
     { field: 'nombre', headerName: 'Producto', flex: 1, minWidth: 140 },
-    { field: 'unidad', headerName: 'Unidad', width: 90 },
-    { field: 'pedida', headerName: 'Pedida', width: 78 },
-  ]
-  if (mostrarRecibido) {
-    productosColDefs.push({
+    { field: 'unidad', headerName: 'U.Medida', width: 90 },
+    { field: 'pedida', headerName: 'Total', width: 78 },
+    {
       field: 'recibido',
       headerName: 'Recibido',
       width: 90,
-      cellStyle: { color: '#b45309', fontWeight: 'bold' },
-    })
-  }
-  productosColDefs.push(
+      cellStyle: (params) =>
+        Number(params.value) > 0
+          ? { color: '#b45309', fontWeight: 'bold' }
+          : { color: '#94a3b8', fontWeight: 'normal' },
+    },
     { field: 'programada', headerName: 'Programado', width: 105 },
-    { field: 'entregada', headerName: 'Entregado', width: 98 },
-    { field: 'pendiente', headerName: 'Pendiente', width: 95 },
-  )
+    {
+      field: 'entregada',
+      headerName: 'Entregado total',
+      width: 120,
+      cellStyle: { color: '#16a34a', fontWeight: 'bold' },
+      headerTooltip: 'Total entregado en todas las entregas de esta venta',
+    },
+    {
+      field: 'pendiente',
+      headerName: 'Pendiente',
+      width: 95,
+      cellStyle: (params) =>
+        Number(params.value) > 0
+          ? { color: '#d97706', fontWeight: 'bold' }
+          : { color: '#94a3b8', fontWeight: 'normal' },
+    },
+  ]
 
   const prevQuantities = new Map<string, number>()
   if (mostrarRecibido && ultimaEdicion) {
