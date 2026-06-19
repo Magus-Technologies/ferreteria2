@@ -241,23 +241,28 @@ export default function TableDetalleEntrega() {
         const programadoAcumulado = acumulado?.programado ?? 0
         const estaEntrega = Number(detalleActual?.cantidad_entregada ?? 0)
 
-        // Use UDV data (udv_cantidad − cantidad_pendiente) when:
-        //   • entrega is confirmed ('en') — backend ran syncLegacy and the
-        //     pendiente is authoritative (0 when fully delivered, > 0 when partial).
-        //   • entrega is still pending BUT cantidad_pendiente > 0 — means the
-        //     venta was edited after a prior confirmation; pendiente is correct.
-        // Fall back to acumuladosPorUdv only for fresh 'pe' deliveries where
-        // cantidad_pendiente = 0 (set at creation by EntregaService.aplicar),
-        // because there 0 would be misleading — nothing has been confirmed yet.
+        // Mirror the ticket PDF logic (EntregaNuevaPdfService):
+        //   • Confirmed ('en'): delivery is physically complete → pendiente = 0,
+        //     entregado = exactly what this delivery had (entrega_detalle.cantidad).
+        //   • Pending, post-edit (cantidad_pendiente > 0): venta was edited after
+        //     a prior confirmation; use UDV authoritative pendiente directly.
+        //   • Fresh pending (cantidad_pendiente = 0): use acumuladosPorUdv, because
+        //     EntregaService.aplicar sets pendiente to 0 at creation before confirm.
         const udvCantidadPendiente = Number(producto.cantidadPendiente ?? 0)
         const esConfirmada = (entregaSeleccionada as any)?.estado_entrega === 'en'
-        const useUdvData = esConfirmada || udvCantidadPendiente > 0
-        const pendiente = useUdvData
-          ? udvCantidadPendiente
-          : Math.max(0, total - entregadoAcumulado)
-        const entregado = useUdvData
-          ? Math.max(0, total - udvCantidadPendiente)
-          : entregadoAcumulado
+
+        let pendiente: number
+        let entregado: number
+        if (esConfirmada) {
+          entregado = estaEntrega
+          pendiente = 0
+        } else if (udvCantidadPendiente > 0) {
+          pendiente = udvCantidadPendiente
+          entregado = Math.max(0, total - udvCantidadPendiente)
+        } else {
+          entregado = entregadoAcumulado
+          pendiente = Math.max(0, total - entregadoAcumulado)
+        }
 
         return {
           producto: producto.producto,

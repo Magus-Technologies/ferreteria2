@@ -54,27 +54,27 @@ export default function ReporteVentasPage() {
     hasta: dayjs().endOf('month').format('YYYY-MM-DD'),
   })
 
+  const effectiveAlmacenId = almacen_id ?? 1
+
   // Query: resumen mensual para el gráfico (agrupado por mes)
   const { data: resumenData, isLoading: loadingGrafico } = useQuery({
-    queryKey: [QueryKeys.GANANCIAS_RESUMEN, almacen_id, dashDesde, dashHasta],
+    queryKey: [QueryKeys.GANANCIAS_RESUMEN, effectiveAlmacenId, dashDesde, dashHasta],
     queryFn: () => gananciasApi.getResumen({
-      almacen_id,
+      almacen_id: effectiveAlmacenId,
       desde: dashDesde,
       hasta: dashHasta,
     }),
-    enabled: !!almacen_id,
   })
 
   // Query: datos detallados para el gráfico por mes (top-level)
   const { data: detalleData, isLoading: loadingDetalle } = useQuery({
-    queryKey: [QueryKeys.GANANCIAS, almacen_id, dashDesde, dashHasta, 'grafico'],
+    queryKey: [QueryKeys.GANANCIAS, effectiveAlmacenId, dashDesde, dashHasta, 'grafico'],
     queryFn: () => gananciasApi.getGanancias({
-      almacen_id,
+      almacen_id: effectiveAlmacenId,
       desde: dashDesde,
       hasta: dashHasta,
       per_page: 10000,
     }),
-    enabled: !!almacen_id,
   })
 
   // Query: empresa para header Excel
@@ -87,7 +87,7 @@ export default function ReporteVentasPage() {
     setExportingContasis(true)
     setContasisResult(null)
     try {
-      const res = await contasisApi.getVentas({ desde: contasisDesde, hasta: contasisHasta, almacen_id })
+      const res = await contasisApi.getVentas({ desde: contasisDesde, hasta: contasisHasta, almacen_id: effectiveAlmacenId })
       const items = res.data?.data
       if (!items || items.length === 0) {
         setContasisResult({ type: 'warning', text: 'No hay comprobantes electrónicos en el rango seleccionado.' })
@@ -146,7 +146,7 @@ export default function ReporteVentasPage() {
       if (viewMode === 'ventas_credito') filtrosExtra.forma_pago = 'cr'
 
       const res = await gananciasApi.getGanancias({
-        almacen_id,
+        almacen_id: effectiveAlmacenId,
         desde: rf.desde,
         hasta: rf.hasta,
         ...filtrosExtra,
