@@ -1,13 +1,41 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Modal, Input, Select, Checkbox, Button, message, Spin } from 'antd'
+import { Modal, Input, Select, Checkbox, Button, Switch, Tag, Tooltip, message, Spin } from 'antd'
 import { DeleteOutlined } from '@ant-design/icons'
+import { useQueryClient } from '@tanstack/react-query'
 import { cargosApi, type Cargo } from '~/lib/api/catalogos'
+import { permissionsApi, type Role } from '~/lib/api/permissions'
 
 interface Position {
   x: number
   y: number
+}
+
+interface ModalState {
+  visible: boolean
+  isNew: boolean
+  codigo: string
+  descripcion: string
+  parent: string | null
+  highlight: boolean
+  staff: boolean
+  role_id: number | null
+  estado: boolean
+  users_count: number
+}
+
+const MODAL_INICIAL: ModalState = {
+  visible: false,
+  isNew: true,
+  codigo: '',
+  descripcion: '',
+  parent: null,
+  highlight: false,
+  staff: false,
+  role_id: null,
+  estado: true,
+  users_count: 0,
 }
 
 const GOLD = '#C9A227'
@@ -17,27 +45,27 @@ const GAP_X = 24
 const GAP_Y = 68
 
 export default function TabOrganigramo() {
+  const queryClient = useQueryClient()
   const [cargos, setCargos] = useState<Cargo[]>([])
+  const [roles, setRoles] = useState<Role[]>([])
   const [positions, setPositions] = useState<Record<string, Position>>({})
   const [loading, setLoading] = useState(false)
   const [dragging, setDragging] = useState<{ id: string; startX: number; startY: number } | null>(null)
   const [didDrag, setDidDrag] = useState(false)
-  const [modal, setModal] = useState<{ visible: boolean; isNew: boolean; codigo: string; descripcion: string; parent: string | null; highlight: boolean; staff: boolean }>({
-    visible: false,
-    isNew: true,
-    codigo: '',
-    descripcion: '',
-    parent: null,
-    highlight: false,
-    staff: false,
-  })
+  const [modal, setModal] = useState<ModalState>(MODAL_INICIAL)
   const canvasRef = useRef<HTMLDivElement>(null)
   const svgRef = useRef<SVGSVGElement>(null)
+
+  // Refrescar los catálogos/queries que consumen cargos (tab de Cargos, selects, etc.)
+  const invalidarQueries = () => {
+    queryClient.invalidateQueries({ queryKey: ['cargos-gestion'] })
+    queryClient.invalidateQueries({ queryKey: ['catalogos', 'cargos'] })
+  }
 
   const loadCargos = async () => {
     setLoading(true)
     try {
-      const data = await cargosApi.list()
+      const data = await cargosApi.listGestion()
       setCargos(data)
     } catch (e) {
       message.error('Error al cargar cargos')
@@ -47,9 +75,19 @@ export default function TabOrganigramo() {
     }
   }
 
-  // Cargar cargos
+  const loadRoles = async () => {
+    try {
+      const res = await permissionsApi.getRolesGestion()
+      setRoles((res.data?.data ?? []).filter((r) => r.estado !== false))
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  // Cargar cargos y roles
   useEffect(() => {
     loadCargos()
+    loadRoles()
   }, [])
 
   // Recalcular layout cuando cambien los cargos
@@ -131,7 +169,7 @@ export default function TabOrganigramo() {
   }
 
   const openNew = () => {
-    setModal({ visible: true, isNew: true, codigo: '', descripcion: '', parent: null, highlight: false, staff: false })
+    setModal({ ...MODAL_INICIAL, visible: true, isNew: true })
   }
 
   const openEdit = (codigo: string) => {
@@ -145,6 +183,9 @@ export default function TabOrganigramo() {
         parent: cargo.parent || null,
         highlight: cargo.highlight || false,
         staff: cargo.staff || false,
+        role_id: cargo.role_id ?? null,
+        estado: cargo.estado !== false,
+        users_count: cargo.users_count ?? 0,
       })
     }
   }
@@ -166,6 +207,8 @@ export default function TabOrganigramo() {
       parent: modal.parent,
       highlight: modal.highlight,
       staff: modal.staff,
+      role_id: modal.role_id ?? null,
+      estado: modal.estado,
     }
 
     setLoading(true)
@@ -178,7 +221,8 @@ export default function TabOrganigramo() {
         message.success('Cargo actualizado')
       }
       await loadCargos()
-      setModal({ visible: false, isNew: true, codigo: '', descripcion: '', parent: null, highlight: false, staff: false })
+      invalidarQueries()
+      setModal(MODAL_INICIAL)
     } catch (error) {
       message.error('Error al guardar el cargo')
       console.error(error)
@@ -188,11 +232,16 @@ export default function TabOrganigramo() {
   }
 
   const deleteNode = async () => {
+    if (modal.users_count > 0) {
+      message.warning('Este cargo está en uso por usuarios. Desactívalo en lugar de eliminarlo.')
+      return
+    }
     setLoading(true)
     try {
       await cargosApi.delete(modal.codigo)
       await loadCargos()
-      setModal({ visible: false, isNew: true, codigo: '', descripcion: '', parent: null, highlight: false, staff: false })
+      invalidarQueries()
+      setModal(MODAL_INICIAL)
       message.success('Cargo eliminado')
     } catch (error) {
       message.error('Error al eliminar el cargo')
@@ -238,6 +287,7 @@ export default function TabOrganigramo() {
         .org-node:hover { box-shadow: 0 0 0 2px ${GOLD}4d; }
         .org-node.highlight { background: ${GOLD}; color: #fff; border-color: ${GOLD}; }
         .org-node.staff { border-style: dashed; }
+        .org-node.inactive { opacity: .4; filter: grayscale(1); }
         .org-node.dragging { opacity: 0.8; cursor: grabbing; z-index: 100; box-shadow: 0 4px 16px #0002; }
         .org-footer { display: flex; gap: 14px; padding: 8px 16px 12px; font-size: 10px; color: #6b7280; flex-wrap: wrap; }
         .org-footer span { display: flex; align-items: center; gap: 5px; }
@@ -271,7 +321,7 @@ export default function TabOrganigramo() {
             return (
               <div
                 key={cargo.codigo}
-                className={`org-node ${dragging?.id === cargo.codigo ? 'dragging' : ''} ${cargo.highlight ? 'highlight' : ''} ${cargo.staff ? 'staff' : ''}`}
+                className={`org-node ${dragging?.id === cargo.codigo ? 'dragging' : ''} ${cargo.highlight ? 'highlight' : ''} ${cargo.staff ? 'staff' : ''} ${cargo.estado === false ? 'inactive' : ''}`}
                 style={{ left: pos.x, top: pos.y, width: BOX_W, height: BOX_H }}
                 onMouseDown={e => handleMouseDown(cargo.codigo, e)}
                 onClick={() => handleNodeClick(cargo.codigo)}
@@ -327,14 +377,44 @@ export default function TabOrganigramo() {
           </div>
 
           <div>
-            <label className='block text-xs text-gray-600 mb-1'>Reporta a</label>
+            <label className='block text-xs text-gray-600 mb-1'>Reporta a (cargo superior)</label>
             <Select
               allowClear
+              showSearch
+              optionFilterProp='label'
               placeholder='Selecciona el cargo superior'
+              className='w-full'
               value={modal.parent || undefined}
               onChange={v => setModal({ ...modal, parent: v || null })}
               options={cargos.filter(c => c.codigo !== modal.codigo).map(c => ({ label: c.descripcion, value: c.codigo }))}
             />
+          </div>
+
+          <div>
+            <label className='block text-xs text-gray-600 mb-1'>Rol relacionado (opcional)</label>
+            <Select
+              allowClear
+              showSearch
+              optionFilterProp='label'
+              placeholder='Sin rol relacionado'
+              className='w-full'
+              value={modal.role_id ?? undefined}
+              onChange={v => setModal({ ...modal, role_id: v ?? null })}
+              options={roles.map(r => ({ label: r.name, value: r.id }))}
+            />
+          </div>
+
+          <div className='flex items-center justify-between'>
+            <div className='flex items-center gap-2'>
+              <Switch
+                checked={modal.estado}
+                onChange={checked => setModal({ ...modal, estado: checked })}
+              />
+              <span className='text-xs text-gray-600'>{modal.estado ? 'Activo' : 'Inactivo'}</span>
+            </div>
+            {!modal.isNew && modal.users_count > 0 && (
+              <Tag color='blue'>{modal.users_count} usuario(s) con este cargo</Tag>
+            )}
           </div>
 
           <div className='flex gap-4'>
@@ -357,9 +437,17 @@ export default function TabOrganigramo() {
       {/* Botón de eliminar en modal */}
       {modal.visible && !modal.isNew && (
         <div className='flex justify-end gap-2 mt-2'>
-          <Button danger icon={<DeleteOutlined />} onClick={deleteNode}>
-            Eliminar
-          </Button>
+          {modal.users_count > 0 ? (
+            <Tooltip title='En uso por usuarios. Desactívalo en lugar de eliminar.'>
+              <Button danger icon={<DeleteOutlined />} disabled>
+                Eliminar
+              </Button>
+            </Tooltip>
+          ) : (
+            <Button danger icon={<DeleteOutlined />} onClick={deleteNode}>
+              Eliminar
+            </Button>
+          )}
         </div>
       )}
     </div>
