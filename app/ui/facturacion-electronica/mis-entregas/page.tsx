@@ -217,6 +217,10 @@ export default function MisEntregasPage() {
           hora_inicio:        (entrega as any).hora_inicio,
           hora_fin:           (entrega as any).hora_fin,
           motivo_anulacion:   (entrega as any).motivo_anulacion,
+          fecha_ejecutada:  (entrega as any).fecha_ejecutada,
+          user_entregado_id: (entrega as any).user_entregado_id,
+          userEntregado:  (entrega as any).userEntregado ?? null,
+          almacenSalida:  (entrega as any).almacenSalida ?? null,
           despachador: (entrega as any).chofer ? { name: (entrega as any).chofer?.name } : null,
           vehiculo: (entrega as any).vehiculo
             ? { name: (entrega as any).vehiculo?.name, placa: (entrega as any).vehiculo?.placa }

@@ -375,14 +375,21 @@ export default function ModalDetallesEntregaCompleto({
               </div>
             </div>
           )}
-          {entregaView.fecha_programada && (
+          {entregaView.fecha_programada ? (
             <div className="flex items-center gap-2 text-sm">
               <FaCalendarAlt className="text-slate-400 text-xs" />
               <span className="text-slate-700">
                 Programada: {dayjs(entregaView.fecha_programada).format('DD/MM/YYYY')}
               </span>
             </div>
-          )}
+          ) : entregaView.fecha_ejecutada ? (
+            <div className="flex items-center gap-2 text-sm">
+              <FaCalendarAlt className="text-slate-400 text-xs" />
+              <span className="text-slate-700">
+                Entregado: {dayjs(entregaView.fecha_ejecutada).format('DD/MM/YYYY HH:mm')}
+              </span>
+            </div>
+          ) : null}
           {(entregaView.hora_inicio || entregaView.hora_fin) && (
             <div className="flex items-center gap-2 text-sm">
               <FaClock className="text-slate-400 text-xs" />
