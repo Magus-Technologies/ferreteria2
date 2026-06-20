@@ -39,8 +39,12 @@ export default function FiltersMisRecepciones() {
   const [debouncedSearchValue] = useDebounce(searchValue, 500)
 
   const almacen_id = useStoreAlmacen(state => state.almacen_id)
+  const setAlmacenId = useStoreAlmacen(state => state.setAlmacenId)
 
   const setFiltros = useStoreFiltrosMisRecepciones(state => state.setFiltros)
+
+  // Valor centinela para "Todos los almacenes" (no se envía al backend).
+  const ALMACEN_TODOS = 0
 
   // Trigger search when debounced value changes
   useEffect(() => {
@@ -64,6 +68,7 @@ export default function FiltersMisRecepciones() {
       form={form}
       name='filtros-mis-recepciones'
       initialValues={{
+        almacen_recepcion_id: almacen_id,
         desde: dayjs().startOf('day'),
         hasta: dayjs().endOf('day'),
       }}
@@ -74,7 +79,8 @@ export default function FiltersMisRecepciones() {
       onFinish={values => {
         const { desde, hasta, almacen_recepcion_id, estado, user_id, proveedor_id, tipo_documento } = values
         const data: RecepcionAlmacenFilters = {
-          almacen_recepcion_id,
+          // "Todos" (centinela 0) => no se envía el filtro y el backend lista todas las recepciones.
+          almacen_recepcion_id: almacen_recepcion_id === ALMACEN_TODOS ? undefined : almacen_recepcion_id,
           fecha_desde: desde ? toUTCBD({ date: desde.startOf('day') }) : undefined,
           fecha_hasta: hasta ? toUTCBD({ date: hasta.endOf('day') }) : undefined,
           user_id,
@@ -104,6 +110,14 @@ export default function FiltersMisRecepciones() {
             className='w-full'
             formWithMessage={false}
             form={form}
+            afecta_store={false}
+            extraOptions={[{ value: ALMACEN_TODOS, label: 'Todos los almacenes' }]}
+            onChange={value => {
+              // Mantener sincronía con el store global solo al elegir un almacén real.
+              if (typeof value === 'number' && value !== ALMACEN_TODOS) {
+                setAlmacenId(value)
+              }
+            }}
           />
         </LabelBase>
         <LabelBase label='Desde:'>
