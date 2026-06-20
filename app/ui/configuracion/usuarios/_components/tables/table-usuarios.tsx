@@ -10,6 +10,7 @@ import { usuariosApi, Usuario } from '~/lib/api/usuarios'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import ModalUsuarioForm from '../modals/modal-usuario-form'
 import ButtonBase from '~/components/buttons/button-base'
+import {blueColors} from  '~/lib/colors'
 
 interface TableUsuariosProps {
   onUsuarioSelect: (usuario: Usuario | null) => void
@@ -170,6 +171,7 @@ export default function TableUsuarios({ onUsuarioSelect }: TableUsuariosProps) {
         columnDefs={columnDefs}
         loading={isLoading}
         domLayout='autoHeight'
+        selectionColor={blueColors[0]}
         pagination={true}
         paginationPageSize={20}
         onRowClicked={(event) => {

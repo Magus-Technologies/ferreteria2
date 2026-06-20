@@ -1,12 +1,13 @@
-'use client'
+"use client";
 
-import { useMemo } from 'react'
-import { ColDef } from 'ag-grid-community'
-import TableWithTitle from '~/components/tables/table-with-title'
-import { Usuario } from '~/lib/api/usuarios'
+import { useMemo } from "react";
+import { ColDef } from "ag-grid-community";
+import TableWithTitle from "~/components/tables/table-with-title";
+import { Usuario } from "~/lib/api/usuarios";
+import { blueColors } from "~/lib/colors";
 
 interface TableInfoUsuarioProps {
-  usuario: Usuario | null
+  usuario: Usuario | null;
 }
 
 export default function TableInfoUsuario({ usuario }: TableInfoUsuarioProps) {
@@ -14,140 +15,145 @@ export default function TableInfoUsuario({ usuario }: TableInfoUsuarioProps) {
   const columnDefs = useMemo<ColDef[]>(
     () => [
       {
-        headerName: 'Tipo Doc',
-        field: 'tipo_documento',
+        headerName: "Tipo Doc",
+        field: "tipo_documento",
         width: 100,
       },
       {
-        headerName: 'Nro Documento',
-        field: 'numero_documento',
+        headerName: "Nro Documento",
+        field: "numero_documento",
         width: 120,
       },
       {
-        headerName: 'Teléfono',
-        field: 'telefono',
+        headerName: "Teléfono",
+        field: "telefono",
         width: 110,
       },
       {
-        headerName: 'Celular',
-        field: 'celular',
+        headerName: "Celular",
+        field: "celular",
         width: 110,
       },
       {
-        headerName: 'Género',
-        field: 'genero',
+        headerName: "Género",
+        field: "genero",
         width: 100,
         valueFormatter: (params) => {
-          if (!params.value) return '-'
-          return params.value === 'M' ? 'Masculino' : params.value === 'F' ? 'Femenino' : 'Otro'
+          if (!params.value) return "-";
+          return params.value === "M"
+            ? "Masculino"
+            : params.value === "F"
+              ? "Femenino"
+              : "Otro";
         },
       },
       {
-        headerName: 'Estado Civil',
-        field: 'estado_civil',
+        headerName: "Estado Civil",
+        field: "estado_civil",
         width: 120,
       },
       {
-        headerName: 'Email Corporativo',
-        field: 'email_corporativo',
+        headerName: "Email Corporativo",
+        field: "email_corporativo",
         flex: 1,
         minWidth: 200,
       },
       {
-        headerName: 'Dirección 1',
-        field: 'direccion_linea1',
+        headerName: "Dirección 1",
+        field: "direccion_linea1",
         flex: 1,
         minWidth: 150,
       },
       {
-        headerName: 'Dirección 2',
-        field: 'direccion_linea2',
+        headerName: "Dirección 2",
+        field: "direccion_linea2",
         flex: 1,
         minWidth: 150,
       },
       {
-        headerName: 'Ciudad',
-        field: 'ciudad',
+        headerName: "Ciudad",
+        field: "ciudad",
         width: 120,
       },
       {
-        headerName: 'Nacionalidad',
-        field: 'nacionalidad',
+        headerName: "Nacionalidad",
+        field: "nacionalidad",
         width: 120,
       },
       {
-        headerName: 'Fecha Nacimiento',
-        field: 'fecha_nacimiento',
+        headerName: "Fecha Nacimiento",
+        field: "fecha_nacimiento",
         width: 140,
         valueFormatter: (params) => {
-          if (!params.value) return '-'
-          return new Date(params.value).toLocaleDateString('es-PE')
+          if (!params.value) return "-";
+          return new Date(params.value).toLocaleDateString("es-PE");
         },
       },
       {
-        headerName: 'Rol Sistema',
-        field: 'rol_sistema',
+        headerName: "Rol Sistema",
+        field: "rol_sistema",
         width: 140,
         // El rol real viene de la relación roles[]; rol_sistema (legacy) es null
         // para roles personalizados.
         valueGetter: (params: any) =>
-          params.data?.roles?.[0]?.name || params.data?.rol_sistema || '-',
+          params.data?.roles?.[0]?.name || params.data?.rol_sistema || "-",
       },
       {
-        headerName: 'Cargo',
-        field: 'cargo',
+        headerName: "Cargo",
+        field: "cargo",
         width: 180,
       },
       {
-        headerName: 'Fecha Inicio',
-        field: 'fecha_inicio',
+        headerName: "Fecha Inicio",
+        field: "fecha_inicio",
         width: 120,
         valueFormatter: (params) => {
-          if (!params.value) return '-'
-          return new Date(params.value).toLocaleDateString('es-PE')
+          if (!params.value) return "-";
+          return new Date(params.value).toLocaleDateString("es-PE");
         },
       },
       {
-        headerName: 'Fecha Baja',
-        field: 'fecha_baja',
+        headerName: "Fecha Baja",
+        field: "fecha_baja",
         width: 120,
         valueFormatter: (params) => {
-          if (!params.value) return '-'
-          return new Date(params.value).toLocaleDateString('es-PE')
+          if (!params.value) return "-";
+          return new Date(params.value).toLocaleDateString("es-PE");
         },
       },
       {
-        headerName: 'Vacaciones',
-        field: 'vacaciones_dias',
+        headerName: "Vacaciones",
+        field: "vacaciones_dias",
         width: 110,
         valueFormatter: (params) => {
-          if (!params.value) return '-'
-          return `${params.value} días`
+          if (!params.value) return "-";
+          return `${params.value} días`;
         },
       },
       {
-        headerName: 'Sueldo',
-        field: 'sueldo_boleta',
+        headerName: "Sueldo",
+        field: "sueldo_boleta",
         width: 120,
         valueFormatter: (params) => {
-          if (!params.value) return '-'
-          return `S/ ${Number(params.value).toFixed(2)}`
+          if (!params.value) return "-";
+          return `S/ ${Number(params.value).toFixed(2)}`;
         },
       },
     ],
-    []
-  )
+    [],
+  );
 
   return (
     <div>
       <TableWithTitle
-        id='configuracion-info-usuario'
-        title='Información Completa del Usuario'
+        id="configuracion-info-usuario"
+        title="Información Completa del Usuario"
         rowData={usuario ? [usuario] : []}
+        selectionColor={blueColors[0]}
         columnDefs={columnDefs}
-        domLayout='autoHeight'
+        domLayout="autoHeight"
         pagination={false}
       />
     </div>
-  )
+  );
 }
