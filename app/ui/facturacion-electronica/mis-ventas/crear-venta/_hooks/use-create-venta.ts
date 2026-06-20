@@ -602,14 +602,15 @@ export default function useCreateVenta({
             const productosVenta = ventaCreada.productos_por_almacen || []
             const unidadesDerivadas: any[] = []
 
-            // Iterar por índice: cantidades_parciales y las unidades de la respuesta
-            // están en el mismo orden (se generan desde los mismos productos del formulario)
-            let parcialIdx = 0
+            // Lookup by unidad_derivada_id (stable) instead of position.
+            // Position-based broke when products were deleted from the UI table.
+            const parcialPorUdvId = new Map(
+              (cantidades_parciales ?? []).map((p: any) => [p.unidad_derivada_id, p])
+            )
             productosVenta.forEach((productoAlmacen: any) => {
               if (productoAlmacen.unidades_derivadas) {
                 productoAlmacen.unidades_derivadas.forEach((unidad: any) => {
-                  const parcial = cantidades_parciales[parcialIdx]
-                  parcialIdx++
+                  const parcial = parcialPorUdvId.get(unidad.id)
                   if (parcial && parcial.entregar > 0) {
                     unidadesDerivadas.push({
                       unidad_derivada_venta_id: unidad.id,
@@ -665,12 +666,10 @@ export default function useCreateVenta({
                 if (parcial_resto_programado && (parcial_resto_programado.despachador_id || parcial_resto_programado.cargo_destino)) {
                   const unidadesDerivadas2: any[] = []
 
-                  let parcialIdx2 = 0
                   productosVenta.forEach((productoAlmacen: any) => {
                     if (productoAlmacen.unidades_derivadas) {
                       productoAlmacen.unidades_derivadas.forEach((unidad: any) => {
-                        const parcial = cantidades_parciales[parcialIdx2]
-                        parcialIdx2++
+                        const parcial = parcialPorUdvId.get(unidad.id)
                         const programar = parcial?.entregar_programado ?? 0
                         if (parcial && programar > 0) {
                           unidadesDerivadas2.push({

@@ -151,8 +151,10 @@ function ModalDetallesEntregaInner({
     if (!open) return
     if (resolvedMode.kind === 'actualizar-entrega' && forzarProgramarRestoOn) {
       setProgramarResto(true)
+    } else if (resolvedMode.kind === 'crear-entrega-resto') {
+      setProgramarResto(true)
     } else {
-      setProgramarResto(resolvedMode.kind !== 'actualizar-entrega')
+      setProgramarResto(false)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, resolvedMode.kind, forzarProgramarRestoOn])
@@ -556,6 +558,10 @@ function ModalDetallesEntregaInner({
           : 0
         const pendiente = Math.max(0, total - entregadoYa)
         const esProductoNuevoEnEdicion = !!ventaIdParaConsulta && !datosBd
+        // Venta nueva (!ventaIdParaConsulta): entregar todo ahora por defecto.
+        // Editar-venta + producto nuevo: ídem.
+        // Editar-venta + producto existente: programar el resto por defecto.
+        const debeEntregarAhora = esProductoNuevoEnEdicion || !ventaIdParaConsulta
         return {
           id: index + 1,
           producto: p.producto_name,
@@ -563,14 +569,8 @@ function ModalDetallesEntregaInner({
           total,
           entregado: entregadoYa,
           pendiente,
-          // En editar-venta, si el producto se agregó recién y no existía en el
-          // snapshot de la venta, se asume que todo su pendiente va "a entregar
-          // ahora". El usuario puede bajarlo manualmente si quiere programar
-          // una parte para después.
-          entregar: esProductoNuevoEnEdicion ? pendiente : 0,
-          // En venta nueva y en productos ya existentes mantenemos el
-          // comportamiento histórico: el pendiente arranca como programado.
-          entregar_programado: esProductoNuevoEnEdicion ? 0 : pendiente,
+          entregar: debeEntregarAhora ? pendiente : 0,
+          entregar_programado: debeEntregarAhora ? 0 : pendiente,
           unidad_derivada_venta_id: p.unidad_derivada_id,
         }
       })
