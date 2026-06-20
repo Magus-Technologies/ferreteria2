@@ -90,8 +90,8 @@ export default function FormCrearCotizacion({
       {/* Fila 1: Fecha Proforma, Vendedor, N° Cotización, Moneda */}
       <div className="flex gap-6">
         {/* Fecha de la cotización (REQUERIDO) - Se usa como fecha y fecha_proforma */}
-        <LabelBase label="Fecha Proforma:" classNames={{ labelParent: "mb-6" }}>
-          <ConfigurableElement componentId="field-fecha-cotizacion" label="Campo Fecha Proforma">
+        <LabelBase label="Fecha Cotización:" classNames={{ labelParent: "mb-6" }}>
+          <ConfigurableElement componentId="field-fecha-cotizacion" label="Campo Fecha Cotización">
             <DatePickerBase
               propsForm={{
                 name: "fecha",

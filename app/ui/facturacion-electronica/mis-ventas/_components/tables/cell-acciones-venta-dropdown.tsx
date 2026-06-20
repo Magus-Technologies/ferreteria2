@@ -274,18 +274,18 @@ export default function CellAccionesVentaDropdown(
       label: <span className="flex items-center gap-2"><FaHistory className="text-slate-600" /> Historial</span>,
       onClick: () => setHistorialOpen(true),
     },
-    {
-      key: 'ver-entregas',
-      label: <span className="flex items-center gap-2"><FaTruck className="text-blue-600" /> Ver Entregas</span>,
-      onClick: () => setVerEntregasOpen(true),
-    },
-    ...(tieneRestante
-      ? [{
-          key: 'entregar',
-          label: <span className="flex items-center gap-2"><FaPlusCircle className="text-purple-600" /> Entregar</span>,
-          onClick: () => setEntregarVentaOpen(true),
-        } as const]
-      : []),
+    // {
+    //   key: 'ver-entregas',
+    //   label: <span className="flex items-center gap-2"><FaTruck className="text-blue-600" /> Ver Entregas</span>,
+    //   onClick: () => setVerEntregasOpen(true),
+    // },
+    // ...(tieneRestante
+    //   ? [{
+    //       key: 'entregar',
+    //       label: <span className="flex items-center gap-2"><FaPlusCircle className="text-purple-600" /> Entregar</span>,
+    //       onClick: () => setEntregarVentaOpen(true),
+    //     } as const]
+    //   : []),
     {
       key: 'nota-credito',
       label: <span className="flex items-center gap-2"><FaClipboardList className="text-rose-600" /> Crear Nota de Crédito</span>,

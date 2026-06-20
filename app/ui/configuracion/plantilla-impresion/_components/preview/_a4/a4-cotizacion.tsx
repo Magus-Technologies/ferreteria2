@@ -35,7 +35,7 @@ export default function A4Cotizacion({ ctx }: { ctx: PreviewContext }) {
               <td style={{ width: "30%", verticalAlign: "middle" }}>
                 <div style={{ border: `${e.border_px}px solid ${e.color_tema}`, borderRadius: 10, overflow: "hidden" }}>
                   <div style={{ ...bloqueACSS(b.caja_ruc), padding: 4 }}>R.U.C. {ruc}</div>
-                  <div style={{ ...bloqueACSS(b.caja_tipo), background: e.color_tema, padding: 4 }}>Proforma</div>
+                  <div style={{ ...bloqueACSS(b.caja_tipo), background: e.color_tema, padding: 4 }}>COTIZACION</div>
                   <div style={{ ...bloqueACSS(b.caja_numero), padding: 4 }}>COT-00000123</div>
                 </div>
               </td>

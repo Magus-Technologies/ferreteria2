@@ -55,7 +55,7 @@ export default function TicketCotizacion({ ctx }: { ctx: PreviewContext }) {
 
           {/* Tipo y número */}
           <div style={{ marginBottom: 6 }}>
-            <div style={{ ...bloqueACSS(b.caja_tipo), textAlign: "center" }}>PROFORMA ELECTRÓNICA</div>
+            <div style={{ ...bloqueACSS(b.caja_tipo), textAlign: "center" }}>COTIZACION</div>
             <div style={{ ...bloqueACSS(b.caja_numero), textAlign: "center" }}>COT-00000123</div>
           </div>
 
