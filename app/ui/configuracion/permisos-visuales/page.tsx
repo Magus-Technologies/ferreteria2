@@ -93,27 +93,93 @@ export default function PermisosVisualesPage() {
   const aceptarMutation = useMutation({
     mutationFn: async ({ estado, tipo_autorizador, autorizador_id, cargo_autorizador }: AceptarData) => {
       if (!rolId || !itemSeleccionado) throw new Error('Datos incompletos');
-      // Visibilidad: solo 'oculto' restringe; los demás lo dejan visible.
-      await permissionsApi.toggleRestriction(rolId, itemSeleccionado.permission, estado !== 'oculto');
-      // Autorización: solo el estado 'autorizacion' la requiere.
-      await autorizacionesApi.saveConfig({
-        role_id: rolId,
-        modulo: itemSeleccionado.permission,
-        accion: 'acceso',
-        requiere_autorizacion: estado === 'autorizacion',
-        tipo_autorizador,
-        autorizador_id,
-        cargo_autorizador,
-      });
+      // Visibilidad y autorización son independientes → en paralelo para reducir latencia
+      // a la mitad (antes eran dos await secuenciales).
+      await Promise.all([
+        // Visibilidad: solo 'oculto' restringe; los demás lo dejan visible.
+        permissionsApi.toggleRestriction(rolId, itemSeleccionado.permission, estado !== 'oculto'),
+        // Autorización: solo el estado 'autorizacion' la requiere.
+        autorizacionesApi.saveConfig({
+          role_id: rolId,
+          modulo: itemSeleccionado.permission,
+          accion: 'acceso',
+          requiere_autorizacion: estado === 'autorizacion',
+          tipo_autorizador,
+          autorizador_id,
+          cargo_autorizador,
+        }),
+      ]);
     },
-    onSuccess: () => {
+    // Optimista: refleja bloqueo/desbloqueo/autorización al instante en las tarjetas y en
+    // la vista en vivo, sin esperar la red ni el refetch. La red corre en segundo plano.
+    onMutate: async ({ estado, tipo_autorizador, autorizador_id, cargo_autorizador }: AceptarData) => {
+      if (!rolId || !itemSeleccionado) return;
+      const permission = itemSeleccionado.permission;
+      const rolesKey = ['roles'] as const;
+      const configsKey = autorizacionesKeys.configs(rolId ?? undefined);
+
+      await Promise.all([
+        queryClient.cancelQueries({ queryKey: rolesKey }),
+        queryClient.cancelQueries({ queryKey: configsKey }),
+      ]);
+
+      const prevRoles = queryClient.getQueryData(rolesKey);
+      const prevConfigs = queryClient.getQueryData(configsKey);
+
+      const ocultar = estado === 'oculto';
+      const requiereAuth = estado === 'autorizacion';
+
+      // --- cache de roles (restricciones de visibilidad) ---
+      queryClient.setQueryData(rolesKey, (old: any) => {
+        if (!old) return old;
+        const mapRole = (r: any) => {
+          if (r?.id !== rolId) return r;
+          const restrictions = Array.isArray(r.restrictions) ? r.restrictions : [];
+          const sinEste = restrictions.filter((x: any) => x?.name !== permission);
+          return { ...r, restrictions: ocultar ? [...sinEste, { name: permission }] : sinEste };
+        };
+        // Soporta las formas { data: Role[] } y { data: { data: Role[] } }.
+        if (Array.isArray(old?.data?.data)) return { ...old, data: { ...old.data, data: old.data.data.map(mapRole) } };
+        if (Array.isArray(old?.data)) return { ...old, data: old.data.map(mapRole) };
+        if (Array.isArray(old)) return old.map(mapRole);
+        return old;
+      });
+
+      // --- cache de configs (requiere_autorizacion para accion 'acceso') ---
+      queryClient.setQueryData(configsKey, (old: any) => {
+        if (!old) return old;
+        const upsert = (arr: any[]) => {
+          const idx = arr.findIndex((c) => c?.modulo === permission && c?.accion === 'acceso');
+          if (idx >= 0) {
+            const next = arr.slice();
+            next[idx] = { ...next[idx], requiere_autorizacion: requiereAuth, tipo_autorizador, autorizador_id, cargo_autorizador };
+            return next;
+          }
+          // No existía config previa: crear una sintética para marcar/desmarcar al instante.
+          return [...arr, { id: -Date.now(), role_id: rolId, modulo: permission, accion: 'acceso', requiere_autorizacion: requiereAuth, tipo_autorizador, autorizador_id, cargo_autorizador }];
+        };
+        if (Array.isArray(old?.data?.data)) return { ...old, data: { ...old.data, data: upsert(old.data.data) } };
+        if (Array.isArray(old?.data)) return { ...old, data: upsert(old.data) };
+        if (Array.isArray(old)) return upsert(old);
+        return old;
+      });
+
+      // Cierre inmediato del modal para que se sienta instantáneo.
       setModalVisible(false);
       setItemSeleccionado(null);
+
+      return { prevRoles, prevConfigs };
+    },
+    onError: (error: any, _vars, context: any) => {
+      // Revertir el cambio optimista si la red falla.
+      if (context?.prevRoles !== undefined) queryClient.setQueryData(['roles'], context.prevRoles);
+      if (context?.prevConfigs !== undefined) queryClient.setQueryData(autorizacionesKeys.configs(rolId ?? undefined), context.prevConfigs);
+      console.error(error?.message || 'Error al guardar');
+    },
+    onSettled: () => {
+      // Reconciliar con el servidor en segundo plano (no bloquea la UI).
       queryClient.invalidateQueries({ queryKey: ['roles'] });
       queryClient.invalidateQueries({ queryKey: autorizacionesKeys.configs(rolId ?? undefined) });
-    },
-    onError: (error: any) => {
-      console.error(error?.message || 'Error al guardar');
     },
   });
 
