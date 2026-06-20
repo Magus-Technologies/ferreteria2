@@ -191,6 +191,7 @@ const MODULE_TO_QUERY_KEYS: Record<string, string[]> = {
   choferes: [QueryKeys.CHOFERES],
   'facturacion-electronica': [QueryKeys.VENTAS, QueryKeys.CONFIGURACION, 'sunat-alertas-pendientes'],
   autorizaciones: ['autorizaciones'],
+  'configuracion-entrega': ['configuracion-entrega'],
   'prestamos-vendedores': ['solicitudes-efectivo-pendientes'],
   'requerimientos-internos': [
     QueryKeys.ORDENES_DE_SERVICIO,
