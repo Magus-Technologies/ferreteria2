@@ -1,23 +1,24 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   App,
-  Button,
   Checkbox,
   Form,
   Input,
   Modal,
   Popconfirm,
   Select,
-  Spin,
   Switch,
-  Table,
   Tag,
   Tooltip,
 } from 'antd'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { FaPlus, FaEdit, FaTrash, FaSitemap } from 'react-icons/fa'
+import { FaPlus, FaEdit, FaTrash } from 'react-icons/fa'
+import { ColDef } from 'ag-grid-community'
+import TableWithTitle from '~/components/tables/table-with-title'
+import ButtonBase from '~/components/buttons/button-base'
+import { blueColors } from '~/lib/colors'
 import { cargosApi, type Cargo } from '~/lib/api/catalogos'
 import { permissionsApi } from '~/lib/api/permissions'
 
@@ -139,128 +140,138 @@ export default function TabCargos() {
   }
 
   const descripcionPorCodigo = (codigo?: string | null) =>
-    codigo ? cargos.find(c => c.codigo === codigo)?.descripcion || codigo : '—'
+    codigo ? cargos.find((c) => c.codigo === codigo)?.descripcion || codigo : '—'
 
-  const columns = [
-    {
-      title: 'Cargo',
-      dataIndex: 'descripcion',
-      key: 'descripcion',
-      render: (d: string, c: Cargo) => (
-        <span className={`font-medium ${c.estado === false ? 'text-gray-400 line-through' : ''}`}>
-          {d} {c.staff && <Tag color="purple" className="!ml-1 !text-[10px]">staff</Tag>}
-        </span>
-      ),
-    },
-    {
-      title: 'Código',
-      dataIndex: 'codigo',
-      key: 'codigo',
-      render: (c: string) => <span className="text-xs text-gray-500">{c}</span>,
-    },
-    {
-      title: 'Reporta a',
-      dataIndex: 'parent',
-      key: 'parent',
-      render: (p: string | null) => <span className="text-sm text-gray-600">{descripcionPorCodigo(p)}</span>,
-    },
-    {
-      title: 'Rol',
-      key: 'role',
-      render: (_: unknown, c: Cargo) =>
-        c.role ? <Tag color="purple">{c.role.name}</Tag> : <span className="text-gray-300 text-xs">—</span>,
-    },
-    {
-      title: 'Usuarios',
-      dataIndex: 'users_count',
-      key: 'users_count',
-      width: 90,
-      align: 'center' as const,
-      render: (n: number = 0) => <Tag color={n > 0 ? 'blue' : 'default'}>{n}</Tag>,
-    },
-    {
-      title: 'Estado',
-      key: 'estado',
-      width: 90,
-      align: 'center' as const,
-      render: (_: unknown, c: Cargo) => (
-        <Switch
-          size="small"
-          checked={c.estado !== false}
-          disabled={toggleMutation.isPending}
-          onChange={(checked) => toggleMutation.mutate({ codigo: c.codigo, estado: checked })}
-        />
-      ),
-    },
-    {
-      title: 'Acciones',
-      key: 'acciones',
-      width: 110,
-      align: 'center' as const,
-      render: (_: unknown, c: Cargo) => {
-        const enUso = (c.users_count ?? 0) > 0
-        return (
-          <div className="flex items-center justify-center gap-2">
-            <Tooltip title="Editar">
-              <button
-                onClick={() => abrirEditar(c)}
-                className="text-blue-500 hover:text-blue-700 p-1.5 rounded hover:bg-blue-50"
-              >
-                <FaEdit size={14} />
-              </button>
-            </Tooltip>
-            {enUso ? (
-              <Tooltip title="En uso por usuarios. Desactívalo en lugar de eliminar.">
-                <span className="text-gray-300 p-1.5 cursor-not-allowed">
-                  <FaTrash size={14} />
-                </span>
-              </Tooltip>
-            ) : (
-              <Popconfirm
-                title="¿Eliminar este cargo?"
-                description="Esta acción no se puede deshacer"
-                okText="Sí, eliminar"
-                cancelText="Cancelar"
-                onConfirm={() => eliminarMutation.mutate(c.codigo)}
-              >
-                <Tooltip title="Eliminar">
-                  <button className="text-red-400 hover:text-red-600 p-1.5 rounded hover:bg-red-50">
-                    <FaTrash size={14} />
-                  </button>
-                </Tooltip>
-              </Popconfirm>
-            )}
+  const columnDefs = useMemo<ColDef<Cargo>[]>(
+    () => [
+      {
+        headerName: 'Estado',
+        field: 'estado',
+        width: 100,
+        cellRenderer: (params: { data: Cargo }) => (
+          <div className='flex items-center h-full'>
+            <Switch
+              size='small'
+              checked={params.data.estado !== false}
+              disabled={toggleMutation.isPending}
+              onChange={(checked) => toggleMutation.mutate({ codigo: params.data.codigo, estado: checked })}
+            />
           </div>
-        )
+        ),
       },
-    },
-  ]
+      {
+        headerName: 'Nombre del cargo (código)',
+        field: 'codigo',
+        width: 200,
+        filter: 'agTextColumnFilter',
+        valueGetter: (params) => params.data?.codigo || '-',
+      },
+      {
+        headerName: 'Descripción',
+        field: 'descripcion',
+        flex: 1,
+        minWidth: 200,
+        filter: 'agTextColumnFilter',
+        cellRenderer: (params: { data: Cargo }) => {
+          const c = params.data
+          return (
+            <span className={`font-medium ${c.estado === false ? 'text-gray-400 line-through' : ''}`}>
+              {c.descripcion}
+              {c.staff && <Tag color='purple' className='!ml-1 !text-[10px]'>staff</Tag>}
+            </span>
+          )
+        },
+      },
+      {
+        headerName: 'Reporta a (cargo superior)',
+        field: 'parent',
+        width: 200,
+        valueGetter: (params) => descripcionPorCodigo(params.data?.parent),
+      },
+      {
+        headerName: 'Rol relacionado (opcional)',
+        field: 'role',
+        width: 180,
+        cellRenderer: (params: { data: Cargo }) =>
+          params.data.role ? (
+            <Tag color='purple'>{params.data.role.name}</Tag>
+          ) : (
+            <span className='text-gray-300 text-xs'>—</span>
+          ),
+      },
+      {
+        headerName: 'Usuarios',
+        field: 'users_count',
+        width: 110,
+        cellRenderer: (params: { data: Cargo }) => {
+          const n = params.data.users_count ?? 0
+          return <Tag color={n > 0 ? 'blue' : 'default'}>{n}</Tag>
+        },
+      },
+      {
+        headerName: 'Acciones',
+        width: 140,
+        pinned: 'right',
+        sortable: false,
+        filter: false,
+        cellRenderer: (params: { data: Cargo }) => {
+          const c = params.data
+          const enUso = (c.users_count ?? 0) > 0
+          return (
+            <div className='flex gap-2 items-center h-full'>
+              <ButtonBase size='sm' color='warning' onClick={() => abrirEditar(c)}>
+                <FaEdit />
+              </ButtonBase>
+              {enUso ? (
+                <Tooltip title='En uso por usuarios. Desactívalo en lugar de eliminar.'>
+                  <ButtonBase size='sm' color='danger' disabled>
+                    <FaTrash />
+                  </ButtonBase>
+                </Tooltip>
+              ) : (
+                <Popconfirm
+                  title='¿Eliminar este cargo?'
+                  description='Esta acción no se puede deshacer'
+                  okText='Sí, eliminar'
+                  cancelText='Cancelar'
+                  okButtonProps={{ danger: true }}
+                  onConfirm={() => eliminarMutation.mutate(c.codigo)}
+                >
+                  <ButtonBase size='sm' color='danger'>
+                    <FaTrash />
+                  </ButtonBase>
+                </Popconfirm>
+              )}
+            </div>
+          )
+        },
+      },
+    ],
+    [cargos, toggleMutation, eliminarMutation]
+  )
 
   return (
-    <div className="mt-4 space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-gray-600">
-          <FaSitemap className="text-yellow-600" />
-          <span className="font-semibold">Cargos ocupacionales (organigrama)</span>
-          <Tag color="blue">{cargos.length} total</Tag>
-        </div>
-        <Button type="primary" icon={<FaPlus />} onClick={abrirCrear}>
+    <div className='mt-4 space-y-4'>
+      <div className='flex justify-end'>
+        <ButtonBase color='success' size='md' onClick={abrirCrear} className='flex items-center gap-2'>
+          <FaPlus />
           Nuevo Cargo
-        </Button>
+        </ButtonBase>
       </div>
 
-      {isLoading ? (
-        <div className="flex justify-center py-12"><Spin size="large" /></div>
-      ) : (
-        <Table
-          rowKey="codigo"
-          dataSource={cargos}
-          columns={columns}
-          size="small"
-          pagination={false}
-          rowClassName={(c) => (c.estado === false ? 'opacity-60' : '')}
-        />
-      )}
+      <TableWithTitle
+        id='configuracion-cargos'
+        title='Cargos ocupacionales (organigrama)'
+        extraTitle={<Tag color='blue'>{cargos.length} total</Tag>}
+        rowData={cargos}
+        columnDefs={columnDefs}
+        loading={isLoading}
+        domLayout='autoHeight'
+        selectionColor={blueColors[0]}
+        pagination={true}
+        paginationPageSize={20}
+        getRowId={(params) => params.data.codigo}
+      />
 
       <Modal
         title={editando ? 'Editar Cargo' : 'Nuevo Cargo'}
@@ -268,57 +279,57 @@ export default function TabCargos() {
         onCancel={cerrarModal}
         onOk={() => form.submit()}
         okText={editando ? 'Guardar' : 'Crear'}
-        cancelText="Cancelar"
+        cancelText='Cancelar'
         confirmLoading={guardarMutation.isPending}
         destroyOnHidden
       >
         <Form
           form={form}
-          layout="vertical"
+          layout='vertical'
           onFinish={(values) => guardarMutation.mutate(values)}
-          className="mt-4"
+          className='mt-4'
         >
           <Form.Item
-            label="Nombre del cargo (código)"
-            name="codigo"
+            label='Nombre del cargo (código)'
+            name='codigo'
             rules={[{ required: true, message: 'El código es requerido' }]}
             normalize={(v) => (typeof v === 'string' ? v.toUpperCase() : v)}
-            extra="Ej: GERENTE COMERCIAL, ALMACENERO"
+            extra='Ej: GERENTE COMERCIAL, ALMACENERO'
           >
-            <Input placeholder="GERENTE COMERCIAL" />
+            <Input placeholder='GERENTE COMERCIAL' />
           </Form.Item>
           <Form.Item
-            label="Descripción"
-            name="descripcion"
+            label='Descripción'
+            name='descripcion'
             rules={[{ required: true, message: 'La descripción es requerida' }]}
           >
-            <Input placeholder="Descripción del cargo" />
+            <Input placeholder='Descripción del cargo' />
           </Form.Item>
-          <Form.Item label="Reporta a (cargo superior)" name="parent">
+          <Form.Item label='Reporta a (cargo superior)' name='parent'>
             <Select
               allowClear
               showSearch
-              optionFilterProp="label"
-              placeholder="Sin superior (raíz)"
+              optionFilterProp='label'
+              placeholder='Sin superior (raíz)'
               options={cargos
                 .filter((c) => c.codigo !== editando?.codigo)
                 .map((c) => ({ value: c.codigo, label: c.descripcion }))}
             />
           </Form.Item>
           <Form.Item
-            label="Rol relacionado (opcional)"
-            name="role_id"
-            extra="Relaciona este cargo con un rol del sistema (referencia)."
+            label='Rol relacionado (opcional)'
+            name='role_id'
+            extra='Relaciona este cargo con un rol del sistema (referencia).'
           >
             <Select
               allowClear
               showSearch
-              optionFilterProp="label"
-              placeholder="Sin rol relacionado"
+              optionFilterProp='label'
+              placeholder='Sin rol relacionado'
               options={roles.map((r) => ({ value: r.id, label: r.name }))}
             />
           </Form.Item>
-          <Form.Item name="staff" valuePropName="checked">
+          <Form.Item name='staff' valuePropName='checked'>
             <Checkbox>Cargo staff (asesor, fuera de la línea jerárquica)</Checkbox>
           </Form.Item>
         </Form>
