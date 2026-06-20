@@ -8,9 +8,9 @@ import TituloModulos from '~/app/_components/others/titulo-modulos'
 import ButtonBase from '~/components/buttons/button-base'
 import ModalUsuarioForm from './_components/modals/modal-usuario-form'
 import { Usuario } from '~/lib/api/usuarios'
-import TabVehiculos from '../registros/_components/tabs/tab-vehiculos'
 import TabRoles from './_components/tabs/tab-roles'
 import TabCargos from './_components/tabs/tab-cargos'
+import TabVehiculos from './_components/tabs/tab-vehiculos'
 
 // Lazy loading de componentes pesados
 const TableUsuarios = lazy(() => import('./_components/tables/table-usuarios'))
@@ -26,6 +26,7 @@ const ComponentLoading = () => (
 export default function UsuariosPage() {
   const [openModal, setOpenModal] = useState(false)
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState<Usuario | null>(null)
+  const [tabActiva, setTabActiva] = useState('usuarios')
 
   const handleUsuarioSelect = (usuario: Usuario | null) => {
     setUsuarioSeleccionado(usuario)
@@ -38,19 +39,23 @@ export default function UsuariosPage() {
           title='Gestión de Usuarios'
           icon={<FaUsers className='text-blue-600' />}
         >
-          <ButtonBase
-            color='success'
-            size='md'
-            onClick={() => setOpenModal(true)}
-            className='flex items-center gap-2'
-          >
-            <FaUserPlus />
-            Crear Usuario
-          </ButtonBase>
+          {tabActiva === 'usuarios' && (
+            <ButtonBase
+              color='success'
+              size='md'
+              onClick={() => setOpenModal(true)}
+              className='flex items-center gap-2'
+            >
+              <FaUserPlus />
+              Crear Usuario
+            </ButtonBase>
+          )}
         </TituloModulos>
 
         <Tabs
           defaultActiveKey='usuarios'
+          activeKey={tabActiva}
+          onChange={setTabActiva}
           className='mt-2'
           items={[
             {
