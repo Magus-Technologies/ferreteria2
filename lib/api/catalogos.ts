@@ -462,6 +462,8 @@ export interface Cargo {
   parent?: string | null;
   highlight?: boolean;
   staff?: boolean;
+  /** Si es false, el cargo no se dibuja en el organigrama (sigue siendo asignable). */
+  visible_organigrama?: boolean;
   estado?: boolean;
   users_count?: number;
   /** Rol del sistema relacionado (opcional). */

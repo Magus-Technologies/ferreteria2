@@ -20,6 +20,7 @@ interface ModalState {
   parent: string | null
   highlight: boolean
   staff: boolean
+  visible_organigrama: boolean
   role_id: number | null
   estado: boolean
   users_count: number
@@ -33,6 +34,7 @@ const MODAL_INICIAL: ModalState = {
   parent: null,
   highlight: false,
   staff: false,
+  visible_organigrama: true,
   role_id: null,
   estado: true,
   users_count: 0,
@@ -98,16 +100,23 @@ export default function TabOrganigramo() {
   }, [cargos])
 
   const buildLayout = () => {
+    // Solo se dibujan los cargos marcados como visibles en el organigrama.
+    // Los ocultos no reciben posición, por lo que renderLines y el render de
+    // nodos (que dependen de positions[codigo]) los omiten automáticamente.
+    const visibles = cargos.filter(c => c.visible_organigrama !== false)
+
     const byId: Record<string, Cargo & { children: (Cargo & { children: any[] })[] }> = {}
-    cargos.forEach(c => {
+    visibles.forEach(c => {
       byId[c.codigo] = { ...c, children: [] }
     })
 
     const roots: (Cargo & { children: any[] })[] = []
-    cargos.forEach(c => {
+    visibles.forEach(c => {
       if (c.staff) return
-      if (!c.parent) roots.push(byId[c.codigo])
-      else if (byId[c.parent]) byId[c.parent].children.push(byId[c.codigo])
+      // Si el padre está oculto (no está en byId) el hijo pasa a ser raíz para
+      // que no desaparezca junto con el padre.
+      if (!c.parent || !byId[c.parent]) roots.push(byId[c.codigo])
+      else byId[c.parent].children.push(byId[c.codigo])
     })
 
     const newPositions: Record<string, Position> = {}
@@ -127,8 +136,8 @@ export default function TabOrganigramo() {
 
     layout(roots, 20, 20, 800)
 
-    // Staff nodes
-    cargos.filter(c => c.staff && c.parent).forEach(c => {
+    // Staff nodes (solo visibles)
+    visibles.filter(c => c.staff && c.parent).forEach(c => {
       const p = newPositions[c.parent!]
       if (p) newPositions[c.codigo] = { x: p.x + BOX_W + 50, y: p.y }
     })
@@ -183,6 +192,7 @@ export default function TabOrganigramo() {
         parent: cargo.parent || null,
         highlight: cargo.highlight || false,
         staff: cargo.staff || false,
+        visible_organigrama: cargo.visible_organigrama !== false,
         role_id: cargo.role_id ?? null,
         estado: cargo.estado !== false,
         users_count: cargo.users_count ?? 0,
@@ -207,6 +217,7 @@ export default function TabOrganigramo() {
       parent: modal.parent,
       highlight: modal.highlight,
       staff: modal.staff,
+      visible_organigrama: modal.visible_organigrama,
       role_id: modal.role_id ?? null,
       estado: modal.estado,
     }
@@ -430,6 +441,19 @@ export default function TabOrganigramo() {
             >
               Cargo staff
             </Checkbox>
+          </div>
+
+          <div className='rounded border border-slate-200 bg-slate-50 px-3 py-2'>
+            <Checkbox
+              checked={modal.visible_organigrama}
+              onChange={e => setModal({ ...modal, visible_organigrama: e.target.checked })}
+            >
+              Mostrar en organigrama
+            </Checkbox>
+            <div className='text-[11px] text-gray-500 mt-1'>
+              Si lo desmarcas, el cargo no se dibuja en el organigrama pero sigue
+              siendo asignable a usuarios y visible en el tab de Cargos.
+            </div>
           </div>
         </div>
       </Modal>
