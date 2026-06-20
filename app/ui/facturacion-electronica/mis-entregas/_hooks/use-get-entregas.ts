@@ -127,16 +127,17 @@ export default function useGetEntregas() {
   const { user } = useAuth()
 
   const esDespachador = user?.rol_sistema === 'DESPACHADOR'
+  const esAdmin = user?.rol_sistema === 'ADMINISTRADOR'
 
   const { data, isFetching, error, refetch } = useQuery({
-    queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, filtros, user?.id, esDespachador],
+    queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, filtros, user?.id, esAdmin],
     queryFn: async () => {
       const response = await entregasNuevasApi.listar({
         fecha_desde:  filtros.fecha_desde?.format('YYYY-MM-DD'),
         fecha_hasta:  filtros.fecha_hasta?.format('YYYY-MM-DD'),
         estado:       filtros.estado_entrega?.length ? filtros.estado_entrega : undefined,
         tipo_entrega: filtros.tipo_entrega as string | undefined,
-        chofer_id:    esDespachador ? user?.id : undefined,
+        chofer_id:    esAdmin ? undefined : user?.id,
         search:       filtros.search,
       })
 
