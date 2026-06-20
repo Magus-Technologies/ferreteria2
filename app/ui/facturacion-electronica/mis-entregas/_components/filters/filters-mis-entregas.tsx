@@ -1,6 +1,7 @@
 'use client'
 
-import { Form, Switch } from 'antd'
+import { Form, Switch, Button } from 'antd'
+import { SettingOutlined } from '@ant-design/icons'
 import { FaSearch, FaTruck } from 'react-icons/fa'
 import FilterDateRangeFields from '~/app/_components/filters/filter-date-range-fields'
 import InputBase from '~/app/_components/form/inputs/input-base'
@@ -27,6 +28,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import type { TipoDespacho, TipoEntrega } from '~/lib/api/entrega-producto'
+import ModalConfigRolesEntrega from '../modals/modal-config-roles-entrega'
 
 interface ValuesFiltersMisEntregas {
   fecha_desde?: dayjs.Dayjs
@@ -121,6 +123,7 @@ export default function FiltersMisEntregas() {
 
   const [searchValue, setSearchValue] = useState('')
   const [debouncedSearch] = useDebounce(searchValue, 500)
+  const [configModalOpen, setConfigModalOpen] = useState(false)
  
   useEffect(() => {
     form.submit()
@@ -163,15 +166,32 @@ export default function FiltersMisEntregas() {
       onFinish={handleFinish}
     >
       <div className="flex items-center justify-between">
-        <TituloModulos
-          title="Mis Entregas"
-          icon={<FaTruck className="text-amber-600" />}
-        />
+        <div className="flex items-center gap-2">
+          <TituloModulos
+            title="Mis Entregas"
+            icon={<FaTruck className="text-amber-600" />}
+          />
+          {esAdmin && (
+            <Button
+              type="text"
+              icon={<SettingOutlined />}
+              size="small"
+              onClick={() => setConfigModalOpen(true)}
+              title="Configurar roles de entrega en tienda"
+              className="text-gray-500 hover:text-amber-600"
+            />
+          )}
+        </div>
         {/* Botón de notificaciones para despachadores */}
         {esDespachador && (
           <NotificationPermissionButton showLabel size="small" />
         )}
       </div>
+
+      <ModalConfigRolesEntrega
+        open={configModalOpen}
+        onClose={() => setConfigModalOpen(false)}
+      />
 
       {/* Filtros Desktop */}
       <div className="mt-4">

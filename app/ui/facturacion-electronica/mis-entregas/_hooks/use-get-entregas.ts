@@ -3,6 +3,7 @@ import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useStoreFiltrosMisEntregas } from '../_store/store-filtros-mis-entregas'
 import { useAuth } from '~/lib/auth-context'
 import { entregasNuevasApi, type EntregaNueva } from '~/lib/api/entregas'
+import { configuracionEntregaApi } from '~/lib/api/configuracion-entrega'
 
 /**
  * Map EntregaNueva (new entrega table) → shape compatible with TableMisEntregas
@@ -129,16 +130,26 @@ export default function useGetEntregas() {
   const esDespachador = user?.rol_sistema === 'DESPACHADOR'
   const esAdmin = user?.rol_sistema === 'ADMINISTRADOR'
 
+  const { data: configData } = useQuery({
+    queryKey: ['configuracion-entrega'],
+    queryFn: () => configuracionEntregaApi.get(),
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const rolesEntregaTienda: string[] = (configData?.data as any)?.roles_entrega_tienda ?? ['ALMACENERO']
+  const puedeVerRecojoTienda = !esAdmin && rolesEntregaTienda.includes(user?.rol_sistema ?? '')
+
   const { data, isFetching, error, refetch } = useQuery({
-    queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, filtros, user?.id, esAdmin],
+    queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, filtros, user?.id, esAdmin, puedeVerRecojoTienda],
     queryFn: async () => {
       const response = await entregasNuevasApi.listar({
-        fecha_desde:  filtros.fecha_desde?.format('YYYY-MM-DD'),
-        fecha_hasta:  filtros.fecha_hasta?.format('YYYY-MM-DD'),
-        estado:       filtros.estado_entrega?.length ? filtros.estado_entrega : undefined,
-        tipo_entrega: filtros.tipo_entrega as string | undefined,
-        chofer_id:    esAdmin ? undefined : user?.id,
-        search:       filtros.search,
+        fecha_desde:           filtros.fecha_desde?.format('YYYY-MM-DD'),
+        fecha_hasta:           filtros.fecha_hasta?.format('YYYY-MM-DD'),
+        estado:                filtros.estado_entrega?.length ? filtros.estado_entrega : undefined,
+        tipo_entrega:          filtros.tipo_entrega as string | undefined,
+        chofer_id:             esAdmin ? undefined : user?.id,
+        incluir_recojo_tienda: puedeVerRecojoTienda ? true : undefined,
+        search:                filtros.search,
       })
 
       // apiRequest wraps the body as { data: body }, and Laravel resource
