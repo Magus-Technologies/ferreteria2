@@ -4,7 +4,7 @@ import { bloqueACSS } from "~/lib/api/plantilla-impresion"
 import type { PreviewContext } from "../_shared/types"
 
 export default function TicketCobroVenta({ ctx }: { ctx: PreviewContext }) {
-  const { e, b, logoUrl, fontFaceCss, containerStyle } = ctx
+  const { e, m, b, logoUrl, fontFaceCss, containerStyle } = ctx
 
   const sep = <div style={{ borderTop: `${e.border_thin_px}px dashed ${e.color_borde}`, margin: "4px 0" }} />
   const sepDouble = <div style={{ borderTop: `2px solid ${e.color_borde}`, margin: "4px 0" }} />
@@ -27,7 +27,7 @@ export default function TicketCobroVenta({ ctx }: { ctx: PreviewContext }) {
         <div style={{ width: 280, margin: "0 auto" }}>
           {/* Solo logo */}
           <div style={{ textAlign: "center", marginBottom: 4 }}>
-            {logoUrl && (
+            {logoUrl && !m.ocultar_logo && (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={logoUrl} alt="logo" style={{ maxWidth: "100%", height: 80, objectFit: "contain" }} />
             )}

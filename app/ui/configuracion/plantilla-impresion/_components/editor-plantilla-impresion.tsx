@@ -374,6 +374,7 @@ export default function EditorPlantillaImpresion({
           <BloquePdfEditor
             bloque={bloque}
             comprobante={comprobante}
+            formato={formato}
             despedida={despedida}
             mensajes={mensajesExtra}
             estilosSecciones={estilosSecciones}
@@ -452,6 +453,7 @@ export default function EditorPlantillaImpresion({
 interface BloquePdfEditorProps {
   bloque: (typeof BLOQUES_PDF)[number];
   comprobante?: string;
+  formato?: "A4" | "Ticket";
   despedida: SeccionEstado;
   mensajes: MensajesExtraPlantilla;
   estilosSecciones: EstilosSecciones;
@@ -466,6 +468,7 @@ interface BloquePdfEditorProps {
 function BloquePdfEditor({
   bloque,
   comprobante,
+  formato,
   despedida,
   mensajes,
   estilosSecciones,
@@ -482,6 +485,20 @@ function BloquePdfEditor({
       <div className="rounded border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
         {bloque.ejemplo}
       </div>
+
+      {bloque.key === "empresa" && formato === "Ticket" && (
+        <div className="rounded border border-amber-200 bg-amber-50 px-3 py-3 flex flex-col gap-1">
+          <ToggleRow
+            label="Mostrar logo de la empresa en el ticket"
+            checked={!mensajes.ocultar_logo}
+            onChange={(v) => onMensajesChange({ ocultar_logo: !v })}
+          />
+          <div className="text-[11px] text-slate-500">
+            Si lo desactivas, este ticket se imprime sin el logo (solo afecta al
+            formato Ticket de este comprobante).
+          </div>
+        </div>
+      )}
 
       {bloque.key === "observaciones" && (
         <div className="grid grid-cols-1 gap-4">
