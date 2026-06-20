@@ -14,6 +14,8 @@ interface SelectAlmacenProps extends SelectBaseProps {
   afecta_store?: boolean
   /** IDs de almacenes que no deben aparecer como opción */
   excludeIds?: (number | undefined)[]
+  /** Opciones extra a anteponer al listado (ej. una opción "Todos"). */
+  extraOptions?: { value: number; label: string }[]
 }
 
 export default function SelectAlmacen({
@@ -25,6 +27,7 @@ export default function SelectAlmacen({
   size = 'large',
   afecta_store = true,
   excludeIds = [],
+  extraOptions = [],
   onChange,
   ...props
 }: SelectAlmacenProps) {
@@ -56,12 +59,15 @@ export default function SelectAlmacen({
       placeholder={placeholder}
       className={className}
       size={size}
-      options={data
-        ?.filter(item => !excludeIds.includes(item.id))
-        .map(item => ({
-          value: item.id,
-          label: item.name,
-        }))}
+      options={[
+        ...extraOptions,
+        ...(data
+          ?.filter(item => !excludeIds.includes(item.id))
+          .map(item => ({
+            value: item.id,
+            label: item.name,
+          })) ?? []),
+      ]}
       onChange={value => {
         if (afecta_store) setAlmacenId(value)
         onChange?.(value)
