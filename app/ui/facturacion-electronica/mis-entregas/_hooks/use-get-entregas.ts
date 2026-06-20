@@ -73,8 +73,9 @@ export function mapToEntregaDB(e: EntregaNueva): any {
       }],
     } : null,
 
-    // Chofer / vehiculo
-    chofer:   e.chofer_name ? { name: e.chofer_name } : undefined,
+    // Chofer / vehiculo / usuario que entregó
+    chofer:         e.chofer_name ? { name: e.chofer_name } : undefined,
+    userEntregado:  (e as any).user_entregado_name ? { name: (e as any).user_entregado_name } : undefined,
     vehiculo: e.vehiculo_placa
       ? { placa: e.vehiculo_placa, name: (e as any).vehiculo_name }
       : undefined,
