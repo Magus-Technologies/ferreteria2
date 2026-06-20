@@ -45,15 +45,22 @@ export default function FiltersMisEntregas() {
   const esDespachador = user?.rol_sistema === 'DESPACHADOR'
   const esAdmin = user?.rol_sistema === 'ADMINISTRADOR'
 
-  // Sync the form UI once when user loads: non-admin defaults to ['pe']
+  // Initialize estado filter once when user loads.
+  // Non-admin: default to ['pe'] (pending only). Admin: no filter (all).
+  // After this, the user can freely clear or change the filter.
   const defaultApplied = useRef(false)
   useEffect(() => {
     if (!user || defaultApplied.current) return
     defaultApplied.current = true
     if (!esAdmin) {
       form.setFieldsValue({ estado_entrega: ['pe'] })
+      setFiltros({
+        fecha_desde: dayjs().startOf('day'),
+        fecha_hasta: dayjs().endOf('day'),
+        estado_entrega: ['pe'],
+      })
     }
-  }, [user, esAdmin, form])
+  }, [user, esAdmin, form, setFiltros])
   const entregaSeleccionada = useStoreEntregaSeleccionada((s) => s.entrega)
   const triggerAccion = useStoreEntregaSeleccionada((s) => s.triggerAccion)
   const openUpdateModal = useStoreEntregaSeleccionada((s) => s.openUpdateModal)
