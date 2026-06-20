@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Modal, Input, Select, Checkbox, Button, Switch, Tag, Tooltip, message, Spin } from 'antd'
-import { DeleteOutlined } from '@ant-design/icons'
+import { Modal, Input, Select, Checkbox, Button, Switch, Tag, Tooltip, message, Spin, Empty } from 'antd'
+import { DeleteOutlined, EyeOutlined, EditOutlined } from '@ant-design/icons'
 import { useQueryClient } from '@tanstack/react-query'
 import { cargosApi, type Cargo } from '~/lib/api/catalogos'
 import { permissionsApi, type Role } from '~/lib/api/permissions'
@@ -55,6 +55,7 @@ export default function TabOrganigramo() {
   const [dragging, setDragging] = useState<{ id: string; startX: number; startY: number } | null>(null)
   const [didDrag, setDidDrag] = useState(false)
   const [modal, setModal] = useState<ModalState>(MODAL_INICIAL)
+  const [ocultosVisible, setOcultosVisible] = useState(false)
   const canvasRef = useRef<HTMLDivElement>(null)
   const svgRef = useRef<SVGSVGElement>(null)
 
@@ -262,6 +263,39 @@ export default function TabOrganigramo() {
     }
   }
 
+  // Cargos ocultos del organigrama: no se dibujan en el canvas, por lo que
+  // se gestionan desde el modal de "Ocultos".
+  const ocultos = cargos.filter(c => c.visible_organigrama === false)
+
+  const mostrarEnOrganigrama = async (cargo: Cargo) => {
+    setLoading(true)
+    try {
+      await cargosApi.update(cargo.codigo, {
+        codigo: cargo.codigo,
+        descripcion: cargo.descripcion,
+        parent: cargo.parent ?? null,
+        highlight: cargo.highlight ?? false,
+        staff: cargo.staff ?? false,
+        visible_organigrama: true,
+        role_id: cargo.role_id ?? null,
+        estado: cargo.estado !== false,
+      })
+      await loadCargos()
+      invalidarQueries()
+      message.success(`"${cargo.descripcion}" se volvió a mostrar en el organigrama`)
+    } catch (error) {
+      message.error('Error al mostrar el cargo en el organigrama')
+      console.error(error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const editarOculto = (codigo: string) => {
+    setOcultosVisible(false)
+    openEdit(codigo)
+  }
+
   const handleMouseDown = (codigo: string, e: React.MouseEvent) => {
     if (e.button !== 0) return
     const pos = positions[codigo]
@@ -312,12 +346,25 @@ export default function TabOrganigramo() {
           <div className='w-2 h-2 rounded-full bg-yellow-600' />
           Organigrama empresarial
         </div>
-        <button
-          onClick={openNew}
-          className='bg-yellow-600 text-white border-0 rounded-lg px-3 py-1.5 text-xs font-semibold cursor-pointer flex items-center gap-1 hover:opacity-85'
-        >
-          + Nuevo cargo
-        </button>
+        <div className='flex items-center gap-2'>
+          <button
+            onClick={() => setOcultosVisible(true)}
+            className='bg-white text-gray-600 border border-gray-300 rounded-lg px-3 py-1.5 text-xs font-semibold cursor-pointer flex items-center gap-1 hover:bg-gray-50'
+          >
+            <EyeOutlined /> Ocultos
+            {ocultos.length > 0 && (
+              <span className='inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-yellow-600 text-white text-[10px] leading-none'>
+                {ocultos.length}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={openNew}
+            className='bg-yellow-600 text-white border-0 rounded-lg px-3 py-1.5 text-xs font-semibold cursor-pointer flex items-center gap-1 hover:opacity-85'
+          >
+            + Nuevo cargo
+          </button>
+        </div>
       </div>
 
       <div className='org-hint'>Haz clic para editar · Arrastra para mover</div>
@@ -456,6 +503,53 @@ export default function TabOrganigramo() {
             </div>
           </div>
         </div>
+      </Modal>
+
+      {/* Modal de cargos ocultos */}
+      <Modal
+        title='Cargos ocultos del organigrama'
+        open={ocultosVisible}
+        onCancel={() => setOcultosVisible(false)}
+        footer={null}
+      >
+        {ocultos.length === 0 ? (
+          <Empty description='No hay cargos ocultos' image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        ) : (
+          <div className='space-y-2'>
+            <div className='text-[12px] text-gray-500 mb-2'>
+              Estos cargos no se dibujan en el organigrama. Pulsa
+              {' '}<EyeOutlined />{' '}para volver a mostrarlos.
+            </div>
+            {ocultos.map(cargo => (
+              <div
+                key={cargo.codigo}
+                className='flex items-center justify-between gap-2 rounded border border-slate-200 px-3 py-2'
+              >
+                <div className='min-w-0'>
+                  <div className='text-sm font-medium text-gray-800 truncate'>{cargo.descripcion}</div>
+                  <div className='text-[11px] text-gray-400 truncate'>{cargo.codigo}</div>
+                </div>
+                <div className='flex items-center gap-1 shrink-0'>
+                  <Button
+                    size='small'
+                    icon={<EditOutlined />}
+                    onClick={() => editarOculto(cargo.codigo)}
+                  >
+                    Editar
+                  </Button>
+                  <Button
+                    type='primary'
+                    size='small'
+                    icon={<EyeOutlined />}
+                    onClick={() => mostrarEnOrganigrama(cargo)}
+                  >
+                    Mostrar
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </Modal>
 
       {/* Botón de eliminar en modal */}
