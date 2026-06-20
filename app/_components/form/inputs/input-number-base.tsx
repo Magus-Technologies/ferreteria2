@@ -66,7 +66,10 @@ export default function InputNumberBase({
   nextWithPrevent = true,
   controls = false,
   onKeyUp,
-  autoComplete = 'off',
+  // "one-time-code": Chrome ignora "off" para autofill de tarjetas (Google Pay)
+  // y los campos numericos son los mas propensos a clasificarse como cc-number.
+  // Un proposito explicito anula la heuristica del navegador.
+  autoComplete = 'one-time-code',
   variant = 'filled',
   formWithMessage = true,
   className = '!w-full',
