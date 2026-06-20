@@ -129,21 +129,15 @@ export default function useGetEntregas() {
   const esDespachador = user?.rol_sistema === 'DESPACHADOR'
   const esAdmin = user?.rol_sistema === 'ADMINISTRADOR'
 
-  // When no explicit estado filter is set, non-admin roles default to ['pe']
-  // so they only see pending deliveries. Admins see all by default.
-  const estadoEfectivo = filtros.estado_entrega?.length
-    ? filtros.estado_entrega
-    : (esAdmin ? undefined : ['pe'])
-
   const { data, isFetching, error, refetch } = useQuery({
-    queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, filtros, user?.id, esDespachador, esAdmin],
+    queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, filtros, user?.id, esAdmin],
     queryFn: async () => {
       const response = await entregasNuevasApi.listar({
         fecha_desde:  filtros.fecha_desde?.format('YYYY-MM-DD'),
         fecha_hasta:  filtros.fecha_hasta?.format('YYYY-MM-DD'),
-        estado:       estadoEfectivo,
+        estado:       filtros.estado_entrega?.length ? filtros.estado_entrega : undefined,
         tipo_entrega: filtros.tipo_entrega as string | undefined,
-        chofer_id:    esDespachador ? user?.id : undefined,
+        chofer_id:    esAdmin ? undefined : user?.id,
         search:       filtros.search,
       })
 
