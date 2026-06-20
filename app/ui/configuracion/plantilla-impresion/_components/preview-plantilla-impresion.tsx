@@ -16,6 +16,7 @@ import TicketPrestamo from "./preview/_ticket/ticket-prestamo"
 import TicketRequerimientoCompra from "./preview/_ticket/ticket-requerimiento-compra"
 import TicketRequerimientoServicio from "./preview/_ticket/ticket-requerimiento-servicio"
 import TicketRecepcionAlmacen from "./preview/_ticket/ticket-recepcion-almacen"
+import TicketRecojo from "./preview/_ticket/ticket-recojo"
 import TicketTransferenciaStock from "./preview/_ticket/ticket-transferencia-stock"
 import TicketValeCompra from "./preview/_ticket/ticket-vale-compra"
 import TicketValeGenerado from "./preview/_ticket/ticket-vale-generado"
@@ -31,6 +32,7 @@ import A4Prestamo from "./preview/_a4/a4-prestamo"
 import A4RequerimientoCompra from "./preview/_a4/a4-requerimiento-compra"
 import A4RequerimientoServicio from "./preview/_a4/a4-requerimiento-servicio"
 import A4RecepcionAlmacen from "./preview/_a4/a4-recepcion-almacen"
+import A4Recojo from "./preview/_a4/a4-recojo"
 import A4TransferenciaStock from "./preview/_a4/a4-transferencia-stock"
 import A4Venta from "./preview/_a4/a4-venta"
 import type { PreviewProps } from "./preview/_shared/types"
@@ -54,6 +56,7 @@ export default function PreviewPlantillaImpresion(props: PreviewProps) {
     if (props.comprobante === "cobro-venta") return <TicketCobroVenta ctx={ctx} />
     if (props.comprobante === "cotizacion") return <TicketCotizacion ctx={ctx} />
     if (props.comprobante === "entrega") return <TicketEntrega ctx={ctx} />
+    if (props.comprobante === "recojo") return <TicketRecojo ctx={ctx} />
     if (props.comprobante === "guia") return <TicketGuia ctx={ctx} />
     if (props.comprobante === "nota-credito") return <TicketNotaCredito ctx={ctx} />
     if (props.comprobante === "nota-debito") return <TicketNotaDebito ctx={ctx} />
@@ -72,6 +75,7 @@ export default function PreviewPlantillaImpresion(props: PreviewProps) {
 
   if (props.comprobante === "cotizacion") return <A4Cotizacion ctx={ctx} />
   if (props.comprobante === "entrega") return <A4Entrega ctx={ctx} />
+  if (props.comprobante === "recojo") return <A4Recojo ctx={ctx} />
   if (props.comprobante === "guia") return <A4Guia ctx={ctx} />
   if (props.comprobante === "nota-credito") return <A4NotaCredito ctx={ctx} />
   if (props.comprobante === "nota-debito") return <A4NotaDebito ctx={ctx} />

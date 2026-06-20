@@ -8,7 +8,8 @@ export function tituloComprobante(comprobante?: string): { titulo: string; numer
     case "compra":                 return { titulo: "COMPRA", numero: "COM-00000045" }
     case "guia":                   return { titulo: "GUÍA DE REMISIÓN REMITENTE\nELECTRÓNICA", numero: "T001-00000087" }
     case "orden-compra":           return { titulo: "ORDEN DE COMPRA", numero: "OC-00000056" }
-    case "entrega":                return { titulo: "ENTREGA DE PRODUCTOS", numero: "EN-00000128" }
+    case "entrega":                return { titulo: "TICKET DE ENTREGA", numero: "EN-00000128" }
+    case "recojo":                 return { titulo: "VALE DE RECOJO", numero: "EN-00000128" }
     case "ingreso-salida":         return { titulo: "INGRESO / SALIDA", numero: "IS-00000034" }
     case "nota-credito":           return { titulo: "NOTA DE CRÉDITO", numero: "BC01-00000012" }
     case "nota-debito":            return { titulo: "NOTA DE DÉBITO", numero: "BD01-00000007" }

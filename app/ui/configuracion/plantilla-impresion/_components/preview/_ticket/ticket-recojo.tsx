@@ -3,7 +3,7 @@
 import { bloqueACSS } from "~/lib/api/plantilla-impresion"
 import type { PreviewContext } from "../_shared/types"
 
-export default function TicketEntrega({ ctx }: { ctx: PreviewContext }) {
+export default function TicketRecojo({ ctx }: { ctx: PreviewContext }) {
   const { e, m, b, razonSocial, direccion, email, ruc, celular, logoUrl, fontFaceCss, containerStyle } = ctx
 
   const sep = <div style={{ borderTop: `${e.border_thin_px}px dashed ${e.color_borde}`, margin: "6px 0" }} />
@@ -36,7 +36,7 @@ export default function TicketEntrega({ ctx }: { ctx: PreviewContext }) {
           {sep}
 
           <div style={{ marginBottom: 6 }}>
-            <div style={{ ...bloqueACSS(b.caja_tipo), textAlign: "center" }}>TICKET DE ENTREGA</div>
+            <div style={{ ...bloqueACSS(b.caja_tipo), textAlign: "center" }}>VALE DE RECOJO</div>
             <div style={{ ...bloqueACSS(b.caja_numero), textAlign: "center" }}>Venta: B001-00000327</div>
           </div>
 
@@ -50,7 +50,7 @@ export default function TicketEntrega({ ctx }: { ctx: PreviewContext }) {
                   <div style={bloqueACSS(b.entrega_info_valor)}>19/05/2026</div>
                   <div style={{ height: 4 }} />
                   <div style={bloqueACSS(b.entrega_info_label)}>TIPO ENTREGA:</div>
-                  <div style={bloqueACSS(b.entrega_info_valor)}>Despacho a Domicilio</div>
+                  <div style={bloqueACSS(b.entrega_info_valor)}>Recojo en Tienda</div>
                   <div style={{ height: 4 }} />
                   <div style={bloqueACSS(b.entrega_info_label)}>DESPACHADOR:</div>
                   <div style={bloqueACSS(b.entrega_info_valor)}>BRYZA CARRION</div>

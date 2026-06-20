@@ -13,6 +13,7 @@ const COMPROBANTES = [
   { key: "guia", label: "Guía", formats: ["A4", "Ticket"] },
   { key: "orden-compra", label: "Orden de compra", formats: ["A4", "Ticket"] },
   { key: "entrega", label: "Entrega", formats: ["A4", "Ticket"] },
+  { key: "recojo", label: "Recojo", formats: ["A4", "Ticket"] },
   { key: "ingreso-salida", label: "Ingreso / Salida", formats: ["A4", "Ticket"] },
   { key: "nota-credito", label: "Nota de crédito", formats: ["A4", "Ticket"] },
   { key: "nota-debito", label: "Nota de débito", formats: ["A4", "Ticket"] },

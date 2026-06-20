@@ -37,7 +37,7 @@ function FilaEntrega({
   )
 }
 
-export default function A4Entrega({ ctx }: { ctx: PreviewContext }) {
+export default function A4Recojo({ ctx }: { ctx: PreviewContext }) {
   const { e, m, b, razonSocial, direccion, email, ruc, celular, logoUrl, fontFaceCss, containerStyle } = ctx
 
   return (
@@ -67,7 +67,7 @@ export default function A4Entrega({ ctx }: { ctx: PreviewContext }) {
               <td style={{ width: "30%", verticalAlign: "middle" }}>
                 <div style={{ border: `${e.border_px}px solid ${e.color_tema}`, borderRadius: 10, overflow: "hidden" }}>
                   <div style={{ ...bloqueACSS(b.caja_ruc), padding: 4 }}>R.U.C. {ruc}</div>
-                  <div style={{ ...bloqueACSS(b.caja_tipo), background: e.color_tema, padding: 4 }}>TICKET DE ENTREGA</div>
+                  <div style={{ ...bloqueACSS(b.caja_tipo), background: e.color_tema, padding: 4 }}>VALE DE RECOJO</div>
                   <div style={{ ...bloqueACSS(b.caja_numero), padding: 4 }}>B001-00000327</div>
                 </div>
               </td>
@@ -87,7 +87,7 @@ export default function A4Entrega({ ctx }: { ctx: PreviewContext }) {
         <table className="w-full mb-2" style={{ borderCollapse: "collapse", border: `${e.border_thin_px}px solid ${e.color_borde}`, borderTop: "0" }}>
           <tbody>
             <FilaEntrega e={e} b={b} izq={["F. ENTREGA", "19/05/2026 16:30"]} der={["ALMACEN", "ALMACEN PRINCIPAL"]} />
-            <FilaEntrega e={e} b={b} izq={["TIPO ENTREGA", "Despacho a Domicilio"]} der={["DESPACHADOR", "BRYZA CARRION"]} />
+            <FilaEntrega e={e} b={b} izq={["TIPO ENTREGA", "Recojo en Tienda"]} der={["DESPACHADOR", "BRYZA CARRION"]} />
             <FilaEntrega e={e} b={b} izq={["TIPO DESPACHO", "Programado"]} der={["ESTADO", "PENDIENTE"]} />
           </tbody>
         </table>

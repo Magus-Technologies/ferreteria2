@@ -117,6 +117,14 @@ const BLOQUES_EXTRA_POR_COMPROBANTE: Record<string, Array<{
       estilos: ["entrega_info_label", "entrega_info_valor"],
     },
   ],
+  recojo: [
+    {
+      key: "entrega_info",
+      label: "Bloque - Datos de la entrega",
+      ejemplo: "F. ENTREGA, TIPO ENTREGA, DESPACHADOR, TIPO DESPACHO, HORARIO, ESTADO",
+      estilos: ["entrega_info_label", "entrega_info_valor"],
+    },
+  ],
 };
 
 /**
@@ -148,6 +156,11 @@ const BLOQUES_POR_COMPROBANTE: Record<string, { A4: string[]; Ticket: string[] }
   },
   entrega: {
     // Entrega: sin totales (no hay precios), sin pie ni consulta.
+    A4: ["empresa", "documento", "cliente", "productos", "observaciones"],
+    Ticket: ["empresa", "documento", "cliente", "productos", "observaciones"],
+  },
+  recojo: {
+    // Recojo: mismos bloques que Entrega (sin totales, pie ni consulta).
     A4: ["empresa", "documento", "cliente", "productos", "observaciones"],
     Ticket: ["empresa", "documento", "cliente", "productos", "observaciones"],
   },
