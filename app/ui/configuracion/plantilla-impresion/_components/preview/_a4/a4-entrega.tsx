@@ -117,6 +117,16 @@ export default function A4Entrega({ ctx }: { ctx: PreviewContext }) {
           </tbody>
         </table>
 
+        {/* Total items */}
+        <table className="w-full" style={{ borderCollapse: "collapse", border: `${e.border_px}px solid ${e.color_borde}`, borderTop: "0" }}>
+          <tbody>
+            <tr>
+              <td style={{ ...bloqueACSS(b.total_label), width: "85%", padding: e.pad_px + 2, textAlign: "right" }}>TOTAL ITEMS</td>
+              <td style={{ ...bloqueACSS(b.total_valor), width: "15%", padding: e.pad_px + 2, textAlign: "right" }}>1</td>
+            </tr>
+          </tbody>
+        </table>
+
         {/* Observaciones */}
         <div style={{ marginTop: 8, border: `${e.border_thin_px}px solid ${e.color_borde}`, borderRadius: 6, padding: 6 }}>
           <div style={{ ...bloqueACSS(b.obs_label), marginBottom: 4 }}>{m.label_observaciones}</div>
