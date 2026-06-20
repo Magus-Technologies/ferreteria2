@@ -263,6 +263,7 @@ export interface FiltrosListarEntregas {
   vehiculo_ids?: number[]
   solo_programadas?: boolean
   search?: string
+  incluir_recojo_tienda?: boolean
 }
 
 export interface FiltrosResumenVentas {
@@ -298,6 +299,7 @@ export const entregasNuevasApi = {
     }
     if (filtros.solo_programadas !== undefined) p.set('solo_programadas', filtros.solo_programadas ? '1' : '0')
     if (filtros.search)       p.set('search', filtros.search)
+    if (filtros.incluir_recojo_tienda) p.set('incluir_recojo_tienda', '1')
     const qs = p.toString()
     return apiRequest(`/entregas${qs ? `?${qs}` : ''}`, { method: 'GET' })
   },
