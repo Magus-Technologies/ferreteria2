@@ -21,6 +21,34 @@ function CellStockReservado({ value }: { value: boolean }) {
   );
 }
 
+// Calcula el total de la cotización (precios ya incluyen IGV).
+function calcularTotalCotizacion(cotizacion: Cotizacion): number {
+  const productos = cotizacion.productos_por_almacen;
+  if (!productos) return 0;
+
+  return productos.reduce((sum, pa) => {
+    const subtotalProducto = (pa.unidades_derivadas || []).reduce((subSum, ud) => {
+      const cantidad = Number(ud.cantidad);
+      const precio = Number(ud.precio);
+      const recargo = Number(ud.recargo || 0);
+      const descuento = Number(ud.descuento || 0);
+
+      const subtotalLinea = precio * cantidad; // SIN multiplicar por factor
+      const subtotalConRecargo = subtotalLinea + recargo;
+
+      let montoLinea = subtotalConRecargo;
+      if (ud.descuento_tipo === "%") {
+        montoLinea = subtotalConRecargo - (subtotalConRecargo * descuento) / 100;
+      } else {
+        montoLinea = subtotalConRecargo - descuento;
+      }
+
+      return subSum + montoLinea;
+    }, 0);
+    return sum + subtotalProducto;
+  }, 0);
+}
+
 export function useColumnsMisCotizaciones(): ColDef<Cotizacion>[] {
   return [
     // {
@@ -97,38 +125,34 @@ export function useColumnsMisCotizaciones(): ColDef<Cotizacion>[] {
       width: 120,
     },
     {
+      colId: "igv",
+      headerName: "IGV",
+      width: 110,
+      valueGetter: (params) => {
+        const cotizacion = params.data;
+        if (!cotizacion) return 0;
+
+        // El IGV solo aplica cuando el documento del cliente es RUC (11 dígitos).
+        const documento =
+          cotizacion.cliente?.numero_documento || cotizacion.ruc_dni || "";
+        if (documento.trim().length !== 11) return 0;
+
+        // El total ya incluye IGV (18%); se desglosa la parte del impuesto.
+        const total = calcularTotalCotizacion(cotizacion);
+        return total - total / 1.18;
+      },
+      valueFormatter: (params) =>
+        params.value ? `S/. ${params.value.toFixed(2)}` : "—",
+      cellStyle: { color: "#0891b2" },
+    },
+    {
       colId: "total",
       headerName: "Total",
       width: 120,
       valueGetter: (params) => {
         const cotizacion = params.data;
-        if (!cotizacion || !cotizacion.productos_por_almacen) return 0;
-
-        const total = cotizacion.productos_por_almacen.reduce((sum, pa) => {
-          const subtotalProducto = (pa.unidades_derivadas || []).reduce((subSum, ud) => {
-            const cantidad = Number(ud.cantidad);
-            const precio = Number(ud.precio);
-            const recargo = Number(ud.recargo || 0);
-            const descuento = Number(ud.descuento || 0);
-            
-            // Calcular total de la línea (igual que en ventas)
-            const subtotalLinea = precio * cantidad; // SIN multiplicar por factor
-            const subtotalConRecargo = subtotalLinea + recargo;
-            
-            // Aplicar descuento
-            let montoLinea = subtotalConRecargo;
-            if (ud.descuento_tipo === '%') {
-              montoLinea = subtotalConRecargo - (subtotalConRecargo * descuento / 100);
-            } else {
-              montoLinea = subtotalConRecargo - descuento;
-            }
-            
-            return subSum + montoLinea;
-          }, 0);
-          return sum + subtotalProducto;
-        }, 0);
-
-        return total;
+        if (!cotizacion) return 0;
+        return calcularTotalCotizacion(cotizacion);
       },
       valueFormatter: (params) => `S/. ${params.value?.toFixed(2) || "0.00"}`,
       cellStyle: { fontWeight: "bold", color: "#059669" },

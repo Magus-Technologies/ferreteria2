@@ -17,10 +17,15 @@ export default function CardsInfoCotizacion({
   isEditing?: boolean;
 }) {
   const tipo_moneda = Form.useWatch("tipo_moneda", form);
+  const ruc_dni = Form.useWatch("ruc_dni", form) as string | undefined;
   const productos = Form.useWatch(
     "productos",
     form
   ) as FormCreateCotizacion["productos"];
+
+  // El IGV solo aplica cuando el documento del cliente es RUC (11 dígitos).
+  // Con DNI (boleta) no se desglosa IGV.
+  const esRuc = (ruc_dni ?? "").trim().length === 11;
 
   // Calcular SubTotal (suma de productos sin descuento)
   const subTotal = useMemo(
@@ -60,6 +65,12 @@ export default function CardsInfoCotizacion({
     [subTotal, totalDescuento]
   );
 
+  // IGV incluido en el total (18%). Solo se muestra cuando el cliente es RUC.
+  const igv = useMemo(
+    () => (esRuc ? total - total / 1.18 : 0),
+    [esRuc, total]
+  );
+
   return (
     <div className="flex flex-col gap-4 max-w-64">
       <ConfigurableElement
@@ -83,6 +94,19 @@ export default function CardsInfoCotizacion({
           moneda={tipo_moneda}
         />
       </ConfigurableElement>
+
+      {esRuc && (
+        <ConfigurableElement
+          componentId="crear-cotizacion.card-igv"
+          label="Card IGV"
+        >
+          <CardInfoCotizacion
+            title="IGV (18%)"
+            value={igv}
+            moneda={tipo_moneda}
+          />
+        </ConfigurableElement>
+      )}
 
       <ConfigurableElement
         componentId="crear-cotizacion.card-total"
