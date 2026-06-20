@@ -16,7 +16,7 @@ import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_compo
 import NotificationPermissionButton from '~/components/notifications/notification-permission-button'
 import { useAuth } from '~/lib/auth-context'
 import { useDebounce } from 'use-debounce'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { blueColors, greenColors, redColors, orangeColors } from '~/lib/colors'
 import {
   TIPO_ENTREGA_LABEL_CON_ICON,
@@ -43,6 +43,17 @@ export default function FiltersMisEntregas() {
   const setFiltros = useStoreFiltrosMisEntregas((state) => state.setFiltros)
   const { user } = useAuth()
   const esDespachador = user?.rol_sistema === 'DESPACHADOR'
+  const esAdmin = user?.rol_sistema === 'ADMINISTRADOR'
+
+  // Sync the form UI once when user loads: non-admin defaults to ['pe']
+  const defaultApplied = useRef(false)
+  useEffect(() => {
+    if (!user || defaultApplied.current) return
+    defaultApplied.current = true
+    if (!esAdmin) {
+      form.setFieldsValue({ estado_entrega: ['pe'] })
+    }
+  }, [user, esAdmin, form])
   const entregaSeleccionada = useStoreEntregaSeleccionada((s) => s.entrega)
   const triggerAccion = useStoreEntregaSeleccionada((s) => s.triggerAccion)
   const openUpdateModal = useStoreEntregaSeleccionada((s) => s.openUpdateModal)
