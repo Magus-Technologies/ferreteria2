@@ -148,10 +148,10 @@ export default function ModalDetallesEntregaCompleto({
     { field: 'programada', headerName: 'Programado', width: 105 },
     {
       field: 'entregada',
-      headerName: 'Entregado total',
-      width: 120,
+      headerName: 'Entregado',
+      width: 105,
       cellStyle: { color: '#16a34a', fontWeight: 'bold' },
-      headerTooltip: 'Total entregado en todas las entregas de esta venta',
+      headerTooltip: 'Cantidad confirmada en esta entrega',
     },
     {
       field: 'pendiente',
@@ -195,36 +195,36 @@ export default function ModalDetallesEntregaCompleto({
         const prevKey = `${codigo.trim().toLowerCase()}|${unidad.trim().toLowerCase()}`
         const cantidadAnterior = prevQuantities.get(prevKey) ?? cantidadActual
         const recibido = mostrarRecibido ? Math.max(cantidadAnterior - cantidadActual, 0) : 0
-        const pedida = mostrarRecibido ? Math.max(cantidadAnterior, cantidadActual) : cantidadActual
         const rawEntregada = Number(p.cantidad_entregada || 0)
-        const cantidadEntregadaPersistida = mostrarRecibido ? cantidadActual : rawEntregada
-        const cantidadProgramada = entregaTieneEntregaFisica ? 0 : rawEntregada
-        const cantidadEntregada = entregaTieneEntregaFisica ? cantidadEntregadaPersistida : 0
-        const cantidadPendiente = mostrarRecibido ? 0 : Math.max(0, cantidadActual - cantidadEntregada)
+        // pedida = what THIS delivery was programmed for, not the full sale qty
+        const pedida = rawEntregada
+        const entregada = entregaTieneEntregaFisica
+          ? (mostrarRecibido ? cantidadActual : rawEntregada)
+          : 0
+        const pendiente = mostrarRecibido ? 0 : (entregaTieneEntregaFisica ? 0 : rawEntregada)
         return {
           codigo,
           nombre: prod?.name || 'Producto',
           unidad,
           pedida,
-          programada: cantidadProgramada,
-          entregada: cantidadEntregada,
+          programada: 0,
+          entregada,
           recibido,
-          pendiente: cantidadPendiente,
+          pendiente,
         }
       })
     : (entregaView.detalles || []).map((d: any) => {
-        const udvTotal = Number(d.udv_cantidad ?? d.cantidad ?? 0)
-        const pendiente = Number(d.cantidad_pendiente ?? 0)
-        const entregada = Math.max(0, udvTotal - pendiente)
+        const estaEntregaQty = Number(d.cantidad ?? 0)
+        const esConfirmada = entregaView?.estado_entrega === 'en'
         return {
           codigo: d.producto?.cod_producto || '',
           nombre: d.producto?.name || 'Producto',
           unidad: d.unidad || '',
-          pedida: udvTotal,
+          pedida: estaEntregaQty,
           programada: 0,
-          entregada,
+          entregada: esConfirmada ? estaEntregaQty : 0,
           recibido: 0,
-          pendiente,
+          pendiente: esConfirmada ? 0 : estaEntregaQty,
         }
       })
 
