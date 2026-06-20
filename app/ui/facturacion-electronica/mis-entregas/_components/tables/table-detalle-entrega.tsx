@@ -188,32 +188,25 @@ export default function TableDetalleEntrega() {
     }
 
     // New entrega model: data arrives as `detalles` (EntregaDetalleItemResource).
-    // When productos_entregados is absent, compute totals from udv_cantidad and
-    // cantidad_pendiente which are always up-to-date in the UDV row.
+    // Total = what THIS delivery was programmed for (entrega_detalle.cantidad),
+    // NOT the full UDV quantity. Each delivery is self-contained.
     const rawProductosEntregados = (entregaSeleccionada as any)?.productos_entregados
     if (!rawProductosEntregados) {
       const detalles: any[] = (entregaSeleccionada as any)?.detalles || []
+      const esConfirmada = (entregaSeleccionada as any)?.estado_entrega === 'en'
       return detalles.map((d) => {
-        const pendiente = Number(d.cantidad_pendiente ?? 0)
-        // udv_cantidad is the authoritative total from the UDV row (available once
-        // the backend change is deployed). When absent, fall back to
-        // detalle.cantidad + cantidad_pendiente which is correct for the common
-        // single-delivery case and for any delivery after a venta edit.
-        const udvTotal = d.udv_cantidad != null
-          ? Number(d.udv_cantidad)
-          : Number(d.cantidad ?? 0) + pendiente
-        const entregado = Math.max(0, udvTotal - pendiente)
+        const estaEntregaQty = Number(d.cantidad ?? 0)
         return {
           producto: d.producto?.name || '—',
           codigo: d.producto?.cod_producto || '',
           marca: '—',
           unidad: d.unidad || '',
-          total: udvTotal,
+          total: estaEntregaQty,
           recibido: 0,
-          estaEntrega: Number(d.cantidad ?? 0),
+          estaEntrega: estaEntregaQty,
           programado: 0,
-          entregado,
-          pendiente,
+          entregado: esConfirmada ? estaEntregaQty : 0,
+          pendiente: esConfirmada ? 0 : estaEntregaQty,
         } satisfies DetalleProductoEntrega
       })
     }
@@ -224,8 +217,6 @@ export default function TableDetalleEntrega() {
 
     if (!mostrarRecibido) {
       return [...actualesAgrupados.values()].map((producto) => {
-        const total = Number(producto.cantidad ?? 0)
-
         // Find the UDV id for this product row to look up cumulative totals
         const detalleActual = (entregaSeleccionada?.productos_entregados || []).find((detalle: any) => {
           const ud = detalle.unidad_derivada_venta || {}
@@ -237,39 +228,22 @@ export default function TableDetalleEntrega() {
 
         const udvId: string = detalleActual?.unidad_derivada_venta_id ?? ''
         const acumulado = acumuladosPorUdv.get(udvId)
-        const entregadoAcumulado = acumulado?.entregado ?? 0
         const programadoAcumulado = acumulado?.programado ?? 0
         const estaEntrega = Number(detalleActual?.cantidad_entregada ?? 0)
 
-        // Mirror the ticket PDF logic (EntregaNuevaPdfService):
-        //   • Confirmed ('en'): delivery is physically complete → pendiente = 0,
-        //     entregado = exactly what this delivery had (entrega_detalle.cantidad).
-        //   • Pending, post-edit (cantidad_pendiente > 0): venta was edited after
-        //     a prior confirmation; use UDV authoritative pendiente directly.
-        //   • Fresh pending (cantidad_pendiente = 0): use acumuladosPorUdv, because
-        //     EntregaService.aplicar sets pendiente to 0 at creation before confirm.
-        const udvCantidadPendiente = Number(producto.cantidadPendiente ?? 0)
+        // Total = what THIS delivery was programmed for, not the full sale qty.
+        // Confirmed → entregado = estaEntrega, pendiente = 0.
+        // Pending   → entregado = 0, pendiente = estaEntrega.
         const esConfirmada = (entregaSeleccionada as any)?.estado_entrega === 'en'
-
-        let pendiente: number
-        let entregado: number
-        if (esConfirmada) {
-          entregado = estaEntrega
-          pendiente = 0
-        } else if (udvCantidadPendiente > 0) {
-          pendiente = udvCantidadPendiente
-          entregado = Math.max(0, total - udvCantidadPendiente)
-        } else {
-          entregado = entregadoAcumulado
-          pendiente = Math.max(0, total - entregadoAcumulado)
-        }
+        const entregado = esConfirmada ? estaEntrega : 0
+        const pendiente = esConfirmada ? 0 : estaEntrega
 
         return {
           producto: producto.producto,
           codigo: producto.codigo,
           marca: producto.marca || '—',
           unidad: producto.unidad,
-          total,
+          total: estaEntrega,
           recibido: 0,
           estaEntrega,
           programado: programadoAcumulado,
@@ -360,14 +334,13 @@ export default function TableDetalleEntrega() {
           : { color: '#94a3b8', fontWeight: 'normal' },
     })
 
-    // Entregado acumulado de TODAS las entregas confirmadas de esta venta
     defs.push({
-      headerName: esParcialAgrupada ? 'Entregado' : 'Entregado total',
+      headerName: 'Entregado',
       field: 'entregado',
-      width: 130,
+      width: 115,
       valueFormatter: (params) => Number(params.value).toFixed(0),
       cellStyle: { color: '#16a34a', fontWeight: 'bold' },
-      headerTooltip: 'Total entregado en todas las entregas de esta venta',
+      headerTooltip: 'Cantidad confirmada en esta entrega',
     })
 
     if (mostrarProgramado) {
@@ -393,7 +366,7 @@ export default function TableDetalleEntrega() {
         Number(params.value) > 0
           ? { color: '#d97706', fontWeight: 'bold' }
           : { color: '#94a3b8', fontWeight: 'normal' },
-      headerTooltip: 'Cantidad aún sin entregar (total − entregado) de esta venta',
+      headerTooltip: 'Cantidad programada en esta entrega aún sin confirmar',
     })
 
     return defs
