@@ -99,6 +99,7 @@ export function useConfirmarEntrega({
 
     if (tipoDespacho === 'Domicilio' && productosEntrega.length > 0) {
       // Domicilio con split: una entrega con solo entregar_programado.
+      // Excluded products keep their slot (index alignment) but with 0 quantities.
       ventaValues.cantidades_parciales = productosEntrega.map((p) => ({
         producto_id: 0,
         producto_name: p.producto,
@@ -109,13 +110,14 @@ export function useConfirmarEntrega({
         entregado: 0,
         pendiente: p.total,
         entregar: 0,
-        entregar_programado: p.entregar_programado,
+        entregar_programado: p.excluido ? 0 : p.entregar_programado,
       }))
     }
 
     if (tipoDespacho === 'Parcial') {
       // Inmediata: lo de "entregar". Programada: lo de "entregar_programado".
       // Resto = total − entregar − entregar_programado queda en cantidad_pendiente.
+      // Excluded products keep their slot (index alignment) but with 0 quantities.
       ventaValues.cantidades_parciales = productosEntrega.map((p) => ({
         producto_id: 0,
         producto_name: p.producto,
@@ -125,8 +127,8 @@ export function useConfirmarEntrega({
         total: p.total,
         entregado: p.entregado,
         pendiente: p.pendiente,
-        entregar: p.entregar,
-        entregar_programado: p.entregar_programado,
+        entregar: p.excluido ? 0 : p.entregar,
+        entregar_programado: p.excluido ? 0 : p.entregar_programado,
       }))
       ventaValues.quien_entrega = quienEntregaParcial
 

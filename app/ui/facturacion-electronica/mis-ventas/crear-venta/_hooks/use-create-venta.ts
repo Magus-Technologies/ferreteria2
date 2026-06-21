@@ -602,15 +602,14 @@ export default function useCreateVenta({
             const productosVenta = ventaCreada.productos_por_almacen || []
             const unidadesDerivadas: any[] = []
 
-            // Lookup by unidad_derivada_id (stable) instead of position.
-            // Position-based broke when products were deleted from the UI table.
-            const parcialPorUdvId = new Map(
-              (cantidades_parciales ?? []).map((p: any) => [p.unidad_derivada_id, p])
-            )
+            // Index-based: cantidades_parciales always includes ALL products
+            // (excluded ones have entregar:0) so the positional mapping holds.
+            let parcialIdx = 0
             productosVenta.forEach((productoAlmacen: any) => {
               if (productoAlmacen.unidades_derivadas) {
                 productoAlmacen.unidades_derivadas.forEach((unidad: any) => {
-                  const parcial = parcialPorUdvId.get(unidad.id)
+                  const parcial = cantidades_parciales[parcialIdx]
+                  parcialIdx++
                   if (parcial && parcial.entregar > 0) {
                     unidadesDerivadas.push({
                       unidad_derivada_venta_id: unidad.id,
@@ -666,10 +665,12 @@ export default function useCreateVenta({
                 if (parcial_resto_programado && (parcial_resto_programado.despachador_id || parcial_resto_programado.cargo_destino)) {
                   const unidadesDerivadas2: any[] = []
 
+                  let parcialIdx2 = 0
                   productosVenta.forEach((productoAlmacen: any) => {
                     if (productoAlmacen.unidades_derivadas) {
                       productoAlmacen.unidades_derivadas.forEach((unidad: any) => {
-                        const parcial = parcialPorUdvId.get(unidad.id)
+                        const parcial = cantidades_parciales[parcialIdx2]
+                        parcialIdx2++
                         const programar = parcial?.entregar_programado ?? 0
                         if (parcial && programar > 0) {
                           unidadesDerivadas2.push({

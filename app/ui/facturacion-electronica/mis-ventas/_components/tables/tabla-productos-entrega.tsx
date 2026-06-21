@@ -77,21 +77,17 @@ export default function TablaProductosEntrega({
   autoProgramarResto = true,
   readonlyEntregar = false,
 }: TablaProductosEntregaProps) {
-  const mostrarRecibido = productos.some((p) => Number(p.recibido || 0) > 0)
-  const mostrarProgramado = productos.some((p) => Number(p.programado || 0) > 0)
-  const [deletedProductos, setDeletedProductos] = useState<ProductoEntrega[]>([])
+  const activeProductos = productos.filter(p => !p.excluido)
+  const excludedProductos = productos.filter(p => p.excluido)
+
+  const mostrarRecibido = activeProductos.some((p) => Number(p.recibido || 0) > 0)
+  const mostrarProgramado = activeProductos.some((p) => Number(p.programado || 0) > 0)
 
   const productosRef = useRef(productos)
   productosRef.current = productos
 
   const onProductoChangeRef = useRef(onProductoChange)
   onProductoChangeRef.current = onProductoChange
-
-  // When the parent resets the list (modal close/reopen), clear any tracked deletions.
-  useEffect(() => {
-    const incomingIds = new Set(productos.map(p => p.unidad_derivada_venta_id))
-    setDeletedProductos(prev => prev.filter(d => !incomingIds.has(d.unidad_derivada_venta_id)))
-  }, [productos])
 
   const handleEntregarChange = useCallback((id: number, value: number | null) => {
     let newValue = Number(value) || 0
@@ -118,16 +114,19 @@ export default function TablaProductosEntrega({
   }, [autoProgramarResto])
 
   const handleDelete = useCallback((id: number) => {
-    const removed = productosRef.current.find(p => p.id === id)
-    if (removed) setDeletedProductos(prev => [...prev, removed])
     onProductoChangeRef.current(
-      productosRef.current.filter((p) => p.id !== id)
+      productosRef.current.map(p =>
+        p.id === id ? { ...p, excluido: true, entregar: 0, entregar_programado: 0 } : p
+      )
     )
   }, [])
 
-  const handleRestore = useCallback((deleted: ProductoEntrega) => {
-    setDeletedProductos(prev => prev.filter(p => p.unidad_derivada_venta_id !== deleted.unidad_derivada_venta_id))
-    onProductoChangeRef.current([...productosRef.current, deleted])
+  const handleRestore = useCallback((id: number) => {
+    onProductoChangeRef.current(
+      productosRef.current.map(p =>
+        p.id === id ? { ...p, excluido: false, entregar: p.pendiente, entregar_programado: 0 } : p
+      )
+    )
   }, [])
 
   const columnDefs: ColDef<ProductoEntrega>[] = [
@@ -228,21 +227,21 @@ export default function TablaProductosEntrega({
           title="Lista de productos"
           selectionColor={orangeColors[10]}
           columnDefs={columnDefs}
-          rowData={productos}
+          rowData={activeProductos}
         />
       </div>
-      {!simple && deletedProductos.length > 0 && (
+      {!simple && excludedProductos.length > 0 && (
         <div className="flex flex-col gap-1 rounded border border-amber-200 bg-amber-50 px-3 py-2">
           <span className="text-xs font-medium text-amber-700">
-            {deletedProductos.length === 1 ? '1 producto excluido de esta entrega:' : `${deletedProductos.length} productos excluidos de esta entrega:`}
+            {excludedProductos.length === 1 ? '1 producto excluido de esta entrega:' : `${excludedProductos.length} productos excluidos de esta entrega:`}
           </span>
           <div className="flex flex-col gap-0.5">
-            {deletedProductos.map(p => (
+            {excludedProductos.map(p => (
               <div key={p.unidad_derivada_venta_id} className="flex items-center justify-between gap-2">
                 <span className="text-xs text-amber-800 truncate">{p.producto}</span>
                 <button
                   type="button"
-                  onClick={() => handleRestore(p)}
+                  onClick={() => handleRestore(p.id)}
                   className="shrink-0 text-xs font-medium text-amber-700 underline hover:text-amber-900"
                 >
                   Restaurar

@@ -14,6 +14,9 @@ export type ProductoEntrega = {
   entregar_programado: number
   unidad_derivada_venta_id: number
   detalle_entrega_producto_id?: number
+  /** When true the product is hidden from the delivery table but kept in the
+   *  array so positional index alignment with cantidades_parciales holds. */
+  excluido?: boolean
 }
 
 export function useProductosEntrega(venta?: getVentaResponseProps, open?: boolean) {
