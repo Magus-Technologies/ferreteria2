@@ -55,7 +55,8 @@ export default function FiltersMisRecepciones() {
 
   useEffect(() => {
     const data: RecepcionAlmacenFilters = {
-      almacen_recepcion_id: almacen_id,
+      // Por defecto "Todos los almacenes" (centinela 0) => no se envía el filtro.
+      almacen_recepcion_id: undefined,
       fecha_desde: toUTCBD({ date: dayjs().startOf('day') }),
       fecha_hasta: toUTCBD({ date: dayjs().endOf('day') }),
     }
@@ -68,7 +69,7 @@ export default function FiltersMisRecepciones() {
       form={form}
       name='filtros-mis-recepciones'
       initialValues={{
-        almacen_recepcion_id: almacen_id,
+        almacen_recepcion_id: ALMACEN_TODOS,
         desde: dayjs().startOf('day'),
         hasta: dayjs().endOf('day'),
       }}
