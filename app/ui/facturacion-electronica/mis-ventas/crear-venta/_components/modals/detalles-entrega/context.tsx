@@ -125,7 +125,7 @@ export function DetallesEntregaProvider({
   const [ubicacionGps, setUbicacionGps] = useState<string>('')
 
   // ── Bloque RESTO (sección "Programar entrega del resto" del Parcial) ──
-  const [programarResto, setProgramarResto] = useState(true)
+  const [programarResto, setProgramarResto] = useState(false)
   const [horaInicioResto, setHoraInicioResto] = useState<string | undefined>(undefined)
   const [horaFinResto, setHoraFinResto] = useState<string | undefined>(undefined)
   const [observacionesResto, setObservacionesResto] = useState<string>('')

@@ -375,14 +375,21 @@ export default function ModalDetallesEntregaCompleto({
               </div>
             </div>
           )}
-          {entregaView.fecha_programada && (
+          {entregaView.fecha_programada ? (
             <div className="flex items-center gap-2 text-sm">
               <FaCalendarAlt className="text-slate-400 text-xs" />
               <span className="text-slate-700">
                 Programada: {dayjs(entregaView.fecha_programada).format('DD/MM/YYYY')}
               </span>
             </div>
-          )}
+          ) : entregaView.fecha_ejecutada ? (
+            <div className="flex items-center gap-2 text-sm">
+              <FaCalendarAlt className="text-slate-400 text-xs" />
+              <span className="text-slate-700">
+                Entregado: {dayjs(entregaView.fecha_ejecutada).format('DD/MM/YYYY HH:mm')}
+              </span>
+            </div>
+          ) : null}
           {(entregaView.hora_inicio || entregaView.hora_fin) && (
             <div className="flex items-center gap-2 text-sm">
               <FaClock className="text-slate-400 text-xs" />
@@ -399,11 +406,14 @@ export default function ModalDetallesEntregaCompleto({
               </span>
             </div>
           )}
-          {entregaView.user?.name && (
+          {(entregaView.userEntregado?.name || entregaView.user?.name) && (
             <div className="flex items-center gap-2 text-sm">
               <FaUserTie className="text-slate-400 text-xs" />
               <span className="text-slate-700">
-                Entregado por: <span className="font-semibold">{entregaView.user.name}</span>
+                Entregado por:{' '}
+                <span className="font-semibold">
+                  {entregaView.userEntregado?.name || entregaView.user?.name}
+                </span>
                 {entregaView.quien_entrega && (
                   <span className="text-slate-500">
                     {' '}({QUIEN_ENTREGA_LABEL[entregaView.quien_entrega as keyof typeof QUIEN_ENTREGA_LABEL] || entregaView.quien_entrega})

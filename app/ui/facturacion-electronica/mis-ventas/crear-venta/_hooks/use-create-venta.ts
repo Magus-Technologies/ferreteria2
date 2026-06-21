@@ -602,8 +602,8 @@ export default function useCreateVenta({
             const productosVenta = ventaCreada.productos_por_almacen || []
             const unidadesDerivadas: any[] = []
 
-            // Iterar por índice: cantidades_parciales y las unidades de la respuesta
-            // están en el mismo orden (se generan desde los mismos productos del formulario)
+            // Index-based: cantidades_parciales always includes ALL products
+            // (excluded ones have entregar:0) so the positional mapping holds.
             let parcialIdx = 0
             productosVenta.forEach((productoAlmacen: any) => {
               if (productoAlmacen.unidades_derivadas) {
