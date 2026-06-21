@@ -4,16 +4,9 @@ import { Checkbox, Modal, Spin, Typography, message } from 'antd'
 import { useEffect, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { configuracionEntregaApi } from '~/lib/api/configuracion-entrega'
+import { permissionsApi } from '~/lib/api/permissions'
 
 const { Text } = Typography
-
-const ROLES = [
-  { value: 'ALMACENERO',  label: 'Almacenero' },
-  { value: 'VENDEDOR',    label: 'Vendedor' },
-  { value: 'CONTADOR',    label: 'Contador' },
-  { value: 'DESPACHADOR', label: 'Despachador' },
-  { value: 'CONDUCTOR',   label: 'Conductor' },
-]
 
 interface Props {
   open: boolean
@@ -25,26 +18,36 @@ export default function ModalConfigRolesEntrega({ open, onClose }: Props) {
   const [saving, setSaving] = useState(false)
   const [selectedRoles, setSelectedRoles] = useState<string[]>([])
 
-  const { data: configData, isLoading } = useQuery({
+  // Roles desde la DB — solo los que tienen rol_sistema definido
+  const { data: rolesData, isLoading: loadingRoles } = useQuery({
+    queryKey: ['roles-db'],
+    queryFn: () => permissionsApi.listRoles(),
+    staleTime: 10 * 60 * 1000,
+  })
+
+  const roles: { value: string; label: string }[] =
+    ((rolesData?.data as any)?.data ?? (rolesData?.data as any) ?? [])
+      .filter((r: any) => r.rol_sistema)
+      .map((r: any) => ({ value: r.rol_sistema as string, label: r.descripcion as string }))
+
+  const { data: configData, isLoading: loadingConfig } = useQuery({
     queryKey: ['configuracion-entrega'],
     queryFn: () => configuracionEntregaApi.get(),
     staleTime: 5 * 60 * 1000,
     enabled: open,
   })
 
-  const rolesFromServer: string[] = (configData?.data as any)?.roles_entrega_tienda ?? ['ALMACENERO']
+  const isLoading = loadingRoles || loadingConfig
 
-  // Sincronizar el estado local cuando los datos del server cambian
+  const rolesFromServer: string[] =
+    (configData?.data as any)?.roles_entrega_tienda ?? ['ALMACENERO']
+
   useEffect(() => {
     if (open && !isLoading) {
       setSelectedRoles(rolesFromServer)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, isLoading, configData])
-
-  const handleCancel = () => {
-    onClose()
-  }
 
   const handleSave = async () => {
     setSaving(true)
@@ -64,7 +67,7 @@ export default function ModalConfigRolesEntrega({ open, onClose }: Props) {
     <Modal
       title="Roles que pueden entregar en tienda"
       open={open}
-      onCancel={handleCancel}
+      onCancel={onClose}
       onOk={handleSave}
       okText="Guardar"
       cancelText="Cancelar"
@@ -85,7 +88,7 @@ export default function ModalConfigRolesEntrega({ open, onClose }: Props) {
           onChange={(vals) => setSelectedRoles(vals as string[])}
           className="flex flex-col gap-3"
         >
-          {ROLES.map((rol) => (
+          {roles.map((rol) => (
             <Checkbox key={rol.value} value={rol.value}>
               {rol.label}
             </Checkbox>
