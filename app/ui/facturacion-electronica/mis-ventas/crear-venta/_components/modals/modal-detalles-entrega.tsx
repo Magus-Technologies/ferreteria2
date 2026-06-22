@@ -999,7 +999,7 @@ function ModalDetallesEntregaInner({
                     resolvedMode.kind !== 'crear-venta' &&
                     totalAEntregar === 0) ||
                   (tipoDespacho === 'Parcial' && totalAEntregar === 0 && totalAProgramar === 0) ||
-                  (tipoDespacho === 'Domicilio' && productosEntrega.length > 0 && totalAProgramar === 0 && totalAEntregar === 0) ||
+                  (tipoDespacho === 'Domicilio' && productosEntrega.length > 0 && totalAProgramar === 0) ||
                   domicilioInvalido ||
                   restoInvalido
             }
