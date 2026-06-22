@@ -50,6 +50,7 @@ export function makeColumnsDomicilio(
     },
     {
       headerName: 'Pendiente sin programar',
+      colId: 'pendiente-sin-programar',
       width: 180,
       valueGetter: (params) => {
         if (!params.data) return 0
@@ -71,7 +72,6 @@ export function makeColumnsDomicilio(
           width: 50,
           sortable: false,
           filter: false,
-          resizable: false,
           cellRenderer: (params: { data?: ProductoEntrega }) => (
             <span
               style={{ cursor: 'pointer' }}
