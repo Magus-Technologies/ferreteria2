@@ -165,8 +165,12 @@ export default function PermisosVisualesPage() {
       });
 
       // Cierre inmediato del modal para que se sienta instantáneo.
+      // OJO: NO limpiar `itemSeleccionado` aquí. Hacerlo provoca un re-render
+      // que React Query usa para releer `options.mutationFn` ANTES de ejecutarlo,
+      // por lo que el closure pasa a tener itemSeleccionado=null y mutationFn
+      // lanza "Datos incompletos" (revierte el optimista → la tarjeta vuelve a verde).
+      // Se limpia en onSettled, cuando la mutación ya leyó el valor.
       setModalVisible(false);
-      setItemSeleccionado(null);
 
       return { prevRoles, prevConfigs };
     },
@@ -177,6 +181,8 @@ export default function PermisosVisualesPage() {
       console.error(error?.message || 'Error al guardar');
     },
     onSettled: () => {
+      // Limpiar la selección recién aquí: la mutación ya leyó itemSeleccionado.
+      setItemSeleccionado(null);
       // Reconciliar con el servidor en segundo plano (no bloquea la UI).
       queryClient.invalidateQueries({ queryKey: ['roles'] });
       queryClient.invalidateQueries({ queryKey: autorizacionesKeys.configs(rolId ?? undefined) });
