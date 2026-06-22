@@ -496,7 +496,7 @@ export default function useCreateVenta({
           // por azar; CAJA, KILO, etc. no coinciden. El nombre de producto es
           // suficiente porque un mismo producto no aparece dos veces con
           // distintas unidades en la misma venta.
-          const parcialLookup = new Map<string, (typeof cantidades_parciales[0])[]>()
+          const parcialLookup = new Map<string, NonNullable<typeof cantidades_parciales>[number][]>()
           if (cantidades_parciales) {
             for (const c of cantidades_parciales) {
               const key = c.producto_name ?? ''
