@@ -483,15 +483,23 @@ export default function useCreateVenta({
           // Si el modal envió cantidades_parciales (split de Domicilio), usar
           // entregar_programado por unidad. Si no, programar todo por defecto.
           //
-          // Matching por nombre+udv, NO por índice posicional: el API devuelve
-          // productos_por_almacen ordenados por pav_id (inserción en BD),
-          // mientras que cantidades_parciales sigue el orden del formulario
-          // (orden en que el usuario agregó productos). Si difieren, el índice
-          // posicional aplica cantidades al producto equivocado.
+          // Matching por nombre de producto, NO por índice posicional.
+          // El API devuelve productos_por_almacen ordenados por pav_id (orden
+          // de inserción en BD), mientras que cantidades_parciales sigue el
+          // orden del formulario (orden en que el usuario agregó productos).
+          // Si difieren, el índice posicional aplica cantidades al producto
+          // equivocado.
+          //
+          // NO usar el unit-type ID en la key: `unidadderivada.id` (catálogo
+          // del form) y `unidadderivadainmutable.id` (respuesta del API) son
+          // tablas distintas con IDs distintos — solo UNIDAD coincide en id=1
+          // por azar; CAJA, KILO, etc. no coinciden. El nombre de producto es
+          // suficiente porque un mismo producto no aparece dos veces con
+          // distintas unidades en la misma venta.
           const parcialLookup = new Map<string, (typeof cantidades_parciales[0])[]>()
           if (cantidades_parciales) {
             for (const c of cantidades_parciales) {
-              const key = `${c.producto_name ?? ''}::${c.unidad_derivada_id ?? ''}`
+              const key = c.producto_name ?? ''
               const arr = parcialLookup.get(key) ?? []
               arr.push(c)
               parcialLookup.set(key, arr)
@@ -502,9 +510,7 @@ export default function useCreateVenta({
             if (productoAlmacen.unidades_derivadas) {
               const prodName = productoAlmacen.producto_almacen?.producto?.name ?? ''
               productoAlmacen.unidades_derivadas.forEach((unidad: any) => {
-                const uddId = unidad.unidad_derivada_inmutable?.id ?? ''
-                const key = `${prodName}::${uddId}`
-                const queue = parcialLookup.get(key)
+                const queue = parcialLookup.get(prodName)
                 const parcial = queue?.shift()
                 const cantidadAEntregar = cantidades_parciales
                   ? Number(parcial?.entregar_programado ?? 0)
