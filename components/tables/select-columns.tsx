@@ -150,11 +150,13 @@ const SelectColumns = forwardRef<SelectColumnsRef, SelectColumnsProps>(
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOpen]);
 
-    // Sincronización final si checkedList se desfasa, aunque ya manejamos en onChange
+    // Sincronización final si checkedList se desfasa, aunque ya manejamos en onChange.
+    // GUARD: nunca sincronizar con lista vacía — significa que aún no inicializamos
+    // (el state update del efecto de init no se aplicó todavía en este render).
+    // Sin este guard, cuando gridApi se vuelve disponible por primera vez dispara
+    // setColumnsVisible(all, false) y deja la tabla en blanco.
     useEffect(() => {
-      if (!gridRef.current) return;
-      // Ya no forzamos setVisibilityColumns aquí para interacciones (es manejado por onChange)
-      // pero sí lo dejamos para la carga inicial o sincronización externa.
+      if (!gridRef.current || checkedList.length === 0) return;
       setVisibilityColumns({ gridApi, checkedList });
       setDefaultColumns(checkedList);
     // eslint-disable-next-line react-hooks/exhaustive-deps

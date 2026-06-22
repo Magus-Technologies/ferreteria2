@@ -207,10 +207,10 @@ export default function TableWithTitle<T, schemaType = unknown>({
               gridApi: params.api,
               checkedList: defaultColumns,
             });
-            setTimeout(() => {
-              params.api.refreshHeader();
-            }, 100);
           }
+          setTimeout(() => {
+            params.api.refreshHeader();
+          }, 100);
         }}
       />
       {children}

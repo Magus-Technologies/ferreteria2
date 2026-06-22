@@ -17,6 +17,7 @@ import { ProgramarCell } from './programar-cell'
  */
 export function makeColumnsDomicilio(
   onProgramarChange: (id: number, value: number | null) => void,
+  onExcluir?: (id: number) => void,
 ): ColDef<ProductoEntrega>[] {
   return [
     {
@@ -63,5 +64,24 @@ export function makeColumnsDomicilio(
         } as Record<string, string>
       },
     },
+    ...(onExcluir
+      ? [{
+          headerName: '',
+          colId: 'excluir',
+          width: 50,
+          sortable: false,
+          filter: false,
+          resizable: false,
+          cellRenderer: (params: { data?: ProductoEntrega }) => (
+            <span
+              style={{ cursor: 'pointer' }}
+              onClick={() => params.data && onExcluir(params.data.id)}
+            >
+              ❌
+            </span>
+          ),
+          cellStyle: { textAlign: 'center' } as Record<string, string>,
+        } as ColDef<ProductoEntrega>]
+      : []),
   ]
 }

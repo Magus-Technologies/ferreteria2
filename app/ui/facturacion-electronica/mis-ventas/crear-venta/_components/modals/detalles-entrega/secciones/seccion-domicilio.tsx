@@ -208,9 +208,36 @@ export function SeccionDomicilio({
                 title="Lista de productos"
                 selectionColor={orangeColors[10]}
                 columnDefs={columnDefsDomicilio}
-                rowData={productosEntrega}
+                rowData={productosEntrega.filter(p => !p.excluido)}
               />
             </div>
+            {productosEntrega.some(p => p.excluido) && (
+              <div className="flex flex-col gap-1 rounded border border-amber-200 bg-amber-50 px-3 py-2">
+                <span className="text-xs font-medium text-amber-700">
+                  {productosEntrega.filter(p => p.excluido).length === 1
+                    ? '1 producto excluido de esta entrega:'
+                    : `${productosEntrega.filter(p => p.excluido).length} productos excluidos de esta entrega:`}
+                </span>
+                <div className="flex flex-col gap-0.5">
+                  {productosEntrega.filter(p => p.excluido).map(p => (
+                    <div key={p.unidad_derivada_venta_id} className="flex items-center justify-between gap-2">
+                      <span className="text-xs text-amber-800 truncate">{p.producto}</span>
+                      <button
+                        type="button"
+                        onClick={() => setProductosEntrega(
+                          productosEntrega.map(x =>
+                            x.id === p.id ? { ...x, excluido: false, entregar_programado: x.total } : x
+                          )
+                        )}
+                        className="shrink-0 text-xs font-medium text-amber-700 underline hover:text-amber-900"
+                      >
+                        Restaurar
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="flex flex-wrap gap-2 justify-end text-xs">
               <div className="bg-orange-50 border border-orange-200 rounded-lg px-3 py-1.5">
                 <span className="text-orange-700">A programar: </span>

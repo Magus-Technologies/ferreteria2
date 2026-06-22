@@ -764,10 +764,25 @@ function ModalDetallesEntregaInner({
     )
   }, [])
 
+  const handleExcluirDomicilio = useCallback((id: number) => {
+    setProductosEntrega((prev) => {
+      const afterExclude = prev.map((p) =>
+        p.id === id ? { ...p, excluido: true, entregar_programado: 0 } : p
+      )
+      const hasProgrammed = afterExclude.some((p) => !p.excluido && p.entregar_programado > 0)
+      if (!hasProgrammed) {
+        return afterExclude.map((p) =>
+          !p.excluido ? { ...p, entregar_programado: p.total } : p
+        )
+      }
+      return afterExclude
+    })
+  }, [])
+
   // Column defs Domicilio — extraídos a archivo (Fase C).
   const columnDefsDomicilio = useMemo(
-    () => makeColumnsDomicilio(handleProgramarChangeDomicilio),
-    [handleProgramarChangeDomicilio],
+    () => makeColumnsDomicilio(handleProgramarChangeDomicilio, handleExcluirDomicilio),
+    [handleProgramarChangeDomicilio, handleExcluirDomicilio],
   )
 
   // Handler para editar "Programar ahora" (entregar_programado) en la tabla del resto.
