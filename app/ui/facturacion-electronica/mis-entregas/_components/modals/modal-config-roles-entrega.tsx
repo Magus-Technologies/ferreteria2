@@ -28,7 +28,7 @@ export default function ModalConfigRolesEntrega({ open, onClose }: Props) {
   const roles: { value: string; label: string }[] =
     ((rolesData?.data as any)?.data ?? (rolesData?.data as any) ?? [])
       .filter((r: any) => r.name !== 'admin_global')
-      .map((r: any) => ({ value: r.name as string, label: r.descripcion as string }))
+      .map((r: any) => ({ value: r.name as string, label: (r.name as string).toUpperCase() }))
 
   const { data: configData, isLoading: loadingConfig } = useQuery({
     queryKey: ['configuracion-entrega'],
