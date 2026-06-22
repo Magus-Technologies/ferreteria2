@@ -96,7 +96,7 @@ export default function Home() {
         <div className='mb-6 sm:mb-8 md:mb-10 lg:mb-12 flex justify-center'>
           <Image
             className='w-48 h-auto sm:w-56 md:w-64 lg:w-80 xl:w-[350px] object-contain'
-            src='/logo-horizontal.png'
+            src='/logo-horizontal.svg'
             alt='Logo'
             width={350}
             height={300}

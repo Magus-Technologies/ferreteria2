@@ -21,7 +21,7 @@ export default function ModalConfigRolesEntrega({ open, onClose }: Props) {
   // Roles desde la DB — solo los que tienen rol_sistema definido
   const { data: rolesData, isLoading: loadingRoles } = useQuery({
     queryKey: ['roles-db'],
-    queryFn: () => permissionsApi.listRoles(),
+    queryFn: () => permissionsApi.getRoles(),
     staleTime: 10 * 60 * 1000,
   })
 

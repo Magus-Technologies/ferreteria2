@@ -4,7 +4,7 @@ import Image from 'next/image'
 import { useState } from 'react'
 import { useEmpresaPublicaConLogo } from '~/hooks/use-empresa-publica'
 
-const FALLBACK = '/logo-horizontal.png'
+const FALLBACK = '/logo-horizontal.svg'
 
 export default function LogoEmpresa() {
   const { data, isLoading, cachedLogoUrl } = useEmpresaPublicaConLogo()
