@@ -109,18 +109,21 @@ export default function ModalResumenEntregaVenta({
     return covered
   }, [historial])
 
-  // Total histórico incluyendo canceladas — para calcular "Devolvió":
+  // Solo entregas CANCELADAS — para calcular "Devolvió":
   // si se entregaron 10, se anuló la entrega y la venta se redujo a 5,
   // devolvio = max(0, 10 - 5) = 5.
-  const allEntregadoMap = useMemo(() => {
-    const all: Record<string, number> = {}
+  // Excluir activas evita que al crear la nueva entrega (qty=5) se sume
+  // de más: (10+5) - 5 = 10 sería incorrecto.
+  const cancelledMap = useMemo(() => {
+    const cancelled: Record<string, number> = {}
     for (const entrega of historial) {
+      if (entrega.estado_entrega_codigo !== 'ca') continue
       for (const d of entrega.detalles ?? []) {
         const id = String(d.unidad_derivada_venta_id)
-        all[id] = (all[id] ?? 0) + (d.cantidad ?? 0)
+        cancelled[id] = (cancelled[id] ?? 0) + (d.cantidad ?? 0)
       }
     }
-    return all
+    return cancelled
   }, [historial])
 
   useEffect(() => {
@@ -130,7 +133,7 @@ export default function ModalResumenEntregaVenta({
         const total    = Number(udv.cantidad ?? 0)
         const entregado = coveredMap[String(udv.id)] ?? 0
         const pendiente = Math.max(0, total - entregado)
-        const devolvio  = Math.max(0, (allEntregadoMap[String(udv.id)] ?? 0) - total)
+        const devolvio  = Math.max(0, (cancelledMap[String(udv.id)] ?? 0) - total)
         return {
           key: `${pi}-${ui}`, udvId: String(udv.id),
           nombre:   prod.producto_almacen?.producto?.name ?? 'Producto',
