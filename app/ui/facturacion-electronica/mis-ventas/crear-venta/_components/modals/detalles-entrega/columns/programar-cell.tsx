@@ -34,13 +34,20 @@ export const ProgramarCell = memo(function ProgramarCell({
   }, [initialValue])
 
   return (
-    <div className="flex items-center h-full">
+    <div
+      className="flex items-center h-full"
+      onFocus={(e) => {
+        const input = e.currentTarget.querySelector('input')
+        if (input && document.activeElement !== input) input.focus()
+      }}
+    >
       <InputNumber
         size="small"
         value={value}
         min={0}
         max={max}
         precision={2}
+        controls={false}
         onChange={setValue}
         onBlur={() => onCommit(id, value)}
         onPressEnter={() => onCommit(id, value)}

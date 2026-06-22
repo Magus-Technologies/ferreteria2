@@ -21,14 +21,14 @@ export default function ModalConfigRolesEntrega({ open, onClose }: Props) {
   // Roles desde la DB — solo los que tienen rol_sistema definido
   const { data: rolesData, isLoading: loadingRoles } = useQuery({
     queryKey: ['roles-db'],
-    queryFn: () => permissionsApi.listRoles(),
+    queryFn: () => permissionsApi.getRoles(),
     staleTime: 10 * 60 * 1000,
   })
 
   const roles: { value: string; label: string }[] =
     ((rolesData?.data as any)?.data ?? (rolesData?.data as any) ?? [])
-      .filter((r: any) => r.rol_sistema)
-      .map((r: any) => ({ value: r.rol_sistema as string, label: r.descripcion as string }))
+      .filter((r: any) => r.name !== 'admin_global')
+      .map((r: any) => ({ value: r.name as string, label: (r.name as string).toUpperCase() }))
 
   const { data: configData, isLoading: loadingConfig } = useQuery({
     queryKey: ['configuracion-entrega'],

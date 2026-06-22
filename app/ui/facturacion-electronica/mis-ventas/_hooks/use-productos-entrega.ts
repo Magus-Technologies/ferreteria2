@@ -48,7 +48,7 @@ export function useProductosEntrega(venta?: getVentaResponseProps, open?: boolea
                   entregado,
                   pendiente,
                   entregar: pendiente,
-                  entregar_programado: 0,
+                  entregar_programado: pendiente,
                   unidad_derivada_venta_id: unidad.id,
                 })
               }

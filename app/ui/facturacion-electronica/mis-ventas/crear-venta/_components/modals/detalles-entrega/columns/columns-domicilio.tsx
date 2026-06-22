@@ -17,6 +17,8 @@ import { ProgramarCell } from './programar-cell'
  */
 export function makeColumnsDomicilio(
   onProgramarChange: (id: number, value: number | null) => void,
+  onExcluir?: (id: number) => void,
+  showRecibido = false,
 ): ColDef<ProductoEntrega>[] {
   return [
     {
@@ -30,6 +32,13 @@ export function makeColumnsDomicilio(
       width: 100,
       valueFormatter: (params) => Number(params.value).toFixed(2),
     },
+    ...(showRecibido ? [{
+      headerName: 'Devolvió',
+      field: 'recibido' as keyof ProductoEntrega,
+      width: 110,
+      valueFormatter: (params: { value: unknown }) => Number(params.value || 0).toFixed(2),
+      cellStyle: { textAlign: 'center', color: '#dc2626', fontWeight: '700' } as Record<string, string>,
+    } as ColDef<ProductoEntrega>] : []),
     {
       headerName: 'Programar ahora',
       field: 'entregar_programado',
@@ -49,6 +58,7 @@ export function makeColumnsDomicilio(
     },
     {
       headerName: 'Pendiente sin programar',
+      colId: 'pendiente-sin-programar',
       width: 180,
       valueGetter: (params) => {
         if (!params.data) return 0
@@ -63,5 +73,23 @@ export function makeColumnsDomicilio(
         } as Record<string, string>
       },
     },
+    ...(onExcluir
+      ? [{
+          headerName: '',
+          colId: 'excluir',
+          width: 50,
+          sortable: false,
+          filter: false,
+          cellRenderer: (params: { data?: ProductoEntrega }) => (
+            <span
+              style={{ cursor: 'pointer' }}
+              onClick={() => params.data && onExcluir(params.data.id)}
+            >
+              ❌
+            </span>
+          ),
+          cellStyle: { textAlign: 'center' } as Record<string, string>,
+        } as ColDef<ProductoEntrega>]
+      : []),
   ]
 }

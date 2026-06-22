@@ -194,14 +194,17 @@ export default function ModalDetallesEntregaCompleto({
         const unidad = udv?.unidad_derivada_inmutable?.name || ''
         const prevKey = `${codigo.trim().toLowerCase()}|${unidad.trim().toLowerCase()}`
         const cantidadAnterior = prevQuantities.get(prevKey) ?? cantidadActual
-        const recibido = mostrarRecibido ? Math.max(cantidadAnterior - cantidadActual, 0) : 0
         const rawEntregada = Number(p.cantidad_entregada || 0)
+        const esCancelada = entregaView?.estado_entrega === 'ca'
+        const recibido = esCancelada
+          ? rawEntregada
+          : (mostrarRecibido ? Math.max(cantidadAnterior - cantidadActual, 0) : 0)
         // pedida = what THIS delivery was programmed for, not the full sale qty
         const pedida = rawEntregada
-        const entregada = entregaTieneEntregaFisica
+        const entregada = (!esCancelada && entregaTieneEntregaFisica)
           ? (mostrarRecibido ? cantidadActual : rawEntregada)
           : 0
-        const pendiente = mostrarRecibido ? 0 : (entregaTieneEntregaFisica ? 0 : rawEntregada)
+        const pendiente = esCancelada ? 0 : (mostrarRecibido ? 0 : (entregaTieneEntregaFisica ? 0 : rawEntregada))
         return {
           codigo,
           nombre: prod?.name || 'Producto',

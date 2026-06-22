@@ -251,7 +251,7 @@ export default function ConsultaDocumentoPage() {
           {/* Header con logo */}
           <div className="px-6 py-4 flex items-center justify-between border-b border-gray-100">
             <div className="flex items-center gap-4">
-              <Image src="/logo-horizontal.png" alt="Logo" width={140} height={50} className="h-10 w-auto object-contain" />
+              <Image src="/logo-horizontal.svg" alt="Logo" width={140} height={50} className="h-10 w-auto object-contain" />
             </div>
             <div className="text-right text-xs text-gray-400">
               <div>{data.empresa.razon_social}</div>

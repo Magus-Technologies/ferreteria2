@@ -9,7 +9,7 @@ export default function UILoading() {
     >
       <div className='text-center'>
         <Image
-          src='/logo-horizontal.png'
+          src='/logo-horizontal.svg'
           alt='Mi Redentor'
           width={350}
           height={300}

@@ -561,12 +561,30 @@ function ModalDetallesEntregaInner({
         // Venta nueva (!ventaIdParaConsulta): entregar todo ahora por defecto.
         // Editar-venta + producto nuevo: ídem.
         // Editar-venta + producto existente: programar el resto por defecto.
+
+        const recibido = datosBd ? Math.max(0, datosBd.cantidadBd - total) : 0
+
+        if (tipoDespacho === 'Domicilio') {
+          return {
+            id: index + 1,
+            producto: p.producto_name,
+            ubicacion: '',
+            total,
+            recibido,
+            entregado: entregadoYa,
+            pendiente,
+            entregar: 0,
+            entregar_programado: pendiente,
+            unidad_derivada_venta_id: p.unidad_derivada_id,
+          }
+        }
         const debeEntregarAhora = esProductoNuevoEnEdicion || !ventaIdParaConsulta
         return {
           id: index + 1,
           producto: p.producto_name,
           ubicacion: '',
           total,
+          recibido,
           entregado: entregadoYa,
           pendiente,
           entregar: debeEntregarAhora ? pendiente : 0,
@@ -764,10 +782,28 @@ function ModalDetallesEntregaInner({
     )
   }, [])
 
+  const handleExcluirDomicilio = useCallback((id: number) => {
+    setProductosEntrega((prev) => {
+      const afterExclude = prev.map((p) =>
+        p.id === id ? { ...p, excluido: true, entregar_programado: 0 } : p
+      )
+      const hasProgrammed = afterExclude.some((p) => !p.excluido && p.entregar_programado > 0)
+      if (!hasProgrammed) {
+        return afterExclude.map((p) =>
+          !p.excluido ? { ...p, entregar_programado: p.total } : p
+        )
+      }
+      return afterExclude
+    })
+  }, [])
+
+  const mostrarRecibidoDomicilio = productosEntrega.some((p) => Number(p.recibido || 0) > 0)
+
   // Column defs Domicilio — extraídos a archivo (Fase C).
   const columnDefsDomicilio = useMemo(
-    () => makeColumnsDomicilio(handleProgramarChangeDomicilio),
-    [handleProgramarChangeDomicilio],
+    () => makeColumnsDomicilio(handleProgramarChangeDomicilio, handleExcluirDomicilio, mostrarRecibidoDomicilio),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [handleProgramarChangeDomicilio, handleExcluirDomicilio, mostrarRecibidoDomicilio],
   )
 
   // Handler para editar "Programar ahora" (entregar_programado) en la tabla del resto.
@@ -984,7 +1020,7 @@ function ModalDetallesEntregaInner({
                     resolvedMode.kind !== 'crear-venta' &&
                     totalAEntregar === 0) ||
                   (tipoDespacho === 'Parcial' && totalAEntregar === 0 && totalAProgramar === 0) ||
-                  (tipoDespacho === 'Domicilio' && productosEntrega.length > 0 && totalAProgramar === 0 && totalAEntregar === 0) ||
+                  (tipoDespacho === 'Domicilio' && productosEntrega.length > 0 && totalAProgramar === 0) ||
                   domicilioInvalido ||
                   restoInvalido
             }
