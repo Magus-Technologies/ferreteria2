@@ -7,7 +7,7 @@ import type { ColDef } from 'ag-grid-community'
 export interface FilaProducto {
   key: string; udvId: string; nombre: string; codigo: string
   marca: string; unidad: string; total: number; entregado: number
-  pendiente: number; cantAProgramar: number
+  pendiente: number; devolvio?: number; cantAProgramar: number
 }
 
 const CantCell = memo(function CantCell({ rowKey, init, max, onCommit, onChangeRef }: {
@@ -38,11 +38,13 @@ export function useColsProductosPendientes({
   onChangeRef,
   includeAProgramar = true,
   aProgramarLabel = 'A programar',
+  showDevolvio = false,
 }: {
   onCommit: (key: string, value: number) => void
   onChangeRef?: (key: string, value: number) => void
   includeAProgramar?: boolean
   aProgramarLabel?: string
+  showDevolvio?: boolean
 }): ColDef<FilaProducto>[] {
   const baseCols: ColDef<FilaProducto>[] = [
     {
@@ -59,6 +61,11 @@ export function useColsProductosPendientes({
     { colId: 'total',     field: 'total',     headerName: 'Total',     width: 60, cellStyle: { textAlign: 'center', color: '#64748b', fontWeight: '600' } },
     { colId: 'entregado', field: 'entregado', headerName: 'Entregado', width: 88, cellStyle: { textAlign: 'center', color: '#16a34a', fontWeight: '700' } },
     { colId: 'pendiente', field: 'pendiente', headerName: 'Pendiente', width: 88, cellStyle: { textAlign: 'center', color: '#ea580c', fontWeight: '700' } },
+    ...(showDevolvio ? [{
+      colId: 'devolvio', field: 'devolvio' as keyof FilaProducto, headerName: 'Devolvió', width: 90,
+      cellStyle: { textAlign: 'center', color: '#7c3aed', fontWeight: '700' },
+      valueFormatter: (params: { value: unknown }) => String(Number(params.value || 0)),
+    } as ColDef<FilaProducto>] : []),
   ]
 
   const aProgramarCol: ColDef<FilaProducto>[] = includeAProgramar ? [

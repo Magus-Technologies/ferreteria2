@@ -18,6 +18,7 @@ import { ProgramarCell } from './programar-cell'
 export function makeColumnsDomicilio(
   onProgramarChange: (id: number, value: number | null) => void,
   onExcluir?: (id: number) => void,
+  showRecibido = false,
 ): ColDef<ProductoEntrega>[] {
   return [
     {
@@ -31,6 +32,13 @@ export function makeColumnsDomicilio(
       width: 100,
       valueFormatter: (params) => Number(params.value).toFixed(2),
     },
+    ...(showRecibido ? [{
+      headerName: 'Devolvió',
+      field: 'recibido' as keyof ProductoEntrega,
+      width: 110,
+      valueFormatter: (params: { value: unknown }) => Number(params.value || 0).toFixed(2),
+      cellStyle: { textAlign: 'center', color: '#dc2626', fontWeight: '700' } as Record<string, string>,
+    } as ColDef<ProductoEntrega>] : []),
     {
       headerName: 'Programar ahora',
       field: 'entregar_programado',

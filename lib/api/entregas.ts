@@ -228,6 +228,9 @@ export interface EntregaNueva {
   longitud: number | null
   observaciones: string | null
   motivo_anulacion: string | null
+  user_entregado_id: string | null
+  user_entregado_name: string | null
+  almacen_salida_name: string | null
   detalles: EntregaDetalleProd[]
   venta?: {
     id: string

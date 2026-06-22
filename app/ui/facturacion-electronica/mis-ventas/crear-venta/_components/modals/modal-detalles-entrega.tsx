@@ -562,12 +562,15 @@ function ModalDetallesEntregaInner({
         // Editar-venta + producto nuevo: ídem.
         // Editar-venta + producto existente: programar el resto por defecto.
 
-           if (tipoDespacho === 'Domicilio') {
+        const recibido = datosBd ? Math.max(0, datosBd.cantidadBd - total) : 0
+
+        if (tipoDespacho === 'Domicilio') {
           return {
             id: index + 1,
             producto: p.producto_name,
             ubicacion: '',
             total,
+            recibido,
             entregado: entregadoYa,
             pendiente,
             entregar: 0,
@@ -581,6 +584,7 @@ function ModalDetallesEntregaInner({
           producto: p.producto_name,
           ubicacion: '',
           total,
+          recibido,
           entregado: entregadoYa,
           pendiente,
           entregar: debeEntregarAhora ? pendiente : 0,
@@ -793,10 +797,13 @@ function ModalDetallesEntregaInner({
     })
   }, [])
 
+  const mostrarRecibidoDomicilio = productosEntrega.some((p) => Number(p.recibido || 0) > 0)
+
   // Column defs Domicilio — extraídos a archivo (Fase C).
   const columnDefsDomicilio = useMemo(
-    () => makeColumnsDomicilio(handleProgramarChangeDomicilio, handleExcluirDomicilio),
-    [handleProgramarChangeDomicilio, handleExcluirDomicilio],
+    () => makeColumnsDomicilio(handleProgramarChangeDomicilio, handleExcluirDomicilio, mostrarRecibidoDomicilio),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [handleProgramarChangeDomicilio, handleExcluirDomicilio, mostrarRecibidoDomicilio],
   )
 
   // Handler para editar "Programar ahora" (entregar_programado) en la tabla del resto.

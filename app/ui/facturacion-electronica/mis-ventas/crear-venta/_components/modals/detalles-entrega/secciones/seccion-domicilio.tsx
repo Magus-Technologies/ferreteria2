@@ -210,9 +210,6 @@ export function SeccionDomicilio({
                 columnDefs={columnDefsDomicilio}
                 rowData={productosEntrega.filter(p => !p.excluido)}
                 persistColumnState={false}
-                exportExcel={false}
-                exportPdf={false}
-                selectColumns={false}
               />
             </div>
             {productosEntrega.some(p => p.excluido) && (

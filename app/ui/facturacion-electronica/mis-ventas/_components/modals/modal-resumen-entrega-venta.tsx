@@ -109,6 +109,20 @@ export default function ModalResumenEntregaVenta({
     return covered
   }, [historial])
 
+  // Total histórico incluyendo canceladas — para calcular "Devolvió":
+  // si se entregaron 10, se anuló la entrega y la venta se redujo a 5,
+  // devolvio = max(0, 10 - 5) = 5.
+  const allEntregadoMap = useMemo(() => {
+    const all: Record<string, number> = {}
+    for (const entrega of historial) {
+      for (const d of entrega.detalles ?? []) {
+        const id = String(d.unidad_derivada_venta_id)
+        all[id] = (all[id] ?? 0) + (d.cantidad ?? 0)
+      }
+    }
+    return all
+  }, [historial])
+
   useEffect(() => {
     if (!vd) return
     const siguientesFilas = (vd.productos_por_almacen ?? []).flatMap((prod: any, pi: number) =>
@@ -116,13 +130,14 @@ export default function ModalResumenEntregaVenta({
         const total    = Number(udv.cantidad ?? 0)
         const entregado = coveredMap[String(udv.id)] ?? 0
         const pendiente = Math.max(0, total - entregado)
+        const devolvio  = Math.max(0, (allEntregadoMap[String(udv.id)] ?? 0) - total)
         return {
           key: `${pi}-${ui}`, udvId: String(udv.id),
           nombre:   prod.producto_almacen?.producto?.name ?? 'Producto',
           codigo:   prod.producto_almacen?.producto?.cod_producto ?? '—',
           marca:    prod.producto_almacen?.producto?.marca?.name ?? '—',
           unidad:   udv.unidad_derivada_inmutable?.name ?? '—',
-          total, entregado, pendiente, cantAProgramar: pendiente,
+          total, entregado, pendiente, devolvio, cantAProgramar: pendiente,
         }
       })
     )
@@ -193,6 +208,7 @@ export default function ModalResumenEntregaVenta({
     onChangeRef,
     includeAProgramar: hasPendiente,
     aProgramarLabel: tipo === 'rt' ? 'A entregar' : 'A programar',
+    showDevolvio: filas.some(f => (f.devolvio ?? 0) > 0) || historial.some(e => e.estado_entrega_codigo === 'ca'),
   })
 
   const aProg    = filas.filter(f => f.cantAProgramar > 0)
@@ -284,12 +300,12 @@ export default function ModalResumenEntregaVenta({
             {/* Productos — 55% del alto */}
             <div style={{ flex: 3 }} className="min-h-0">
               <TableWithTitle<FilaProducto>
-                id={tipo === 'de' ? 'entrega-productos-de-v1' : 'entrega-productos-rt-v1'}
+                id={tipo === 'de' ? 'entrega-productos-de-v3' : 'entrega-productos-rt-v3'}
                 title="Productos de la venta"
                 rowData={filas} columnDefs={colsProductos}
                 rowSelection={false} withNumberColumn={false} pagination={false}
                 persistColumnState={true} domLayout="normal" rowHeight={36} headerHeight={HH}
-                isVisible={open} exportExcel={false} exportPdf={false}
+                isVisible={open}
                 noRowsOverlayComponent={() => <div className="text-gray-400 text-sm">Sin productos</div>}
               />
             </div>
@@ -297,7 +313,7 @@ export default function ModalResumenEntregaVenta({
             {/* Historial — 45% del alto */}
             <div style={{ flex: 2 }} className="min-h-0">
               <TableWithTitle<EntregaNueva>
-                id="entrega-historial-v4"
+                id="entrega-historial-v9"
                 title="Historial de entregas"
                 extraTitle={historial.length > 0
                   ? <span className="text-xs text-slate-400 font-normal">· {historial.length} registro{historial.length !== 1 ? 's' : ''}</span>
@@ -305,7 +321,7 @@ export default function ModalResumenEntregaVenta({
                 rowData={historial} columnDefs={colsHistorial}
                 rowSelection={false} withNumberColumn={false} pagination={false}
                 persistColumnState={true} domLayout="normal" rowHeight={48} headerHeight={HH}
-                isVisible={open} exportExcel={false} exportPdf={false}
+                isVisible={open}
                 noRowsOverlayComponent={() => <div className="text-gray-400 text-sm">Sin entregas registradas</div>}
               />
             </div>

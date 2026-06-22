@@ -95,12 +95,13 @@ export function useColsHistorialEntrega({ onRefetch, entregas }: { onRefetch?: (
       },
     },
     {
-      colId: 'quien_despacha', headerName: 'Despacha', width: 140,
+      colId: 'quien_despacha', headerName: 'Despacha', width: 160,
       cellRenderer: ({ data: d }: { data: EntregaNueva }) => (
         <div className="flex flex-col justify-center h-full leading-tight gap-0.5">
           <span className="text-xs font-semibold text-slate-700">{d.quien_entrega_nombre ?? '—'}</span>
-          {d.chofer_name   && <span className="text-[10px] text-slate-500">👤 {d.chofer_name}</span>}
-          {d.vehiculo_name && <span className="text-[10px] text-slate-400">🚗 {d.vehiculo_name}{d.vehiculo_placa ? ` · ${d.vehiculo_placa}` : ''}</span>}
+          {d.chofer_name        && <span className="text-[10px] text-slate-500">👤 {d.chofer_name}</span>}
+          {d.vehiculo_name      && <span className="text-[10px] text-slate-400">🚗 {d.vehiculo_name}{d.vehiculo_placa ? ` · ${d.vehiculo_placa}` : ''}</span>}
+          {d.user_entregado_name && <span className="text-[10px] text-green-600">✅ {d.user_entregado_name}</span>}
         </div>
       ),
     },
@@ -131,6 +132,19 @@ export function useColsHistorialEntrega({ onRefetch, entregas }: { onRefetch?: (
           </div>
         )
       },
+    },
+    {
+      colId: 'devolvio', headerName: 'Devolvió', width: 80,
+      valueGetter: ({ data: d }: { data: EntregaNueva }) => {
+        if (!d || d.estado_entrega_codigo !== 'ca') return 0
+        return (d.detalles ?? []).reduce((s, det) => s + Number(det.cantidad ?? 0), 0)
+      },
+      cellStyle: (p: { value: number }) => ({
+        textAlign: 'center',
+        fontWeight: '700',
+        fontSize: '13px',
+        color: p.value > 0 ? '#dc2626' : '#94a3b8',
+      }),
     },
     {
       colId: 'acciones', headerName: 'Acciones', width: 90,
