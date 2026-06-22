@@ -15,7 +15,7 @@ const distribucionesDemo = [
 ]
 
 export default function TicketAperturaCaja({ ctx }: { ctx: PreviewContext }) {
-  const { e, b, razonSocial, direccion, email, ruc, celular, logoUrl, fontFaceCss, containerStyle, tituloDocumento, numeroDocumento } = ctx
+  const { e, m, b, razonSocial, direccion, email, ruc, celular, logoUrl, fontFaceCss, containerStyle, tituloDocumento, numeroDocumento } = ctx
 
   const sep = <div style={{ borderTop: `${e.border_thin_px}px dashed ${e.color_borde}`, margin: "6px 0" }} />
 
@@ -45,7 +45,7 @@ export default function TicketAperturaCaja({ ctx }: { ctx: PreviewContext }) {
         <div style={{ width: 280, margin: "0 auto" }}>
           {/* Empresa */}
           <div style={{ textAlign: "center", marginBottom: 6 }}>
-            {logoUrl && (
+            {logoUrl && !m.ocultar_logo && (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={logoUrl} alt="logo" style={{ maxWidth: "100%", height: 60, objectFit: "contain" }} />
             )}

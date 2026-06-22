@@ -23,7 +23,7 @@ export default function TicketRequerimientoServicio({ ctx }: { ctx: PreviewConte
         <div style={{ width: 280, margin: "0 auto" }}>
           {/* Header centrado, sin recuadros */}
           <div style={{ textAlign: "center", marginBottom: 6 }}>
-            {logoUrl && (
+            {logoUrl && !m.ocultar_logo && (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={logoUrl} alt="logo" style={{ maxHeight: 50, objectFit: "contain", marginBottom: 4 }} />
             )}

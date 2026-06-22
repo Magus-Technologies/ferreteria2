@@ -4,7 +4,7 @@ import { bloqueACSS } from "~/lib/api/plantilla-impresion"
 import type { PreviewContext } from "../_shared/types"
 
 export default function TicketValeGenerado({ ctx }: { ctx: PreviewContext }) {
-  const { e, b, razonSocial, logoUrl, fontFaceCss, containerStyle } = ctx
+  const { e, m, b, razonSocial, logoUrl, fontFaceCss, containerStyle } = ctx
 
   return (
     <>
@@ -13,7 +13,7 @@ export default function TicketValeGenerado({ ctx }: { ctx: PreviewContext }) {
         <div style={{ width: 280, margin: "0 auto" }}>
           {/* Header empresa */}
           <div style={{ textAlign: "center", marginBottom: 4 }}>
-            {logoUrl && (
+            {logoUrl && !m.ocultar_logo && (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={logoUrl} alt="logo" style={{ maxWidth: "100%", height: 60, objectFit: "contain" }} />
             )}

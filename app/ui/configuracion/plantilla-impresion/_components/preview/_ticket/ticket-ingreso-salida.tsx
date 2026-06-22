@@ -15,7 +15,7 @@ export default function TicketIngresoSalida({ ctx }: { ctx: PreviewContext }) {
         <div style={{ width: 280, margin: "0 auto" }}>
           {/* Header */}
           <div style={{ textAlign: "center", marginBottom: 6 }}>
-            {logoUrl && (
+            {logoUrl && !m.ocultar_logo && (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={logoUrl} alt="logo" style={{ maxWidth: "100%", height: 60, objectFit: "contain" }} />
             )}

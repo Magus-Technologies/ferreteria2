@@ -22,6 +22,8 @@ export interface MensajesExtraPlantilla {
   ocultar_canjear?: boolean;
   ocultar_despedida?: boolean;
   ocultar_cuentas_bancarias?: boolean;
+  // Oculta el logo de la empresa en el ticket (configurable por comprobante).
+  ocultar_logo?: boolean;
 }
 
 export type AlineacionBloque = "left" | "center" | "right";
@@ -91,6 +93,7 @@ export const MENSAJES_EXTRA_DEFAULT: MensajesExtraPlantilla = {
   ocultar_canjear: false,
   ocultar_despedida: false,
   ocultar_cuentas_bancarias: false,
+  ocultar_logo: false,
 };
 
 export const BLOQUE_VACIO: EstiloBloque = {
