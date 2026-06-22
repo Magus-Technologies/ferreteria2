@@ -235,8 +235,9 @@ export default function TableDetalleEntrega() {
         // Confirmed → entregado = estaEntrega, pendiente = 0.
         // Pending   → entregado = 0, pendiente = estaEntrega.
         const esConfirmada = (entregaSeleccionada as any)?.estado_entrega === 'en'
+        const esCancelada = (entregaSeleccionada as any)?.estado_entrega === 'ca'
         const entregado = esConfirmada ? estaEntrega : 0
-        const pendiente = esConfirmada ? 0 : estaEntrega
+        const pendiente = (esConfirmada || esCancelada) ? 0 : estaEntrega
 
         return {
           producto: producto.producto,
@@ -244,7 +245,7 @@ export default function TableDetalleEntrega() {
           marca: producto.marca || '—',
           unidad: producto.unidad,
           total: estaEntrega,
-          recibido: 0,
+          recibido: esCancelada ? estaEntrega : 0,
           estaEntrega,
           programado: programadoAcumulado,
           entregado,
