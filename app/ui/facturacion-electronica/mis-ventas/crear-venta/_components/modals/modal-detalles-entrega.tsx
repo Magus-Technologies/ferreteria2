@@ -561,6 +561,20 @@ function ModalDetallesEntregaInner({
         // Venta nueva (!ventaIdParaConsulta): entregar todo ahora por defecto.
         // Editar-venta + producto nuevo: ídem.
         // Editar-venta + producto existente: programar el resto por defecto.
+
+           if (tipoDespacho === 'Domicilio') {
+          return {
+            id: index + 1,
+            producto: p.producto_name,
+            ubicacion: '',
+            total,
+            entregado: entregadoYa,
+            pendiente,
+            entregar: 0,
+            entregar_programado: pendiente,
+            unidad_derivada_venta_id: p.unidad_derivada_id,
+          }
+        }
         const debeEntregarAhora = esProductoNuevoEnEdicion || !ventaIdParaConsulta
         return {
           id: index + 1,

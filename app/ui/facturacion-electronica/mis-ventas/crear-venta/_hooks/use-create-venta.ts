@@ -482,14 +482,32 @@ export default function useCreateVenta({
 
           // Si el modal envió cantidades_parciales (split de Domicilio), usar
           // entregar_programado por unidad. Si no, programar todo por defecto.
-          let parcialIdx = 0
+          //
+          // Matching por nombre+udv, NO por índice posicional: el API devuelve
+          // productos_por_almacen ordenados por pav_id (inserción en BD),
+          // mientras que cantidades_parciales sigue el orden del formulario
+          // (orden en que el usuario agregó productos). Si difieren, el índice
+          // posicional aplica cantidades al producto equivocado.
+          const parcialLookup = new Map<string, (typeof cantidades_parciales[0])[]>()
+          if (cantidades_parciales) {
+            for (const c of cantidades_parciales) {
+              const key = `${c.producto_name ?? ''}::${c.unidad_derivada_id ?? ''}`
+              const arr = parcialLookup.get(key) ?? []
+              arr.push(c)
+              parcialLookup.set(key, arr)
+            }
+          }
+
           productosVenta.forEach((productoAlmacen: any) => {
             if (productoAlmacen.unidades_derivadas) {
+              const prodName = productoAlmacen.producto_almacen?.producto?.name ?? ''
               productoAlmacen.unidades_derivadas.forEach((unidad: any) => {
-                const parcial = cantidades_parciales?.[parcialIdx]
-                parcialIdx++
-                const cantidadAEntregar = parcial
-                  ? Number(parcial.entregar_programado ?? 0)
+                const uddId = unidad.unidad_derivada_inmutable?.id ?? ''
+                const key = `${prodName}::${uddId}`
+                const queue = parcialLookup.get(key)
+                const parcial = queue?.shift()
+                const cantidadAEntregar = cantidades_parciales
+                  ? Number(parcial?.entregar_programado ?? 0)
                   : Number(unidad.cantidad)
                 if (cantidadAEntregar > 0) {
                   unidadesDerivadas.push({
