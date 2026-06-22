@@ -44,6 +44,7 @@ export interface LoginResponse {
     /** componentIds cuyo acceso ya fue otorgado al usuario */
     auth_granted?: string[];
     rol_sistema: string | null;
+    role_name: string | null;
     cargo: string | null;
     cargo_id?: number | null;
     es_root_cargo?: boolean;

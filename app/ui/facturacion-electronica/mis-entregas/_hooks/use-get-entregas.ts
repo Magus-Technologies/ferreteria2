@@ -139,8 +139,12 @@ export default function useGetEntregas() {
     staleTime: 5 * 60 * 1000,
   })
 
-  const rolesEntregaTienda: string[] = (configData?.data as any)?.roles_entrega_tienda ?? ['ALMACENERO']
-  const puedeVerRecojoTienda = !esAdmin && rolesEntregaTienda.includes(user?.rol_sistema ?? '')
+  const rolesEntregaTienda: string[] = (configData?.data as any)?.roles_entrega_tienda ?? ['almacenero']
+  // Chequear ambos identificadores: role_name (nuevo, sin rol_sistema) y rol_sistema (compat)
+  const puedeVerRecojoTienda = !esAdmin && (
+    rolesEntregaTienda.includes(user?.role_name ?? '') ||
+    rolesEntregaTienda.includes(user?.rol_sistema ?? '')
+  )
 
   const { data, isFetching, error, refetch } = useQuery({
     queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, filtros, user?.id, esAdmin, puedeVerRecojoTienda],
