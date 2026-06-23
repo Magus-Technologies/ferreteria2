@@ -45,7 +45,8 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
     | "EnTienda"
     | "Domicilio"
     | "Parcial"
-    | "Omitir";
+    | "Omitir"
+    | "OmitirConStock";
   const productos = Form.useWatch(
     "productos",
     form,
@@ -115,7 +116,7 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
     // Si es despacho en tienda Y el cliente ya tiene la mercadería (descontar_stock=no),
     // el backend ya decide todo (quien_entrega=vendedor, estado=en). No hay nada
     // que configurar → submit directo sin abrir el modal.
-    if (tipo_despacho === 'Omitir' || (tipo_despacho === 'EnTienda' && descontarStockWatch === 'no')) {
+    if (tipo_despacho === 'Omitir' || tipo_despacho === 'OmitirConStock' || (tipo_despacho === 'EnTienda' && descontarStockWatch === 'no')) {
       form.submit();
     } else {
       setModalDetallesEntregaOpen(true);
@@ -560,7 +561,7 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
           setModalOpen(false);
           // Misma lógica que handleCreditoClick: si EnTienda + descontar_stock=no,
           // el backend ya decide todo, no abrir modal de entrega.
-          if (tipo_despacho === 'Omitir' || (tipo_despacho === 'EnTienda' && descontarStockWatch === 'no')) {
+          if (tipo_despacho === 'Omitir' || tipo_despacho === 'OmitirConStock' || (tipo_despacho === 'EnTienda' && descontarStockWatch === 'no')) {
             form.submit();
           } else {
             setModalDetallesEntregaOpen(true);

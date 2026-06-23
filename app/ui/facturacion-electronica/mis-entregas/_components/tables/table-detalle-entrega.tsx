@@ -277,7 +277,7 @@ export default function TableDetalleEntrega() {
         recibido: Math.max(cantidadAnterior - cantidadActual, 0),
         estaEntrega: 0,
         programado: 0,
-        entregado: cantidadActual,
+        entregado: Math.min(cantidadAnterior, cantidadActual),
         pendiente: Math.max(cantidadActual - cantidadAnterior, 0),
       })
     }

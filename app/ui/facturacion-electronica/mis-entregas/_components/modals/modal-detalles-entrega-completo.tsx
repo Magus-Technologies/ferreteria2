@@ -199,12 +199,14 @@ export default function ModalDetallesEntregaCompleto({
         const recibido = esCancelada
           ? rawEntregada
           : (mostrarRecibido ? Math.max(cantidadAnterior - cantidadActual, 0) : 0)
-        // pedida = what THIS delivery was programmed for, not the full sale qty
-        const pedida = rawEntregada
+        // pedida = max(original, current) so the Total column always shows the larger qty
+        const pedida = mostrarRecibido ? Math.max(cantidadAnterior, cantidadActual) : rawEntregada
         const entregada = (!esCancelada && entregaTieneEntregaFisica)
-          ? (mostrarRecibido ? cantidadActual : rawEntregada)
+          ? (mostrarRecibido ? Math.min(cantidadAnterior, cantidadActual) : rawEntregada)
           : 0
-        const pendiente = esCancelada ? 0 : (mostrarRecibido ? 0 : (entregaTieneEntregaFisica ? 0 : rawEntregada))
+        const pendiente = esCancelada ? 0 : (mostrarRecibido
+          ? Math.max(cantidadActual - cantidadAnterior, 0)
+          : (entregaTieneEntregaFisica ? 0 : rawEntregada))
         return {
           codigo,
           nombre: prod?.name || 'Producto',
