@@ -71,11 +71,15 @@ export function mapToEntregaDB(e: EntregaNueva): any {
           cantidad_entregada:       d.cantidad,
         })),
       }],
+      historial: (venta as any).historial ?? [],
     } : null,
 
     // Chofer / vehiculo / usuario que entregó / almacén
+    user_entregado_id: (e as any).user_entregado_id ?? null,
     chofer:         e.chofer_name ? { name: e.chofer_name } : undefined,
-    userEntregado:  (e as any).user_entregado_name ? { name: (e as any).user_entregado_name } : undefined,
+    userEntregado:  (e as any).user_entregado_name
+      ? { id: (e as any).user_entregado_id ?? true, name: (e as any).user_entregado_name }
+      : undefined,
     almacenSalida:  (e as any).almacen_salida_name ? { name: (e as any).almacen_salida_name } : undefined,
     fecha_ejecutada: e.fecha_ejecutada ?? undefined,
     vehiculo: e.vehiculo_placa
