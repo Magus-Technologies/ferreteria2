@@ -651,6 +651,11 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
       ]}
       width={500}
       centered
+      // Este modal es hermano (no hijo) del modal "Registrar Cobro", por lo que antd
+      // les asigna el mismo z-index (1100) y el orden del DOM decide cuál queda encima.
+      // Forzamos un z-index mayor para que "Anular Cobro" siempre quede sobre el padre.
+      zIndex={1100 + 100}
+      destroyOnHidden
     >
       <div className='space-y-4'>
         <div className='bg-red-50 border border-red-200 rounded-lg p-3'>

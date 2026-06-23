@@ -30,8 +30,15 @@ interface VentaConDistribucion extends VentaCompleta {
   _numeroOperacion: string | undefined
 }
 
+// Redondeo a centavos (2 decimales, half-up) para eliminar ruido de punto flotante.
+// Sin esto, montos como 986600.3949 hacen que el `max` del InputNumber quede por
+// debajo del valor mostrado y antd recorta lo que escribe el usuario (986600.40 -> 986600.39).
+function round2(n: number): number {
+  return Math.round((n + Number.EPSILON) * 100) / 100
+}
+
 function calcularTotalVenta(venta: VentaCompleta): number {
-  return (venta.productos_por_almacen || []).reduce((acc, item: any) => {
+  const total = (venta.productos_por_almacen || []).reduce((acc, item: any) => {
     for (const u of item.unidades_derivadas ?? []) {
       const precio = Number(u.precio ?? 0)
       const cantidad = Number(u.cantidad ?? 0)
@@ -41,6 +48,7 @@ function calcularTotalVenta(venta: VentaCompleta): number {
     }
     return acc
   }, 0)
+  return round2(total)
 }
 
 export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultipleProps) {
@@ -100,12 +108,12 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
     const defaultPago = defaultPagoValue
     const ventas: VentaConDistribucion[] = ventasData.map((v: VentaCompleta) => {
       const total = calcularTotalVenta(v)
-      const cobrado = Number(v.total_cobrado || 0)
+      const cobrado = round2(Number(v.total_cobrado || 0))
       return {
         ...v,
         _totalVenta: total,
         _totalCobrado: cobrado,
-        _saldoPendiente: total - cobrado,
+        _saldoPendiente: round2(total - cobrado),
         _montoAPagar: 0,
         _seleccionada: true,
         _desplieguePagoId: defaultPago,
@@ -150,7 +158,7 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
 
   const handleMontoManual = useCallback((ventaId: string, monto: number) => {
     setVentasDistribucion(prev => prev.map(v =>
-      v.id === ventaId ? { ...v, _montoAPagar: Math.min(monto, v._saldoPendiente) } : v
+      v.id === ventaId ? { ...v, _montoAPagar: round2(Math.min(monto, v._saldoPendiente)) } : v
     ))
   }, [])
 
@@ -199,10 +207,10 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
 
 
   const totalDeudaCliente = useMemo(() =>
-    ventasDistribucion.filter(v => v._seleccionada).reduce((sum, v) => sum + v._saldoPendiente, 0), [ventasDistribucion])
+    round2(ventasDistribucion.filter(v => v._seleccionada).reduce((sum, v) => sum + v._saldoPendiente, 0)), [ventasDistribucion])
 
   const totalDistribuido = useMemo(() =>
-    ventasDistribucion.reduce((sum, v) => sum + v._montoAPagar, 0), [ventasDistribucion])
+    round2(ventasDistribucion.reduce((sum, v) => sum + v._montoAPagar, 0)), [ventasDistribucion])
 
   const montoSinDistribuir = montoTotal - totalDistribuido
 
