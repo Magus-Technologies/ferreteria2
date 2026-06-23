@@ -301,16 +301,39 @@ export default function ModalResumenEntregaVenta({
           <div className="flex-1 min-w-0 flex flex-col gap-3 min-h-0">
 
             {/* Productos — 55% del alto */}
-            <div style={{ flex: 3 }} className="min-h-0">
-              <TableWithTitle<FilaProducto>
-                id={tipo === 'de' ? 'entrega-productos-de-v3' : 'entrega-productos-rt-v3'}
-                title="Productos de la venta"
-                rowData={filas} columnDefs={colsProductos}
-                rowSelection={false} withNumberColumn={false} pagination={false}
-                persistColumnState={true} domLayout="normal" rowHeight={36} headerHeight={HH}
-                isVisible={open}
-                noRowsOverlayComponent={() => <div className="text-gray-400 text-sm">Sin productos</div>}
-              />
+            <div style={{ flex: 3 }} className="min-h-0 flex flex-col gap-1">
+              <div className="flex-1 min-h-0">
+                <TableWithTitle<FilaProducto>
+                  id={tipo === 'de' ? 'entrega-productos-de-v4' : 'entrega-productos-rt-v4'}
+                  title="Productos de la venta"
+                  rowData={filas.filter(f => f.cantAProgramar > 0 || f.pendiente === 0)} columnDefs={colsProductos}
+                  rowSelection={false} withNumberColumn={false} pagination={false}
+                  persistColumnState={true} domLayout="normal" rowHeight={36} headerHeight={HH}
+                  isVisible={open}
+                  noRowsOverlayComponent={() => <div className="text-gray-400 text-sm">Sin productos</div>}
+                />
+              </div>
+              {filas.some(f => f.cantAProgramar === 0 && f.pendiente > 0) && (
+                <div className="flex-shrink-0 flex flex-col gap-0.5 rounded border border-amber-200 bg-amber-50 px-3 py-2">
+                  <span className="text-xs font-medium text-amber-700">
+                    {filas.filter(f => f.cantAProgramar === 0 && f.pendiente > 0).length === 1
+                      ? '1 producto excluido de esta entrega:'
+                      : `${filas.filter(f => f.cantAProgramar === 0 && f.pendiente > 0).length} productos excluidos de esta entrega:`}
+                  </span>
+                  {filas.filter(f => f.cantAProgramar === 0 && f.pendiente > 0).map(f => (
+                    <div key={f.key} className="flex items-center justify-between gap-2">
+                      <span className="text-xs text-amber-800 truncate">{f.nombre}</span>
+                      <button
+                        type="button"
+                        onClick={() => onCommit(f.key, f.pendiente)}
+                        className="shrink-0 text-xs font-medium text-amber-700 underline hover:text-amber-900"
+                      >
+                        Restaurar
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Historial — 45% del alto */}

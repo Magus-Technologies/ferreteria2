@@ -76,6 +76,23 @@ export function useColsProductosPendientes({
         <CantCell rowKey={d.key} init={d.cantAProgramar} max={d.pendiente} onCommit={onCommit} onChangeRef={onChangeRef} />
       ),
     },
+    {
+      colId: 'acciones_cant', headerName: '', width: 36, suppressSizeToFit: true,
+      cellRenderer: ({ data: d }: { data: FilaProducto }) => {
+        if (d.pendiente === 0) return null
+        return (
+          <div className="flex items-center justify-center h-full">
+            <button
+              onClick={() => onCommit(d.key, 0)}
+              className="text-red-400 hover:text-red-600 text-base leading-none font-bold"
+              title="Quitar de esta entrega"
+            >
+              ✕
+            </button>
+          </div>
+        )
+      },
+    },
   ] : []
 
   return [...baseCols, ...aProgramarCol]
