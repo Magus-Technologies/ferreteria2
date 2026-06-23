@@ -233,6 +233,7 @@ export default function MisEntregasPage() {
               telefono:     (entrega as any).venta?.cliente?.telefono,
             },
             entregas_productos: [],
+            historial: (entrega as any).venta?.historial ?? [],
           },
           productos_entregados: ((entrega as any).productos_entregados ?? []).map((d: any) => ({
             id:                d.id,
