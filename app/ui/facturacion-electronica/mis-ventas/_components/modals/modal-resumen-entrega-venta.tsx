@@ -211,7 +211,7 @@ export default function ModalResumenEntregaVenta({
     onChangeRef,
     includeAProgramar: hasPendiente,
     aProgramarLabel: tipo === 'rt' ? 'A entregar' : 'A programar',
-    showDevolvio: filas.some(f => (f.devolvio ?? 0) > 0) || historial.some(e => e.estado_entrega_codigo === 'ca'),
+    showDevolvio: filas.some(f => (f.devolvio ?? 0) > 0) || historial.some((e: any) => e.estado_entrega_codigo === 'ca'),
   })
 
   const aProg    = filas.filter(f => f.cantAProgramar > 0)

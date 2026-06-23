@@ -15,6 +15,7 @@ import { gananciasApi } from '~/lib/api/ganancias'
 import { empresaApi } from '~/lib/api/empresa'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useStoreAlmacen } from '~/store/store-almacen'
+import { parseFechaDMY } from '~/utils/fechas'
 import KpiCards from './_components/kpi-cards'
 import GraficoVentas from './_components/grafico-ventas'
 import SeccionReportesAvanzados from './_components/seccion-reportes-avanzados'
@@ -61,7 +62,9 @@ function ReporteVentasContent() {
     const detalle = detalleData?.data?.data || []
     const porMes: Record<string, { ventas: number; ganancia: number }> = {}
     for (const item of detalle) {
-      const mes = dayjs(item.fecha).format('MMM-YY').toUpperCase()
+      const fecha = parseFechaDMY(item.fecha)
+      if (!fecha) continue
+      const mes = fecha.format('MMM-YY').toUpperCase()
       if (!porMes[mes]) porMes[mes] = { ventas: 0, ganancia: 0 }
       porMes[mes].ventas += Number(item.subtot || 0)
       porMes[mes].ganancia += Number(item.ganancia || 0)

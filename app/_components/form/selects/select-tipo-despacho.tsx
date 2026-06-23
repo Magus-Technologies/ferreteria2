@@ -11,7 +11,8 @@ const TIPOS_DESPACHO = [
   { value: 'EnTienda', label: '🏪 Despacho en Tienda' },
   { value: 'Domicilio', label: '🚚 Despacho a Domicilio' },
   { value: 'Parcial', label: '📦 Despacho Parcial' },
-  { value: 'Omitir', label: '⏭ Omitir Entrega' },
+  { value: 'Omitir', label: '⏭ Omitir (sin stock)' },
+  { value: 'OmitirConStock', label: '⏭ Omitir (con stock)' },
 ]
 
 export default function SelectTipoDespacho({

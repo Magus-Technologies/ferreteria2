@@ -73,6 +73,8 @@ export default function TableProductoSearch({
   const tableGridRef = useRef<any>(null);
   const searchTerm = value?.trim();
   const isActiveSearch = searchTerm.length >= 2;
+  const userSelectedRef = useRef<boolean>(false);
+  const prevValueRef = useRef(value);
 
   /**
    * Carga TODOS los productos del almacén en un solo request (shape LIGERO
@@ -134,6 +136,7 @@ export default function TableProductoSearch({
     staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
+    placeholderData: (previousData) => previousData,
   });
 
   const setProductoSeleccionadoSearchStore = useStoreProductoSeleccionadoSearch(
@@ -274,12 +277,21 @@ export default function TableProductoSearch({
     }
   }, [quickFilterValue]);
 
-  // Auto-seleccionar el primer producto cuando hay resultados
+  // Resetear selección manual cuando el usuario cambia la búsqueda
+  if (prevValueRef.current !== value) {
+    prevValueRef.current = value;
+    userSelectedRef.current = false;
+  }
+
+  // Auto-seleccionar el primer producto cuando hay resultados.
+  // Si el usuario ya hizo click manualmente en una fila, NO sobreescribir.
   useEffect(() => {
     if (!productosFiltrados || productosFiltrados.length === 0) {
       setProductoSeleccionadoSearchStore(undefined);
       return;
     }
+
+    if (userSelectedRef.current) return;
 
     let cancelled = false;
     let attempts = 0;
@@ -290,11 +302,8 @@ export default function TableProductoSearch({
       const api = tableGridRef.current?.api;
       const firstNode = api?.getDisplayedRowAtIndex(0);
       if (firstNode) {
-        const alreadySelected = (api?.getSelectedNodes()?.length ?? 0) > 0;
-        if (!alreadySelected) {
-          firstNode.setSelected(true);
-          setProductoSeleccionadoSearchStore(firstNode.data as any);
-        }
+        firstNode.setSelected(true);
+        setProductoSeleccionadoSearchStore(firstNode.data as any);
         return;
       }
       if (++attempts < maxAttempts) {
@@ -325,10 +334,12 @@ export default function TableProductoSearch({
       cacheQuickFilter={true}
       quickFilterText={quickFilterValue}
       onSelectionChanged={({ selectedNodes }) => {
+        if (selectedNodes?.[0]) userSelectedRef.current = true;
         const producto = selectedNodes?.[0]?.data as Producto;
         setProductoSeleccionadoSearchStore(producto as any);
       }}
       onRowClicked={({ data, node }) => {
+        userSelectedRef.current = true;
         node.setSelected(true);
         setProductoSeleccionadoSearchStore(data as any);
         requestConfirm();

@@ -135,7 +135,7 @@ export function useColsHistorialEntrega({ onRefetch, entregas }: { onRefetch?: (
     },
     {
       colId: 'devolvio', headerName: 'Devolvió', width: 80,
-      valueGetter: ({ data: d }: { data: EntregaNueva }) => {
+      valueGetter: ({ data: d }: { data: EntregaNueva | undefined }) => {
         if (!d || d.estado_entrega_codigo !== 'ca') return 0
         return (d.detalles ?? []).reduce((s, det) => s + Number(det.cantidad ?? 0), 0)
       },

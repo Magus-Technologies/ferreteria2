@@ -45,6 +45,7 @@ interface ValuesFiltersMisVentas {
   tipo_documento?: TipoDocumento;
   user_id?: string;
   estado_de_venta?: EstadoDeVenta;
+  estado_cuenta?: 'pagado' | 'deuda';
   serie_numero?: string;
   entrega?: 'pendiente' | 'completa';
   // Filtro por ediciones — se mapea a ?editada=si|no en el backend.
@@ -113,6 +114,7 @@ export default function FiltersMisVentas() {
     if (values.forma_de_pago) count++;
     if (values.despliegue_de_pago_id) count++;
     if (values.estado_de_venta) count++;
+    if (values.estado_cuenta) count++;
     if (values.user_id) count++;
     if (values.serie_numero) count++;
     if (values.entrega) count++;
@@ -472,6 +474,25 @@ export default function FiltersMisVentas() {
                 />
               </Form.Item>
             </ConfigurableElement>
+            
+          </div>
+           <div className="col-span-2 flex items-center gap-1">
+            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
+              Est. Cuenta:
+            </label>
+            <ConfigurableElement componentId="field-estado-cuenta" label="Campo Estado Cuenta">
+              <Form.Item name="estado_cuenta" noStyle>
+                <Select
+                  allowClear
+                  placeholder="Todos"
+                  className="w-full"
+                  options={[
+                    { value: 'pagado', label: 'Pagado' },
+                    { value: 'deuda', label: 'Deuda' },
+                  ]}
+                />
+              </Form.Item>
+            </ConfigurableElement>
           </div>
           <div className="col-span-2 flex items-center gap-1">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
@@ -657,6 +678,22 @@ export default function FiltersMisVentas() {
                 options={[
                   { value: 'pendiente', label: 'Pendiente' },
                   { value: 'completa', label: 'Completa' },
+                ]}
+              />
+            </Form.Item>
+          </div>
+            <div>
+            <label className="text-sm font-semibold text-gray-700 block mb-2">
+              Est. Cuenta:
+            </label>
+            <Form.Item name="estado_cuenta" noStyle>
+              <Select
+                allowClear
+                placeholder="Todos"
+                className="w-full"
+                options={[
+                  { value: 'pagado', label: 'Pagado' },
+                  { value: 'deuda', label: 'Deuda' },
                 ]}
               />
             </Form.Item>

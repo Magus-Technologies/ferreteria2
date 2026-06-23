@@ -240,7 +240,9 @@ export function exportReporteVentasToExcel({
     // Fila cabecera del comprobante
     data.push([
       cell(seq++,                                             S.invoiceRowNum),
-      cell(first.fecha ? dayjs(first.fecha).format('DD/MM/YYYY') : '', S.invoiceRow),
+      // El backend ya entrega la fecha formateada como DD/MM/YYYY; usarla tal
+      // cual evita el "Invalid Date" que producÃ­a dayjs(first.fecha).
+      cell(first.fecha ?? '',                                 S.invoiceRow),
       cell(first.tipo_doc ?? '',                              S.invoiceRow),
       cell(first.numero   ?? '',                              S.invoiceRow),
       cell(first.cliente  ?? '',                              S.invoiceRow),
