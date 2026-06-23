@@ -129,19 +129,6 @@ export default function CellAccionesVentaDropdown(
   };
 
   const handleEditar = () => {
-    const entregas: any[] = venta?.entregas || venta?.entregas_productos || venta?.entregasProductos || [];
-    const codigoEstado = (e: any) => e?.estado_entrega?.codigo ?? e?.estado_entrega;
-    const tieneEntregasCompletadas = entregas.some((e: any) => codigoEstado(e) === 'en');
-
-    if (tieneEntregasCompletadas) {
-      modal.warning({
-        title: 'No se puede editar',
-        content: 'Esta venta tiene entregas completadas. Primero anule las entregas para poder editarla.',
-        okText: 'Entendido',
-      });
-      return;
-    }
-
     router.push(`/ui/facturacion-electronica/mis-ventas/editar-venta/${ventaId}`);
   };
 
