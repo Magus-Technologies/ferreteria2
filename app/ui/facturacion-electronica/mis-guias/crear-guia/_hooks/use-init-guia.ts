@@ -197,13 +197,12 @@ export default function useInitGuia({
         })
       ) || []
 
-      // Desde una entrega puntual: solo las líneas de esa entrega con cantidad > 0.
-      // Sin entrega: todas las líneas de la venta.
+      // En ambos casos filtrar cantidad > 0 para excluir productos ya completamente guiados.
       const productos = entregaDetalleMap
         ? productosTodos.filter(
             (p: any) => entregaDetalleMap!.has(Number(p.unidad_derivada_venta_id)) && p.cantidad > 0,
           )
-        : productosTodos
+        : productosTodos.filter((p: any) => p.cantidad > 0)
 
       // Dirección del cliente — el modelo Cliente ya no tiene `direccion` /
       // `direccion_2` / `direccion_3` / `direccion_4` planos: usa
