@@ -262,11 +262,13 @@ export default function TableDetalleEntrega() {
     )
 
     const filas: DetalleProductoEntrega[] = []
+    const esConfirmadaAhora = (entregaSeleccionada as any)?.estado_entrega === 'en'
 
     for (const [clave, actual] of actualesAgrupados.entries()) {
       const anterior = anterioresAgrupados.get(clave)
       const cantidadAnterior = Number(anterior?.cantidad ?? 0)
       const cantidadActual = Number(actual.cantidad ?? 0)
+      const esAumentoConfirmado = cantidadActual > cantidadAnterior && esConfirmadaAhora
 
       filas.push({
         producto: actual.producto,
@@ -277,8 +279,8 @@ export default function TableDetalleEntrega() {
         recibido: Math.max(cantidadAnterior - cantidadActual, 0),
         estaEntrega: 0,
         programado: 0,
-        entregado: Math.min(cantidadAnterior, cantidadActual),
-        pendiente: Math.max(cantidadActual - cantidadAnterior, 0),
+        entregado: esAumentoConfirmado ? cantidadActual : Math.min(cantidadAnterior, cantidadActual),
+        pendiente: esAumentoConfirmado ? 0 : Math.max(cantidadActual - cantidadAnterior, 0),
       })
     }
 
