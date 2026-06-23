@@ -91,7 +91,10 @@ export const permissionsApi = {
    * Listar todos los roles con sus restricciones
    */
   getRoles: async (): Promise<ApiResponse<Role[]>> => {
-    return apiRequest<Role[]>("/roles", { method: "GET" });
+    // Usar el endpoint de restricciones: incluye eager-loading de `restrictions`.
+    // El endpoint plano `/roles` (CatalogoController) devuelve solo id/name/descripcion,
+    // por lo que al refetch se perdían las restricciones y las tarjetas volvían a verde.
+    return apiRequest<Role[]>("/restrictions/roles", { method: "GET" });
   },
 
   /**

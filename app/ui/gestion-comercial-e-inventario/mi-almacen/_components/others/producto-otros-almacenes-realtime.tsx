@@ -1,10 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { subscribeModelChanged } from "~/lib/realtime-bus";
 import ProductoOtrosAlmacenes from "./producto-otros-almacenes";
-import type { Producto } from "~/app/_types/producto";
+import { useProductosListadoCompleto } from "../../_hooks/useProductosListadoCompleto";
 
 interface ProductoOtrosAlmacenesRealtimeProps {
   productoId: number;
@@ -12,44 +9,19 @@ interface ProductoOtrosAlmacenesRealtimeProps {
   unidadesContenidas: number;
 }
 
-const STOCK_MODULES = [
-  "transferencias-stock",
-  "productos",
-  "ingresos-salidas",
-  "compras",
-  "ventas",
-  "recepciones-almacen",
-  "entregas-productos",
-  "prestamos",
-];
-
 export default function ProductoOtrosAlmacenesRealtime({
   productoId,
   almacenId,
   unidadesContenidas,
 }: ProductoOtrosAlmacenesRealtimeProps) {
-  const queryClient = useQueryClient();
-  const [, forceRender] = useState(0);
+  // Suscribirse a la MISMA query del listado (`['productos-listado-completo', almacenId]`)
+  // que alimenta la tabla. Así el modal se re-renderiza reactivamente ante cualquier
+  // actualización de la cache: tanto por WebSocket como por la invalidación directa de
+  // React Query (p. ej. al "Deshacer" una recepción). Antes leía la cache de forma
+  // imperativa (getQueryData) y solo se actualizaba con el evento de WebSocket, por lo
+  // que si Reverb estaba caído el stock por almacén quedaba viejo.
+  const { data: allProducts } = useProductosListadoCompleto(almacenId);
 
-  useEffect(() => {
-    return subscribeModelChanged((payload) => {
-      if (STOCK_MODULES.includes(payload.module)) {
-        queryClient
-          .refetchQueries({
-            queryKey: ["productos-listado-completo", almacenId],
-            exact: true,
-          })
-          .then(() => {
-            forceRender((v) => v + 1);
-          });
-      }
-    });
-  }, [queryClient, almacenId]);
-
-  const allProducts = queryClient.getQueryData<Producto[]>([
-    "productos-listado-completo",
-    almacenId,
-  ]);
   const producto = allProducts?.find((p) => p.id === productoId);
   const otherWarehouses =
     producto?.producto_en_almacenes?.filter(
