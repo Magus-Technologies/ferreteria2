@@ -416,27 +416,25 @@ export function useColumnsMisVentas() {
         const codigoEstado = (e: any) => e?.estado_entrega?.codigo ?? e?.estado_entrega;
 
         if (entregas.length > 0) {
-          // Estados: pe=Pendiente, ec=En Camino, en=Entregado, ca=Cancelado
-          const hayEntregasPendientes = entregas.some((e: any) => codigoEstado(e) === 'pe');
-          const hayEntregasEnCamino = entregas.some((e: any) => codigoEstado(e) === 'ec');
-          const todasEntregadas = entregas.every((e: any) => codigoEstado(e) === 'en');
-          
-          // Solo mostrar "Completa" si todas las entregas están físicamente entregadas
+          const entregasActivas = entregas.filter((e: any) => codigoEstado(e) !== 'ca');
+          if (entregasActivas.length === 0) return 'Pendiente';
+
+          const todasEntregadas = entregasActivas.every((e: any) => codigoEstado(e) === 'en');
+          const hayEntregasEnCamino = entregasActivas.some((e: any) => codigoEstado(e) === 'ec');
+          const hayEntregasPendientes = entregasActivas.some((e: any) => codigoEstado(e) === 'pe');
+
           if (todasEntregadas && totalPendiente === 0) return 'Completa';
           if (hayEntregasEnCamino) return 'En Camino';
           if (hayEntregasPendientes) return 'Pendiente';
         }
-        
-        // Si no hay entregas creadas, usar la lógica anterior basada en cantidad_pendiente
+
         if (totalPendiente === 0) return 'Completa';
-        if (totalPendiente < totalCantidad) return 'Parcial';
         return 'Pendiente';
       },
       cellStyle: (params) => {
         const value = params.value;
         if (value === 'Completa') return { color: '#16a34a', fontWeight: 'bold' };
         if (value === 'En Camino') return { color: '#3b82f6', fontWeight: 'bold' };
-        if (value === 'Parcial') return { color: '#d97706', fontWeight: 'bold' };
         if (value === 'Pendiente') return { color: '#dc2626', fontWeight: 'bold' };
         if (value === 'Anulado') return { color: '#6b7280', fontWeight: 'bold' };
         return null;
