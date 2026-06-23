@@ -112,11 +112,29 @@ export default function useInitGuia({
 
   useEffect(() => {
     if (guia) {
-      // Inicializar formulario con datos de guía existente (edición)
+      const productos = (guia.detalles ?? []).map((d: any) => ({
+        producto_id: d.producto_id,
+        producto_almacen_id: d.producto_almacen_id,
+        producto_name: d.producto?.name ?? '',
+        producto_codigo: d.producto?.cod_producto ?? '',
+        marca_name: d.producto?.marca?.name ?? '',
+        unidad_derivada_id: d.unidad_derivada_inmutable_id,
+        unidad_derivada_name: d.unidad_derivada_inmutable_name ?? d.unidadDerivadaInmutable?.name ?? '',
+        unidad_derivada_factor: Number(d.factor) || 1,
+        cantidad: Number(d.cantidad),
+        costo: 0,
+        precio_venta: 0,
+        peso_total: d.peso_total,
+        unidad_derivada_venta_id: d.unidad_derivada_venta_id,
+      }))
+
       form.setFieldsValue({
         ...guia,
         fecha_emision: dayjs(guia.fecha_emision),
         fecha_traslado: dayjs(guia.fecha_traslado),
+        motivo_traslado: guia.motivo_traslado_id ?? guia.motivo_traslado?.id,
+        afecta_stock: String(guia.afecta_stock),
+        productos,
       })
     } else if (venta && !isLoading && (!entregaIdParam || !isLoadingEntregasVenta)) {
       // Inicializar formulario con datos de la venta
