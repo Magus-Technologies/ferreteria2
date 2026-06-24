@@ -6,7 +6,7 @@ import { useRef, memo, useCallback, useMemo, useEffect, useState } from 'react'
 import { redColors } from '~/lib/colors'
 import { AgGridReact } from 'ag-grid-react'
 import { VentaCreateInputSchema } from '~/types/zod-schemas'
-import { ColDef, SelectionChangedEvent, RowDoubleClickedEvent, RowClickedEvent } from 'ag-grid-community'
+import { ColDef, SelectionChangedEvent, RowDoubleClickedEvent, RowClickedEvent, ModelUpdatedEvent } from 'ag-grid-community'
 import { ventaApi, type VentaCompleta } from '~/lib/api/venta'
 import { useQuery } from '@tanstack/react-query'
 import { useStoreFiltrosVentasPorCobrar } from '../../_store/store-filtros-ventas-por-cobrar'
@@ -477,10 +477,27 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
     }
   }, [rowData]);
 
-  // Actualizar el store de ventas filtradas para el reporte y las tarjetas
+  // Publicar al store las filas REALMENTE visibles (después del filtro rápido del
+  // buscador, no solo del filtro de mora). Así el reporte y las tarjetas de
+  // resumen reflejan exactamente lo que ve el usuario en la tabla.
+  const publicarVentasVisibles = useCallback((api: ModelUpdatedEvent<VentaCompleta>['api']) => {
+    const visibles: VentaCompleta[] = []
+    api.forEachNodeAfterFilter(node => {
+      if (node.data) visibles.push(node.data)
+    })
+    useStoreVentasFiltradas.getState().setVentas(visibles)
+  }, [])
+
+  const handleModelUpdated = useCallback((e: ModelUpdatedEvent<VentaCompleta>) => {
+    publicarVentasVisibles(e.api)
+  }, [publicarVentasVisibles])
+
+  // Fallback: si el grid aún no ha disparado onModelUpdated, publicar rowData.
   useEffect(() => {
-    useStoreVentasFiltradas.getState().setVentas(rowData)
-  }, [rowData])
+    const api = tableRef.current?.api
+    if (api) publicarVentasVisibles(api)
+    else useStoreVentasFiltradas.getState().setVentas(rowData)
+  }, [rowData, publicarVentasVisibles])
 
   // Propagar estado de carga a las tarjetas de resumen
   useEffect(() => {
@@ -516,6 +533,7 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
         suppressRowTransform={true}
         rowBuffer={10}
         quickFilterText={quickFilterText}
+        onModelUpdated={handleModelUpdated}
       >
       </TableWithTitle>
 
