@@ -1,46 +1,16 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
-import { QueryKeys } from '~/app/_lib/queryKeys'
-import { ventaApi, type VentaCompleta } from '~/lib/api/venta'
-import { useStoreFiltrosVentasPorCobrar } from '../../_store/store-filtros-ventas-por-cobrar'
+import { type VentaCompleta } from '~/lib/api/venta'
+import { useStoreVentasFiltradas } from '../tables/table-ventas-por-cobrar'
 import { useMemo } from 'react'
 import dayjs from 'dayjs'
 
 export default function CardsInfoVentasPorCobrar() {
-  const filtros = useStoreFiltrosVentasPorCobrar(state => state.filtros)
-
-  // Convert Prisma filters to API filters
-  const apiFilters = useMemo(() => {
-    if (!filtros) return undefined
-
-    const fechaFilter = filtros.fecha as any;
-    const desde = fechaFilter?.gte ? new Date(fechaFilter.gte).toISOString().split('T')[0] : undefined;
-    const hasta = fechaFilter?.lte ? new Date(fechaFilter.lte).toISOString().split('T')[0] : undefined;
-
-    return {
-      almacen_id: filtros.almacen_id as number | undefined,
-      cliente_id: filtros.cliente_id as number | undefined,
-      user_id: filtros.user_id as string | undefined,
-      desde,
-      hasta,
-      per_page: -1, // Obtener todas para calcular estadísticas
-    }
-  }, [filtros])
-
-  const { data, isLoading } = useQuery({
-    queryKey: [QueryKeys.VENTAS_POR_COBRAR_STATS, apiFilters],
-    queryFn: async () => {
-      const result = await ventaApi.getVentasPorCobrar(apiFilters)
-      if (result.error) {
-        throw new Error(result.error.message)
-      }
-      return result.data!
-    },
-    enabled: !!filtros,
-    staleTime: 2 * 60 * 1000,
-    gcTime: 5 * 60 * 1000,
-  })
+  // Consumimos las ventas ya filtradas por la tabla, así las tarjetas reflejan
+  // exactamente los mismos filtros (almacén, cliente, vendedor, fechas, estado
+  // de pago, tipo de documento, búsqueda y rango de mora) sin duplicar la query.
+  const ventas = useStoreVentasFiltradas(state => state.ventas)
+  const isLoading = useStoreVentasFiltradas(state => state.loading)
 
   // Función para calcular el total de una venta
   const calcularTotalVenta = (venta: VentaCompleta) => {
@@ -59,8 +29,8 @@ export default function CardsInfoVentasPorCobrar() {
 
   // Calcular estadísticas de las ventas por cobrar
   const estadisticas = useMemo(() => {
-    const ventas = data?.data ?? []
-    
+    let totalACobrar = 0
+    let totalCobrado = 0
     let totalSaldo = 0
     let saldoVencido30 = 0
     let saldoVencido60 = 0
@@ -71,6 +41,8 @@ export default function CardsInfoVentasPorCobrar() {
       const total = calcularTotalVenta(venta)
       const totalPagado = Number(venta.total_cobrado || 0)
       const saldo = total - totalPagado
+      totalACobrar += total
+      totalCobrado += totalPagado
       totalSaldo += saldo
 
       // Calcular días vencidos y acumular saldo por categoría
@@ -91,17 +63,19 @@ export default function CardsInfoVentasPorCobrar() {
 
     return {
       totalVentas: ventas.length,
+      totalACobrar,
+      totalCobrado,
       totalSaldo,
       saldoVencido30,
       saldoVencido60,
       saldoVencido90,
     }
-  }, [data?.data])
+  }, [ventas])
 
   if (isLoading) {
     return (
       <div className='flex flex-col gap-3 h-full'>
-        {[...Array(4)].map((_, i) => (
+        {[...Array(6)].map((_, i) => (
           <div key={i} className='bg-white border border-slate-200 rounded-lg p-5 animate-pulse'>
             <div className='h-4 bg-slate-200 rounded w-3/4 mx-auto mb-3'></div>
             <div className='h-8 bg-slate-200 rounded w-1/2 mx-auto'></div>
@@ -113,6 +87,34 @@ export default function CardsInfoVentasPorCobrar() {
 
   return (
     <div className='flex flex-col gap-3 h-full'>
+      {/* Total a Cobrar */}
+      <div className='flex flex-col items-center justify-center px-4 py-5 border border-blue-200 rounded-lg shadow-md w-full bg-white'>
+        <h3 className='text-sm font-medium text-center text-slate-600 mb-2'>
+          Total a Cobrar
+        </h3>
+        <p className='text-xl font-bold text-nowrap text-blue-600'>
+          S/.{' '}
+          {estadisticas.totalACobrar.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
+        </p>
+      </div>
+
+      {/* Cobrado */}
+      <div className='flex flex-col items-center justify-center px-4 py-5 border border-green-200 rounded-lg shadow-md w-full bg-white'>
+        <h3 className='text-sm font-medium text-center text-slate-600 mb-2'>
+          Cobrado
+        </h3>
+        <p className='text-xl font-bold text-nowrap text-green-600'>
+          S/.{' '}
+          {estadisticas.totalCobrado.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
+        </p>
+      </div>
+
       {/* Total Saldo Pendiente */}
       <div className='flex flex-col items-center justify-center px-4 py-5 border border-red-200 rounded-lg shadow-md w-full bg-white'>
         <h3 className='text-sm font-medium text-center text-slate-600 mb-2'>
