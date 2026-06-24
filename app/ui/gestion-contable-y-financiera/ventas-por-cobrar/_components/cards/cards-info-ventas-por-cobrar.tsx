@@ -1,46 +1,16 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
-import { QueryKeys } from '~/app/_lib/queryKeys'
-import { ventaApi, type VentaCompleta } from '~/lib/api/venta'
-import { useStoreFiltrosVentasPorCobrar } from '../../_store/store-filtros-ventas-por-cobrar'
+import { type VentaCompleta } from '~/lib/api/venta'
+import { useStoreVentasFiltradas } from '../tables/table-ventas-por-cobrar'
 import { useMemo } from 'react'
 import dayjs from 'dayjs'
 
 export default function CardsInfoVentasPorCobrar() {
-  const filtros = useStoreFiltrosVentasPorCobrar(state => state.filtros)
-
-  // Convert Prisma filters to API filters
-  const apiFilters = useMemo(() => {
-    if (!filtros) return undefined
-
-    const fechaFilter = filtros.fecha as any;
-    const desde = fechaFilter?.gte ? new Date(fechaFilter.gte).toISOString().split('T')[0] : undefined;
-    const hasta = fechaFilter?.lte ? new Date(fechaFilter.lte).toISOString().split('T')[0] : undefined;
-
-    return {
-      almacen_id: filtros.almacen_id as number | undefined,
-      cliente_id: filtros.cliente_id as number | undefined,
-      user_id: filtros.user_id as string | undefined,
-      desde,
-      hasta,
-      per_page: -1, // Obtener todas para calcular estadísticas
-    }
-  }, [filtros])
-
-  const { data, isLoading } = useQuery({
-    queryKey: [QueryKeys.VENTAS_POR_COBRAR_STATS, apiFilters],
-    queryFn: async () => {
-      const result = await ventaApi.getVentasPorCobrar(apiFilters)
-      if (result.error) {
-        throw new Error(result.error.message)
-      }
-      return result.data!
-    },
-    enabled: !!filtros,
-    staleTime: 2 * 60 * 1000,
-    gcTime: 5 * 60 * 1000,
-  })
+  // Consumimos las ventas ya filtradas por la tabla, así las tarjetas reflejan
+  // exactamente los mismos filtros (almacén, cliente, vendedor, fechas, estado
+  // de pago, tipo de documento, búsqueda y rango de mora) sin duplicar la query.
+  const ventas = useStoreVentasFiltradas(state => state.ventas)
+  const isLoading = useStoreVentasFiltradas(state => state.loading)
 
   // Función para calcular el total de una venta
   const calcularTotalVenta = (venta: VentaCompleta) => {
@@ -59,8 +29,6 @@ export default function CardsInfoVentasPorCobrar() {
 
   // Calcular estadísticas de las ventas por cobrar
   const estadisticas = useMemo(() => {
-    const ventas = data?.data ?? []
-
     let totalACobrar = 0
     let totalCobrado = 0
     let totalSaldo = 0
@@ -102,7 +70,7 @@ export default function CardsInfoVentasPorCobrar() {
       saldoVencido60,
       saldoVencido90,
     }
-  }, [data?.data])
+  }, [ventas])
 
   if (isLoading) {
     return (

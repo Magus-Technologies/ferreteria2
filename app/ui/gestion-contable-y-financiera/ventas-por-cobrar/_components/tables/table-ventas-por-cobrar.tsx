@@ -28,15 +28,19 @@ export const useStoreVentaSeleccionada = create<UseStoreVentaSeleccionada>((set)
   setVenta: (venta) => set({ venta }),
 }))
 
-// Store para las ventas filtradas (para el reporte)
+// Store para las ventas filtradas (para el reporte y las tarjetas de resumen)
 type UseStoreVentasFiltradas = {
   ventas: VentaCompleta[]
+  loading: boolean
   setVentas: (ventas: VentaCompleta[]) => void
+  setLoading: (loading: boolean) => void
 }
 
 export const useStoreVentasFiltradas = create<UseStoreVentasFiltradas>((set) => ({
   ventas: [],
+  loading: false,
   setVentas: (ventas) => set({ ventas }),
+  setLoading: (loading) => set({ loading }),
 }))
 
 // Calcula días de mora: positivo = vencida, negativo = aún no vence
@@ -473,10 +477,15 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
     }
   }, [rowData]);
 
-  // Actualizar el store de ventas filtradas para el reporte
+  // Actualizar el store de ventas filtradas para el reporte y las tarjetas
   useEffect(() => {
     useStoreVentasFiltradas.getState().setVentas(rowData)
   }, [rowData])
+
+  // Propagar estado de carga a las tarjetas de resumen
+  useEffect(() => {
+    useStoreVentasFiltradas.getState().setLoading(isLoading || isSearching)
+  }, [isLoading, isSearching])
 
   // Solo renderizar cuando hay filtros
   if (!filtros) return null
