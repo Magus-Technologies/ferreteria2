@@ -3,12 +3,14 @@
 import { Form } from 'antd'
 import { Dayjs } from 'dayjs'
 import { useSearchParams } from 'next/navigation'
+import { useQuery } from '@tanstack/react-query'
 import FormBase from '~/components/form/form-base'
 import useCreateGuia from '../../_hooks/use-create-guia'
 import useInitGuia from '../../_hooks/use-init-guia'
 import FormTableGuia from '../form/form-table-guia'
 import FormCrearGuia from '../form/form-crear-guia'
 import CardsInfoGuia from '../cards/cards-info-guia'
+import { guiaRemisionApi } from '~/lib/api/guia-remision'
 
 export type FormCreateGuia = {
   productos: Array<{
@@ -63,11 +65,25 @@ export type FormCreateGuia = {
 }
 
 export default function BodyCrearGuia({
-  guia,
+  guia: guiaProp,
 }: { guia?: any } = {}) {
   const [form] = Form.useForm<FormCreateGuia>()
   const searchParams = useSearchParams()
   const motivoCodigo = searchParams.get('motivo_codigo') || ''
+  const guiaId = searchParams.get('guia_id')
+
+  const { data: guiaFetched } = useQuery({
+    queryKey: ['guia-remision', guiaId],
+    queryFn: async () => {
+      const res = await guiaRemisionApi.getById(guiaId!)
+      if (res.error) throw new Error(res.error.message)
+      return res.data?.data ?? res.data
+    },
+    enabled: !!guiaId && !guiaProp,
+    staleTime: 0,
+  })
+
+  const guia = guiaProp ?? guiaFetched
 
   const { venta } = useInitGuia({ guia, form })
 

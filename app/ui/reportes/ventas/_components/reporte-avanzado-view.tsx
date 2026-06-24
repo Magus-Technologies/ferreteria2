@@ -1,14 +1,17 @@
 'use client'
 
 import { useState } from 'react'
-import { FaArrowLeft } from 'react-icons/fa'
-import { DatePicker, Button } from 'antd'
+import { FaArrowLeft, FaSearch } from 'react-icons/fa'
+import { DatePicker, Button, Input } from 'antd'
 import dayjs from 'dayjs'
+import { useDebounce } from 'use-debounce'
 import { useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { gananciasApi, type GananciaDetalle } from '~/lib/api/ganancias'
 import { exportReporteVentasToExcel } from '~/utils/export-reporte-ventas-excel'
+import { useDownloadPdf } from '~/hooks/use-download-pdf'
 import { useStoreAlmacen } from '~/store/store-almacen'
+import DocReporteVentas from './doc-reporte-ventas'
 
 const { RangePicker } = DatePicker
 
@@ -56,19 +59,28 @@ export default function ReporteAvanzadoView({ tipo, almacenId, empresaInfo }: Pr
 
   const [desde, setDesde] = useState(dayjs().startOf('month').format('YYYY-MM-DD'))
   const [hasta, setHasta] = useState(dayjs().endOf('month').format('YYYY-MM-DD'))
+  const [search, setSearch] = useState('')
   const [exporting, setExporting] = useState(false)
+  const [exportingPdf, setExportingPdf] = useState(false)
   const [result, setResult] = useState<ResultState | null>(null)
+
+  const { downloadPdf } = useDownloadPdf()
 
   const filtrosBase = FILTROS[tipo] ?? {}
 
+  // El backend filtra por documento / razÃ³n social / nombre del cliente con `search`.
+  const [searchDebounced] = useDebounce(search.trim(), search.trim() === '' ? 0 : 500)
+  const searchFiltro = searchDebounced.length >= 2 ? { search: searchDebounced } : {}
+
   const { data: previewData, isLoading: loadingPreview } = useQuery({
-    queryKey: ['reporte-avanzado-preview', tipo, effectiveAlmacenId, desde, hasta],
+    queryKey: ['reporte-avanzado-preview', tipo, effectiveAlmacenId, desde, hasta, searchDebounced],
     queryFn: () =>
       gananciasApi.getGanancias({
         almacen_id: effectiveAlmacenId,
         desde,
         hasta,
         ...filtrosBase,
+        ...searchFiltro,
         per_page: 100,
       }),
   })
@@ -76,17 +88,24 @@ export default function ReporteAvanzadoView({ tipo, almacenId, empresaInfo }: Pr
   const rows   = previewData?.data?.data ?? []
   const resumen = previewData?.data?.resumen
 
+  // Trae todos los registros del rango/filtros para exportar (Excel o PDF).
+  const fetchItemsParaExportar = async () => {
+    const res = await gananciasApi.getGanancias({
+      almacen_id: effectiveAlmacenId,
+      desde,
+      hasta,
+      ...filtrosBase,
+      ...searchFiltro,
+      per_page: 10000,
+    })
+    return res
+  }
+
   const handleExport = async () => {
     setExporting(true)
     setResult(null)
     try {
-      const res = await gananciasApi.getGanancias({
-        almacen_id: effectiveAlmacenId,
-        desde,
-        hasta,
-        ...filtrosBase,
-        per_page: 10000,
-      })
+      const res = await fetchItemsParaExportar()
       const items = res.data?.data
       if (!items?.length) {
         setResult({ type: 'warning', text: 'No hay ventas en el rango de fechas seleccionado.' })
@@ -106,6 +125,35 @@ export default function ReporteAvanzadoView({ tipo, almacenId, empresaInfo }: Pr
       setResult({ type: 'error', text: 'Error al generar el reporte. Intente nuevamente.' })
     } finally {
       setExporting(false)
+    }
+  }
+
+  const handleExportPdf = async () => {
+    setExportingPdf(true)
+    setResult(null)
+    try {
+      const res = await fetchItemsParaExportar()
+      const items = res.data?.data
+      if (!items?.length) {
+        setResult({ type: 'warning', text: 'No hay ventas en el rango de fechas seleccionado.' })
+        return
+      }
+      await downloadPdf(
+        <DocReporteVentas
+          items={items}
+          resumen={res.data?.resumen}
+          titulo={TITLES[tipo]}
+          fechaDesde={dayjs(desde).format('DD/MM/YYYY')}
+          fechaHasta={dayjs(hasta).format('DD/MM/YYYY')}
+          empresa={empresaInfo}
+        />,
+        `${tipo}_${dayjs().format('YYYYMMDD_HHmmss')}`,
+      )
+      setResult({ type: 'success', text: 'PDF generado correctamente.' })
+    } catch {
+      setResult({ type: 'error', text: 'Error al generar el PDF. Intente nuevamente.' })
+    } finally {
+      setExportingPdf(false)
     }
   }
 
@@ -142,12 +190,27 @@ export default function ReporteAvanzadoView({ tipo, almacenId, empresaInfo }: Pr
             size='middle'
           />
         </div>
+        <div>
+          <label className='block text-xs font-medium text-slate-500 mb-1'>Buscar cliente</label>
+          <Input
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setResult(null) }}
+            placeholder='Documento, razón social o nombre'
+            allowClear
+            prefix={<FaSearch className='text-slate-400 mr-1' />}
+            className='w-[280px]'
+          />
+        </div>
         <Button type='primary' onClick={handleExport} loading={exporting}>
           Exportar Excel
+        </Button>
+        <Button onClick={handleExportPdf} loading={exportingPdf} danger>
+          Descargar PDF
         </Button>
         <Button onClick={() => {
           setDesde(dayjs().startOf('month').format('YYYY-MM-DD'))
           setHasta(dayjs().endOf('month').format('YYYY-MM-DD'))
+          setSearch('')
           setResult(null)
         }}>
           Limpiar
@@ -231,7 +294,8 @@ export default function ReporteAvanzadoView({ tipo, almacenId, empresaInfo }: Pr
                     className='border-b border-slate-100 hover:bg-slate-50 transition-colors'
                   >
                     <td className='px-3 py-1.5 whitespace-nowrap text-slate-600'>
-                      {dayjs(row.fecha).format('DD/MM/YY')}
+                      {/* El backend ya entrega la fecha como DD/MM/YYYY */}
+                      {row.fecha}
                     </td>
                     <td className='px-3 py-1.5 whitespace-nowrap text-slate-500'>
                       {row.tipo_doc} {row.numero}

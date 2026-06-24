@@ -148,6 +148,7 @@ export interface UpdateVentaRequest extends Partial<CreateVentaRequest> {}
 export interface VentaFilters {
   almacen_id?: number;
   estado_de_venta?: EstadoDeVenta;
+  estado_cuenta?: 'pagado' | 'deuda';
   cliente_id?: number;
   tipo_documento?: TipoDocumento;
   despliegue_de_pago_id?: string;

@@ -333,6 +333,7 @@ export default function useCreateVenta({
         tipo_despacho === 'EnTienda' ? TipoDespachoVenta.EN_TIENDA
           : tipo_despacho === 'Domicilio' ? TipoDespachoVenta.DOMICILIO
           : tipo_despacho === 'Parcial' ? TipoDespachoVenta.PARCIAL
+          : tipo_despacho === 'OmitirConStock' ? 'oc' as any
           : undefined,
       // ✅ Enviar quien_entrega para que el backend lo use al auto-crear la
       // entrega de despacho en tienda (antes lo hardcodeaba como 'vendedor').

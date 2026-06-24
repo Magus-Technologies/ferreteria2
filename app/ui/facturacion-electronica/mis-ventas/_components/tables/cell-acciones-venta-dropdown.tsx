@@ -132,6 +132,17 @@ export default function CellAccionesVentaDropdown(
     router.push(`/ui/facturacion-electronica/mis-ventas/editar-venta/${ventaId}`);
   };
 
+  const todoGuiadoVenta = (venta?.productos_por_almacen ?? []).length > 0 &&
+    (venta?.productos_por_almacen ?? []).every((pa: any) =>
+      (pa?.unidades_derivadas ?? []).every(
+        (u: any) => Number(u?.cantidad_guiada ?? 0) >= Number(u?.cantidad ?? 0),
+      ),
+    )
+
+  const handleCrearGuia = () => {
+    router.push(`/ui/facturacion-electronica/mis-guias/crear-guia?venta_id=${ventaId}`)
+  };
+
   const handleVerPDF = () => {
     openModal(ventaId);
   };
@@ -273,6 +284,12 @@ export default function CellAccionesVentaDropdown(
       key: 'historial',
       label: <span className="flex items-center gap-2"><FaHistory className="text-slate-600" /> Historial</span>,
       onClick: () => setHistorialOpen(true),
+    },
+    {
+      key: 'crear-guia',
+      label: <span className="flex items-center gap-2"><FaTruck className="text-blue-600" /> Crear Guía de Remisión</span>,
+      onClick: handleCrearGuia,
+      disabled: estadoVenta === 'an' || todoGuiadoVenta,
     },
     // {
     //   key: 'ver-entregas',

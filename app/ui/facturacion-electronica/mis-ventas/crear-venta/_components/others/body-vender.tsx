@@ -99,7 +99,7 @@ export type FormCreateVenta = ClienteDireccionFormFields & {
     }
   }>
   // ✅ Campos de entrega
-  tipo_despacho?: 'EnTienda' | 'Domicilio' | 'Parcial' | 'Omitir'
+  tipo_despacho?: 'EnTienda' | 'Domicilio' | 'Parcial' | 'Omitir' | 'OmitirConStock'
   despachador_id?: string
   fecha_programada?: string
   hora_inicio?: string

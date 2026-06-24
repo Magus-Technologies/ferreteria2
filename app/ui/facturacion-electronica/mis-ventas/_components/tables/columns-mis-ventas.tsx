@@ -67,17 +67,21 @@ export function useColumnsMisVentas() {
       filter: false,
       resizable: false,
       cellRenderer: CellSeleccionarNota,
-      cellStyle: { display: "flex", alignItems: "center", justifyContent: "center" },
+      cellStyle: {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      },
     },
     {
       headerName: "T.Doc",
       field: "tipo_documento",
       width: 100,
       valueFormatter: ({ value }) => {
-        if (value === '01') return 'Factura'
-        if (value === '03') return 'Boleta'
-        if (value === 'nv') return 'Nota de Venta'
-        return value
+        if (value === "01") return "Factura";
+        if (value === "03") return "Boleta";
+        if (value === "nv") return "Nota de Venta";
+        return value;
       },
     },
     {
@@ -103,11 +107,11 @@ export function useColumnsMisVentas() {
       colId: "cotizacion_numero",
       width: 130,
       valueGetter: (params) => {
-        const desc = (params.data as any)?.descripcion || '';
+        const desc = (params.data as any)?.descripcion || "";
         const match = desc.match(/cotizaci[oó]n\s+(.+)$/i);
-        return match ? match[1] : '';
+        return match ? match[1] : "";
       },
-      cellStyle: { color: '#0369a1', fontWeight: '500' },
+      cellStyle: { color: "#0369a1", fontWeight: "500" },
     },
     {
       headerName: "Cliente",
@@ -117,10 +121,12 @@ export function useColumnsMisVentas() {
       valueGetter: (params) => {
         const cliente = params.data?.cliente;
         if (!cliente) return "CLIENTES VARIOS";
-        
-        const nombre = cliente.razon_social || `${cliente.nombres || ''} ${cliente.apellidos || ''}`.trim();
-        const documento = cliente.numero_documento || '';
-        
+
+        const nombre =
+          cliente.razon_social ||
+          `${cliente.nombres || ""} ${cliente.apellidos || ""}`.trim();
+        const documento = cliente.numero_documento || "";
+
         return documento ? `${documento} - ${nombre}` : nombre;
       },
     },
@@ -130,7 +136,8 @@ export function useColumnsMisVentas() {
       field: "productos_por_almacen",
       width: 120,
       valueGetter: (params) => {
-        if (params.data) return calcularTotalesVentaConVales(params.data).subtotal;
+        if (params.data)
+          return calcularTotalesVentaConVales(params.data).subtotal;
         const productos = (params.data as any)?.productos_por_almacen || [];
         const total = productos.reduce((sum: number, producto: any) => {
           const productoTotal = producto.unidades_derivadas.reduce(
@@ -139,26 +146,27 @@ export function useColumnsMisVentas() {
               const precio = Number(unidad.precio); // Precio CON IGV
               const recargo = Number(unidad.recargo || 0);
               const descuento = Number(unidad.descuento || 0);
-              
+
               // Calcular total de la línea
               const subtotalLinea = precio * cantidad;
               const subtotalConRecargo = subtotalLinea + recargo;
-              
+
               // Aplicar descuento
               let montoLinea = subtotalConRecargo;
-              if (unidad.descuento_tipo === '%') {
-                montoLinea = subtotalConRecargo - (subtotalConRecargo * descuento / 100);
+              if (unidad.descuento_tipo === "%") {
+                montoLinea =
+                  subtotalConRecargo - (subtotalConRecargo * descuento) / 100;
               } else {
                 montoLinea = subtotalConRecargo - descuento;
               }
-              
+
               return pSum + montoLinea;
             },
-            0
+            0,
           );
           return sum + productoTotal;
         }, 0);
-        
+
         // El total incluye IGV, dividir entre 1.18 para obtener subtotal sin IGV
         return total / 1.18;
       },
@@ -179,26 +187,27 @@ export function useColumnsMisVentas() {
               const precio = Number(unidad.precio);
               const recargo = Number(unidad.recargo || 0);
               const descuento = Number(unidad.descuento || 0);
-              
+
               const subtotalLinea = precio * cantidad;
               const subtotalConRecargo = subtotalLinea + recargo;
-              
+
               let montoLinea = subtotalConRecargo;
-              if (unidad.descuento_tipo === '%') {
-                montoLinea = subtotalConRecargo - (subtotalConRecargo * descuento / 100);
+              if (unidad.descuento_tipo === "%") {
+                montoLinea =
+                  subtotalConRecargo - (subtotalConRecargo * descuento) / 100;
               } else {
                 montoLinea = subtotalConRecargo - descuento;
               }
-              
+
               return pSum + montoLinea;
             },
-            0
+            0,
           );
           return sum + productoTotal;
         }, 0);
-        
+
         // IGV = Total - Subtotal = Total - (Total / 1.18)
-        return total - (total / 1.18);
+        return total - total / 1.18;
       },
       valueFormatter: (params) => `S/. ${Number(params.value || 0).toFixed(2)}`,
     },
@@ -217,24 +226,25 @@ export function useColumnsMisVentas() {
               const precio = Number(unidad.precio);
               const recargo = Number(unidad.recargo || 0);
               const descuento = Number(unidad.descuento || 0);
-              
+
               const subtotalLinea = precio * cantidad;
               const subtotalConRecargo = subtotalLinea + recargo;
-              
+
               let montoLinea = subtotalConRecargo;
-              if (unidad.descuento_tipo === '%') {
-                montoLinea = subtotalConRecargo - (subtotalConRecargo * descuento / 100);
+              if (unidad.descuento_tipo === "%") {
+                montoLinea =
+                  subtotalConRecargo - (subtotalConRecargo * descuento) / 100;
               } else {
                 montoLinea = subtotalConRecargo - descuento;
               }
-              
+
               return pSum + montoLinea;
             },
-            0
+            0,
           );
           return sum + productoTotal;
         }, 0);
-        
+
         // El total ya incluye IGV
         return total;
       },
@@ -253,7 +263,8 @@ export function useColumnsMisVentas() {
       field: "productos_por_almacen",
       width: 120,
       valueGetter: (params) => {
-        if (params.data) return calcularTotalesVentaConVales(params.data).descuentoTotal;
+        if (params.data)
+          return calcularTotalesVentaConVales(params.data).descuentoTotal;
         const data = params.data as any;
         const productos = data?.productos_por_almacen || [];
 
@@ -293,7 +304,10 @@ export function useColumnsMisVentas() {
       },
       cellStyle: (params) => {
         if (Number(params.value || 0) > 0)
-          return { color: "#16a34a", fontWeight: "bold" } as Record<string, string>;
+          return { color: "#16a34a", fontWeight: "bold" } as Record<
+            string,
+            string
+          >;
         return { color: "#9ca3af" } as Record<string, string>;
       },
     },
@@ -302,12 +316,16 @@ export function useColumnsMisVentas() {
       colId: "despliegue_pago",
       width: 160,
       valueGetter: (params) => {
-        const pagos = params.data?.despliegue_de_pago_ventas ?? params.data?.despliegueDePagoVentas
-        if (!pagos || pagos.length === 0) return '—'
-        return pagos
-          .map((p: any) => p.despliegue_de_pago?.name || '—')
-          .filter((name: string) => name !== '—')
-          .join(', ') || '—'
+        const pagos =
+          params.data?.despliegue_de_pago_ventas ??
+          params.data?.despliegueDePagoVentas;
+        if (!pagos || pagos.length === 0) return "—";
+        return (
+          pagos
+            .map((p: any) => p.despliegue_de_pago?.name || "—")
+            .filter((name: string) => name !== "—")
+            .join(", ") || "—"
+        );
       },
     },
     {
@@ -315,18 +333,27 @@ export function useColumnsMisVentas() {
       colId: "sobrecargo_total",
       width: 120,
       valueGetter: (params) => {
-        const pagos = params.data?.despliegue_de_pago_ventas ?? params.data?.despliegueDePagoVentas
-        if (!pagos || pagos.length === 0) return 0
-        return pagos.reduce((sum: number, p: any) => sum + Number(p.sobrecargo_aplicado || 0), 0)
+        const pagos =
+          params.data?.despliegue_de_pago_ventas ??
+          params.data?.despliegueDePagoVentas;
+        if (!pagos || pagos.length === 0) return 0;
+        return pagos.reduce(
+          (sum: number, p: any) => sum + Number(p.sobrecargo_aplicado || 0),
+          0,
+        );
       },
       valueFormatter: (params) => {
-        const val = Number(params.value || 0)
-        if (val === 0) return '—'
-        return `S/. ${val.toFixed(2)}`
+        const val = Number(params.value || 0);
+        if (val === 0) return "—";
+        return `S/. ${val.toFixed(2)}`;
       },
       cellStyle: (params) => {
-        if (Number(params.value || 0) > 0) return { color: '#d97706', fontWeight: 'bold' } as Record<string, string>
-        return { color: '#9ca3af' } as Record<string, string>
+        if (Number(params.value || 0) > 0)
+          return { color: "#d97706", fontWeight: "bold" } as Record<
+            string,
+            string
+          >;
+        return { color: "#9ca3af" } as Record<string, string>;
       },
     },
     {
@@ -335,9 +362,9 @@ export function useColumnsMisVentas() {
       width: 100,
       valueFormatter: (params) => {
         const formaPago = params.value;
-        if (formaPago === 'co') return 'Contado';
-        if (formaPago === 'cr') return 'Crédito';
-        return formaPago || '';
+        if (formaPago === "co") return "Contado";
+        if (formaPago === "cr") return "Crédito";
+        return formaPago || "";
       },
     },
     {
@@ -345,7 +372,9 @@ export function useColumnsMisVentas() {
       field: "fecha_vencimiento",
       width: 180,
       valueFormatter: (params) =>
-        params.value ? formatFechaPeru(params.value, "DD/MM/YYYY hh:mm:ss A") : "-",
+        params.value
+          ? formatFechaPeru(params.value, "DD/MM/YYYY hh:mm:ss A")
+          : "-",
     },
     {
       headerName: "Estado",
@@ -353,20 +382,86 @@ export function useColumnsMisVentas() {
       width: 100,
       cellRenderer: (params: any) => {
         const estado = params.value;
-        const config: Record<string, { label: string; bg: string; text: string }> = {
-          'pr': { label: 'Pagado',    bg: '#dcfce7', text: '#16a34a' },
-          'cr': { label: 'Creado',    bg: '#f1f5f9', text: '#475569' },
-          'ee': { label: 'En Espera', bg: '#fef9c3', text: '#854d0e' },
-          'an': { label: 'Anulado',   bg: '#fee2e2', text: '#dc2626' },
+        const config: Record<
+          string,
+          { label: string; bg: string; text: string }
+        > = {
+          // 'pr': { label: 'Pagado',    bg: '#dcfce7', text: '#16a34a' },
+          cr: { label: "Creado", bg: "#f1f5f9", text: "#475569" },
+          ee: { label: "En Espera", bg: "#fef9c3", text: "#854d0e" },
+          an: { label: "Anulado", bg: "#fee2e2", text: "#dc2626" },
         };
-        const { label, bg, text } = config[estado] ?? { label: estado || '', bg: '#f1f5f9', text: '#475569' };
+        const { label, bg, text } = config[estado] ?? {
+          label: estado || "",
+          bg: "#f1f5f9",
+          text: "#475569",
+        };
         return (
           <div className="flex items-center h-full">
-            <span style={{ background: bg, color: text, fontWeight: 'bold', fontSize: '11px', padding: '2px 8px', borderRadius: '9999px' }}>
+            <span
+              style={{
+                background: bg,
+                color: text,
+                fontWeight: "bold",
+                fontSize: "11px",
+                padding: "2px 8px",
+                borderRadius: "9999px",
+              }}
+            >
               {label}
             </span>
           </div>
         );
+      },
+    },
+    {
+      headerName: "Est. cuenta",
+      colId: "estado_cuenta",
+      width: 110,
+      valueGetter: (params) => {
+        const data = params.data;
+        if (!data) return "—";
+        if (data.estado_de_venta === "pr") return "Pagado";
+        if (data.estado_de_venta === "cr")
+          return data.forma_de_pago === "co" ? "Pagado" : "Deuda";
+        if (data.estado_de_venta === "an") return "-";
+        return "—";
+      },
+      cellRenderer: (params: any) => {
+        const value = params.value;
+        if (value === "Pagado") {
+          return (
+            <span
+              style={{
+                background: "#dcfce7",
+                color: "#16a34a",
+                fontWeight: "bold",
+                fontSize: "11px",
+                padding: "2px 8px",
+                borderRadius: "9999px",
+              }}
+            >
+              Pagado
+            </span>
+          );
+        }
+        if (value === "Deuda") {
+          return (
+            <span
+              style={{
+                background: "#fee2e2",
+                color: "#dc2626",
+                fontWeight: "bold",
+                fontSize: "11px",
+                padding: "2px 8px",
+                borderRadius: "9999px",
+              }}
+            >
+              Deuda
+            </span>
+          );
+        }
+        return <span style={{ color: "#9ca3af" }}>—</span>;
       },
     },
     {
@@ -375,16 +470,16 @@ export function useColumnsMisVentas() {
       width: 130,
       valueFormatter: (params) => {
         const tipo = params.value;
-        if (tipo === 'et') return '🏪 En Tienda';
-        if (tipo === 'do') return '🏠 Domicilio';
-        if (tipo === 'pa') return '🔀 Parcial';
-        return tipo || '—';
+        if (tipo === "et") return "🏪 En Tienda";
+        if (tipo === "do") return "🏠 Domicilio";
+        if (tipo === "pa") return "🔀 Parcial";
+        return tipo || "—";
       },
       cellStyle: (params) => {
         const tipo = params.value;
-        if (tipo === 'et') return { color: '#0284c7', fontWeight: 'bold' };
-        if (tipo === 'do') return { color: '#7c3aed', fontWeight: 'bold' };
-        if (tipo === 'pa') return { color: '#d97706', fontWeight: 'bold' };
+        if (tipo === "et") return { color: "#0284c7", fontWeight: "bold" };
+        if (tipo === "do") return { color: "#7c3aed", fontWeight: "bold" };
+        if (tipo === "pa") return { color: "#d97706", fontWeight: "bold" };
         return null;
       },
     },
@@ -393,8 +488,8 @@ export function useColumnsMisVentas() {
       colId: "entrega_estado",
       width: 130,
       valueGetter: (params) => {
-        if (params.data?.estado_de_venta === 'an') return 'Anulado';
-        
+        if (params.data?.estado_de_venta === "an") return "Anulado";
+
         const productos = params.data?.productos_por_almacen || [];
         let totalPendiente = 0;
         let totalCantidad = 0;
@@ -404,39 +499,56 @@ export function useColumnsMisVentas() {
             totalPendiente += Number(unidad.cantidad_pendiente || 0);
           });
         });
-        
-        if (totalCantidad === 0) return 'Sin productos';
-        
+
+        if (totalCantidad === 0) return "Sin productos";
+
         // Verificar el estado real de las entregas físicas (tabla nueva `entregas`,
         // con fallback a la legacy `entregas_productos` durante la migración).
-        const entregas = (params.data as any)?.entregas || params.data?.entregas_productos || (params.data as any)?.entregasProductos || [];
+        const entregas =
+          (params.data as any)?.entregas ||
+          params.data?.entregas_productos ||
+          (params.data as any)?.entregasProductos ||
+          [];
 
         // El estado puede venir como objeto { codigo } (tabla nueva, vía FK al
         // catálogo) o como string plano (legacy).
-        const codigoEstado = (e: any) => e?.estado_entrega?.codigo ?? e?.estado_entrega;
+        const codigoEstado = (e: any) =>
+          e?.estado_entrega?.codigo ?? e?.estado_entrega;
 
         if (entregas.length > 0) {
-          const entregasActivas = entregas.filter((e: any) => codigoEstado(e) !== 'ca');
-          if (entregasActivas.length === 0) return 'Pendiente';
+          const entregasActivas = entregas.filter(
+            (e: any) => codigoEstado(e) !== "ca",
+          );
+          if (entregasActivas.length === 0) return "Pendiente";
 
-          const todasEntregadas = entregasActivas.every((e: any) => codigoEstado(e) === 'en');
-          const hayEntregasEnCamino = entregasActivas.some((e: any) => codigoEstado(e) === 'ec');
-          const hayEntregasPendientes = entregasActivas.some((e: any) => codigoEstado(e) === 'pe');
+          const todasEntregadas = entregasActivas.every(
+            (e: any) => codigoEstado(e) === "en",
+          );
+          const hayEntregasEnCamino = entregasActivas.some(
+            (e: any) => codigoEstado(e) === "ec",
+          );
+          const hayEntregasPendientes = entregasActivas.some(
+            (e: any) => codigoEstado(e) === "pe",
+          );
 
-          if (todasEntregadas && totalPendiente === 0) return 'Completa';
-          if (hayEntregasEnCamino) return 'En Camino';
-          if (hayEntregasPendientes) return 'Pendiente';
+          if (todasEntregadas && totalPendiente === 0) return "Completa";
+          if (hayEntregasEnCamino) return "En Camino";
+          if (hayEntregasPendientes) return "Pendiente";
         }
 
-        if (totalPendiente === 0) return 'Completa';
-        return 'Pendiente';
+        if (totalPendiente === 0) return "Completa";
+        return "Pendiente";
       },
       cellStyle: (params) => {
         const value = params.value;
-        if (value === 'Completa') return { color: '#16a34a', fontWeight: 'bold' };
-        if (value === 'En Camino') return { color: '#3b82f6', fontWeight: 'bold' };
-        if (value === 'Pendiente') return { color: '#dc2626', fontWeight: 'bold' };
-        if (value === 'Anulado') return { color: '#6b7280', fontWeight: 'bold' };
+        if (value === "Completa")
+          return { color: "#16a34a", fontWeight: "bold" };
+        if (value === "En Camino")
+          return { color: "#3b82f6", fontWeight: "bold" };
+        if (value === "Pendiente")
+          return { color: "#dc2626", fontWeight: "bold" };
+        if (value === "Anulado")
+          return { color: "#6b7280", fontWeight: "bold" };
         return null;
       },
     },
@@ -455,15 +567,19 @@ export function useColumnsMisVentas() {
       colId: "editada",
       width: 110,
       valueGetter: (params) => {
-        const n = Number(params.data?.total_ediciones ?? 0)
-        if (n === 0) return "No"
-        return n === 1 ? "Sí (1)" : `Sí (${n})`
+        const n = Number(params.data?.total_ediciones ?? 0);
+        if (n === 0) return "No";
+        return n === 1 ? "Sí (1)" : `Sí (${n})`;
       },
       cellStyle: (params) => {
         // Cast a Record<string,string> para que AG Grid acepte el union de
         // estilos (su index signature no permite `fontWeight: undefined`).
-        if (params.value === "No") return { color: '#6b7280' } as Record<string, string>
-        return { color: '#d97706', fontWeight: 'bold' } as Record<string, string>
+        if (params.value === "No")
+          return { color: "#6b7280" } as Record<string, string>;
+        return { color: "#d97706", fontWeight: "bold" } as Record<
+          string,
+          string
+        >;
       },
     },
     {
@@ -491,4 +607,3 @@ export function useColumnsMisVentas() {
 
   return columnDefs;
 }
-

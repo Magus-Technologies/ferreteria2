@@ -1,11 +1,28 @@
 import dayjs, { Dayjs } from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
+import customParseFormat from 'dayjs/plugin/customParseFormat'
 
 dayjs.extend(utc)
 dayjs.extend(timezone)
+dayjs.extend(customParseFormat)
 
 const TZ_PERU = 'America/Lima'
+
+/**
+ * Parsea una fecha que el backend de reportes emite ya formateada como
+ * `DD/MM/YYYY` (p. ej. el endpoint /ganancias usa DATE_FORMAT). dayjs no
+ * interpreta ese formato por defecto y devuelve "Invalid Date", por lo que
+ * aquÃ­ se parsea explÃ­citamente. Si el string no cumple ese formato se
+ * intenta el parseo por defecto (ISO).
+ */
+export function parseFechaDMY(fecha?: string | null): Dayjs | null {
+  if (!fecha) return null
+  const d = dayjs(fecha, 'DD/MM/YYYY', true)
+  if (d.isValid()) return d
+  const fallback = dayjs(fecha)
+  return fallback.isValid() ? fallback : null
+}
 
 export function toLocalString({
   date,
