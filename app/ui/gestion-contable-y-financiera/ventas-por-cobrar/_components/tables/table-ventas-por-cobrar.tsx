@@ -534,6 +534,7 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
         rowBuffer={10}
         quickFilterText={quickFilterText}
         onModelUpdated={handleModelUpdated}
+        overlayNoRowsTemplate='<span style="padding:8px 16px;color:#64748b;font-size:13px;">No se encontraron ventas por cobrar con los filtros o la búsqueda aplicada. Verifica que el número corresponda a una <b>venta</b> a crédito (las facturas de <b>compra</b> a proveedores se consultan en Cuentas por Pagar).</span>'
       >
       </TableWithTitle>
 
