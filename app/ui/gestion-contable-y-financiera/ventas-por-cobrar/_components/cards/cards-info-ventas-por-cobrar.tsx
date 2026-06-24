@@ -60,7 +60,9 @@ export default function CardsInfoVentasPorCobrar() {
   // Calcular estadísticas de las ventas por cobrar
   const estadisticas = useMemo(() => {
     const ventas = data?.data ?? []
-    
+
+    let totalACobrar = 0
+    let totalCobrado = 0
     let totalSaldo = 0
     let saldoVencido30 = 0
     let saldoVencido60 = 0
@@ -71,6 +73,8 @@ export default function CardsInfoVentasPorCobrar() {
       const total = calcularTotalVenta(venta)
       const totalPagado = Number(venta.total_cobrado || 0)
       const saldo = total - totalPagado
+      totalACobrar += total
+      totalCobrado += totalPagado
       totalSaldo += saldo
 
       // Calcular días vencidos y acumular saldo por categoría
@@ -91,6 +95,8 @@ export default function CardsInfoVentasPorCobrar() {
 
     return {
       totalVentas: ventas.length,
+      totalACobrar,
+      totalCobrado,
       totalSaldo,
       saldoVencido30,
       saldoVencido60,
@@ -101,7 +107,7 @@ export default function CardsInfoVentasPorCobrar() {
   if (isLoading) {
     return (
       <div className='flex flex-col gap-3 h-full'>
-        {[...Array(4)].map((_, i) => (
+        {[...Array(6)].map((_, i) => (
           <div key={i} className='bg-white border border-slate-200 rounded-lg p-5 animate-pulse'>
             <div className='h-4 bg-slate-200 rounded w-3/4 mx-auto mb-3'></div>
             <div className='h-8 bg-slate-200 rounded w-1/2 mx-auto'></div>
@@ -113,6 +119,34 @@ export default function CardsInfoVentasPorCobrar() {
 
   return (
     <div className='flex flex-col gap-3 h-full'>
+      {/* Total a Cobrar */}
+      <div className='flex flex-col items-center justify-center px-4 py-5 border border-blue-200 rounded-lg shadow-md w-full bg-white'>
+        <h3 className='text-sm font-medium text-center text-slate-600 mb-2'>
+          Total a Cobrar
+        </h3>
+        <p className='text-xl font-bold text-nowrap text-blue-600'>
+          S/.{' '}
+          {estadisticas.totalACobrar.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
+        </p>
+      </div>
+
+      {/* Cobrado */}
+      <div className='flex flex-col items-center justify-center px-4 py-5 border border-green-200 rounded-lg shadow-md w-full bg-white'>
+        <h3 className='text-sm font-medium text-center text-slate-600 mb-2'>
+          Cobrado
+        </h3>
+        <p className='text-xl font-bold text-nowrap text-green-600'>
+          S/.{' '}
+          {estadisticas.totalCobrado.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
+        </p>
+      </div>
+
       {/* Total Saldo Pendiente */}
       <div className='flex flex-col items-center justify-center px-4 py-5 border border-red-200 rounded-lg shadow-md w-full bg-white'>
         <h3 className='text-sm font-medium text-center text-slate-600 mb-2'>
