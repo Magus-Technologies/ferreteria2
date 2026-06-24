@@ -44,7 +44,16 @@ export function calcularTotalesVentaConVales(data: any) {
         ? (baseProductos * valor) / 100
         : valor;
   }
-  const total = Math.max(0, totalLineas - descuentoVales);
+  const calculatedTotal = Math.max(0, totalLineas - descuentoVales);
+
+  // For contado ventas, total_pagado is authoritative: if cantidad was ever stored
+  // incorrectly as base units (e.g. 2000 instead of 2 for MILLAR), the product
+  // calculation above inflates the total. total_pagado always captures what was paid.
+  const totalPagado = Number(data?.total_pagado || 0);
+  const total =
+    data?.forma_de_pago === "co" && totalPagado > 0
+      ? totalPagado
+      : calculatedTotal;
 
   return {
     total,
