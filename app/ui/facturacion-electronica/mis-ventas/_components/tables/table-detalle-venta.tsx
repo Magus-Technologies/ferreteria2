@@ -27,10 +27,7 @@ export default function TableDetalleVenta() {
         unidad: unidad.unidad_derivada_inmutable.name,
         cantidad: Number(unidad.cantidad),
         precio: Number(unidad.precio),
-        subtotal:
-          Number(unidad.cantidad) *
-          Number(unidad.factor) *
-          Number(unidad.precio),
+        subtotal: Number(unidad.cantidad) * Number(unidad.precio),
         entregado: Number(unidad.cantidad) - Number(unidad.cantidad_pendiente || 0),
         pendiente: Number(unidad.cantidad_pendiente || 0),
       }))
