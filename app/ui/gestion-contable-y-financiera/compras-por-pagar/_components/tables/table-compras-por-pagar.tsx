@@ -5,7 +5,7 @@ import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useRef, memo, useCallback, useMemo, useEffect, useState } from 'react'
 import { redColors } from '~/lib/colors'
 import { AgGridReact } from 'ag-grid-react'
-import { ColDef, SelectionChangedEvent, RowDoubleClickedEvent, RowClickedEvent } from 'ag-grid-community'
+import { ColDef, SelectionChangedEvent, RowDoubleClickedEvent, RowClickedEvent, ModelUpdatedEvent } from 'ag-grid-community'
 import { compraApi, type Compra } from '~/lib/api/compra'
 import { useQuery } from '@tanstack/react-query'
 import { useStoreFiltrosComprasPorPagar } from '../../_store/store-filtros-compras-por-pagar'
@@ -27,15 +27,19 @@ export const useStoreCompraSeleccionada = create<UseStoreCompraSeleccionada>((se
   setCompra: (compra) => set({ compra }),
 }))
 
-// Store para las compras filtradas (para el reporte)
+// Store para las compras filtradas (para el reporte y las tarjetas de resumen)
 type UseStoreComprasFiltradas = {
   compras: Compra[]
+  loading: boolean
   setCompras: (compras: Compra[]) => void
+  setLoading: (loading: boolean) => void
 }
 
 export const useStoreComprasFiltradas = create<UseStoreComprasFiltradas>((set) => ({
   compras: [],
+  loading: false,
   setCompras: (compras) => set({ compras }),
+  setLoading: (loading) => set({ loading }),
 }))
 
 // Calcula días de mora: positivo = vencida, negativo = aún no vence
@@ -381,10 +385,32 @@ const TableComprasPorPagar = memo(function TableComprasPorPagar() {
     }
   }, [rowData]);
 
-  // Actualizar el store de compras filtradas
+  // Publicar al store las filas REALMENTE visibles (después del filtro rápido del
+  // buscador, no solo del filtro de mora). Así el reporte y las tarjetas de
+  // resumen reflejan exactamente lo que ve el usuario en la tabla.
+  const publicarComprasVisibles = useCallback((api: ModelUpdatedEvent<Compra>['api']) => {
+    const visibles: Compra[] = []
+    api.forEachNodeAfterFilter(node => {
+      if (node.data) visibles.push(node.data)
+    })
+    useStoreComprasFiltradas.getState().setCompras(visibles)
+  }, [])
+
+  const handleModelUpdated = useCallback((e: ModelUpdatedEvent<Compra>) => {
+    publicarComprasVisibles(e.api)
+  }, [publicarComprasVisibles])
+
+  // Fallback: si el grid aún no ha disparado onModelUpdated, publicar rowData.
   useEffect(() => {
-    useStoreComprasFiltradas.getState().setCompras(rowData)
-  }, [rowData])
+    const api = tableRef.current?.api
+    if (api) publicarComprasVisibles(api)
+    else useStoreComprasFiltradas.getState().setCompras(rowData)
+  }, [rowData, publicarComprasVisibles])
+
+  // Propagar estado de carga a las tarjetas de resumen
+  useEffect(() => {
+    useStoreComprasFiltradas.getState().setLoading(isLoading || isSearching)
+  }, [isLoading, isSearching])
 
   if (!filtros) return null
 
@@ -412,6 +438,8 @@ const TableComprasPorPagar = memo(function TableComprasPorPagar() {
         suppressRowTransform={true}
         rowBuffer={10}
         quickFilterText={quickFilterText}
+        onModelUpdated={handleModelUpdated}
+        overlayNoRowsTemplate='<span style="padding:8px 16px;color:#64748b;font-size:13px;">No se encontraron compras por pagar con los filtros o la búsqueda aplicada. Recuerda que solo se listan compras a <b>crédito</b>; si la factura ya está pagada, cambia el Estado a <b>Todas</b>.</span>'
       >
       </TableWithTitle>
 

@@ -1,46 +1,16 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
-import { QueryKeys } from '~/app/_lib/queryKeys'
-import { compraApi, type Compra } from '~/lib/api/compra'
-import { useStoreFiltrosComprasPorPagar } from '../../_store/store-filtros-compras-por-pagar'
+import { type Compra } from '~/lib/api/compra'
+import { useStoreComprasFiltradas } from '../tables/table-compras-por-pagar'
 import { useMemo } from 'react'
 import dayjs from 'dayjs'
 
 export default function CardsInfoComprasPorPagar() {
-  const filtros = useStoreFiltrosComprasPorPagar(state => state.filtros)
-
-  // Convert Prisma filters to API filters
-  const apiFilters = useMemo(() => {
-    if (!filtros) return undefined
-
-    const fechaFilter = filtros.fecha as any;
-    const desde = fechaFilter?.gte ? new Date(fechaFilter.gte).toISOString().split('T')[0] : undefined;
-    const hasta = fechaFilter?.lte ? new Date(fechaFilter.lte).toISOString().split('T')[0] : undefined;
-
-    return {
-      almacen_id: filtros.almacen_id as number | undefined,
-      proveedor_id: (filtros as any).proveedor_id as number | undefined,
-      user_id: filtros.user_id as string | undefined,
-      desde,
-      hasta,
-      per_page: -1,
-    }
-  }, [filtros])
-
-  const { data, isLoading } = useQuery({
-    queryKey: [QueryKeys.COMPRAS_POR_PAGAR_STATS, apiFilters],
-    queryFn: async () => {
-      const result = await compraApi.getComprasPorPagar(apiFilters)
-      if (result.error) {
-        throw new Error(result.error.message)
-      }
-      return result.data!
-    },
-    enabled: !!filtros,
-    staleTime: 2 * 60 * 1000,
-    gcTime: 5 * 60 * 1000,
-  })
+  // Consumimos las compras ya filtradas por la tabla, así las tarjetas reflejan
+  // exactamente los mismos filtros (almacén, proveedor, usuario, fechas, estado
+  // de pago, tipo de documento, búsqueda y rango de mora) sin duplicar la query.
+  const compras = useStoreComprasFiltradas(state => state.compras)
+  const isLoading = useStoreComprasFiltradas(state => state.loading)
 
   // Función para calcular el total de una compra
   const calcularTotalCompra = (compra: Compra) => {
@@ -59,9 +29,8 @@ export default function CardsInfoComprasPorPagar() {
 
   // Calcular estadísticas de las compras por pagar
   const estadisticas = useMemo(() => {
-    const raw = data?.data
-    const compras: any[] = Array.isArray(raw) ? raw : raw && typeof raw === 'object' ? Object.values(raw) : []
-    
+    let totalAPagar = 0
+    let totalPagadoAcum = 0
     let totalSaldo = 0
     let saldoVencido30 = 0
     let saldoVencido60 = 0
@@ -72,6 +41,8 @@ export default function CardsInfoComprasPorPagar() {
       const total = calcularTotalCompra(compra)
       const totalPagado = Number(compra.total_pagado || 0)
       const saldo = total - totalPagado
+      totalAPagar += total
+      totalPagadoAcum += totalPagado
       totalSaldo += saldo
 
       // Calcular días vencidos y acumular saldo por categoría
@@ -92,17 +63,19 @@ export default function CardsInfoComprasPorPagar() {
 
     return {
       totalCompras: compras.length,
+      totalAPagar,
+      totalPagado: totalPagadoAcum,
       totalSaldo,
       saldoVencido30,
       saldoVencido60,
       saldoVencido90,
     }
-  }, [data?.data])
+  }, [compras])
 
   if (isLoading) {
     return (
       <div className='flex flex-col gap-3 h-full'>
-        {[...Array(4)].map((_, i) => (
+        {[...Array(6)].map((_, i) => (
           <div key={i} className='bg-white border border-slate-200 rounded-lg p-5 animate-pulse'>
             <div className='h-4 bg-slate-200 rounded w-3/4 mx-auto mb-3'></div>
             <div className='h-8 bg-slate-200 rounded w-1/2 mx-auto'></div>
@@ -114,6 +87,34 @@ export default function CardsInfoComprasPorPagar() {
 
   return (
     <div className='flex flex-col gap-3 h-full'>
+      {/* Total a Pagar */}
+      <div className='flex flex-col items-center justify-center px-4 py-5 border border-blue-200 rounded-lg shadow-md w-full bg-white'>
+        <h3 className='text-sm font-medium text-center text-slate-600 mb-2'>
+          Total a Pagar
+        </h3>
+        <p className='text-xl font-bold text-nowrap text-blue-600'>
+          S/.{' '}
+          {estadisticas.totalAPagar.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
+        </p>
+      </div>
+
+      {/* Pagado */}
+      <div className='flex flex-col items-center justify-center px-4 py-5 border border-green-200 rounded-lg shadow-md w-full bg-white'>
+        <h3 className='text-sm font-medium text-center text-slate-600 mb-2'>
+          Pagado
+        </h3>
+        <p className='text-xl font-bold text-nowrap text-green-600'>
+          S/.{' '}
+          {estadisticas.totalPagado.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
+        </p>
+      </div>
+
       {/* Total Saldo Pendiente */}
       <div className='flex flex-col items-center justify-center px-4 py-5 border border-red-200 rounded-lg shadow-md w-full bg-white'>
         <h3 className='text-sm font-medium text-center text-slate-600 mb-2'>
