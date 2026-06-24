@@ -164,12 +164,21 @@ export default function ModalDetallesEntregaCompleto({
     },
   ]
 
+  type PrevProd = { nombre: string; codigo: string; unidad: string; cantidad: number }
   const prevQuantities = new Map<string, number>()
+  const prevProductos = new Map<string, PrevProd>()
   if (mostrarRecibido && ultimaEdicion) {
     for (const ph of (ultimaEdicion.datos_anteriores?.productos || [])) {
       for (const ud of (ph.unidades || [])) {
         const k = `${String(ph.codigo || '').trim().toLowerCase()}|${String(ud.unidad || '').trim().toLowerCase()}`
-        prevQuantities.set(k, Number(ud.cantidad ?? 0))
+        const qty = Number(ud.cantidad ?? 0)
+        prevQuantities.set(k, qty)
+        prevProductos.set(k, {
+          nombre: ph.nombre || ph.producto || '',
+          codigo: ph.codigo || '',
+          unidad: ud.unidad || '',
+          cantidad: qty,
+        })
       }
     }
   }
@@ -234,6 +243,31 @@ export default function ModalDetallesEntregaCompleto({
           pendiente: esConfirmada ? 0 : estaEntregaQty,
         }
       })
+
+  // Products removed from the venta after this delivery was created still have
+  // entrega_producto records but their unidad_derivada_venta is gone, so they
+  // vanish from the productos.map() above. Recover them from datos_anteriores.
+  if (mostrarRecibido && !esParcialAgrupada && productos.length > 0) {
+    const currentKeys = new Set(
+      productosRowData.map(
+        (r) => `${r.codigo.trim().toLowerCase()}|${r.unidad.trim().toLowerCase()}`,
+      ),
+    )
+    for (const [k, prev] of prevProductos.entries()) {
+      if (!currentKeys.has(k)) {
+        productosRowData.push({
+          codigo: prev.codigo,
+          nombre: prev.nombre,
+          unidad: prev.unidad,
+          pedida: prev.cantidad,
+          programada: 0,
+          entregada: 0,
+          recibido: prev.cantidad,
+          pendiente: 0,
+        })
+      }
+    }
+  }
 
   return (
     <Modal
