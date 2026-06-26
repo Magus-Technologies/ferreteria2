@@ -144,21 +144,26 @@ export default function useGetEntregas() {
   })
 
   const rolesEntregaTienda: string[] = (configData?.data as any)?.roles_entrega_tienda ?? ['almacenero']
+  const rolesSupervisores: string[]  = (configData?.data as any)?.roles_supervisores_entrega ?? []
+
   // Chequear ambos identificadores: role_name (nuevo, sin rol_sistema) y rol_sistema (compat)
-  const puedeVerRecojoTienda = !esAdmin && (
-    rolesEntregaTienda.includes(user?.role_name ?? '') ||
-    rolesEntregaTienda.includes(user?.rol_sistema ?? '')
-  )
+  const matchRol = (lista: string[]) =>
+    lista.includes(user?.role_name ?? '') || lista.includes(user?.rol_sistema ?? '')
+
+  const puedeVerRecojoTienda = !esAdmin && matchRol(rolesEntregaTienda)
+  // Supervisor: ve TODAS las entregas sin filtro de chofer (igual que admin, pero sin ser admin)
+  const esSupervisor = !esAdmin && matchRol(rolesSupervisores)
 
   const { data, isFetching, error, refetch } = useQuery({
-    queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, filtros, user?.id, esAdmin, puedeVerRecojoTienda],
+    queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, filtros, user?.id, esAdmin, esSupervisor, puedeVerRecojoTienda],
     queryFn: async () => {
       const response = await entregasNuevasApi.listar({
         fecha_desde:           filtros.fecha_desde?.format('YYYY-MM-DD'),
         fecha_hasta:           filtros.fecha_hasta?.format('YYYY-MM-DD'),
         estado:                filtros.estado_entrega?.length ? filtros.estado_entrega : undefined,
         tipo_entrega:          filtros.tipo_entrega as string | undefined,
-        chofer_id:             esAdmin ? undefined : user?.id,
+        // Supervisor ve todo (sin chofer_id), igual que admin
+        chofer_id:             (esAdmin || esSupervisor) ? undefined : user?.id,
         incluir_recojo_tienda: puedeVerRecojoTienda ? true : undefined,
         search:                filtros.search,
       })
