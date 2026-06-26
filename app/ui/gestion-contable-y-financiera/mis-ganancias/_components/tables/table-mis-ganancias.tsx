@@ -125,6 +125,12 @@ export default function TableMisGanancias() {
       valueFormatter: (p) => p.value?.toFixed(2) || '0.00',
     },
     {
+      headerName: 'UNIDAD',
+      field: 'unidad',
+      width: 80,
+      valueFormatter: (p) => p.value || '-',
+    },
+    {
       headerName: 'P.UNIT',
       field: 'p_unit',
       width: 80,

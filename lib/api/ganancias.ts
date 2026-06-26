@@ -17,6 +17,7 @@ export interface GananciaDetalle {
   producto: string;
   marca: string;
   cant: number;
+  unidad?: string;
   p_unit: number;
   subtot: number;
   costo: number;
