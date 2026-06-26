@@ -152,22 +152,14 @@ export default function ModalUsuarioForm({
     staleTime: 30 * 60 * 1000,
   });
 
-  // Autocompletado bidireccional cargo <-> rol. onValuesChange NO se dispara con
-  // setFieldsValue, así que no pisa la edición al cargar ni genera bucles entre campos.
+  // El "Cargo u Ocupación" está bloqueado y se DERIVA del rol: al elegir un rol se
+  // autocompleta con el cargo vinculado por role_id (el primero si hubiera varios) y
+  // se limpia si el rol no tiene cargo asociado. onValuesChange NO se dispara con
+  // setFieldsValue, así que no pisa la edición al cargar ni genera bucles.
   const handleValuesChange = (changed: Partial<UsuarioFormValues>) => {
-    // cargo -> rol (1:1): el rol SIEMPRE refleja el cargo (lo pone, o lo limpia si
-    // el cargo no tiene rol vinculado, para no dejar uno viejo/ajeno).
-    if ("cargo" in changed) {
-      const cargo = cargos?.find((c) => c.codigo === changed.cargo);
-      form.setFieldValue("role_id", cargo?.role_id ?? undefined);
-    }
-    // rol -> cargo: un rol puede tener varios cargos. Solo autorrelleno si tiene
-    // EXACTAMENTE uno (sin ambigüedad); si tiene varios, lo deja para elegir a mano.
     if ("role_id" in changed) {
-      const relacionados = cargos?.filter((c) => c.role_id === changed.role_id) ?? [];
-      if (relacionados.length === 1) {
-        form.setFieldValue("cargo", relacionados[0].codigo);
-      }
+      const cargo = cargos?.find((c) => c.role_id === changed.role_id);
+      form.setFieldValue("cargo", cargo?.codigo ?? undefined);
     }
   };
 
@@ -648,7 +640,8 @@ export default function ModalUsuarioForm({
                       { required: true, message: "Selecciona el cargo" },
                     ],
                   }}
-                  placeholder="Seleccionar cargo"
+                  placeholder="Se asigna según el rol"
+                  disabled
                 />
               </LabelBase>
             </div>
