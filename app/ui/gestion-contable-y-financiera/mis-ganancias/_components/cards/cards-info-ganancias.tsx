@@ -5,6 +5,8 @@ import { Input, App } from 'antd'
 import { useGetResumenGanancias } from '~/app/ui/gestion-contable-y-financiera/mis-ganancias/_hooks/use-get-ganancias'
 import { useStoreFiltrosMisGanancias } from '~/app/ui/gestion-contable-y-financiera/mis-ganancias/_store/store-filtros-mis-ganancias'
 import { gananciasApi } from '~/lib/api/ganancias'
+import { getGastosExtras } from '~/lib/api/gasto-extra'
+import { comisionApi } from '~/lib/api/comision'
 import { useState, useMemo } from 'react'
 import { FaMoneyBillWave, FaFileInvoiceDollar } from 'react-icons/fa'
 import { FaMoneyBills, FaMoneyBillTrendUp } from 'react-icons/fa6'
@@ -28,26 +30,41 @@ export default function CardsInfoGanancias() {
   
   const filtros = useStoreFiltrosMisGanancias((state) => state.filtros)
   const { data, isLoading } = useGetResumenGanancias(filtros)
-  
-  const { data: gastosData } = useQuery({
-    queryKey: ['gastos-card', filtros.desde, filtros.hasta, filtros.almacen_id],
+
+  const { data: gastosExtrasData } = useQuery({
+    queryKey: ['gastos-card-extras', filtros.desde, filtros.hasta, filtros.almacen_id],
     queryFn: async () => {
-      const result = await gananciasApi.getPagosCompras({
-        desde: filtros.desde,
-        hasta: filtros.hasta,
-        search: '',
-        almacen_id: filtros.almacen_id
+      const result = await getGastosExtras({
+        fechaDesde: filtros.desde,
+        fechaHasta: filtros.hasta,
+        almacen_id: filtros.almacen_id,
       })
       return result
     },
-    enabled: !!filtros?.almacen_id && !!filtros?.desde && !!filtros?.hasta,
+    enabled: !!filtros?.almacen_id,
+    staleTime: 1000 * 60 * 5,
+  })
+
+  const { data: comisionesData } = useQuery({
+    queryKey: ['gastos-card-comisiones', filtros.desde, filtros.hasta, filtros.almacen_id],
+    queryFn: async () => {
+      const result = await comisionApi.porVendedor({
+        desde: filtros.desde,
+        hasta: filtros.hasta,
+        almacen_id: filtros.almacen_id,
+      })
+      return result
+    },
+    enabled: !!filtros?.almacen_id,
     staleTime: 1000 * 60 * 5,
   })
 
   const gastosTotal = useMemo(() => {
-    const gastos = gastosData?.data?.data?.gastos || []
-    return gastos.reduce((sum: number, g: any) => sum + (Number(g.monto) || 0), 0)
-  }, [gastosData])
+    const gastosExtras = gastosExtrasData?.data || []
+    const totalExtras = gastosExtras.reduce((sum: number, g: any) => sum + (Number(g.monto) || 0), 0)
+    const totalComisiones = comisionesData?.data?.resumen?.total_generado || 0
+    return totalExtras + totalComisiones
+  }, [gastosExtrasData, comisionesData])
 
   const resumen = data?.data?.data || {
     ventas: 0,
