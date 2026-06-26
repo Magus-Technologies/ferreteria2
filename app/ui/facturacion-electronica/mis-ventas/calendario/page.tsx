@@ -13,6 +13,9 @@ import { entregasNuevasApi } from '~/lib/api/entregas'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import dayjs from 'dayjs'
 import { vehiculosApi } from '~/lib/api/catalogos'
+import NoAutorizado from '~/components/others/no-autorizado'
+import { usePermission } from '~/hooks/use-permission'
+import { permissions } from '~/lib/permissions'
 
 const CalendarProgramacionEntregas = lazy(
   () => import('~/app/_components/calendar/calendar-programacion-entregas')
@@ -247,6 +250,7 @@ function PanelDetalleEntrega({ entregaId, evento }: { entregaId: number; evento:
 
 export default function CalendarioEntregasPage() {
   const router = useRouter()
+  const canAccess = usePermission(permissions.FACTURACION_ELECTRONICA_CALENDARIO_ENTREGAS_INDEX)
   const [eventoSeleccionado, setEventoSeleccionado] = useState<EntregaEvent | null>(null)
   const [vehiculoIds, setVehiculoIds] = useState<number[]>([])
   const { data: vehiculos = [], isLoading: cargandoVehiculos } = useQuery({
@@ -257,7 +261,10 @@ export default function CalendarioEntregasPage() {
       return res.data?.data ?? []
     },
     staleTime: 10 * 60 * 1000,
+    enabled: canAccess,
   })
+
+  if (!canAccess) return <NoAutorizado />
 
   return (
     <ContenedorGeneral className="h-full">

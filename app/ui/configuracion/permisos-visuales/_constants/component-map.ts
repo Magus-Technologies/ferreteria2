@@ -20,8 +20,6 @@ const MisAperturasCierres = lazy(() => import('~/app/ui/facturacion-electronica/
 const MovimientosCaja = lazy(() => import('~/app/ui/facturacion-electronica/movimientos-caja/page'));
 const MisVales = lazy(() => import('~/app/ui/facturacion-electronica/vales-compra/page'));
 const CrearVale = lazy(() => import('~/app/ui/facturacion-electronica/vales-compra/crear-vale/page'));
-// Vistas que comparten permiso con otra del nav, así que se registran por RUTA
-// (ver COMPONENT_MAP_BY_ROUTE y resolveVistaComponent más abajo).
 const HistorialVentas = lazy(() => import('~/app/ui/facturacion-electronica/mis-ventas/historial/page'));
 const CalendarioEntregas = lazy(() => import('~/app/ui/facturacion-electronica/mis-ventas/calendario/page'));
 const ArqueosDiarios = lazy(() => import('~/app/ui/facturacion-electronica/arqueos-diarios/page'));
@@ -77,8 +75,10 @@ const ConfigImpresion = lazy(() => import('~/app/ui/configuracion/plantilla-impr
 export const COMPONENT_MAP: Partial<Record<string, React.LazyExoticComponent<any>>> = {
   'facturacion-electronica.dashboard.index': DashboardFE,
   'facturacion-electronica.mis-ventas.index': MisVentas,
+  'facturacion-electronica.historial-ventas.index': HistorialVentas,
   'facturacion-electronica.crear-venta.index': CrearVenta,
   'facturacion-electronica.mis-entregas.index': MisEntregas,
+  'facturacion-electronica.calendario-entregas.index': CalendarioEntregas,
   'facturacion-electronica.mis-guias.index': MisGuias,
   'facturacion-electronica.crear-guia.index': CrearGuia,
   'facturacion-electronica.mis-cotizaciones.index': MisCotizaciones,
@@ -91,6 +91,7 @@ export const COMPONENT_MAP: Partial<Record<string, React.LazyExoticComponent<any
   'facturacion-electronica.mis-notas-debito.index': MisNotasDebito,
   'facturacion-electronica.mis-contactos.index': MisContactos,
   'facturacion-electronica.mis-aperturas-cierres.index': MisAperturasCierres,
+  'facturacion-electronica.arqueos-diarios.index': ArqueosDiarios,
   'facturacion-electronica.movimientos-caja.index': MovimientosCaja,
   'facturacion-electronica.mis-vales.index': MisVales,
   'facturacion-electronica.crear-vale.index': CrearVale,
@@ -146,10 +147,8 @@ export const COMPONENT_MAP: Partial<Record<string, React.LazyExoticComponent<any
 };
 
 /**
- * Vistas registradas por RUTA, no por permiso. Sirve para las vistas que tienen
- * página propia pero comparten `permission` con otra del nav (ej. "Historial de
- * Ventas" comparte `mis-ventas.index` con "Mis Ventas"). Como COMPONENT_MAP está
- * indexado por permiso, sin esto solo se podría previsualizar una de las dos.
+ * Fallback por ruta para vistas históricas que antes compartían permiso con otra
+ * del nav. Se conserva para compatibilidad si llega un item antiguo.
  */
 export const COMPONENT_MAP_BY_ROUTE: Partial<Record<string, React.LazyExoticComponent<any>>> = {
   '/ui/facturacion-electronica/mis-ventas/historial': HistorialVentas,

@@ -30,12 +30,16 @@ export default function PanelRestricciones({
     ],
     bottomNav: [
       { label: "Mis Ventas", permiso: "facturacion-electronica.mis-ventas.index" },
+      { label: "Historial de Ventas", permiso: "facturacion-electronica.historial-ventas.index" },
+      { label: "Mis Entregas", permiso: "facturacion-electronica.mis-entregas.index" },
+      { label: "Calendario de Entregas", permiso: "facturacion-electronica.calendario-entregas.index" },
       { label: "Mis Cotizaciones", permiso: "facturacion-electronica.mis-cotizaciones.index" },
       { label: "Mis Guías", permiso: "facturacion-electronica.mis-guias.index" },
       { label: "Mis Préstamos", permiso: "facturacion-electronica.mis-prestamos.index" },
       { label: "Mis Notas", permiso: "facturacion-electronica.mis-notas.index" },
       { label: "Mis Contactos", permiso: "facturacion-electronica.mis-contactos.index" },
       { label: "Aperturas/Cierres", permiso: "facturacion-electronica.mis-aperturas-cierres.index" },
+      { label: "Arqueos Diarios", permiso: "facturacion-electronica.arqueos-diarios.index" },
       { label: "Movimientos de Caja", permiso: "facturacion-electronica.movimientos-caja.index" },
     ],
   };

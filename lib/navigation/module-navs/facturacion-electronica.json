@@ -112,7 +112,7 @@
         "label": "Historial de Ventas",
         "icon": "FaHistory",
         "route": "/ui/facturacion-electronica/mis-ventas/historial",
-        "permission": "facturacion-electronica.mis-ventas.index"
+        "permission": "facturacion-electronica.historial-ventas.index"
       },
       {
         "id": "mis-entregas",
@@ -126,7 +126,7 @@
         "label": "Calendario de Entregas",
         "icon": "FaCalendarAlt",
         "route": "/ui/facturacion-electronica/mis-ventas/calendario",
-        "permission": "facturacion-electronica.mis-entregas.index"
+        "permission": "facturacion-electronica.calendario-entregas.index"
       },
       {
         "id": "mis-cotizaciones",
@@ -182,7 +182,7 @@
         "label": "Arqueos Diarios",
         "icon": "FaBalanceScale",
         "route": "/ui/facturacion-electronica/arqueos-diarios",
-        "permission": "facturacion-electronica.mis-aperturas-cierres.index"
+        "permission": "facturacion-electronica.arqueos-diarios.index"
       },
       {
         "id": "movimientos-caja",

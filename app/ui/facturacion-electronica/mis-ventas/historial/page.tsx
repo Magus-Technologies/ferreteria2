@@ -9,6 +9,9 @@ import ContenedorGeneral from '~/app/_components/containers/contenedor-general'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { ventaApi, type VentaHistorialItem } from '~/lib/api/venta'
 import { useRouter } from 'next/navigation'
+import NoAutorizado from '~/components/others/no-autorizado'
+import { usePermission } from '~/hooks/use-permission'
+import { permissions } from '~/lib/permissions'
 
 const { RangePicker } = DatePicker
 
@@ -76,6 +79,7 @@ function getClienteNombre(venta: VentaHistorialItem['venta']): string {
 
 export default function HistorialVentasPage() {
   const router = useRouter()
+  const canAccess = usePermission(permissions.FACTURACION_ELECTRONICA_HISTORIAL_VENTAS_INDEX)
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
   const [accion, setAccion] = useState<string | undefined>(undefined)
@@ -95,10 +99,13 @@ export default function HistorialVentasPage() {
       if (result.error) throw new Error(result.error.message)
       return result.data!
     },
+    enabled: canAccess,
   })
 
   const items = data?.data ?? []
   const total = data?.total ?? 0
+
+  if (!canAccess) return <NoAutorizado />
 
   return (
     <ContenedorGeneral>

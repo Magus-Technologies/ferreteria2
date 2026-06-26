@@ -7,7 +7,7 @@ import { usePermission } from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 
 export default function ArqueosDiariosPage() {
-  const canAccess = usePermission(permissions.FACTURACION_ELECTRONICA_INDEX)
+  const canAccess = usePermission(permissions.FACTURACION_ELECTRONICA_ARQUEOS_DIARIOS_INDEX)
 
   if (!canAccess) return <NoAutorizado />
 

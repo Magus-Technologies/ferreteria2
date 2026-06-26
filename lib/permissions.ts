@@ -43,13 +43,16 @@ export enum permissions {
   // ============================================
   FACTURACION_ELECTRONICA_DASHBOARD_INDEX = "facturacion-electronica.dashboard.index",
   FACTURACION_ELECTRONICA_MIS_VENTAS_INDEX = "facturacion-electronica.mis-ventas.index",
+  FACTURACION_ELECTRONICA_HISTORIAL_VENTAS_INDEX = "facturacion-electronica.historial-ventas.index",
   FACTURACION_ELECTRONICA_MIS_ENTREGAS_INDEX = "facturacion-electronica.mis-entregas.index",
+  FACTURACION_ELECTRONICA_CALENDARIO_ENTREGAS_INDEX = "facturacion-electronica.calendario-entregas.index",
   FACTURACION_ELECTRONICA_MIS_COTIZACIONES_INDEX = "facturacion-electronica.mis-cotizaciones.index",
   FACTURACION_ELECTRONICA_MIS_GUIAS_INDEX = "facturacion-electronica.mis-guias.index",
   FACTURACION_ELECTRONICA_MIS_PRESTAMOS_INDEX = "facturacion-electronica.mis-prestamos.index",
   FACTURACION_ELECTRONICA_MIS_NOTAS_INDEX = "facturacion-electronica.mis-notas.index",
   FACTURACION_ELECTRONICA_MIS_CONTACTOS_INDEX = "facturacion-electronica.mis-contactos.index",
   FACTURACION_ELECTRONICA_MIS_APERTURAS_CIERRES_INDEX = "facturacion-electronica.mis-aperturas-cierres.index",
+  FACTURACION_ELECTRONICA_ARQUEOS_DIARIOS_INDEX = "facturacion-electronica.arqueos-diarios.index",
   FACTURACION_ELECTRONICA_MOVIMIENTOS_CAJA_INDEX = "facturacion-electronica.movimientos-caja.index",
   FACTURACION_ELECTRONICA_CREAR_VENTA_INDEX = "facturacion-electronica.crear-venta.index",
   FACTURACION_ELECTRONICA_CREAR_COTIZACION_INDEX = "facturacion-electronica.crear-cotizacion.index",
@@ -388,8 +391,12 @@ const permissionstoDescripcion: Record<PermisosValidos, string> = {
     "Ver Dashboard Facturación Electrónica",
   [permissions.FACTURACION_ELECTRONICA_MIS_VENTAS_INDEX]:
     "Ver Página Mis Ventas",
+  [permissions.FACTURACION_ELECTRONICA_HISTORIAL_VENTAS_INDEX]:
+    "Ver Página Historial de Ventas",
   [permissions.FACTURACION_ELECTRONICA_MIS_ENTREGAS_INDEX]:
     "Ver Página Mis Entregas",
+  [permissions.FACTURACION_ELECTRONICA_CALENDARIO_ENTREGAS_INDEX]:
+    "Ver Página Calendario de Entregas",
   [permissions.FACTURACION_ELECTRONICA_MIS_COTIZACIONES_INDEX]:
     "Ver Página Mis Cotizaciones",
   [permissions.FACTURACION_ELECTRONICA_MIS_GUIAS_INDEX]: "Ver Página Mis Guías",
@@ -400,6 +407,8 @@ const permissionstoDescripcion: Record<PermisosValidos, string> = {
     "Ver Página Mis Contactos",
   [permissions.FACTURACION_ELECTRONICA_MIS_APERTURAS_CIERRES_INDEX]:
     "Ver Página Aperturas y Cierres",
+  [permissions.FACTURACION_ELECTRONICA_ARQUEOS_DIARIOS_INDEX]:
+    "Ver Página Arqueos Diarios",
   [permissions.FACTURACION_ELECTRONICA_MOVIMIENTOS_CAJA_INDEX]:
     "Ver Página Movimientos de Caja",
   [permissions.FACTURACION_ELECTRONICA_CREAR_VENTA_INDEX]:
