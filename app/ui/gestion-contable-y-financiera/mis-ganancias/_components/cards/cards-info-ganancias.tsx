@@ -5,11 +5,12 @@ import { Input, App } from 'antd'
 import { useGetResumenGanancias } from '~/app/ui/gestion-contable-y-financiera/mis-ganancias/_hooks/use-get-ganancias'
 import { useStoreFiltrosMisGanancias } from '~/app/ui/gestion-contable-y-financiera/mis-ganancias/_store/store-filtros-mis-ganancias'
 import { gananciasApi } from '~/lib/api/ganancias'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { FaMoneyBillWave, FaFileInvoiceDollar } from 'react-icons/fa'
 import { FaMoneyBills, FaMoneyBillTrendUp } from 'react-icons/fa6'
 import { GiPayMoney, GiReceiveMoney } from 'react-icons/gi'
 import { MdAnalytics } from 'react-icons/md'
+import { useQuery } from '@tanstack/react-query'
 import ModalPagosCompras from '../modals/modal-pagos-compras'
 import ModalPerdidas from '../modals/modal-perdidas'
 import ModalAnalisisPerdidasVentas from '../modals/modal-analisis-perdidas-ventas'
@@ -28,6 +29,26 @@ export default function CardsInfoGanancias() {
   const filtros = useStoreFiltrosMisGanancias((state) => state.filtros)
   const { data, isLoading } = useGetResumenGanancias(filtros)
   
+  const { data: gastosData } = useQuery({
+    queryKey: ['gastos-card', filtros.desde, filtros.hasta, filtros.almacen_id],
+    queryFn: async () => {
+      const result = await gananciasApi.getPagosCompras({
+        desde: filtros.desde,
+        hasta: filtros.hasta,
+        search: '',
+        almacen_id: filtros.almacen_id
+      })
+      return result
+    },
+    enabled: !!filtros?.almacen_id && !!filtros?.desde && !!filtros?.hasta,
+    staleTime: 1000 * 60 * 5,
+  })
+
+  const gastosTotal = useMemo(() => {
+    const gastos = gastosData?.data?.data?.gastos || []
+    return gastos.reduce((sum: number, g: any) => sum + (Number(g.monto) || 0), 0)
+  }, [gastosData])
+
   const resumen = data?.data?.data || {
     ventas: 0,
     costo: 0,
@@ -123,7 +144,7 @@ export default function CardsInfoGanancias() {
           <div className='text-[11px] text-slate-600 font-medium'>Gastos U</div>
         </div>
         <div className='text-base font-bold text-slate-600 text-center'>
-          {isLoading ? '...' : resumen.gastos_u.toFixed(2)}
+          {isLoading ? '...' : gastosTotal.toFixed(2)}
         </div>
       </div>
 
