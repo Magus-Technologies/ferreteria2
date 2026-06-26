@@ -25,6 +25,7 @@ import {
   getDireccionFromForm,
 } from "~/lib/utils/cliente-direcciones-form";
 import { useCheckAperturaDiaria } from "../../_hooks/use-check-apertura-diaria";
+import type { TipoDespachoUI } from "../modals/detalles-entrega/types";
 import { BankOutlined } from "@ant-design/icons";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 import { useStoreProductoAgregadoVenta } from "../../_store/store-producto-agregado-venta";
@@ -521,7 +522,7 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
         setOpen={setModalDetallesEntregaOpen}
         form={form}
         ventaId={ventaId}
-        tipoDespacho={(!tipo_despacho || tipo_despacho === 'Omitir') ? 'EnTienda' : tipo_despacho}
+        tipoDespacho={(!tipo_despacho || tipo_despacho === 'Omitir' || tipo_despacho === 'OmitirConStock') ? 'EnTienda' : tipo_despacho as TipoDespachoUI}
         // Si el usuario eligió `descontar_stock = 'no'`, el cliente YA TIENE la
         // mercadería. El backend fuerza `quien_entrega = 'vendedor'` y
         // `estado_entrega = 'en'`. Ocultamos el campo "¿Quién entrega?"
