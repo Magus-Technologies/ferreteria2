@@ -522,6 +522,12 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
         setOpen={setModalDetallesEntregaOpen}
         form={form}
         ventaId={ventaId}
+        // Tipo de despacho: 'Omitir' y 'OmitirConStock' se tratan como 'EnTienda'
+        // porque en ambos casos no hay despacho físico pendiente.
+        // - 'Omitir': el usuario omitió el despacho.
+        // - 'OmitirConStock': el usuario marcó "descontar_stock = no" (el cliente
+        //   ya tiene la mercadería), por lo que la entrega es inmediata en tienda.
+        // Ambos caen en 'EnTienda' para que no se abra la UI de Domicilio/Parcial.
         tipoDespacho={(!tipo_despacho || tipo_despacho === 'Omitir' || tipo_despacho === 'OmitirConStock') ? 'EnTienda' : tipo_despacho as TipoDespachoUI}
         // Si el usuario eligió `descontar_stock = 'no'`, el cliente YA TIENE la
         // mercadería. El backend fuerza `quien_entrega = 'vendedor'` y
