@@ -3,6 +3,7 @@ import type { ApiResponse } from '~/lib/api'
 
 export interface ConfiguracionEntrega {
   roles_entrega_tienda: string[]
+  roles_supervisores_entrega?: string[]
 }
 
 export const configuracionEntregaApi = {
