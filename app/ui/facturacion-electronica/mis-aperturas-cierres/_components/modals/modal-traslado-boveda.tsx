@@ -13,13 +13,24 @@ interface ModalTrasladoBovedaProps {
   onCancel: () => void;
   onSuccess: () => void;
   aperturaCierreId: string;
-  vendedorId: string;
+  /** @deprecated Ya no se usa: el vendedor se elige en la lista (efectivo por vendedor + caja). */
+  vendedorId?: string;
 }
 
 interface FormValues {
-  origen_value: string; // Will store "sub_caja_id-despliegue_pago_id"
+  origen_value: string; // Almacena "vendedor_id|||sub_caja_id|||despliegue_pago_id"
   monto: number;
   justificacion?: string;
+}
+
+interface EfectivoPorVendedorRow {
+  vendedor_id: string;
+  vendedor_nombre: string;
+  sub_caja_id: string | number;
+  sub_caja_nombre: string;
+  despliegue_pago_id: string;
+  metodo_nombre: string;
+  efectivo_disponible: string;
 }
 
 export default function ModalTrasladoBoveda({
@@ -27,7 +38,6 @@ export default function ModalTrasladoBoveda({
   onCancel,
   onSuccess,
   aperturaCierreId,
-  vendedorId,
 }: ModalTrasladoBovedaProps) {
   const { message, modal } = App.useApp();
   const [form] = Form.useForm<FormValues>();
@@ -35,11 +45,14 @@ export default function ModalTrasladoBoveda({
   const [efectivoDisponible, setEfectivoDisponible] = useState<number>(0);
   const efectivoDisponibleRef = useRef<number>(0);
 
-  // Cargar las sub cajas asignadas al usuario para ventas
-  const { data: subCajas = [], isLoading: loadingSubCajas } = useQuery({
-    queryKey: [QueryKeys.SUB_CAJAS, 'todas-con-saldo-vendedor'],
+  // Efectivo (apertura + ventas) SEPARADO por vendedor + caja + método de efectivo.
+  const { data: filas = [], isLoading: loadingFilas } = useQuery({
+    queryKey: [QueryKeys.SUB_CAJAS, 'efectivo-por-vendedor', aperturaCierreId],
     queryFn: async () => {
-      const result = await apiRequest<{ success: boolean; data: any[] }>('/cajas/sub-cajas/todas-con-saldo-vendedor')
+      const qs = aperturaCierreId ? `?apertura_cierre_caja_id=${aperturaCierreId}` : ''
+      const result = await apiRequest<{ success: boolean; data: EfectivoPorVendedorRow[] }>(
+        `/cajas/sub-cajas/efectivo-por-vendedor${qs}`,
+      )
       return result.data?.data || []
     },
     enabled: open,
@@ -48,26 +61,24 @@ export default function ModalTrasladoBoveda({
   // Mapa value → saldo para no depender de campos custom en el option de Ant Design
   const saldoMap = useMemo(() => {
     const map: Record<string, number> = {};
-    subCajas.forEach((caja: any) => {
-      (caja.metodos_pago || []).forEach((metodo: any) => {
-        const key = `${caja.id}|||${metodo.despliegue_pago_id}`;
-        map[key] = parseFloat(metodo.saldo_vendedor || '0');
-      });
+    filas.forEach((fila) => {
+      const key = `${fila.vendedor_id}|||${fila.sub_caja_id}|||${fila.despliegue_pago_id}`;
+      map[key] = parseFloat(fila.efectivo_disponible || '0');
     });
     return map;
-  }, [subCajas]);
+  }, [filas]);
 
   const handleSubmit = async (values: FormValues) => {
     try {
       setLoading(true);
 
-      const [sub_caja_id, despliegue_pago_id] = values.origen_value.split('|||');
+      const [vendedor_id, sub_caja_id, despliegue_pago_id] = values.origen_value.split('|||');
 
       const result = await trasladoBovedaApi.registrarTraslado({
         apertura_cierre_caja_id: aperturaCierreId,
         sub_caja_id,
         despliegue_pago_id,
-        vendedor_id: vendedorId,
+        vendedor_id,
         monto: values.monto,
         justificacion: values.justificacion,
       });
@@ -133,38 +144,23 @@ export default function ModalTrasladoBoveda({
       >
         <Form.Item
           name="origen_value"
-          label="Caja y Método de Origen"
-          rules={[{ required: true, message: "Seleccione el método de origen" }]}
+          label="Vendedor / Caja de Origen"
+          rules={[{ required: true, message: "Seleccione el vendedor y la caja de origen" }]}
         >
           <Select
-            placeholder="Seleccione la caja"
-            loading={loadingSubCajas}
+            placeholder="Seleccione el vendedor"
+            loading={loadingFilas}
+            showSearch
+            optionFilterProp="label"
             onChange={(value) => {
               const saldo = saldoMap[value as string] ?? 0;
               efectivoDisponibleRef.current = saldo;
               setEfectivoDisponible(saldo);
             }}
-            options={subCajas.flatMap((caja: any) =>
-              (caja.metodos_pago || [])
-                .filter((metodo: any) => {
-                  const nombreMetodo = (metodo.metodo_de_pago_nombre || '').toLowerCase();
-                  const nombreDespliegue = (metodo.nombre || '').toLowerCase();
-                  const cuenta = metodo.cuenta_bancaria;
-                  const sinCuenta = !cuenta || cuenta === 'SIN-CUENTA' || cuenta === '-';
-                  const esEfectivo = sinCuenta && (
-                    nombreMetodo.includes('efectivo') ||
-                    nombreDespliegue.includes('efectivo')
-                  );
-                  // Solo mostrar efectivos que tengan saldo > 0
-                  const tieneSaldo = parseFloat(metodo.saldo_vendedor || '0') > 0;
-                  return esEfectivo && tieneSaldo;
-                })
-                .map((metodo: any) => ({
-                  label: `${caja.nombre} / ${metodo.nombre} - S/ ${parseFloat(metodo.saldo_vendedor).toFixed(2)}`,
-                  value: `${caja.id}|||${metodo.despliegue_pago_id}`,
-                  saldo_efectivo: metodo.saldo_vendedor,
-                }))
-            )}
+            options={filas.map((fila) => ({
+              label: `${fila.vendedor_nombre} / ${fila.sub_caja_nombre} / ${fila.metodo_nombre} - S/ ${parseFloat(fila.efectivo_disponible).toFixed(2)}`,
+              value: `${fila.vendedor_id}|||${fila.sub_caja_id}|||${fila.despliegue_pago_id}`,
+            }))}
           />
         </Form.Item>
 
@@ -178,6 +174,16 @@ export default function ModalTrasladoBoveda({
               min: 0.01,
               message: "El monto debe ser mayor a 0",
             },
+            () => ({
+              validator(_, value) {
+                if (value == null || efectivoDisponible <= 0 || value <= efectivoDisponible) {
+                  return Promise.resolve();
+                }
+                return Promise.reject(
+                  new Error(`El monto excede el efectivo disponible (S/ ${efectivoDisponible.toFixed(2)})`),
+                );
+              },
+            }),
           ]}
         >
           <InputNumber

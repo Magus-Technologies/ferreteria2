@@ -499,6 +499,16 @@ export const cajaApi = {
   },
 
   /**
+   * Anular/deshacer una apertura en estado 'abierta'
+   */
+  anularApertura(id: string): Promise<ApiResponse<{ success: boolean; message: string }>> {
+    return apiRequest<{ success: boolean; message: string }>(
+      `/cajas/apertura/${id}/anular`,
+      { method: 'POST' }
+    )
+  },
+
+  /**
    * Enviar ticket de apertura por email con PDF adjunto
    */
   enviarTicketAperturaEmail: async (aperturaId: string, email: string, pdfBlob: Blob) => {

@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Spin, Button, Space, Form } from "antd";
-import { FilterOutlined, ReloadOutlined } from "@ant-design/icons";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { App, Spin, Button, Space, Form } from "antd";
 import { cajaApi, type AperturaYCierreCaja } from "~/lib/api/caja";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 import TableWithTitle from "~/components/tables/table-with-title";
@@ -29,6 +28,8 @@ interface FilterValues {
 }
 
 export default function HistorialAperturas() {
+  const { modal, message } = App.useApp();
+  const queryClient = useQueryClient();
   const [form] = Form.useForm<FilterValues>();
   const gridRef = useRef<AgGridReact<AperturaYCierreCaja>>(null);
   const [selectedApertura, setSelectedApertura] = useState<AperturaYCierreCaja | null>(null);
@@ -123,6 +124,39 @@ export default function HistorialAperturas() {
     setSelectedApertura(null);
   };
 
+  const handleDeshacer = (apertura: AperturaYCierreCaja) => {
+    modal.confirm({
+      title: '¿Deshacer apertura?',
+      content: (
+        <div>
+          <p>Esta acción revertirá la apertura y dejará la caja disponible para una nueva apertura.</p>
+          <p className="mt-2 text-sm text-slate-600">
+            Monto: <span className="font-semibold">S/ {parseFloat(apertura.monto_apertura).toFixed(2)}</span>
+          </p>
+          <p className="text-sm text-slate-600">
+            Caja: <span className="font-semibold">{apertura.caja_principal?.nombre || '-'}</span>
+          </p>
+        </div>
+      ),
+      okText: 'Sí, deshacer',
+      okType: 'danger',
+      cancelText: 'Cancelar',
+      onOk: async () => {
+        try {
+          await cajaApi.anularApertura(apertura.id);
+          message.success('Apertura anulada exitosamente');
+          queryClient.invalidateQueries({ queryKey: [QueryKeys.HISTORIAL_APERTURAS_TODAS] });
+          queryClient.invalidateQueries({ queryKey: [QueryKeys.CAJA_ACTIVA] });
+          refetch();
+        } catch (error: any) {
+          message.error(
+            error.response?.data?.message || 'Error al anular la apertura'
+          );
+        }
+      },
+    });
+  };
+
   const handleFinish = (values: FilterValues) => {
     console.log('🔍 Aplicando filtros:', values);
     setSelectedUserId(values.user_id);
@@ -145,6 +179,7 @@ export default function HistorialAperturas() {
 
   const columns = useColumnsAperturas({
     onVerTicket: handleVerTicket,
+    onDeshacer: handleDeshacer,
   });
 
   if (isLoading) {

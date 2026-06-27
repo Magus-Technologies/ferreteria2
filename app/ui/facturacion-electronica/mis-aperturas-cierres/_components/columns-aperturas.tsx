@@ -1,7 +1,7 @@
 import { ColDef } from 'ag-grid-community'
 import { AperturaYCierreCaja } from '~/lib/api/caja'
 import { Button, Tag, Tooltip } from 'antd'
-import { FaFilePdf } from 'react-icons/fa6'
+import { FaFilePdf, FaRotateLeft } from 'react-icons/fa6'
 import { formatFechaPeru } from '~/utils/fechas'
 
 const formatCurrency = (value: number) => {
@@ -15,8 +15,10 @@ const centerCell = { display: 'flex', alignItems: 'center', justifyContent: 'cen
 
 export const useColumnsAperturas = ({
   onVerTicket,
+  onDeshacer,
 }: {
   onVerTicket: (apertura: AperturaYCierreCaja) => void
+  onDeshacer?: (apertura: AperturaYCierreCaja) => void
 }): ColDef<AperturaYCierreCaja>[] => {
   return [
     {
@@ -84,10 +86,11 @@ export const useColumnsAperturas = ({
       colId: 'acciones',
       headerName: 'Acciones',
       field: 'id',
-      width: 90,
+      width: 140,
       pinned: 'right',
       cellStyle: centerCell,
       cellRenderer: (params: any) => {
+        const isAbierta = params.data?.estado === 'abierta'
         return (
           <div className='flex gap-1 items-center justify-center'>
             <Tooltip title='Ver Ticket de Apertura'>
@@ -100,6 +103,18 @@ export const useColumnsAperturas = ({
                 <FaFilePdf className='text-red-600 text-lg' />
               </Button>
             </Tooltip>
+            {isAbierta && onDeshacer && (
+              <Tooltip title='Deshacer apertura'>
+                <Button
+                  type='link'
+                  size='small'
+                  className='flex items-center gap-1'
+                  onClick={() => onDeshacer(params.data)}
+                >
+                  <FaRotateLeft className='text-amber-600 text-lg' />
+                </Button>
+              </Tooltip>
+            )}
           </div>
         )
       },
