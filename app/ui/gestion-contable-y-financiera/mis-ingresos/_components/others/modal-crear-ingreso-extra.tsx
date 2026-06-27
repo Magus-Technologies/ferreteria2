@@ -1,16 +1,14 @@
 'use client'
 
-import { Form, Input, InputNumber, Select, Switch, message } from 'antd'
-import { useState, useEffect, useCallback } from 'react'
-import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
+import { Form, Input, InputNumber } from 'antd'
+import { useEffect, useCallback } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import useApp from 'antd/es/app/useApp'
 import { crearIngresoExtra, updateIngresoExtra, type CrearIngresoExtraData, type IngresoExtra } from '~/lib/api/ingreso-extra'
-import { usuariosApi } from '~/lib/api/usuarios'
 import ModalForm from '~/components/modals/modal-form'
 import SelectDespliegueDePago from '~/app/_components/form/selects/select-despliegue-de-pago'
 import LabelBase from '~/components/form/label-base'
 import TitleForm from '~/components/form/title-form'
-import { useCheckAperturaDiaria } from '~/app/ui/gestion-contable-y-financiera/mis-ingresos/_hooks/use-check-apertura-diaria'
-import AperturaGuard from '~/app/ui/_components/apertura-auto-check'
 
 interface ModalCrearIngresoExtraProps {
     open: boolean
@@ -19,17 +17,10 @@ interface ModalCrearIngresoExtraProps {
 }
 
 export default function ModalCrearIngresoExtra({ open, onClose, ingresoEdit }: ModalCrearIngresoExtraProps) {
-    const [form] = Form.useForm<CrearIngresoExtraData & { requiereAprobacion?: boolean }>()
+    const [form] = Form.useForm<CrearIngresoExtraData>()
     const queryClient = useQueryClient()
-    const [requiereAprobacion, setRequiereAprobacion] = useState(false)
+    const { message } = useApp()
     const isEditing = !!ingresoEdit
-    useCheckAperturaDiaria()
-
-    const { data: supervisoresRes, isLoading: loadingSupervisores } = useQuery({
-        queryKey: ['supervisores'],
-        queryFn: () => usuariosApi.getSupervisores(),
-        enabled: open && requiereAprobacion
-    })
 
     const crearMutation = useMutation({
         mutationFn: crearIngresoExtra,
@@ -57,8 +48,6 @@ export default function ModalCrearIngresoExtra({ open, onClose, ingresoEdit }: M
         }
     })
 
-    const supervisores = supervisoresRes?.data?.data || []
-
     useEffect(() => {
         if (open && ingresoEdit) {
             form.setFieldsValue({
@@ -71,16 +60,10 @@ export default function ModalCrearIngresoExtra({ open, onClose, ingresoEdit }: M
 
     const handleClose = () => {
         form.resetFields()
-        setRequiereAprobacion(false)
         onClose()
     }
 
-    const handleFinish = useCallback((values: CrearIngresoExtraData & { requiereAprobacion?: boolean }) => {
-        if (!values.requiereAprobacion || isEditing) {
-            delete values.supervisor_id
-            delete values.supervisor_password
-        }
-
+    const handleFinish = useCallback((values: CrearIngresoExtraData) => {
         const desplieguePagoId = values.despliegue_pago_id?.includes('-')
             ? values.despliegue_pago_id.split('-')[1]
             : values.despliegue_pago_id
@@ -96,19 +79,14 @@ export default function ModalCrearIngresoExtra({ open, onClose, ingresoEdit }: M
     }, [isEditing, ingresoEdit, updateMutation, crearMutation])
 
     return (
-        <>
-        {/* El guard de apertura SOLO debe exigir caja cuando el modal está abierto.
-            Antes se montaba siempre y, como el top-nav (que lo incluye) está en el
-            layout, forzaba el modal de apertura en TODO el módulo, incluido el Dashboard. */}
-        {open && <AperturaGuard />}
         <ModalForm
             open={open}
             setOpen={(val) => { if (!val) handleClose() }}
             modalProps={{
-                width: 600,
+                width: 700,
                 centered: true,
                 title: <TitleForm>{isEditing ? 'Editar Ingreso Operativo' : 'Registrar Nuevo Ingreso Operativo'}</TitleForm>,
-                okText: isEditing ? 'Guardar Cambios' : (requiereAprobacion ? 'Guardar y Aprobar' : 'Guardar como Pendiente'),
+                okText: isEditing ? 'Guardar Cambios' : 'Guardar',
                 cancelText: 'Cancelar',
                 destroyOnHidden: true,
                 okButtonProps: {
@@ -121,58 +99,36 @@ export default function ModalCrearIngresoExtra({ open, onClose, ingresoEdit }: M
                 layout: 'vertical',
                 onFinish: handleFinish,
                 className: 'mt-4',
-                initialValues: { requiereAprobacion: false },
-                onValuesChange: (changed) => {
-                    if (changed.requiereAprobacion !== undefined) {
-                        setRequiereAprobacion(changed.requiereAprobacion)
-                    }
-                }
             }}
         >
             <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                    <LabelBase label="Monto (S/.)" orientation="column">
-                        <Form.Item name="monto" rules={[{ required: true, message: 'Ingrese el monto' }]} className="mb-0">
-                            <InputNumber className="w-full" min={0.01} step={0.1} precision={2} placeholder="0.00" prefix="S/" />
+                <div className="grid grid-cols-3 gap-3">
+                    <LabelBase label="Monto (S/.)" orientation="column" className="w-full">
+                        <Form.Item name="monto" rules={[{ required: true, message: 'Ingrese el monto' }]} className="mb-0 w-full">
+                            <InputNumber className="!w-full" min={0.01} step={0.1} precision={2} placeholder="0.00" prefix="S/" />
                         </Form.Item>
                     </LabelBase>
-                    <LabelBase label="Método de Pago" orientation="column">
-                        <SelectDespliegueDePago
-                            placeholder="Selecciona el método de pago"
-                            propsForm={{ name: 'despliegue_pago_id', rules: [{ required: true, message: 'Selecciona un método de pago' }] }}
-                        />
-                    </LabelBase>
+
+                    <div className="col-span-2">
+                        <LabelBase label="Método de Pago" orientation="column" className="w-full">
+                            <SelectDespliegueDePago
+                                placeholder="Selecciona el método de pago"
+                                className="!w-full"
+                                propsForm={{
+                                    name: 'despliegue_pago_id',
+                                    rules: [{ required: true, message: 'Selecciona un método de pago' }],
+                                }}
+                            />
+                        </LabelBase>
+                    </div>
                 </div>
 
-                <LabelBase label="Concepto o Motivo del Ingreso" orientation="column">
-                    <Form.Item name="concepto" rules={[{ required: true, message: 'El concepto es obligatorio' }]} className="mb-0">
-                        <Input.TextArea rows={3} placeholder="Detalle el motivo del Ingreso..." />
+                <LabelBase label="Concepto o Motivo del Ingreso" orientation="column" className="w-full">
+                    <Form.Item name="concepto" rules={[{ required: true, message: 'El concepto es obligatorio' }]} className="mb-0 w-full">
+                        <Input.TextArea rows={3} className="!w-full" placeholder="Detalle el motivo del ingreso..." />
                     </Form.Item>
                 </LabelBase>
-
-                {!isEditing && (
-                    <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 mt-3">
-                        <Form.Item name="requiereAprobacion" label="¿Aprobar inmediatamente?" valuePropName="checked" className="mb-1">
-                            <Switch />
-                        </Form.Item>
-                        {requiereAprobacion && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 mt-2">
-                                <Form.Item name="supervisor_id" label="Supervisor" rules={[{ required: true, message: 'Seleccione un supervisor' }]} className="mb-2 md:mb-0">
-                                    <Select loading={loadingSupervisores} placeholder="Seleccione supervisor...">
-                                        {supervisores.map((sup: { id: string; name: string }) => (
-                                            <Select.Option key={sup.id} value={sup.id}>{sup.name}</Select.Option>
-                                        ))}
-                                    </Select>
-                                </Form.Item>
-                                <Form.Item name="supervisor_password" label="Contraseña" rules={[{ required: true, message: 'Ingrese contraseña' }]} className="mb-2 md:mb-0">
-                                    <Input.Password placeholder="Contraseña de supervisor" />
-                                </Form.Item>
-                            </div>
-                        )}
-                    </div>
-                )}
             </div>
         </ModalForm>
-        </>
     )
 }
