@@ -4,6 +4,7 @@ import CardMiniInfo from '../cards/card-mini-info'
 import { useStoreFiltrosMisVentas } from '../../_store/store-filtros-mis-ventas'
 import { useMemo } from 'react'
 import useGetVentas from '../../_hooks/use-get-ventas'
+import { EstadoDeVenta, FormaDePago } from '~/lib/api/venta'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 
 export default function CardsInfoVentas() {
@@ -63,11 +64,11 @@ export default function CardsInfoVentas() {
       const totalConIGV = totalVenta
 
       // Clasificar según forma de pago y estado
-      if (venta.estado === 'Anulado') {
+      if (venta.estado_de_venta === EstadoDeVenta.ANULADO) {
         anulados += totalConIGV
-      } else if (venta.forma_de_pago === 'Contado') {
+      } else if (venta.forma_de_pago === FormaDePago.CONTADO) {
         viaContado += totalConIGV
-      } else if (venta.forma_de_pago === 'Crédito') {
+      } else if (venta.forma_de_pago === FormaDePago.CREDITO) {
         viaCredito += totalConIGV
         // Aquí podrías calcular cuánto se ha pagado y cuánto se debe
         // Por ahora asumimos que todo el crédito está pendiente
