@@ -5,6 +5,8 @@ import { QueryKeys } from '~/app/_lib/queryKeys'
 import { FaMoneyCheckAlt } from 'react-icons/fa'
 import { useQuery } from '@tanstack/react-query'
 import { apiRequest } from '~/lib/api'
+import { Form } from 'antd'
+import { useEffect } from 'react'
 
 interface SelectDespliegueDePagoProps extends SelectBaseProps {
   classNameIcon?: string
@@ -65,6 +67,29 @@ export default function SelectDespliegueDePago({
     value: metodo.value,
     label: metodo.label,
   })) || []
+
+  // Auto-corregir: si el valor del formulario es un ID plano (no compuesto),
+  // buscar el valor compuesto correspondiente y actualizar el formulario
+  const watchedValue = Form.useWatch(props.propsForm?.name)
+  const fieldName = props.propsForm?.name
+
+  let formInstance: ReturnType<typeof Form.useFormInstance> | null = null
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    formInstance = Form.useFormInstance()
+  } catch { formInstance = null }
+
+  useEffect(() => {
+    if (!watchedValue || !metodosFiltrados?.length || !fieldName || !formInstance) return
+
+    const isAlreadyComposite = metodosFiltrados.some((m: any) => m.value === watchedValue)
+    if (isAlreadyComposite) return
+
+    const found = metodosFiltrados.find((m: any) => m.despliegue_pago_id === watchedValue)
+    if (found) {
+      formInstance.setFieldValue(fieldName, found.value)
+    }
+  }, [watchedValue, metodosFiltrados, fieldName, formInstance])
 
   return (
     <SelectBase
