@@ -9,6 +9,7 @@ interface FiltrosMisIngresos {
   cajeroRegistra?: string
   sucursal?: string
   busqueda?: string
+  estado?: string
 }
 
 interface StoreFiltrosMisIngresos {

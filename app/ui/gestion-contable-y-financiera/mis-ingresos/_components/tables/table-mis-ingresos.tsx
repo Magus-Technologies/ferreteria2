@@ -1,100 +1,42 @@
 'use client'
 
-import { useRef, memo, useCallback, useMemo, useState, useEffect } from 'react'
-import { AgGridReact } from 'ag-grid-react'
-import { ColDef, SelectionChangedEvent, RowDoubleClickedEvent, RowClickedEvent, ICellRendererParams } from 'ag-grid-community'
+import { memo, useCallback, useMemo, useState } from 'react'
+import { ColDef, ICellRendererParams } from 'ag-grid-community'
 import { useStoreFiltrosMisIngresos } from '../../_store/store-filtros-mis-ingresos'
 import { useGetIngresos } from '../../_hooks/use-get-ingresos'
 import { type IngresoExtra, anularIngresoExtra } from '~/lib/api/ingreso-extra'
-import dayjs from 'dayjs'
 import { formatFechaPeru } from '~/utils/fechas'
 import TableWithTitle from '~/components/tables/table-with-title'
-import { Button, Modal, message, Tooltip, Popconfirm } from 'antd'
-import { ExclamationCircleOutlined } from '@ant-design/icons'
-import { FaCheck, FaTimes } from 'react-icons/fa'
+import { Button, Popconfirm, Tooltip } from 'antd'
+import useApp from 'antd/es/app/useApp'
 import { MdDelete, MdEditSquare } from 'react-icons/md'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import ModalAprobarIngresoExtra from '../others/modal-aprobar-ingreso-extra'
 import ModalCrearIngresoExtra from '../others/modal-crear-ingreso-extra'
-
-const { confirm } = Modal
-
-// Componente para renderizar el estado
-const EstadoCellRenderer = (props: ICellRendererParams) => {
-  const estado = props.value as 'pendiente' | 'aprobado' | 'anulado'
-
-  if (estado === 'anulado') {
-    return (
-      <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-        Anulado
-      </span>
-    )
-  }
-
-  if (estado === 'pendiente') {
-    return (
-      <span className="px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-        Pendiente
-      </span>
-    )
-  }
-
-  return (
-    <span className="px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-      Aprobado
-    </span>
-  )
-}
 
 const TableMisIngresos = memo(function TableMisIngresos() {
   const filtros = useStoreFiltrosMisIngresos(state => state.filtros)
   const queryClient = useQueryClient()
-
-  const [modalAprobarOpen, setModalAprobarOpen] = useState(false)
-  const [selectedIngresoId, setSelectedIngresoId] = useState<string | null>(null)
+  const { message } = useApp()
 
   const [modalEditOpen, setModalEditOpen] = useState(false)
   const [ingresoEdit, setIngresoEdit] = useState<IngresoExtra | undefined>(undefined)
-
   const [loadingActionId, setLoadingActionId] = useState<string | null>(null)
 
-  // Mutación para anular
   const anularMutation = useMutation({
     mutationFn: anularIngresoExtra,
     onSuccess: () => {
-      message.success('Ingreso anulado correctamente')
+      message.success('Ingreso eliminado correctamente')
       queryClient.invalidateQueries({ queryKey: ['ingresos-extras'] })
       queryClient.invalidateQueries({ queryKey: ['ingresos-extras-resumen'] })
     },
     onError: (error: Error) => {
-      message.error(error.message || 'Error al anular el Ingreso')
+      message.error(error.message || 'Error al eliminar el ingreso')
     },
     onSettled: () => {
       setLoadingActionId(null)
     }
   })
 
-  const handleAprobarClicked = useCallback((id: string) => {
-    setSelectedIngresoId(id)
-    setModalAprobarOpen(true)
-  }, [])
-
-  const handleAnularClicked = useCallback((id: string) => {
-    confirm({
-      title: '¿Estás seguro de anular este Ingreso?',
-      icon: <ExclamationCircleOutlined className="text-red-500" />,
-      content: 'Si estaba aprobado, el monto se revertirá regresando el dinero a la caja.',
-      okText: 'Sí, Anular',
-      okType: 'danger',
-      cancelText: 'Cancelar',
-      onOk() {
-        setLoadingActionId(id)
-        anularMutation.mutate(id)
-      },
-    })
-  }, [anularMutation])
-
-  // Convert store filters to API filters
   const apiFilters = useMemo(() => {
     if (!filtros) return null
 
@@ -105,12 +47,12 @@ const TableMisIngresos = memo(function TableMisIngresos() {
       cajeroRegistra: filtros.cajeroRegistra,
       sucursal: filtros.sucursal,
       busqueda: filtros.busqueda,
+      estado: filtros.estado,
       per_page: 100,
       page: 1
     }
   }, [filtros])
 
-  // Fetch Ingresos data
   const { data: IngresosResponse, isLoading, error } = useGetIngresos(
     apiFilters || {},
     !!apiFilters
@@ -118,7 +60,6 @@ const TableMisIngresos = memo(function TableMisIngresos() {
 
   const IngresosData = IngresosResponse?.data || []
 
-  // Definir columnas según la imagen
   const columns: ColDef<IngresoExtra>[] = useMemo(() => [
     {
       headerName: 'FECHA REGISTRO',
@@ -164,22 +105,30 @@ const TableMisIngresos = memo(function TableMisIngresos() {
       valueGetter: params => params.data?.user?.name || 'Desconocido'
     },
     {
-      headerName: 'SUPERVISOR',
-      field: 'supervisor.name',
-      width: 150,
-      valueGetter: params => params.data?.supervisor?.name || '-'
-    },
-    {
       headerName: 'ESTADO',
       field: 'estado',
-      width: 120,
-      cellRenderer: EstadoCellRenderer,
+      width: 110,
+      cellRenderer: (params: ICellRendererParams) => {
+        const estado = params.value
+        if (estado === 'anulado') {
+          return (
+            <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+              Anulado
+            </span>
+          )
+        }
+        return (
+          <span className="px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+            Activo
+          </span>
+        )
+      },
       cellClass: 'flex items-center',
     },
     {
       headerName: 'ACCIONES',
       field: 'id',
-      width: 180,
+      width: 120,
       pinned: 'right',
       cellRenderer: (params: ICellRendererParams) => {
         const data = params.data as IngresoExtra
@@ -187,40 +136,27 @@ const TableMisIngresos = memo(function TableMisIngresos() {
 
         const isRowLoading = loadingActionId === data.id
         const isAnulado = data.estado === 'anulado'
-        const isAprobado = data.estado === 'aprobado'
 
         return (
           <div className="flex gap-2 items-center h-full">
-            <Tooltip title={isAprobado ? "Ingreso ya aprobado" : "Aprobar Ingreso"}>
-              <Button
-                type='text'
-                size='small'
-                icon={<FaCheck size={16} />}
-                style={{ color: isAprobado ? '#94a3b8' : '#059669' }}
-                className='p-0 hover:!bg-transparent hover:scale-110 transition-all active:scale-95 cursor-pointer min-w-fit'
-                loading={isRowLoading}
-                disabled={isRowLoading || isAprobado}
-                onClick={() => handleAprobarClicked(data.id)}
-              />
-            </Tooltip>
-            <Tooltip title="Editar Ingreso">
+            <Tooltip title={isAnulado ? 'Ingreso anulado' : 'Editar Ingreso'}>
               <Button
                 type='text'
                 size='small'
                 icon={<MdEditSquare size={18} />}
-                style={{ color: '#eab308' }}
+                style={{ color: isAnulado ? '#94a3b8' : '#eab308' }}
                 className='p-0 hover:!bg-transparent hover:scale-110 transition-all active:scale-95 cursor-pointer min-w-fit'
-                disabled={isRowLoading}
+                disabled={isRowLoading || isAnulado}
                 onClick={() => {
                   setIngresoEdit(data)
                   setModalEditOpen(true)
                 }}
               />
             </Tooltip>
-            <Tooltip title={isAnulado ? "Ingreso ya anulado" : "Anular Ingreso"}>
+            <Tooltip title={isAnulado ? 'Ingreso anulado' : 'Anular Ingreso'}>
               <Popconfirm
                 title='¿Estás seguro de anular este ingreso?'
-                description='Si estaba aprobado, el monto se revertirá regresando el dinero a la caja.'
+                description='El monto se revertirá regresando el dinero a la caja.'
                 onConfirm={() => {
                   setLoadingActionId(data.id)
                   anularMutation.mutate(data.id)
@@ -245,14 +181,12 @@ const TableMisIngresos = memo(function TableMisIngresos() {
         )
       }
     }
-  ], [handleAprobarClicked, anularMutation])
+  ], [loadingActionId, anularMutation])
 
   const getRowId = useCallback((params: any) => params.data.id, [])
 
-  // Solo renderizar cuando hay filtros
   if (!filtros) return null
 
-  // Show loading state
   if (isLoading) {
     return (
       <div className='h-full flex items-center justify-center'>
@@ -261,7 +195,6 @@ const TableMisIngresos = memo(function TableMisIngresos() {
     )
   }
 
-  // Show error state
   if (error) {
     return (
       <div className='h-full flex items-center justify-center'>
@@ -289,15 +222,6 @@ const TableMisIngresos = memo(function TableMisIngresos() {
           selectColumns={true}
         />
       </div>
-
-      <ModalAprobarIngresoExtra
-        open={modalAprobarOpen}
-        onClose={() => {
-          setModalAprobarOpen(false)
-          setSelectedIngresoId(null)
-        }}
-        IngresoId={selectedIngresoId}
-      />
 
       <ModalCrearIngresoExtra
         open={modalEditOpen}

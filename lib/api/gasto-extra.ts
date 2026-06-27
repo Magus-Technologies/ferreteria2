@@ -4,6 +4,7 @@ export interface GastoExtra {
     id: string
     monto: number
     concepto: string
+    estado?: string
     user_id: string
     despliegue_pago_id: string | null
     created_at: string

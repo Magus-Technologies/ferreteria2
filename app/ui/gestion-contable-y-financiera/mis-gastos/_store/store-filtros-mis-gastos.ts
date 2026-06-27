@@ -10,6 +10,7 @@ interface FiltrosMisGastos {
   cajeroRegistra?: string
   sucursal?: string
   busqueda?: string
+  estado?: string
 }
 
 interface StoreFiltrosMisGastos {

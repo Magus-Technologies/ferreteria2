@@ -47,6 +47,7 @@ const TableMisGastos = memo(function TableMisGastos() {
       cajeroRegistra: filtros.cajeroRegistra,
       sucursal: filtros.sucursal,
       busqueda: filtros.busqueda,
+      estado: filtros.estado,
       per_page: 100,
       page: 1
     }
@@ -117,13 +118,20 @@ const TableMisGastos = memo(function TableMisGastos() {
     },
     {
       headerName: 'ESTADO',
-      field: 'compra',
-      width: 120,
-      cellRenderer: (params: ICellRendererParams<GastoExtra>) => {
-        const usado = !!params.data?.compra
+      field: 'estado',
+      width: 110,
+      cellRenderer: (params: ICellRendererParams) => {
+        const estado = params.value
+        if (estado === 'anulado') {
+          return (
+            <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+              Anulado
+            </span>
+          )
+        }
         return (
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${usado ? 'bg-blue-100 text-blue-800' : 'bg-emerald-100 text-emerald-800'}`}>
-            {usado ? 'Usado' : 'Disponible'}
+          <span className="px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+            Activo
           </span>
         )
       },
@@ -139,44 +147,46 @@ const TableMisGastos = memo(function TableMisGastos() {
         if (!data) return null
 
         const isRowLoading = loadingActionId === data.id
+        const isAnulado = data.estado === 'anulado'
         const isUsado = !!data.compra
 
         return (
           <div className="flex gap-2 items-center h-full">
-            <Tooltip title="Editar Gasto">
+            <Tooltip title={isAnulado ? 'Gasto anulado' : 'Editar Gasto'}>
               <Button
                 type='text'
                 size='small'
                 icon={<MdEditSquare size={18} />}
-                style={{ color: '#eab308' }}
+                style={{ color: isAnulado ? '#94a3b8' : '#eab308' }}
                 className='p-0 hover:!bg-transparent hover:scale-110 transition-all active:scale-95 cursor-pointer min-w-fit'
-                disabled={isRowLoading}
+                disabled={isRowLoading || isAnulado}
                 onClick={() => {
                   setGastoEdit(data)
                   setModalEditOpen(true)
                 }}
               />
             </Tooltip>
-            <Tooltip title={isUsado ? 'No se puede eliminar: ya está asociado a una compra' : 'Eliminar Gasto'}>
+            <Tooltip title={isAnulado ? 'Gasto anulado' : 'Anular Gasto'}>
               <Popconfirm
-                title='¿Estás seguro de eliminar este gasto?'
+                title='¿Estás seguro de anular este gasto?'
+                description='El monto se revertirá regresando el dinero a la caja.'
                 onConfirm={() => {
                   setLoadingActionId(data.id)
                   eliminarMutation.mutate(data.id)
                 }}
-                okText='Sí, Eliminar'
+                okText='Sí, Anular'
                 cancelText='Cancelar'
                 okButtonProps={{ danger: true }}
-                disabled={isRowLoading || isUsado}
+                disabled={isRowLoading || isAnulado || isUsado}
               >
                 <Button
                   type='text'
                   size='small'
                   icon={<MdDelete size={18} />}
-                  style={{ color: isUsado ? '#94a3b8' : '#e11d48' }}
+                  style={{ color: isAnulado || isUsado ? '#94a3b8' : '#e11d48' }}
                   className='p-0 hover:!bg-transparent hover:scale-110 transition-all active:scale-95 cursor-pointer min-w-fit'
                   loading={isRowLoading && eliminarMutation.isPending}
-                  disabled={isRowLoading || isUsado}
+                  disabled={isRowLoading || isAnulado || isUsado}
                 />
               </Popconfirm>
             </Tooltip>

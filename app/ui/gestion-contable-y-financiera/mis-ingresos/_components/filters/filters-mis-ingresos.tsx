@@ -22,6 +22,7 @@ interface ValuesFiltersMisIngresos {
   cajeroRegistra?: string
   sucursal?: string
   busqueda?: string
+  estado?: string
 }
 
 export default function FiltersMisIngresos() {
@@ -46,6 +47,7 @@ export default function FiltersMisIngresos() {
     const data = {
       fechaDesde: dayjs().startOf('day').format('YYYY-MM-DD'),
       fechaHasta: dayjs().endOf('day').format('YYYY-MM-DD'),
+      estado: 'aprobado',
     }
     setFiltros(data)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -58,6 +60,7 @@ export default function FiltersMisIngresos() {
       initialValues={{
         fechaDesde: dayjs().startOf('day'),
         fechaHasta: dayjs().endOf('day'),
+        estado: 'aprobado',
       }}
       className='w-full'
       onFinish={values => {
@@ -155,6 +158,20 @@ export default function FiltersMisIngresos() {
                     { label: 'PRINCIPAL', value: 'PRINCIPAL' },
                   ]}
                   allowClear
+                />
+              </Form.Item>
+            </LabelBase>
+          </ConfigurableElement>
+
+          <ConfigurableElement componentId='gestion-contable.mis-Ingresos.filtro-estado' label='Filtro Estado'>
+            <LabelBase label='Estado:'>
+              <Form.Item name='estado' className='!mb-0' initialValue='aprobado'>
+                <Select
+                  className='!min-w-[130px] !w-[130px] !max-w-[130px]'
+                  options={[
+                    { label: 'Activo', value: 'aprobado' },
+                    { label: 'Anulado', value: 'anulado' },
+                  ]}
                 />
               </Form.Item>
             </LabelBase>

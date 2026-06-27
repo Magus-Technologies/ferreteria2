@@ -4,17 +4,12 @@ export interface IngresoExtra {
     id: string
     monto: number
     concepto: string
-    estado: 'pendiente' | 'aprobado' | 'anulado'
+    estado?: string
     user_id: string
-    supervisor_id: string | null
     despliegue_pago_id: string | null
     created_at: string
     updated_at: string
     user?: {
-        id: string
-        name: string
-    }
-    supervisor?: {
         id: string
         name: string
     }
@@ -31,14 +26,7 @@ export interface IngresoExtra {
 export interface CrearIngresoExtraData {
     monto: number
     concepto: string
-    supervisor_id?: string
-    supervisor_password?: string
     despliegue_pago_id?: string
-}
-
-export interface AprobarIngresoExtraData {
-    supervisor_id: string
-    supervisor_password: string
 }
 
 export interface ResumenIngresosExtras {
@@ -94,11 +82,4 @@ export const anularIngresoExtra = async (id: string): Promise<{ data: IngresoExt
     return response.data!
 }
 
-// Aprobar ingreso extra
-export const aprobarIngresoExtra = async (id: string, data: AprobarIngresoExtraData): Promise<{ data: IngresoExtra; message: string }> => {
-    const response = await apiRequest<{ data: IngresoExtra; message: string }>(`/ingresos-extras/${id}/aprobar`, { method: 'POST', data })
-    if (response.error) {
-        throw new Error(response.error.message)
-    }
-    return response.data!
-}
+

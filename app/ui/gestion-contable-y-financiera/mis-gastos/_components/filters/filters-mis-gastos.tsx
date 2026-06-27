@@ -22,6 +22,7 @@ interface ValuesFiltersMisGastos {
   cajeroRegistra?: string
   sucursal?: string
   busqueda?: string
+  estado?: string
 }
 
 export default function FiltersMisGastos() {
@@ -46,6 +47,7 @@ export default function FiltersMisGastos() {
     const data = {
       fechaDesde: dayjs().startOf('day').format('YYYY-MM-DD HH:mm:ss'),
       fechaHasta: dayjs().endOf('day').format('YYYY-MM-DD HH:mm:ss'),
+      estado: 'aprobado',
     }
     setFiltros(data)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -58,6 +60,7 @@ export default function FiltersMisGastos() {
       initialValues={{
         fechaDesde: dayjs().startOf('day'),
         fechaHasta: dayjs().endOf('day'),
+        estado: 'aprobado',
       }}
       className='w-full'
       onFinish={values => {
@@ -155,6 +158,20 @@ export default function FiltersMisGastos() {
                     { label: 'PRINCIPAL', value: 'PRINCIPAL' },
                   ]}
                   allowClear
+                />
+              </Form.Item>
+            </LabelBase>
+          </ConfigurableElement>
+
+          <ConfigurableElement componentId='gestion-contable.mis-gastos.filtro-estado' label='Filtro Estado'>
+            <LabelBase label='Estado:'>
+              <Form.Item name='estado' className='!mb-0' initialValue='aprobado'>
+                <Select
+                  className='!min-w-[130px] !w-[130px] !max-w-[130px]'
+                  options={[
+                    { label: 'Activo', value: 'aprobado' },
+                    { label: 'Anulado', value: 'anulado' },
+                  ]}
                 />
               </Form.Item>
             </LabelBase>
