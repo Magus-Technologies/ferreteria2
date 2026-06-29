@@ -63,7 +63,8 @@ export default function HistorialCierres() {
 
   // Filtros
   const [selectedUserId, setSelectedUserId] = useState<string | undefined>(undefined);
-  const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null] | null>(null);
+  // Por defecto se filtra al día de hoy (el usuario puede ampliar el rango).
+  const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null] | null>([dayjs(), dayjs()]);
   const [selectedCajaPrincipalId, setSelectedCajaPrincipalId] = useState<number | undefined>(undefined);
 
   // Cajas principales para el filtro
@@ -184,7 +185,7 @@ export default function HistorialCierres() {
   const handleLimpiarFiltros = () => {
     form.resetFields();
     setSelectedUserId(undefined);
-    setDateRange(null);
+    setDateRange([dayjs(), dayjs()]); // vuelve al filtro por defecto: hoy
     setSelectedCajaPrincipalId(undefined);
   };
 
@@ -357,6 +358,7 @@ export default function HistorialCierres() {
           name="filtros-cierres"
           onFinish={handleFinish}
           className="w-full"
+          initialValues={{ desde: dayjs(), hasta: dayjs() }}
         >
           <div className="mb-6">
             <div className="grid grid-cols-12 gap-x-3 gap-y-2.5">

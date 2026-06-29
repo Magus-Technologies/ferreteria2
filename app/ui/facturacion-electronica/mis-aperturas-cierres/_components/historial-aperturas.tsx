@@ -38,7 +38,8 @@ export default function HistorialAperturas() {
 
   // Filtros
   const [selectedUserId, setSelectedUserId] = useState<string | undefined>(undefined);
-  const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null] | null>(null);
+  // Por defecto se filtra al día de hoy (el usuario puede ampliar el rango).
+  const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null] | null>([dayjs(), dayjs()]);
   const [selectedEstado, setSelectedEstado] = useState<string | undefined>(undefined);
   const [selectedCajaPrincipalId, setSelectedCajaPrincipalId] = useState<number | undefined>(undefined);
 
@@ -172,7 +173,7 @@ export default function HistorialAperturas() {
   const handleLimpiarFiltros = () => {
     form.resetFields();
     setSelectedUserId(undefined);
-    setDateRange(null);
+    setDateRange([dayjs(), dayjs()]); // vuelve al filtro por defecto: hoy
     setSelectedEstado(undefined);
     setSelectedCajaPrincipalId(undefined);
   };
@@ -203,6 +204,7 @@ export default function HistorialAperturas() {
           name="filtros-aperturas"
           onFinish={handleFinish}
           className="w-full"
+          initialValues={{ desde: dayjs(), hasta: dayjs() }}
         >
           <div className="mb-6">
             <div className="grid grid-cols-12 gap-x-3 gap-y-2.5">
