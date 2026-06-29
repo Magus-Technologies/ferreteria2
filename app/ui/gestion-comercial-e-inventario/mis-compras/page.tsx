@@ -14,6 +14,7 @@ const FiltersMisCompras = lazy(() => import('./_components/filters/filters-mis-c
 const BotonesAccionesCompra = lazy(() => import('./_components/others/botones-acciones-compra'))
 const TableMisCompras = lazy(() => import('./_components/tables/table-mis-compras'))
 const TableDetalleDeCompraMisCompras = lazy(() => import('./_components/tables/table-detalle-de-compra-mis-compras'))
+const CardsInfoCompras = lazy(() => import('./_components/others/cards-info-compras'))
 
 // Componente de loading optimizado
 const ComponentLoading = () => (
@@ -35,40 +36,59 @@ export default function MisCompras() {
 
       {/* Layout responsivo */}
       <div className="w-full mt-4">
-        <div className="flex flex-col gap-4 sm:gap-5 md:gap-6 min-w-0">
-          <ConfigurableElement componentId="gestion-comercial.mis-compras.tabla-compras" label="Tabla de Compras">
-            <div className="h-[250px]">
-              <ProgressiveLoader
-                identifier="mis-compras-table-compras"
-                priority="critical"
-              >
-                <Suspense fallback={<ComponentLoading />}>
-                  <TableMisCompras />
-                </Suspense>
-              </ProgressiveLoader>
-            </div>
-          </ConfigurableElement>
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 sm:gap-5 md:gap-6 lg:gap-8">
+          {/* Columna principal */}
+          <div className="flex flex-col gap-4 sm:gap-5 md:gap-6 min-w-0">
+            <ConfigurableElement componentId="gestion-comercial.mis-compras.tabla-compras" label="Tabla de Compras">
+              <div className="h-[250px]">
+                <ProgressiveLoader
+                  identifier="mis-compras-table-compras"
+                  priority="critical"
+                >
+                  <Suspense fallback={<ComponentLoading />}>
+                    <TableMisCompras />
+                  </Suspense>
+                </ProgressiveLoader>
+              </div>
+            </ConfigurableElement>
 
-          {/* Botones de acciones */}
-          <div className="mt-2">
-            <Suspense fallback={<ComponentLoading />}>
-              <BotonesAccionesCompra />
-            </Suspense>
+            {/* Botones de acciones */}
+            <div className="mt-2">
+              <Suspense fallback={<ComponentLoading />}>
+                <BotonesAccionesCompra />
+              </Suspense>
+            </div>
+
+            <ConfigurableElement componentId="gestion-comercial.mis-compras.tabla-detalle-compra" label="Tabla Detalle de Compra">
+              <div className="h-[200px]">
+                <ProgressiveLoader
+                  identifier="mis-compras-detalle-compra"
+                  priority="medium"
+                  delay={800}
+                >
+                  <Suspense fallback={<ComponentLoading />}>
+                    <TableDetalleDeCompraMisCompras />
+                  </Suspense>
+                </ProgressiveLoader>
+              </div>
+            </ConfigurableElement>
           </div>
 
-          <ConfigurableElement componentId="gestion-comercial.mis-compras.tabla-detalle-compra" label="Tabla Detalle de Compra">
-            <div className="h-[200px]">
-              <ProgressiveLoader
-                identifier="mis-compras-detalle-compra"
-                priority="medium"
-                delay={800}
-              >
-                <Suspense fallback={<ComponentLoading />}>
-                  <TableDetalleDeCompraMisCompras />
-                </Suspense>
-              </ProgressiveLoader>
+          {/* Columna lateral - Cards informativos (Solo Desktop) */}
+          <div className="hidden lg:flex flex-col items-start gap-1.5 flex-nowrap w-[190px] flex-shrink-0">
+            <Suspense fallback={<Spin />}>
+              <CardsInfoCompras />
+            </Suspense>
+          </div>
+        </div>
+
+        {/* Cards informativos - Móvil/Tablet */}
+        <div className="lg:hidden mt-4">
+          <Suspense fallback={<Spin />}>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <CardsInfoCompras />
             </div>
-          </ConfigurableElement>
+          </Suspense>
         </div>
       </div>
     </ContenedorGeneral>
