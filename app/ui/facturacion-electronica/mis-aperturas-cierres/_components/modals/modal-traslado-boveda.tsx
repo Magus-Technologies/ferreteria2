@@ -144,21 +144,22 @@ export default function ModalTrasladoBoveda({
       >
         <Form.Item
           name="origen_value"
-          label="Vendedor / Caja de Origen"
-          rules={[{ required: true, message: "Seleccione el vendedor y la caja de origen" }]}
+          label="Caja de Origen"
+          rules={[{ required: true, message: "Seleccione la caja de origen" }]}
         >
           <Select
-            placeholder="Seleccione el vendedor"
+            placeholder="Seleccione la caja"
             loading={loadingFilas}
             showSearch
             optionFilterProp="label"
+            notFoundContent={loadingFilas ? 'Cargando...' : 'No tienes efectivo disponible'}
             onChange={(value) => {
               const saldo = saldoMap[value as string] ?? 0;
               efectivoDisponibleRef.current = saldo;
               setEfectivoDisponible(saldo);
             }}
             options={filas.map((fila) => ({
-              label: `${fila.vendedor_nombre} / ${fila.sub_caja_nombre} / ${fila.metodo_nombre} - S/ ${parseFloat(fila.efectivo_disponible).toFixed(2)}`,
+              label: `${fila.sub_caja_nombre} / ${fila.metodo_nombre} - S/ ${parseFloat(fila.efectivo_disponible).toFixed(2)}`,
               value: `${fila.vendedor_id}|||${fila.sub_caja_id}|||${fila.despliegue_pago_id}`,
             }))}
           />
