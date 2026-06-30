@@ -38,8 +38,11 @@ export interface ResumenIngresosExtras {
 }
 
 // Obtener lista de ingresos extras
-export const getIngresosExtras = async (): Promise<{ data: IngresoExtra[] }> => {
-    const response = await apiRequest<{ data: IngresoExtra[] }>('/ingresos-extras')
+export const getIngresosExtras = async (filtros?: Record<string, any>): Promise<{ data: IngresoExtra[] }> => {
+    const response = await apiRequest<{ data: IngresoExtra[] }>('/ingresos-extras', {
+        method: 'GET',
+        params: filtros
+    })
     if (response.error) {
         throw new Error(response.error.message)
     }

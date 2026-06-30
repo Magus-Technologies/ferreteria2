@@ -169,6 +169,7 @@ export default function FiltersMisGastos() {
                 <Select
                   className='!min-w-[130px] !w-[130px] !max-w-[130px]'
                   options={[
+                    { label: 'Todos', value: '' },
                     { label: 'Activo', value: 'aprobado' },
                     { label: 'Anulado', value: 'anulado' },
                   ]}

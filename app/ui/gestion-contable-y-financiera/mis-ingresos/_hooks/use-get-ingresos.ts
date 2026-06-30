@@ -7,7 +7,7 @@ export const useGetIngresos = (
 ) => {
   return useQuery({
     queryKey: ['ingresos-extras', filtros],
-    queryFn: () => getIngresosExtras(),
+    queryFn: () => getIngresosExtras(filtros),
     enabled: enabled && !!filtros,
     staleTime: 0,
   })
