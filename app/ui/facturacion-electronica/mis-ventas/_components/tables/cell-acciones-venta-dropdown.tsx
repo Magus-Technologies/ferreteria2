@@ -67,22 +67,19 @@ export default function CellAccionesVentaDropdown(
 
   // Verificar si se puede editar.
   // Bloqueado si:
-  //  1. estado_de_venta es anulado o procesado
+  //  1. estado_de_venta es anulado
   //  2. SUNAT ya aceptó (Caso A en plan-edicion-entregas.md)
   //  3. (antes: entrega en 'ec'/'en') — ahora se permite editar siempre,
   //     el backend regenera los detalles de entrega al actualizar la venta.
   const estadoVenta = venta?.estado_de_venta;
   let editLockReason: string | null = null;
   if (estadoVenta === 'an') editLockReason = 'La venta está anulada.';
-  else if (estadoVenta === 'pr') editLockReason = 'La venta ya fue procesada.';
   else if (isAceptado) editLockReason = 'SUNAT ya aceptó el comprobante. Usa Nota de Crédito para hacer cambios.';
   const canEdit = editLockReason === null;
 
-  // Verificar si se puede anular (no anulado).
-  // Las ventas 'pr' (Procesado) también se pueden anular si son a crédito
-  // — el backend revierte los cobros asociados y descuenta métodos de pago.
-  const esCreditoPagado = estadoVenta === 'pr' && venta?.forma_de_pago === 'cr';
-  const canAnular = estadoVenta !== 'an' && (estadoVenta !== 'pr' || esCreditoPagado);
+  // Verificar si se puede anular (cualquier estado excepto anulado).
+  // El backend revierte los cobros activos al anular.
+  const canAnular = estadoVenta !== 'an';
 
   const handleAnular = () => {
     modal.confirm({

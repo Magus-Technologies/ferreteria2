@@ -225,6 +225,8 @@ export function useColumnsMisVentas() {
       colId: "total",
       field: "productos_por_almacen",
       width: 120,
+      filter: 'agNumberColumnFilter',
+      filterParams: { inRangeInclusive: true },
       valueGetter: (params) => {
         if (params.data) return calcularTotalesVentaConVales(params.data).total;
         const productos = (params.data as any)?.productos_por_almacen || [];
@@ -430,9 +432,13 @@ export function useColumnsMisVentas() {
       valueGetter: (params) => {
         const data = params.data;
         if (!data) return "—";
-        if (data.estado_de_venta === "pr") return "Pagado";
-        if (data.estado_de_venta === "cr")
-          return data.forma_de_pago === "co" ? "Pagado" : "Deuda";
+        if (data.estado_de_venta === "cr") {
+          if (data.forma_de_pago === "co") return "Pagado";
+          const { total } = calcularTotalesVentaConVales(data);
+          // total_cobrado = cobros activos (crédito); total_pagado = despliegues (contado).
+          const cobrado = Number(data.total_cobrado ?? 0);
+          return Math.round((total - cobrado) * 100) / 100 <= 0 ? "Pagado" : "Deuda";
+        }
         if (data.estado_de_venta === "an") return "-";
         return "—";
       },

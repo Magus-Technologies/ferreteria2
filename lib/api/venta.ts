@@ -48,9 +48,6 @@ export enum EstadoDeVenta {
   EN_ESPERA = 'ee',
   CREADO = 'cr',
   ANULADO = 'an',
-  // El backend (`App\Models\Venta`) tiene este case pero estaba ausente del
-  // frontend, lo que rompía comparaciones tipo `estado === 'pr'`.
-  PROCESADO = 'pr',
 }
 
 export enum DescuentoTipo {
