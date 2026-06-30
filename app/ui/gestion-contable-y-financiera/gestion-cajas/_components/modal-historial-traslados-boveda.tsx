@@ -34,7 +34,7 @@ export default function ModalHistorialTrasladosBoveda({
     const [traslados, setTraslados] = useState<TrasladoBoveda[]>([])
     const [loading, setLoading] = useState(false)
     // Por defecto se filtra al día de hoy (el usuario puede ampliar el rango).
-    const [rangoFechas, setRangoFechas] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>([dayjs(), dayjs()])
+    const [rangoFechas, setRangoFechas] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null]>([dayjs(), dayjs()])
     const [buscarUsuario, setBuscarUsuario] = useState('')
     const gridRef = useRef<AgGridReact<TrasladoBoveda>>(null)
 
@@ -113,8 +113,8 @@ export default function ModalHistorialTrasladosBoveda({
                     (fecha.isBefore(end, 'day') || fecha.isSame(end, 'day'));
                 if (!dentroRango) return false;
             }
-            // Filtro por usuario (nombre del vendedor)
-            if (texto && !(t.vendedor?.name ?? '').toLowerCase().includes(texto)) {
+            // Filtro por usuario (nombre del vendedor o ID)
+            if (texto && !(t.vendedor?.name ?? '').toLowerCase().includes(texto) && !(t.vendedor_id ?? '').toLowerCase().includes(texto)) {
                 return false;
             }
             return true;

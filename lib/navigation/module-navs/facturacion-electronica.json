@@ -79,6 +79,12 @@
             "permission": "caja.create"
           },
           {
+            "key": "efectivo-apertura",
+            "label": "Efectivo de Apertura",
+            "action": "openEfectivoApertura",
+            "permission": "caja.create"
+          },
+          {
             "key": "cerrar-caja",
             "label": "Cerrar Caja",
             "route": "/ui/facturacion-electronica/cierre-caja",

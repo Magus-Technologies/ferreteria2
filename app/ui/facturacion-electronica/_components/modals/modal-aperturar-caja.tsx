@@ -8,7 +8,7 @@ import { useState, useMemo, useEffect } from 'react'
 import SelectCajaPrincipal from '~/app/ui/facturacion-electronica/_components/selects/select-caja-principal'
 import SelectVendedor from '~/app/ui/facturacion-electronica/_components/selects/select-vendedor'
 import useAperturarCaja from '../../_hooks/use-aperturar-caja'
-import { FaPlus, FaTrash } from 'react-icons/fa'
+import { FaPlus, FaTrash, FaWallet } from 'react-icons/fa'
 import ConteoDinero from '~/app/ui/facturacion-electronica/_components/others/conteo-dinero'
 import { useQuery } from '@tanstack/react-query'
 import { cajaPrincipalApi } from '~/lib/api/caja-principal'
@@ -16,6 +16,7 @@ import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useAuth } from '~/lib/auth-context'
 import ModalTicketApertura from './modal-ticket-apertura'
 import { useEmpresaPublica } from '~/hooks/use-empresa-publica'
+import { apiRequest } from '~/lib/api'
 
 type ModalAperturarCajaProps = {
   open: boolean
@@ -70,6 +71,21 @@ export default function ModalAperturarCaja({
     enabled: open,
   })
 
+  // Obtener efectivo de apertura asignado al usuario actual
+  const { data: efectivoAsignadoData } = useQuery({
+    queryKey: ['efectivo-asignado-para-mi'],
+    queryFn: async () => {
+      const res = await apiRequest<{ success: boolean; data: { total_asignado: number } }>(
+        '/cajas/cierre/efectivo-asignado-para-mi',
+      )
+      return res.data?.data
+    },
+    enabled: open,
+  })
+
+  const efectivoAsignadoTotal = efectivoAsignadoData?.total_asignado || 0
+  const [efectivoAsignadoUsado, setEfectivoAsignadoUsado] = useState(false)
+
   // Auto-completar con el usuario actual cuando se abre el modal (solo si NO es admin)
   useEffect(() => {
     if (open && user) {
@@ -108,7 +124,16 @@ export default function ModalAperturarCaja({
   }, [open, cajasPrincipales, form])
 
   const { crearAperturarCaja, loading } = useAperturarCaja({
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
+      // Si se usó el efectivo asignado, marcarlo como consumido para que no reaparezca.
+      if (efectivoAsignadoUsado) {
+        try {
+          await apiRequest('/cajas/cierre/consumir-efectivo-asignado', { method: 'POST' })
+        } catch {
+          // No bloquear la apertura si falla el marcado
+        }
+        setEfectivoAsignadoUsado(false)
+      }
       // Primero llamar a onSuccess para marcar el éxito
       onSuccess?.()
       // Luego cerrar el modal
@@ -127,6 +152,7 @@ export default function ModalAperturarCaja({
     const nuevoId = Date.now().toString()
     setVendedores([{ id: nuevoId, user_id: undefined, caja_principal_id: undefined, monto: 0 }])
     setVendedorSeleccionadoId(nuevoId)
+    setEfectivoAsignadoUsado(false)
   }
 
   const vendedorSeleccionado = vendedores.find(v => v.id === vendedorSeleccionadoId)
@@ -221,6 +247,19 @@ export default function ModalAperturarCaja({
     ))
   }
 
+  // Aplicar el efectivo de apertura asignado al vendedor seleccionado (ya viene contado
+  // del cierre anterior, así que se carga directo como su monto de distribución).
+  const usarEfectivoAsignado = () => {
+    if (efectivoAsignadoTotal <= 0) return
+    if (!vendedorSeleccionadoId) {
+      message.warning('Selecciona primero un vendedor en la lista')
+      return
+    }
+    actualizarVendedor(vendedorSeleccionadoId, 'monto', efectivoAsignadoTotal)
+    setEfectivoAsignadoUsado(true)
+    message.success(`S/ ${efectivoAsignadoTotal.toFixed(2)} aplicado a la distribución del vendedor`)
+  }
+
   const handleSubmit = (values: AperturarCajaFormValues) => {
     if (!cajaOrigenId) {
       message.error('Debes seleccionar la caja de origen')
@@ -302,6 +341,32 @@ export default function ModalAperturarCaja({
             </div>
           </div>
         </div>
+
+        {/* Efectivo de Apertura asignado */}
+        {efectivoAsignadoTotal > 0 && (
+          <div className='p-3 bg-emerald-50 rounded-lg border border-emerald-200 flex items-center justify-between gap-3'>
+            <div className='flex items-center gap-3'>
+              <FaWallet className='text-emerald-600 text-lg' />
+              <div>
+                <p className='text-sm text-slate-700'>
+                  Tienes <strong className='text-emerald-700'>S/ {efectivoAsignadoTotal.toFixed(2)}</strong> asignado como efectivo de apertura
+                </p>
+                <p className='text-xs text-slate-500'>
+                  Este monto fue dejado al cerrar caja y asignado a ti. Aplícalo al vendedor seleccionado.
+                </p>
+              </div>
+            </div>
+            <Button
+              type='primary'
+              size='small'
+              onClick={usarEfectivoAsignado}
+              disabled={efectivoAsignadoUsado}
+              className='!bg-emerald-600 hover:!bg-emerald-700'
+            >
+              {efectivoAsignadoUsado ? 'Aplicado ✓' : `Usar S/ ${efectivoAsignadoTotal.toFixed(2)}`}
+            </Button>
+          </div>
+        )}
 
         {/* Layout de dos columnas */}
         <div className='grid grid-cols-2 gap-3'>

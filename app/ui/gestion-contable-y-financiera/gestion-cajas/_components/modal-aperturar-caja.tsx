@@ -8,7 +8,7 @@ import { useState, useMemo, useEffect } from 'react'
 import SelectCajaPrincipal from './select-caja-principal'
 import SelectVendedor from './select-vendedor'
 import useAperturarCaja from '../_hooks/use-aperturar-caja'
-import { FaPlus, FaTrash } from 'react-icons/fa'
+import { FaPlus, FaTrash, FaWallet } from 'react-icons/fa'
 import ConteoDinero from './conteo-dinero'
 import { useQuery } from '@tanstack/react-query'
 import { cajaPrincipalApi } from '~/lib/api/caja-principal'
@@ -16,6 +16,7 @@ import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useAuth } from '~/lib/auth-context'
 import ModalTicketApertura from './modal-ticket-apertura'
 import { useEmpresaPublica } from '~/hooks/use-empresa-publica'
+import { apiRequest } from '~/lib/api'
 
 type ModalAperturarCajaProps = {
   open: boolean
@@ -69,6 +70,20 @@ export default function ModalAperturarCaja({
     },
     enabled: open,
   })
+
+  // Obtener efectivo de apertura asignado al usuario actual
+  const { data: efectivoAsignadoData } = useQuery({
+    queryKey: ['efectivo-asignado-para-mi'],
+    queryFn: async () => {
+      const res = await apiRequest<{ success: boolean; data: { total_asignado: number } }>(
+        '/cajas/cierre/efectivo-asignado-para-mi',
+      )
+      return res.data?.data
+    },
+    enabled: open,
+  })
+
+  const efectivoAsignadoTotal = efectivoAsignadoData?.total_asignado || 0
 
   // Auto-completar con el usuario actual cuando se abre el modal (solo si NO es admin)
   useEffect(() => {
@@ -301,6 +316,22 @@ export default function ModalAperturarCaja({
             </div>
           </div>
         </div>
+
+        {/* Efectivo de Apertura asignado */}
+        {efectivoAsignadoTotal > 0 && (
+          <div className='p-3 bg-emerald-50 rounded-lg border border-emerald-200 flex items-center gap-3'>
+            <FaWallet className='text-emerald-600 text-lg' />
+            <div>
+              <p className='text-sm text-slate-700'>
+                Tienes <strong className='text-emerald-700'>S/ {efectivoAsignadoTotal.toFixed(2)}</strong> asignado como efectivo de apertura
+              </p>
+              <p className='text-xs text-slate-500'>
+                Este monto fue dejado por otro usuario al cerrar su caja y asignado a ti.
+                Inclúyelo en la distribucin de cada vendedor segn corresponda.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Layout de dos columnas */}
         <div className='grid grid-cols-2 gap-3'>

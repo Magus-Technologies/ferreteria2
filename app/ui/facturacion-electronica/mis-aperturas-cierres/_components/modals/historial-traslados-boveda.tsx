@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
-import { App, DatePicker } from "antd";
+import { App, DatePicker, Input } from "antd";
 const { RangePicker } = DatePicker;
 import dayjs from "dayjs";
 import { DollarOutlined } from "@ant-design/icons";
@@ -25,14 +25,15 @@ export default function HistorialTrasladosBoveda({
   const { modal, message } = App.useApp();
   const [traslados, setTraslados] = useState<TrasladoBoveda[]>([]);
   const [loading, setLoading] = useState(false);
-  const [rangoFechas, setRangoFechas] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>(null);
+  const [rangoFechas, setRangoFechas] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null]>([dayjs(), dayjs()]);
+  const [buscarUsuario, setBuscarUsuario] = useState("")
   const gridRef = useRef<AgGridReact<TrasladoBoveda>>(null);
 
   const cargarTraslados = async () => {
     try {
       setLoading(true);
       const response = await trasladoBovedaApi.obtenerTrasladosPorCaja(aperturaCierreId);
-      setTraslados((response as any)?.data || []);
+      setTraslados(Array.isArray(response) ? response : (response as any)?.data || []);
     } catch (error) {
       message.error("Error al cargar traslados");
     } finally {
@@ -82,14 +83,23 @@ export default function HistorialTrasladosBoveda({
   });
 
   const filteredTraslados = useMemo(() => {
-    if (!rangoFechas || !rangoFechas[0] || !rangoFechas[1]) return traslados;
-    const [start, end] = rangoFechas;
+    const texto = buscarUsuario.trim().toLowerCase();
     return traslados.filter(t => {
-      const fecha = dayjs(t.fecha_traslado);
-      return (fecha.isAfter(start, 'day') || fecha.isSame(start, 'day')) &&
-        (fecha.isBefore(end, 'day') || fecha.isSame(end, 'day'));
+      if (rangoFechas && rangoFechas[0] && rangoFechas[1]) {
+        const fecha = dayjs(t.fecha_traslado);
+        const [start, end] = rangoFechas;
+        const dentroRango =
+          (fecha.isAfter(start, 'day') || fecha.isSame(start, 'day')) &&
+          (fecha.isBefore(end, 'day') || fecha.isSame(end, 'day'));
+        if (!dentroRango) return false;
+      }
+      const nombreVendedor = (t.vendedor?.name ?? t.vendedor_id ?? '').toLowerCase()
+      if (texto && !nombreVendedor.includes(texto)) {
+        return false;
+      }
+      return true;
     });
-  }, [traslados, rangoFechas]);
+  }, [traslados, rangoFechas, buscarUsuario]);
 
   const totalTrasladado = filteredTraslados.reduce(
     (sum, t) => sum + parseFloat(t.monto),
@@ -99,15 +109,27 @@ export default function HistorialTrasladosBoveda({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex justify-between items-end">
-        <div className="flex flex-col gap-1">
-          <span className="text-xs text-slate-500 font-medium">Rango de fechas:</span>
-          <RangePicker
-            className="w-64"
-            placeholder={['Inicio', 'Fin']}
-            value={rangoFechas}
-            onChange={(val) => setRangoFechas(val as any)}
-            allowClear
-          />
+        <div className="flex items-end gap-3">
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-slate-500 font-medium">Buscar usuario:</span>
+            <Input.Search
+              className="w-56"
+              placeholder="Nombre del vendedor"
+              value={buscarUsuario}
+              onChange={(e) => setBuscarUsuario(e.target.value)}
+              allowClear
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-slate-500 font-medium">Rango de fechas:</span>
+            <RangePicker
+              className="w-64"
+              placeholder={['Inicio', 'Fin']}
+              value={rangoFechas}
+              onChange={(val) => setRangoFechas(val as any)}
+              allowClear
+            />
+          </div>
         </div>
 
         <div className="p-2 px-4 bg-amber-50 border border-amber-200 rounded-lg inline-block text-right">
