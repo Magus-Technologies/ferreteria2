@@ -1,6 +1,6 @@
 'use client'
 
-import { Modal, App, DatePicker } from 'antd'
+import { Modal, App, DatePicker, Input } from 'antd'
 const { RangePicker } = DatePicker;
 import { useState, useEffect, useRef, useMemo } from 'react'
 import dayjs from 'dayjs'
@@ -33,7 +33,9 @@ export default function ModalHistorialTrasladosBoveda({
     const { modal, message } = App.useApp()
     const [traslados, setTraslados] = useState<TrasladoBoveda[]>([])
     const [loading, setLoading] = useState(false)
-    const [rangoFechas, setRangoFechas] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>(null)
+    // Por defecto se filtra al día de hoy (el usuario puede ampliar el rango).
+    const [rangoFechas, setRangoFechas] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>([dayjs(), dayjs()])
+    const [buscarUsuario, setBuscarUsuario] = useState('')
     const gridRef = useRef<AgGridReact<TrasladoBoveda>>(null)
 
     // Obtener caja activa para sacar su ID
@@ -100,14 +102,24 @@ export default function ModalHistorialTrasladosBoveda({
     })
 
     const filteredTraslados = useMemo(() => {
-        if (!rangoFechas || !rangoFechas[0] || !rangoFechas[1]) return traslados;
-        const [start, end] = rangoFechas;
+        const texto = buscarUsuario.trim().toLowerCase();
         return traslados.filter(t => {
-            const fecha = dayjs(t.fecha_traslado);
-            return (fecha.isAfter(start, 'day') || fecha.isSame(start, 'day')) &&
-                (fecha.isBefore(end, 'day') || fecha.isSame(end, 'day'));
+            // Filtro por rango de fechas (si está seleccionado)
+            if (rangoFechas && rangoFechas[0] && rangoFechas[1]) {
+                const fecha = dayjs(t.fecha_traslado);
+                const [start, end] = rangoFechas;
+                const dentroRango =
+                    (fecha.isAfter(start, 'day') || fecha.isSame(start, 'day')) &&
+                    (fecha.isBefore(end, 'day') || fecha.isSame(end, 'day'));
+                if (!dentroRango) return false;
+            }
+            // Filtro por usuario (nombre del vendedor)
+            if (texto && !(t.vendedor?.name ?? '').toLowerCase().includes(texto)) {
+                return false;
+            }
+            return true;
         });
-    }, [traslados, rangoFechas]);
+    }, [traslados, rangoFechas, buscarUsuario]);
 
     const totalTrasladado = filteredTraslados.reduce((sum, t) => sum + parseFloat(t.monto), 0)
 
@@ -130,15 +142,27 @@ export default function ModalHistorialTrasladosBoveda({
         >
             <div className='mt-4 flex flex-col gap-4'>
                 <div className='flex justify-between items-end'>
-                    <div className='flex flex-col gap-1'>
-                        <span className='text-xs text-slate-500 font-medium'>Rango de fechas:</span>
-                        <RangePicker
-                            className='w-64'
-                            placeholder={['Inicio', 'Fin']}
-                            value={rangoFechas}
-                            onChange={(val) => setRangoFechas(val as any)}
-                            allowClear
-                        />
+                    <div className='flex items-end gap-3'>
+                        <div className='flex flex-col gap-1'>
+                            <span className='text-xs text-slate-500 font-medium'>Buscar usuario:</span>
+                            <Input.Search
+                                className='w-56'
+                                placeholder='Nombre del vendedor'
+                                value={buscarUsuario}
+                                onChange={(e) => setBuscarUsuario(e.target.value)}
+                                allowClear
+                            />
+                        </div>
+                        <div className='flex flex-col gap-1'>
+                            <span className='text-xs text-slate-500 font-medium'>Rango de fechas:</span>
+                            <RangePicker
+                                className='w-64'
+                                placeholder={['Inicio', 'Fin']}
+                                value={rangoFechas}
+                                onChange={(val) => setRangoFechas(val as any)}
+                                allowClear
+                            />
+                        </div>
                     </div>
 
                     <div className='p-2 px-4 bg-amber-50 border border-amber-200 rounded-lg inline-block text-right'>
