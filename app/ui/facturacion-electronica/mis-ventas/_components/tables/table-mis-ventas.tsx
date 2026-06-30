@@ -26,7 +26,10 @@ export const useStoreVentaSeleccionada = create<UseStoreVentaSeleccionada>(
 // Función para calcular el color de una venta
 function calcularColorVenta(venta: getVentaResponseProps): string {
   const formaDePago = venta.forma_de_pago;
-  const totalPagado = Number(venta.total_pagado || 0);
+  // Para crédito usar total_cobrado (cobros activos); para contado usar total_pagado (despliegues).
+  const totalPagado = formaDePago === 'cr'
+    ? Number(venta.total_cobrado ?? 0)
+    : Number(venta.total_pagado ?? 0);
 
   // Calcular el total de la venta
   const total = calcularTotalesVentaConVales(venta).total;

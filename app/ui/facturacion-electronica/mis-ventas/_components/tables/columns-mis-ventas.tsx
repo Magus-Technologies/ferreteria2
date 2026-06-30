@@ -433,8 +433,9 @@ export function useColumnsMisVentas() {
         if (data.estado_de_venta === "cr") {
           if (data.forma_de_pago === "co") return "Pagado";
           const { total } = calcularTotalesVentaConVales(data);
-          const totalPagado = Number(data.total_pagado ?? 0);
-          return Math.round((total - totalPagado) * 100) / 100 <= 0 ? "Pagado" : "Deuda";
+          // total_cobrado = cobros activos (crédito); total_pagado = despliegues (contado).
+          const cobrado = Number(data.total_cobrado ?? 0);
+          return Math.round((total - cobrado) * 100) / 100 <= 0 ? "Pagado" : "Deuda";
         }
         if (data.estado_de_venta === "an") return "-";
         return "—";
