@@ -33,17 +33,20 @@ export default function CardsInfoVentas() {
     let creditoPagado = 0
     let creditoDeuda = 0
     let totalICBPER = 0
+    let comision = 0
 
-    response.forEach(venta => {
-      // Calcular el total de la venta desde los productos
-      const totalVenta = venta.productos_por_almacen?.reduce((sum: number, productoAlmacen: any) => {
-        const subtotalProducto = productoAlmacen.unidades_derivadas?.reduce((subSum: number, unidad: any) => {
+    response.forEach((venta: any) => {
+      // Calcular el total de la venta y comisión desde los productos
+      let totalVenta = 0
+
+      venta.productos_por_almacen?.forEach((productoAlmacen: any) => {
+        productoAlmacen.unidades_derivadas?.forEach((unidad: any) => {
           const cantidad = Number(unidad.cantidad);
           const precio = Number(unidad.precio);
           const recargo = Number(unidad.recargo || 0);
           const descuento = Number(unidad.descuento || 0);
           
-          // Calcular total de la línea (SIN multiplicar por factor)
+          // Calcular total de la línea
           const subtotalLinea = precio * cantidad;
           const subtotalConRecargo = subtotalLinea + recargo;
           
@@ -55,24 +58,27 @@ export default function CardsInfoVentas() {
             montoLinea = subtotalConRecargo - descuento;
           }
           
-          return subSum + montoLinea;
-        }, 0) || 0
-        return sum + subtotalProducto
-      }, 0) || 0
+          totalVenta += montoLinea;
 
-      // El total ya incluye IGV (no multiplicar por 1.18)
-      const totalConIGV = totalVenta
+          // Comisión por unidad (si tiene)
+          const comisionUnidad = Number(unidad.comision || 0);
+          if (comisionUnidad > 0) {
+            comision += comisionUnidad * cantidad;
+          }
+        });
+      });
 
       // Clasificar según forma de pago y estado
       if (venta.estado_de_venta === EstadoDeVenta.ANULADO) {
-        anulados += totalConIGV
+        anulados += totalVenta
       } else if (venta.forma_de_pago === FormaDePago.CONTADO) {
-        viaContado += totalConIGV
+        viaContado += totalVenta
       } else if (venta.forma_de_pago === FormaDePago.CREDITO) {
-        viaCredito += totalConIGV
-        // Aquí podrías calcular cuánto se ha pagado y cuánto se debe
-        // Por ahora asumimos que todo el crédito está pendiente
-        creditoDeuda += totalConIGV
+        viaCredito += totalVenta
+        // Calcular cuánto se ha pagado y cuánto se debe
+        const pagado = Number(venta.total_cobrado || 0)
+        creditoPagado += pagado
+        creditoDeuda += totalVenta - pagado
       }
 
       // ICBPER (si aplica)
@@ -81,7 +87,6 @@ export default function CardsInfoVentas() {
 
     const totalVentas = viaContado + viaCredito
     const ventaPromedio = response.length > 0 ? totalVentas / response.length : 0
-    const comision = totalVentas * 0.05 // Ejemplo: 5% de comisión
 
     return {
       viaContado,
