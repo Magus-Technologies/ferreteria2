@@ -23,6 +23,7 @@ export default function CardsInfoMisIngresos() {
       cajeroRegistra: filtros.cajeroRegistra,
       sucursal: filtros.sucursal,
       busqueda: filtros.busqueda,
+      ...(filtros.estado ? { estado: filtros.estado } : {}),
     }
   }, [filtros])
 

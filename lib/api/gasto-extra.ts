@@ -60,8 +60,11 @@ export const getGastosExtras = async (filtros?: Record<string, any>): Promise<{ 
 }
 
 // Obtener resumen de gastos extras
-export const getResumenGastosExtras = async (): Promise<{ data: ResumenGastosExtras }> => {
-    const response = await apiRequest<{ data: ResumenGastosExtras }>('/gastos-extras/resumen')
+export const getResumenGastosExtras = async (filtros?: Record<string, any>): Promise<{ data: ResumenGastosExtras }> => {
+    const response = await apiRequest<{ data: ResumenGastosExtras }>('/gastos-extras/resumen', {
+        method: 'GET',
+        params: filtros
+    })
     if (response.error) {
         throw new Error(response.error.message)
     }

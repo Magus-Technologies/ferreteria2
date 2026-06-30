@@ -19,7 +19,7 @@ export const useGetResumenIngresos = (
 ) => {
   return useQuery({
     queryKey: ['ingresos-extras-resumen', filtros],
-    queryFn: () => getResumenIngresosExtras(),
+    queryFn: () => getResumenIngresosExtras(filtros),
     enabled: enabled && !!filtros,
     staleTime: 0,
   })

@@ -19,7 +19,7 @@ export const useGetResumenGastos = (
 ) => {
   return useQuery({
     queryKey: ['gastos-extras-resumen', filtros],
-    queryFn: () => getResumenGastosExtras(),
+    queryFn: () => getResumenGastosExtras(filtros),
     enabled: enabled && !!filtros,
     staleTime: 0,
   })
