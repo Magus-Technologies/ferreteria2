@@ -14,7 +14,7 @@ import RangePickerBase from '~/app/_components/form/fechas/range-picker-base'
 import YearPicker from '~/app/_components/form/fechas/year-picker'
 import { usePermission } from '~/hooks/use-permission'
 import { Suspense, lazy, useState, useMemo } from 'react'
-import { Spin } from 'antd'
+import { Spin, Grid } from 'antd'
 import dayjs, { type Dayjs } from 'dayjs'
 import { useQuery } from '@tanstack/react-query'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
@@ -32,6 +32,7 @@ const ComponentLoading = () => <div className="flex items-center justify-center 
 
 export default function GestionComercialEInventario() {
   const canAccess = usePermission(permissions.GESTION_COMERCIAL_E_INVENTARIO_INDEX)
+  const screens = Grid.useBreakpoint()
 
   const { almacen_id } = useStoreAlmacen()
   const desde = useStoreDashboardFiltrosGCI((s) => s.desde)
@@ -115,10 +116,11 @@ export default function GestionComercialEInventario() {
           >
             <RangePickerBase
               variant='filled'
-              size='large'
+              size={screens.sm ? 'large' : 'small'}
               className='w-full sm:w-auto'
               allowClear={false}
               value={rangoValue}
+              popupStyle={{ maxWidth: '95vw', overflow: 'auto' }}
               onChange={(rango) => {
                 if (rango && rango[0] && rango[1]) {
                   setRango(rango[0].format('YYYY-MM-DD'), rango[1].format('YYYY-MM-DD'))

@@ -22,10 +22,10 @@ export default function CardDashboard({
   href,
 }: CardDashboardProps) {
   const content = (
-    <div className='flex flex-col justify-between bg-white px-4 py-4 rounded-xl shadow-md h-full hover:shadow-lg transition-shadow'>
+    <div className='flex flex-col justify-between bg-white px-3 py-3 sm:px-4 sm:py-4 rounded-xl shadow-md h-full hover:shadow-lg transition-shadow'>
       {/* Header con título e icono */}
       <div className='flex items-start justify-between gap-2'>
-        <div className='font-semibold text-lg leading-tight text-slate-600 flex-1'>
+        <div className='font-semibold text-xs sm:text-lg leading-tight text-slate-600 flex-1'>
           {title}
         </div>
         <div className='flex items-center gap-2'>
@@ -39,8 +39,8 @@ export default function CardDashboard({
       </div>
       
       {/* Contenido principal con valor */}
-      <div className='flex items-end justify-start mt-4'>
-        <div className='text-3xl font-bold text-slate-800'>
+      <div className='flex items-end justify-start mt-2 sm:mt-4'>
+        <div className='text-sm sm:text-3xl font-bold text-slate-800'>
           {prefix}
           {value.toLocaleString('en-US', {
             minimumFractionDigits: decimal,

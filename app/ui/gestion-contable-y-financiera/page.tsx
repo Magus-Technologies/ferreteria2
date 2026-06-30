@@ -12,7 +12,7 @@ import RangePickerBase from '~/app/_components/form/fechas/range-picker-base'
 import SelectAlmacen from '~/app/_components/form/selects/select-almacen'
 import { usePermission } from '~/hooks/use-permission'
 import { Suspense, lazy, useMemo } from 'react'
-import { Spin } from 'antd'
+import { Spin, Grid } from 'antd'
 import dayjs, { type Dayjs } from 'dayjs'
 import { useQuery } from '@tanstack/react-query'
 import { useStoreDashboardFiltrosGCF, useFiltrosDashboardGCF } from './_store/store-dashboard-filtros'
@@ -35,6 +35,7 @@ const ChartLoading = () => (
 
 export default function GestionContableYFinanciera() {
   const canAccess = usePermission(permissions.GESTION_CONTABLE_Y_FINANCIERA_INDEX)
+  const screens = Grid.useBreakpoint()
 
   const desde = useStoreDashboardFiltrosGCF((s) => s.desde)
   const hasta = useStoreDashboardFiltrosGCF((s) => s.hasta)
@@ -64,10 +65,11 @@ export default function GestionContableYFinanciera() {
         <div className='flex flex-col sm:flex-row gap-2 sm:gap-4 md:gap-6 lg:gap-8 items-stretch sm:items-center w-full sm:w-auto'>
           <RangePickerBase
             variant='filled'
-            size='large'
+            size={screens.sm ? 'large' : 'small'}
             className='w-full sm:w-auto'
             allowClear={false}
             value={rangoValue}
+            popupStyle={{ maxWidth: '95vw', overflow: 'auto' }}
             onChange={(rango) => {
               if (rango && rango[0] && rango[1]) {
                 setRango(rango[0].format('YYYY-MM-DD'), rango[1].format('YYYY-MM-DD'))

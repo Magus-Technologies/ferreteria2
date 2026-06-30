@@ -203,3 +203,16 @@
     right: 16px;
   }
 }
+
+@media (max-width: 639px) {
+  .ant-picker-dropdown {
+    max-width: calc(100vw - 16px) !important;
+  }
+  .ant-picker-panel-container {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .ant-picker-panel-layout {
+    min-width: 0 !important;
+  }
+}
