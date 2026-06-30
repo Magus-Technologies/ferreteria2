@@ -225,6 +225,8 @@ export function useColumnsMisVentas() {
       colId: "total",
       field: "productos_por_almacen",
       width: 120,
+      filter: 'agNumberColumnFilter',
+      filterParams: { inRangeInclusive: true },
       valueGetter: (params) => {
         if (params.data) return calcularTotalesVentaConVales(params.data).total;
         const productos = (params.data as any)?.productos_por_almacen || [];
