@@ -3,7 +3,7 @@ import { useStoreAlmacen } from '~/store/store-almacen'
 import useApp from 'antd/es/app/useApp'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '~/lib/auth-context'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import {
   TipoDocumento,
@@ -101,15 +101,21 @@ export default function useCreateVenta({
   const { notification, message } = useApp()
   const almacen_id = useStoreAlmacen((store) => store.almacen_id)
   const [loading, setLoading] = useState(false)
+  const submittingRef = useRef(false)
   const queryClient = useQueryClient()
   const isEditing = !!ventaId
 
   const handleSubmit = useCallback(async (values: FormCreateVenta) => {
+    if (submittingRef.current) return
     if (!user_id)
       return notification.error({ message: 'No hay un usuario seleccionado' })
     if (!almacen_id)
       return notification.error({ message: 'No hay un almacen seleccionado' })
 
+    submittingRef.current = true
+    setLoading(true)
+
+    try {
     const esEnEspera = values.estado_de_venta === EstadoDeVenta.EN_ESPERA
     const valesExcluidos = useStoreProductoAgregadoVenta.getState().valesExcluidos
 
@@ -383,7 +389,6 @@ export default function useCreateVenta({
       vales_excluidos: valesExcluidos.length > 0 ? valesExcluidos : undefined,
     }
 
-    setLoading(true)
     try {
       // Usar create o update según el modo
       const response = isEditing
@@ -864,7 +869,9 @@ export default function useCreateVenta({
       notification.error({
         message: 'Error inesperado al crear venta',
       })
+    }
     } finally {
+      submittingRef.current = false
       setLoading(false)
     }
   }, [router, user_id, notification, message, almacen_id, queryClient, isEditing, ventaId, onMissingApertura])

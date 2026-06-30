@@ -15,7 +15,7 @@ import { IoDocumentText } from "react-icons/io5";
 import RangePickerBase from "~/app/_components/form/fechas/range-picker-base";
 // import SelectAlmacen from "~/app/_components/form/selects/select-almacen";
 import { usePermission } from "~/hooks/use-permission";
-import { Spin } from "antd";
+import { Spin, Grid } from "antd";
 import dynamic from "next/dynamic";
 import dayjs, { type Dayjs } from "dayjs";
 import { useMemo } from "react";
@@ -59,6 +59,7 @@ const VentasPorMarca = dynamic(
 
 export default function FacturacionElectronica() {
   const canAccess = usePermission(permissions.FACTURACION_ELECTRONICA_DASHBOARD_INDEX);
+  const screens = Grid.useBreakpoint();
 
   const filtros = useFiltrosDashboard();
   const desde = useStoreDashboardFiltros((s) => s.desde);
@@ -97,10 +98,11 @@ export default function FacturacionElectronica() {
           >
             <RangePickerBase
               variant="filled"
-              size="large"
+              size={screens.sm ? 'large' : 'small'}
               className="w-full sm:w-auto"
               allowClear={false}
               value={rangoValue}
+              popupStyle={{ maxWidth: '95vw', overflow: 'auto' }}
               onChange={(rango) => {
                 if (rango && rango[0] && rango[1]) {
                   setRango(
@@ -124,7 +126,7 @@ export default function FacturacionElectronica() {
       {/* Grid responsivo para Dashboard */}
       <div className="flex flex-col gap-2 sm:gap-3 md:gap-4 lg:gap-3 w-full">
         {/* Cards superiores - Responsivos */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 lg:gap-8 xl:gap-12">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 md:gap-6 lg:gap-8 xl:gap-12">
           <ConfigurableElement
             componentId="dashboard.card-total-ventas"
             label="Card Total de Ventas"
