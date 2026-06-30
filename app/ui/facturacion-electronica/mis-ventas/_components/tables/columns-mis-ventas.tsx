@@ -430,9 +430,12 @@ export function useColumnsMisVentas() {
       valueGetter: (params) => {
         const data = params.data;
         if (!data) return "—";
-        if (data.estado_de_venta === "pr") return "Pagado";
-        if (data.estado_de_venta === "cr")
-          return data.forma_de_pago === "co" ? "Pagado" : "Deuda";
+        if (data.estado_de_venta === "cr") {
+          if (data.forma_de_pago === "co") return "Pagado";
+          const { total } = calcularTotalesVentaConVales(data);
+          const totalPagado = Number(data.total_pagado ?? 0);
+          return Math.round((total - totalPagado) * 100) / 100 <= 0 ? "Pagado" : "Deuda";
+        }
         if (data.estado_de_venta === "an") return "-";
         return "—";
       },

@@ -38,10 +38,7 @@ function calcularColorVenta(venta: getVentaResponseProps): string {
   if (estado === 'ee' || estado === 'an' || formaDePago === 'co') {
     return orangeColors[2];
   }
-  // Verde: Crédito pagado (por estado 'pr' o por saldo calculado)
-  if (estado === 'pr') {
-    return greenColors[2];
-  }
+  // Verde: Crédito completamente pagado (saldo calculado)
   if (formaDePago === 'cr' && resta <= 0.01) {
     return greenColors[2];
   }

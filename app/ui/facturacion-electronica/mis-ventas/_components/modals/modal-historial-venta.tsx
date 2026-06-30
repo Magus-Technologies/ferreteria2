@@ -26,7 +26,7 @@ const FIELD_LABELS: Record<string, string> = {
 const VALUE_LABELS: Record<string, Record<string, string>> = {
   tipo_documento: { '01': 'Factura', '03': 'Boleta', 'nv': 'Nota de Venta' },
   forma_de_pago: { co: 'Contado', cr: 'Crédito' },
-  estado_de_venta: { cr: 'Creado', ee: 'En Espera', pr: 'Procesado', an: 'Anulado' },
+  estado_de_venta: { cr: 'Creado', ee: 'En Espera', an: 'Anulado' },
   tipo_moneda: { s: 'Soles', d: 'Dólares' },
 }
 
