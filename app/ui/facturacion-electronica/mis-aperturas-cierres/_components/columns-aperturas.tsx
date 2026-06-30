@@ -70,6 +70,27 @@ export const useColumnsAperturas = ({
       ),
     },
     {
+      colId: 'desglose_apertura',
+      headerName: 'Desglose (Asignado / Manual)',
+      field: 'monto_apertura_asignado',
+      width: 200,
+      minWidth: 160,
+      cellStyle: centerCell,
+      cellRenderer: (params: any) => {
+        const asignado = parseFloat(params.data?.monto_apertura_asignado ?? '0')
+        const manual = parseFloat(params.data?.monto_apertura_manual ?? '0')
+        if (asignado <= 0) {
+          return <span className='text-slate-400 text-xs'>—</span>
+        }
+        return (
+          <div className='leading-tight text-xs'>
+            <div className='text-emerald-600 font-semibold'>Asignado: {formatCurrency(asignado)}</div>
+            <div className='text-slate-600'>Manual: {formatCurrency(manual)}</div>
+          </div>
+        )
+      },
+    },
+    {
       colId: 'estado',
       headerName: 'Estado',
       field: 'estado',

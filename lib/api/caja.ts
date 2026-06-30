@@ -25,6 +25,10 @@ export interface AperturaYCierreCaja {
   sub_caja_id: number
   user_id: string
   monto_apertura: string
+  /** Desglose del monto de apertura: total, parte asignada (de otro cierre) y parte manual. */
+  monto_apertura_total?: string
+  monto_apertura_asignado?: string
+  monto_apertura_manual?: string
   fecha_apertura: string
   monto_cierre: string | null
   fecha_cierre: string | null
@@ -55,6 +59,8 @@ export interface AperturaYCierreCaja {
 export interface AperturarCajaRequest {
   caja_principal_id: number
   monto_apertura: number
+  /** Parte del monto que viene de efectivo asignado de otro cierre. */
+  monto_asignado?: number
   conteo_billetes_monedas?: {
     billete_200?: number
     billete_100?: number

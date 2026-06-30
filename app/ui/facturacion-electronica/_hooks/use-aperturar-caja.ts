@@ -104,6 +104,7 @@ export default function useAperturarCaja({
     values: AperturarCajaFormValues & {
       enviarTicket?: boolean
       emailDestino?: string
+      monto_asignado?: number
     },
     empresaData?: unknown
   ) {
@@ -120,6 +121,7 @@ export default function useAperturarCaja({
       const payload = {
         caja_principal_id: values.caja_origen_id,
         monto_apertura: montoTotal,
+        monto_asignado: values.monto_asignado || 0,
         conteo_billetes_monedas: conteoApertura,
         enviar_ticket: false,
         vendedores: values.vendedores.map(vendedor => ({

@@ -28,7 +28,8 @@ interface VendedorAsignacion {
   id: string
   user_id?: string
   caja_principal_id?: number
-  monto: number
+  monto: number // Monto contado manualmente (denominaciones)
+  monto_asignado?: number // Efectivo asignado de otro cierre (se suma al manual)
   conteo_billetes_monedas?: any
 }
 
@@ -159,15 +160,18 @@ export default function ModalAperturarCaja({
 
   const cajaOrigenId = Form.useWatch('caja_origen_id', form)
 
+  // Total efectivo de un vendedor = lo contado manualmente + lo asignado de otro cierre
+  const montoEfectivoVendedor = (v: VendedorAsignacion) => (v.monto || 0) + (v.monto_asignado || 0)
+
   const totalAsignado = useMemo(() =>
-    vendedores.reduce((sum, v) => sum + (v.monto || 0), 0),
+    vendedores.reduce((sum, v) => sum + montoEfectivoVendedor(v), 0),
     [vendedores]
   )
 
   const esValido = useMemo(() => {
     const tieneOrigen = !!cajaOrigenId
     const tieneMonto = totalAsignado > 0
-    const vendedoresValidos = vendedores.every(v => v.user_id && v.monto > 0)
+    const vendedoresValidos = vendedores.every(v => v.user_id && montoEfectivoVendedor(v) > 0)
 
     return tieneOrigen && tieneMonto && vendedoresValidos
   }, [cajaOrigenId, totalAsignado, vendedores])
@@ -255,9 +259,12 @@ export default function ModalAperturarCaja({
       message.warning('Selecciona primero un vendedor en la lista')
       return
     }
-    actualizarVendedor(vendedorSeleccionadoId, 'monto', efectivoAsignadoTotal)
+    // Se guarda APARTE del conteo manual: el total del vendedor será manual + asignado.
+    setVendedores(prev => prev.map(v =>
+      v.id === vendedorSeleccionadoId ? { ...v, monto_asignado: efectivoAsignadoTotal } : v
+    ))
     setEfectivoAsignadoUsado(true)
-    message.success(`S/ ${efectivoAsignadoTotal.toFixed(2)} aplicado a la distribución del vendedor`)
+    message.success(`S/ ${efectivoAsignadoTotal.toFixed(2)} se sumará a lo que cuentes del vendedor`)
   }
 
   const handleSubmit = (values: AperturarCajaFormValues) => {
@@ -266,7 +273,7 @@ export default function ModalAperturarCaja({
       return
     }
 
-    const vendedorSinMonto = vendedores.find(v => !v.monto || v.monto <= 0)
+    const vendedorSinMonto = vendedores.find(v => montoEfectivoVendedor(v) <= 0)
     if (vendedorSinMonto || totalAsignado <= 0) {
       message.error('El monto de cada vendedor debe ser mayor a S/. 0.00')
       return
@@ -286,12 +293,18 @@ export default function ModalAperturarCaja({
       return
     }
 
-    const vendedoresValidos = vendedores.filter(v => v.user_id && v.monto > 0)
+    // El monto que se envía por vendedor es el TOTAL (manual contado + asignado de otro cierre).
+    const vendedoresValidos = vendedores
+      .filter(v => v.user_id && montoEfectivoVendedor(v) > 0)
+      .map(v => ({ ...v, monto: montoEfectivoVendedor(v) }))
+
+    const montoAsignadoTotal = vendedores.reduce((sum, v) => sum + (v.monto_asignado || 0), 0)
 
     crearAperturarCaja(
       {
         caja_origen_id: values.caja_origen_id,
         vendedores: vendedoresValidos,
+        monto_asignado: montoAsignadoTotal,
         enviarTicket,
         emailDestino: emailDestino.trim() || undefined
       },
@@ -464,10 +477,15 @@ export default function ModalAperturarCaja({
                     />
                   </div>
                   <div className='w-24 text-right'>
-                    <span className={`font-bold ${vendedor.monto <= 0 ? 'text-red-500' : 'text-orange-600'}`}>
-                      S/. {vendedor.monto.toFixed(2)}
+                    <span className={`font-bold ${montoEfectivoVendedor(vendedor) <= 0 ? 'text-red-500' : 'text-orange-600'}`}>
+                      S/. {montoEfectivoVendedor(vendedor).toFixed(2)}
                     </span>
-                    {vendedor.monto <= 0 && (
+                    {(vendedor.monto_asignado || 0) > 0 && (
+                      <div className='text-emerald-600 text-[10px] leading-none'>
+                        incl. S/. {(vendedor.monto_asignado || 0).toFixed(2)} asignado
+                      </div>
+                    )}
+                    {montoEfectivoVendedor(vendedor) <= 0 && (
                       <div className='text-red-500 text-xs'>Requerido &gt; 0</div>
                     )}
                   </div>
