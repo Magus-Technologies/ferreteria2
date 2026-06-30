@@ -79,9 +79,13 @@ export default function TopNav({ className }: { className?: string }) {
               return { type: 'divider' as const };
             }
 
+            const isAperturarCaja = sub.key === 'aperturar-caja'
+            const cajaYaAbierta = isAperturarCaja && !!cajaActiva
+
             return {
               key: sub.key,
               label: sub.label,
+              disabled: cajaYaAbierta,
               onClick: sub.route
                 ? () => router.push(sub.route as string)
                 : sub.action && actionHandlers[sub.action]
