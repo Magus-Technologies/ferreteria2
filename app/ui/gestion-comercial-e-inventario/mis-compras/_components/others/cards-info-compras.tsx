@@ -152,11 +152,8 @@ export default function CardsInfoCompras() {
         viaContado += totalCompra
       } else if (compra.forma_de_pago === 'cr') {
         viaCredito += totalCompra
-        if (resta <= 0.01) {
-          creditoPagado += totalCompra
-        } else {
-          creditoDeuda += totalCompra
-        }
+        creditoPagado += totalPagado
+        creditoDeuda += Math.max(0, resta)
       }
 
       if (compra.estado_de_compra === EstadoDeCompra.Procesado) {
