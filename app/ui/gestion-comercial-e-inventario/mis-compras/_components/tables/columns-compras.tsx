@@ -289,18 +289,13 @@ export function useColumnsCompras({
       field: 'productos_por_almacen',
       width: 90,
       minWidth: 90,
-      valueFormatter: (params) => {
-        const total = Number(getSubTotal(params.value))
-        const totalPagado = Number(params.data?.total_pagado || 0)
-        const resta = total - totalPagado
-        return String(resta)
-      },
+      valueFormatter: (params) => String(getSaldoResta(params.data)),
       filter: 'agNumberColumnFilter',
       cellRenderer: (params: ICellRendererParams<Compra>) => {
-        const total = Number(getSubTotal(params.value))
-        const totalPagado = Number(params.data?.total_pagado || 0)
-        const resta = total - totalPagado
-        return formatCurrencySoles(resta)
+        const saldo = getSaldoResta(params.data)
+        // Para compras en dólares el saldo del backend viene en dólares
+        const esDolar = params.data?.tipo_moneda === 'd'
+        return esDolar ? `$ ${saldo.toFixed(2)}` : formatCurrencySoles(saldo)
       },
     },
     {
@@ -309,58 +304,21 @@ export function useColumnsCompras({
       field: 'productos_por_almacen',
       width: 120,
       minWidth: 120,
-      valueFormatter: (params) => {
-        // Si es contado, siempre está pagado
-        if (params.data?.forma_de_pago === 'co') {
-          return 'Pagado'
-        }
-        
-        // Si es crédito, verificar si está pagado completamente
-        const total = Number(getSubTotal(params.value))
-        const totalPagado = Number(params.data?.total_pagado || 0)
-        const resta = total - totalPagado
-        
-        if (resta <= 0.01) { // Tolerancia de 1 centavo
-          return 'Pagado'
-        } else {
-          return 'Crédito'
-        }
-      },
+      valueFormatter: (params) => (estaCompraPagada(params.data) ? 'Pagado' : 'Crédito'),
       filter: true,
       cellRenderer: (params: ICellRendererParams<Compra>) => {
-        // Si es contado, siempre está pagado
-        if (params.data?.forma_de_pago === 'co') {
-          return (
-            <div className='flex items-center h-full'>
-              <span className='px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800'>
-                Pagado
-              </span>
-            </div>
-          )
-        }
-        
-        // Si es crédito, verificar si está pagado completamente
-        const total = Number(getSubTotal(params.value))
-        const totalPagado = Number(params.data?.total_pagado || 0)
-        const resta = total - totalPagado
-        
-        if (resta <= 0.01) { // Tolerancia de 1 centavo
-          return (
-            <div className='flex items-center h-full'>
-              <span className='px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800'>
-                Pagado
-              </span>
-            </div>
-          )
-        } else {
-          return (
-            <div className='flex items-center h-full'>
-              <span className='px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800'>
-                Crédito
-              </span>
-            </div>
-          )
-        }
+        const pagado = estaCompraPagada(params.data)
+        return (
+          <div className='flex items-center h-full'>
+            <span
+              className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                pagado ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+              }`}
+            >
+              {pagado ? 'Pagado' : 'Crédito'}
+            </span>
+          </div>
+        )
       },
     },
     {
@@ -607,4 +565,23 @@ function getSubTotal(productos: Compra['productos_por_almacen']) {
   }
 
   return total.toFixed(2)
+}
+
+// Saldo pendiente: prefiere el valor del backend (en la moneda de la compra, dólares si
+// tipo_moneda='d'); fallback en soles para datos antiguos sin el campo.
+function getSaldoResta(compra?: Compra): number {
+  if (!compra) return 0
+  if (compra.saldo_pendiente != null) return Number(compra.saldo_pendiente)
+  const total = Number(getSubTotal(compra.productos_por_almacen))
+  const totalPagado = Number(compra.total_pagado ?? 0)
+  return total - totalPagado
+}
+
+// ¿Compra pagada? Prefiere el flag del backend (calculado en la moneda correcta);
+// fallback: contado siempre pagado, crédito pagado si el saldo <= 0.01.
+function estaCompraPagada(compra?: Compra): boolean {
+  if (!compra) return false
+  if (typeof compra.esta_pagado === 'boolean') return compra.esta_pagado
+  if (compra.forma_de_pago === 'co') return true
+  return getSaldoResta(compra) <= 0.01
 }

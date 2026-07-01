@@ -163,6 +163,19 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
     }
   }, [open, saldoTC, form])
 
+  // Al CAMBIAR el tipo de cambio, recalcular el monto al saldo en soles del nuevo TC
+  // (antes solo se autocompletaba una vez, así que cambiar el TC no movía el monto).
+  const tcPrevRef = useRef<number | null>(null)
+  useEffect(() => {
+    if (!open) { tcPrevRef.current = null; return }
+    if (!esDolares) return
+    const tcNum = Number(tcEnForm) || 0
+    if (tcPrevRef.current !== null && tcPrevRef.current !== tcNum && saldoTC > 0) {
+      form.setFieldValue('monto', Number(saldoTC.toFixed(2)))
+    }
+    tcPrevRef.current = tcNum
+  }, [tcEnForm, esDolares, open, saldoTC, form])
+
   // Query para obtener despliegues de pago y setear Efectivo por defecto
   const { data: desplieguesData } = useQuery({
     queryKey: [QueryKeys.SUB_CAJAS, 'metodos-para-ventas'],

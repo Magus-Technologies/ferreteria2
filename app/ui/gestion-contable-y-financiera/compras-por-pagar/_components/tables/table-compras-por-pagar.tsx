@@ -190,6 +190,18 @@ const TableComprasPorPagar = memo(function TableComprasPorPagar() {
     }, 0) + Number(compra.percepcion ?? 0)
   }, [])
 
+  // ¿Compra pagada? Prefiere el flag del backend (calculado en la moneda correcta,
+  // dólares si tipo_moneda='d'); fallback en soles para datos antiguos.
+  const getEstaPagado = useCallback((compra?: Compra) => {
+    if (!compra) return false
+    if (typeof compra.esta_pagado === 'boolean') return compra.esta_pagado
+    if (compra.forma_de_pago === 'co') return true
+    const saldo = compra.saldo_pendiente != null
+      ? Number(compra.saldo_pendiente)
+      : calcularTotalCompra(compra) - Number(compra.total_pagado || 0)
+    return saldo <= 0.01
+  }, [calcularTotalCompra])
+
   // Definir columnas específicas para compras por pagar
   const columns: ColDef<Compra>[] = useMemo(() => [
     {
@@ -285,18 +297,38 @@ const TableComprasPorPagar = memo(function TableComprasPorPagar() {
       cellRenderer: (params: any) => {
         const compra = params.data as Compra
         if (!compra) return 'S/. 0.00'
-        
-        const total = calcularTotalCompra(compra)
-        const totalPagado = Number(compra.total_pagado || 0)
-        const saldo = total - totalPagado
-        
-        return `S/. ${saldo.toFixed(2)}`
+
+        // Saldo del backend en la moneda de la compra (dólares si tipo_moneda='d');
+        // fallback en soles para datos antiguos.
+        const esDolar = compra.tipo_moneda === 'd'
+        const saldo = compra.saldo_pendiente != null
+          ? Number(compra.saldo_pendiente)
+          : calcularTotalCompra(compra) - Number(compra.total_pagado || 0)
+
+        return esDolar ? `$ ${saldo.toFixed(2)}` : `S/. ${saldo.toFixed(2)}`
       },
     },
     {
       headerName: 'Mon.',
       width: 80,
-      valueGetter: () => 'PEN',
+      valueGetter: (params: any) => (params.data?.tipo_moneda === 'd' ? 'USD' : 'PEN'),
+    },
+    {
+      headerName: 'Estado',
+      width: 110,
+      valueGetter: (params: any) => (getEstaPagado(params.data as Compra) ? 'Pagado' : 'Pendiente'),
+      cellRenderer: (params: any) => {
+        const pagado = getEstaPagado(params.data as Compra)
+        return (
+          <span
+            className={`px-2 py-1 text-xs font-semibold rounded-full ${
+              pagado ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            }`}
+          >
+            {pagado ? 'Pagado' : 'Pendiente'}
+          </span>
+        )
+      },
     },
     {
       headerName: 'Moras',
@@ -324,7 +356,7 @@ const TableComprasPorPagar = memo(function TableComprasPorPagar() {
         )
       },
     },
-  ], [calcularTotalCompra, handleVerPdf])
+  ], [calcularTotalCompra, handleVerPdf, getEstaPagado])
 
   const handleSelectionChanged = useCallback(
     (event: SelectionChangedEvent<Compra>) => {
@@ -365,6 +397,7 @@ const TableComprasPorPagar = memo(function TableComprasPorPagar() {
           'Paga',
           'Saldo',
           'Mon.',
+          'Estado',
           'Moras',
           'PDF',
         ],

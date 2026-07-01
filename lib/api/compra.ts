@@ -79,6 +79,10 @@ export interface Compra {
   recepciones_almacen_count?: number;
   pagos_de_compras_count?: number;
   total_pagado?: number;
+  // Saldo en la moneda de la compra (dólares si tipo_moneda = 'd') calculado por el backend
+  saldo_pendiente?: number | null;
+  // true = pagado, false = por pagar, null = no aplica (anulada / no calculado)
+  esta_pagado?: boolean | null;
   orden_compra_id?: number | null;
   orden_compra?: { id: number; codigo: string } | null;
 }
