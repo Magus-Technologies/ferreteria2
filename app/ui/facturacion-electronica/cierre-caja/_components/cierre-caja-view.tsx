@@ -331,6 +331,10 @@ export default function CierreCajaView() {
 
     if (success) {
       setArqueoFinalizado(true)
+      // Mostrar automáticamente el ticket de cierre (si el usuario dejó activo "Ticket Caja")
+      if (ticketCaja) {
+        setModalTicketOpen(true)
+      }
       if (isReCierre) {
         // CORREGIDO: Después de re-cerrar exitosamente, quitar re_cierre=true de la URL
         // para que la vista vuelva a modo solo lectura

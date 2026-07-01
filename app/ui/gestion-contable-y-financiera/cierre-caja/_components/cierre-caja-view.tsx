@@ -1,6 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { useRealtime } from '~/hooks/use-realtime'
+import { subscribeModelChanged } from '~/lib/realtime-bus'
 import { Card, Button, Input, Checkbox, Tabs, Spin, Empty, message, Modal } from 'antd'
 import { FaCheckCircle, FaSearch } from 'react-icons/fa'
 import ConteoDinero from '../../gestion-cajas/_components/conteo-dinero'
@@ -28,9 +30,27 @@ export default function CierreCajaView() {
   const supervisorValidadoUrl = searchParams.get('supervisor_validado') === 'true'
   const supervisorIdUrl = searchParams.get('supervisor_id')
 
-  const { cajaActiva, loading, error, esEdicion } = useCierreCaja(cierreId || undefined)
+  const { cajaActiva, loading, error, esEdicion, recargar } = useCierreCaja(cierreId || undefined)
   const { cerrarCaja, loading: loadingCierre } = useCerrarCaja()
   const { data: empresaData } = useEmpresaPublica()
+
+  // Tiempo real: conectar el canal y refrescar el cierre cuando ocurran movimientos
+  // que afectan el resumen (ventas, gastos, ingresos, préstamos, caja), sin recargar la página.
+  useRealtime()
+  const recargarRef = useRef(recargar)
+  recargarRef.current = recargar
+  useEffect(() => {
+    if (cierreId) return // en modo edición (cierre cerrado) es un snapshot, no auto-refresca
+    const MODULOS_CIERRE = [
+      'ventas', 'gastos', 'ingresos', 'prestamos', 'prestamos-vendedores', 'cajas',
+    ]
+    const unsub = subscribeModelChanged((ev) => {
+      if (MODULOS_CIERRE.includes(ev.module)) {
+        recargarRef.current()
+      }
+    })
+    return unsub
+  }, [cierreId])
 
   const [totalEfectivo, setTotalEfectivo] = useState(0)
   const [totalCuentas, setTotalCuentas] = useState(0)
@@ -261,8 +281,12 @@ export default function CierreCajaView() {
     )
     .reduce((sum: number, metodo: any) => sum + Number(metodo.total), 0) || 0
 
-  // Monto esperado de EFECTIVO = Efectivo Inicial + Efectivo de ventas
-  const montoEsperado = (resumen.efectivo_inicial || 0) + efectivoEsperado
+  // Monto esperado de EFECTIVO: usar el del BACKEND, que ya incluye TODO (efectivo inicial
+  // + ventas efectivo + ingresos extras + préstamos recibidos − gastos efectivo − préstamos
+  // dados). Antes el front lo recalculaba a medias e ignoraba ingresos extras/gastos.
+  const montoEsperado = resumen.monto_esperado != null
+    ? Number(resumen.monto_esperado)
+    : (resumen.efectivo_inicial || 0) + efectivoEsperado
   const diferencia = totalEfectivo - montoEsperado
   const faltante = diferencia < 0 ? Math.abs(diferencia) : 0
   const sobrante = diferencia > 0 ? diferencia : 0
@@ -300,6 +324,10 @@ export default function CierreCajaView() {
 
     if (success) {
       setArqueoFinalizado(true)
+      // Mostrar automáticamente el ticket de cierre (si el usuario dejó activo "Ticket Caja")
+      if (ticketCaja) {
+        setModalTicketOpen(true)
+      }
       if (isReCierre) {
         // CORREGIDO: Después de re-cerrar exitosamente, quitar re_cierre=true de la URL
         // para que la vista vuelva a modo solo lectura

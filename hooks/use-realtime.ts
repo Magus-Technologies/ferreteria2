@@ -182,6 +182,8 @@ const MODULE_TO_QUERY_KEYS: Record<string, string[]> = {
     QueryKeys.HISTORIAL_APERTURAS_TODAS,
     QueryKeys.HISTORIAL_CIERRES,
     QueryKeys.MOVIMIENTOS_INTERNOS,
+    // Query propia del "Resumen detalle" del cierre (traslados a bóveda).
+    'traslados-boveda',
   ],
   gastos: [QueryKeys.MIS_GASTOS, QueryKeys.EGRESOS_DINERO],
   ingresos: [QueryKeys.GANANCIAS, QueryKeys.GANANCIAS_RESUMEN],
