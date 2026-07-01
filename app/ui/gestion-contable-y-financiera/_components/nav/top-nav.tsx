@@ -59,6 +59,7 @@ const itemsCaja: MenuProps['items'] = [
   {
     key: 'aperturar-caja',
     label: 'Aperturar Caja',
+    disabled: !!cajaActiva,
     onClick: () => {
       setOpenAperturarCaja(true)
     }

@@ -124,7 +124,7 @@ export default function ModalCrearIngresoExtra({ open, onClose, ingresoEdit }: M
                 </div>
 
                 <LabelBase label="Concepto o Motivo del Ingreso" orientation="column" className="w-full">
-                    <Form.Item name="concepto" rules={[{ required: true, message: 'El concepto es obligatorio' }]} className="mb-0 w-full">
+                    <Form.Item name="concepto" rules={[]} className="mb-0 w-full">
                         <Input.TextArea rows={3} className="!w-full" placeholder="Detalle el motivo del ingreso..." />
                     </Form.Item>
                 </LabelBase>
