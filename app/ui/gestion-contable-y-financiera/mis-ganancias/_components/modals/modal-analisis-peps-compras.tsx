@@ -26,6 +26,8 @@ interface VentaEnCompra {
   ganancia_tc_compra: number
   ganancia_tc_pago?: number
   diferencia_cambio?: number
+  total_costo_tc_compra: number
+  total_costo_tc_pago?: number
   fracciones: PepsFraccionAnalisis[]
 }
 
@@ -70,6 +72,8 @@ function buildComprasView(productos: PepsProductoAnalisis[]): CompraView[] {
         ganancia_tc_compra: venta.ganancia_tc_compra,
         ganancia_tc_pago: venta.ganancia_tc_pago,
         diferencia_cambio: venta.diferencia_cambio,
+        total_costo_tc_compra: venta.total_costo_tc_compra,
+        total_costo_tc_pago: venta.total_costo_tc_pago,
         fracciones: venta.fracciones,
       })
     })
@@ -452,7 +456,7 @@ export default function ModalAnalisisPepsCompras({ open, onClose, filtros: filtr
           <div className="flex flex-col gap-3">
 
             {/* Resumen compra */}
-            <div className="grid grid-cols-4 gap-3 mb-1">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-1">
               <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-center">
                 <div className="text-[10px] text-slate-500 font-bold uppercase mb-1">Unidades consumidas</div>
                 <div className="text-base font-bold text-slate-700">{drawerCompra.cantidad_total.toFixed(2)} u</div>
@@ -477,6 +481,13 @@ export default function ModalAnalisisPepsCompras({ open, onClose, filtros: filtr
                 <div className="text-[10px] text-blue-600 font-bold uppercase mb-1">Costo TC compra</div>
                 <div className="text-base font-bold text-blue-700">S/ {fmt(drawerCompra.costo_tc_compra_total)}</div>
               </div>
+              {/* Costo real total (suma de "Total" de cada venta al TC de pago) */}
+              {drawerCompra.tc_pago_real && (
+                <div className="bg-green-50 border border-green-100 rounded-lg p-3 text-center">
+                  <div className="text-[10px] text-green-600 font-bold uppercase mb-1">Costo TC pago (real)</div>
+                  <div className="text-base font-bold text-green-700">S/ {fmt(drawerCompra.costo_tc_pago_total)}</div>
+                </div>
+              )}
               {drawerCompra.tc_pago_real ? (
                 <div className={`border rounded-lg p-3 text-center ${drawerCompra.diferencia_total < 0 ? 'bg-red-50 border-red-100' : 'bg-green-50 border-green-100'}`}>
                   <div className={`text-[10px] font-bold uppercase mb-1 ${drawerCompra.diferencia_total < 0 ? 'text-red-600' : 'text-green-600'}`}>
@@ -550,6 +561,23 @@ export default function ModalAnalisisPepsCompras({ open, onClose, filtros: filtr
                         </div>
                       </div>
                     ))}
+                    {/* Total del desglose: suma de todas las fracciones (útil sobre todo cuando la
+                        venta se surtió de varias compras, pero se muestra siempre por consistencia) */}
+                    <div className="flex items-center justify-between pt-1.5 mt-0.5 border-t border-slate-200">
+                      <span className="text-[11px] font-semibold text-slate-600">
+                        Total ({venta.cantidad.toFixed(2)} u)
+                      </span>
+                      <div className="flex gap-4 text-xs shrink-0">
+                        <span className="text-slate-500">
+                          <b className="text-blue-700">S/{fmt(venta.total_costo_tc_compra)}</b>
+                        </span>
+                        {venta.total_costo_tc_pago !== undefined && (
+                          <span className="text-slate-500">
+                            <b className="text-green-700">S/{fmt(venta.total_costo_tc_pago)}</b>
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
 
                   {/* Totales venta */}
@@ -564,9 +592,12 @@ export default function ModalAnalisisPepsCompras({ open, onClose, filtros: filtr
                           <span className="text-slate-500">Ganancia con TC pago (real)</span>
                           <span style={{ color: colorPos(venta.ganancia_tc_pago) }}>S/ {fmt(venta.ganancia_tc_pago)}</span>
                         </div>
+                        {/* Fila de la resta explícita: Ganancia TC pago − Ganancia TC compra = Diferencia TC */}
                         <div className="flex justify-between items-center text-xs font-bold border-t border-slate-100 pt-1 mt-0.5">
                           <span className="text-slate-500">Diferencia TC (impacto)</span>
-                          <span style={{ color: colorImpacto(venta.diferencia_cambio) }}>S/ {fmtS(venta.diferencia_cambio)}</span>
+                          <span style={{ color: colorImpacto(venta.diferencia_cambio) }}>
+                            S/ {fmt(venta.ganancia_tc_pago)} − S/ {fmt(venta.ganancia_tc_compra)} = S/ {fmtS(venta.diferencia_cambio)}
+                          </span>
                         </div>
                       </>
                     )}
