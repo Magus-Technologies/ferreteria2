@@ -50,7 +50,9 @@ const fmtS = (n: number | undefined) => {
   return (n >= 0 ? '+' : '') + n.toFixed(2)
 }
 const colorPos = (n: number | undefined) => (n !== undefined && n >= 0 ? '#16a34a' : '#dc2626')
-const colorImpacto = (n: number | undefined) => (n !== undefined && n <= 0 ? '#16a34a' : '#dc2626')
+// Impacto TC con convención de la referencia: positivo (o cero) = ganancia (verde),
+// negativo = pérdida (rojo).
+const colorImpacto = (n: number | undefined) => (n !== undefined && n >= 0 ? '#16a34a' : '#dc2626')
 
 function buildComprasView(productos: PepsProductoAnalisis[]): CompraView[] {
   const comprasMap = new Map<number, CompraView>()
@@ -104,7 +106,9 @@ function buildComprasView(productos: PepsProductoAnalisis[]): CompraView[] {
         compra.costo_tc_compra_total += fraccion.costo_tc_compra
         if (fraccion.costo_tc_pago !== undefined) {
           compra.costo_tc_pago_total += fraccion.costo_tc_pago
-          compra.diferencia_total += fraccion.costo_tc_pago - fraccion.costo_tc_compra
+          // Convención referencia: pago − compra en ganancia = compra − pago en costo.
+          // Positivo = ganaste más (TC pago más barato); negativo = perdiste.
+          compra.diferencia_total += fraccion.costo_tc_compra - fraccion.costo_tc_pago
         }
       })
     })
@@ -474,8 +478,8 @@ export default function ModalAnalisisPepsCompras({ open, onClose, filtros: filtr
                 <div className="text-base font-bold text-blue-700">S/ {fmt(drawerCompra.costo_tc_compra_total)}</div>
               </div>
               {drawerCompra.tc_pago_real ? (
-                <div className={`border rounded-lg p-3 text-center ${drawerCompra.diferencia_total > 0 ? 'bg-red-50 border-red-100' : 'bg-green-50 border-green-100'}`}>
-                  <div className={`text-[10px] font-bold uppercase mb-1 ${drawerCompra.diferencia_total > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                <div className={`border rounded-lg p-3 text-center ${drawerCompra.diferencia_total < 0 ? 'bg-red-50 border-red-100' : 'bg-green-50 border-green-100'}`}>
+                  <div className={`text-[10px] font-bold uppercase mb-1 ${drawerCompra.diferencia_total < 0 ? 'text-red-600' : 'text-green-600'}`}>
                     Impacto TC total
                   </div>
                   <div className="text-base font-bold" style={{ color: colorImpacto(drawerCompra.diferencia_total) }}>
