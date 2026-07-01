@@ -11,10 +11,28 @@ import { useQuery } from '@tanstack/react-query'
 import { apiRequest } from '~/lib/api'
 import { FaChevronRight, FaChevronDown } from 'react-icons/fa'
 
-// Fila real (con __rowKey único) o fila de detalle sintética (documento pagado, full-width)
-type GananciaRow = (GananciaDetalle & { __rowKey: string; __detail?: undefined })
+// Fila real (con __rowKey único), fila de detalle sintética (documento pagado, full-width)
+// o fila EXTRA de subtotal (se agrega después de la última venta de una compra con 2+
+// ventas; las filas individuales NO se tocan ni se fusionan).
+type GananciaRow = (GananciaDetalle & { __rowKey: string; __detail?: undefined; __subtotal?: undefined })
 type DetalleRow = { __detail: true; __rowKey: string; documento_pagado?: string | null }
-type GridRow = GananciaRow | DetalleRow
+type SubtotalRow = {
+  __subtotal: true
+  __rowKey: string
+  __detail?: undefined
+  documento_pagado: string
+  numero: string
+  cant: number
+  subtot: number
+  costo_total: number
+  ganancia: number
+  miembros: number
+}
+type GridRow = GananciaRow | DetalleRow | SubtotalRow
+
+// "N compras" no identifica una compra específica (una venta que se surtió de varios
+// lotes) — no se puede usar como llave de agrupación o mezclaría ventas no relacionadas.
+const esDocumentoAgrupable = (doc?: string | null): doc is string => !!doc && !/\d+ compras$/i.test(doc)
 
 export default function TableMisGanancias() {
   const filtros = useStoreFiltrosMisGanancias((state) => state.filtros)
@@ -41,18 +59,63 @@ export default function TableMisGanancias() {
 
   const rowData = data?.data?.data || []
 
+  // Agrega una fila EXTRA de subtotal justo después de la ÚLTIMA venta de cada compra
+  // con 2+ ventas. Las filas individuales (NV109, NV110, ...) NO se tocan ni se fusionan.
+  const rowDataConSubtotales = useMemo<(GananciaDetalle | SubtotalRow)[]>(() => {
+    const grupos = new Map<string, GananciaDetalle[]>()
+    rowData.forEach((row) => {
+      if (esDocumentoAgrupable(row.documento_pagado)) {
+        const key = row.documento_pagado
+        if (!grupos.has(key)) grupos.set(key, [])
+        grupos.get(key)!.push(row)
+      }
+    })
+
+    // Índice (en rowData) de la última venta de cada compra con 2+ ventas: ahí se
+    // inserta la fila de subtotal, justo después.
+    const ultimoIndicePorDoc = new Map<string, number>()
+    rowData.forEach((row, i) => {
+      const doc = row.documento_pagado
+      if (esDocumentoAgrupable(doc) && (grupos.get(doc)?.length ?? 0) > 1) {
+        ultimoIndicePorDoc.set(doc, i)
+      }
+    })
+
+    const resultado: (GananciaDetalle | SubtotalRow)[] = []
+    rowData.forEach((row, i) => {
+      resultado.push(row)
+      const doc = row.documento_pagado
+      if (doc && ultimoIndicePorDoc.get(doc) === i) {
+        const miembros = grupos.get(doc)!
+        resultado.push({
+          __subtotal: true,
+          __rowKey: `subtotal-${doc}`,
+          documento_pagado: doc,
+          numero: `SUBTOTAL COMPRA ${doc}`,
+          cant: miembros.reduce((s, r) => s + Number(r.cant || 0), 0),
+          subtot: miembros.reduce((s, r) => s + Number(r.subtot || 0), 0),
+          costo_total: miembros.reduce((s, r) => s + Number(r.costo_total || 0), 0),
+          ganancia: miembros.reduce((s, r) => s + Number(r.ganancia || 0), 0),
+          miembros: miembros.length,
+        })
+      }
+    })
+    return resultado
+  }, [rowData])
+
   // Intercala una fila de detalle (documento pagado) justo debajo de cada fila expandida.
+  // Las filas de subtotal no son expandibles (ellas mismas ya son el resumen).
   const processedRowData = useMemo<GridRow[]>(() => {
     const result: GridRow[] = []
-    rowData.forEach((row, i) => {
-      const rowKey = `${row.id}-${i}`
+    rowDataConSubtotales.forEach((row: any, i) => {
+      const rowKey = row.__subtotal ? row.__rowKey : `${row.id}-${i}`
       result.push({ ...row, __rowKey: rowKey })
-      if (expandedKeys.has(rowKey)) {
+      if (!row.__subtotal && expandedKeys.has(rowKey)) {
         result.push({ __detail: true, __rowKey: `${rowKey}-detail`, documento_pagado: row.documento_pagado })
       }
     })
     return result
-  }, [rowData, expandedKeys])
+  }, [rowDataConSubtotales, expandedKeys])
 
   // Crear mapa de despliegues de pago para conversión rápida
   const despliegueMap = useMemo(() => {
@@ -104,7 +167,7 @@ export default function TableMisGanancias() {
       resizable: false,
       suppressNavigable: true,
       cellRenderer: (params: ICellRendererParams<GridRow>) => {
-        if (!params.data || '__detail' in params.data) return null
+        if (!params.data || '__detail' in params.data || (params.data as any).__subtotal) return null
         const rowKey = params.data.__rowKey
         const isOpen = expandedKeys.has(rowKey)
         return (
@@ -191,7 +254,8 @@ export default function TableMisGanancias() {
       field: 'p_unit',
       width: 80,
       type: 'numericColumn',
-      valueFormatter: (p) => p.value?.toFixed(2) || '0.00',
+      // La fila de subtotal no tiene un precio unitario único (cada venta tuvo el suyo)
+      valueFormatter: (p) => (p.data?.__subtotal ? '-' : p.value?.toFixed(2) || '0.00'),
     },
     {
       headerName: 'LOTE',
@@ -205,7 +269,7 @@ export default function TableMisGanancias() {
       field: 'costo',
       width: 80,
       type: 'numericColumn',
-      valueFormatter: (p) => p.value?.toFixed(4) || '0.0000',
+      valueFormatter: (p) => (p.data?.__subtotal ? '-' : p.value?.toFixed(4) || '0.0000'),
       cellStyle: { color: '#7c3aed', fontWeight: 'bold' } as CellStyle,
     },
     {
@@ -258,6 +322,12 @@ export default function TableMisGanancias() {
       columnDefs={columns}
       rowData={processedRowData}
       getRowId={(params: any) => params.data.__rowKey}
+      // Fila de subtotal: se resalta con fondo y borde superior, como un total de grupo.
+      getRowStyle={(params: any) =>
+        params.data?.__subtotal
+          ? { background: '#fef9c3', borderTop: '2px solid #ca8a04', fontWeight: '700' as const }
+          : undefined
+      }
       // IsFullWidthRowParams trae el dato en rowNode.data, NO en params.data directo
       // (ese shape es el de ICellRendererParams, que sí usa fullWidthCellRenderer abajo).
       isFullWidthRow={(params: any) => !!params.rowNode?.data?.__detail}
