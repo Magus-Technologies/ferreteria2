@@ -28,6 +28,9 @@ export interface GananciaDetalle {
   updated_at: string;
   // "Lote 1/2" cuando la venta se desglosa por costos PEPS distintos; null si no.
   desglose_lote?: string | null;
+  // Serie-número de la compra de origen del costo (PEPS). "N compras" si el lote
+  // se surtió de varias; null si no hay registro de consumo (dato antiguo).
+  documento_pagado?: string | null;
 }
 
 export interface ResumenGanancias {

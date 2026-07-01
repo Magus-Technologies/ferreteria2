@@ -561,23 +561,26 @@ export default function ModalAnalisisPepsCompras({ open, onClose, filtros: filtr
                         </div>
                       </div>
                     ))}
-                    {/* Total del desglose: suma de todas las fracciones (útil sobre todo cuando la
-                        venta se surtió de varias compras, pero se muestra siempre por consistencia) */}
-                    <div className="flex items-center justify-between pt-1.5 mt-0.5 border-t border-slate-200">
-                      <span className="text-[11px] font-semibold text-slate-600">
-                        Total ({venta.cantidad.toFixed(2)} u)
-                      </span>
-                      <div className="flex gap-4 text-xs shrink-0">
-                        <span className="text-slate-500">
-                          <b className="text-blue-700">S/{fmt(venta.total_costo_tc_compra)}</b>
+                    {/* Total del desglose: solo aporta información cuando la venta se surtió de
+                        VARIAS compras (suma fracciones distintas). Con 1 sola fracción sería
+                        una fila duplicada de la de arriba, así que se oculta. */}
+                    {numCompras > 1 && (
+                      <div className="flex items-center justify-between pt-1.5 mt-0.5 border-t border-slate-200">
+                        <span className="text-[11px] font-semibold text-slate-600">
+                          Total ({venta.cantidad.toFixed(2)} u)
                         </span>
-                        {venta.total_costo_tc_pago !== undefined && (
+                        <div className="flex gap-4 text-xs shrink-0">
                           <span className="text-slate-500">
-                            <b className="text-green-700">S/{fmt(venta.total_costo_tc_pago)}</b>
+                            <b className="text-blue-700">S/{fmt(venta.total_costo_tc_compra)}</b>
                           </span>
-                        )}
+                          {venta.total_costo_tc_pago !== undefined && (
+                            <span className="text-slate-500">
+                              <b className="text-green-700">S/{fmt(venta.total_costo_tc_pago)}</b>
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
 
                   {/* Totales venta */}

@@ -175,6 +175,29 @@ export default function TableBase<T>({
     }, 300);
   }, [persistColumnState, storageKey]);
 
+  // Columnas sin headerName (botones de acción, expandir, checkbox, etc.): nunca
+  // aparecen en el selector "Ver Columnas", así que si quedan marcadas hide:true en
+  // el estado guardado de AG Grid no hay forma de que el usuario las reactive. Se
+  // fuerza su visibilidad al restaurar el estado guardado.
+  const headerlessColIds = useMemo(() => {
+    const ids = new Set<string>();
+    (columnDefs ?? []).forEach((col: any) => {
+      if (!col.headerName) {
+        const id = col.colId || col.field;
+        if (id) ids.add(id);
+      }
+    });
+    return ids;
+  }, [columnDefs]);
+
+  const stripHeaderlessHide = useCallback(
+    (state: any[]) =>
+      state.map((s) =>
+        headerlessColIds.has(s.colId) ? { ...s, hide: false } : s,
+      ),
+    [headerlessColIds],
+  );
+
   // Aplicar estado guardado
   const applyColumnState = useCallback(() => {
     if (
@@ -193,7 +216,7 @@ export default function TableBase<T>({
 
     try {
       gridApiRef.current.applyColumnState({
-        state: columnStateRef.current,
+        state: stripHeaderlessHide(columnStateRef.current),
         applyOrder: true,
       });
       hasAppliedInitialStateRef.current = true;
@@ -205,7 +228,7 @@ export default function TableBase<T>({
         isApplyingStateRef.current = false;
       }, 100);
     }
-  }, []);
+  }, [stripHeaderlessHide]);
 
   // Manejar cuando la grilla está lista
   const onGridReady = useCallback(
@@ -394,7 +417,7 @@ export default function TableBase<T>({
             // Aplicar el estado a AG Grid
             isApplyingStateRef.current = true;
             gridApiRef.current.applyColumnState({
-              state: parsedState,
+              state: stripHeaderlessHide(parsedState),
               applyOrder: true,
             });
             gridApiRef.current.refreshHeader();
@@ -408,7 +431,7 @@ export default function TableBase<T>({
         }
       });
     }
-  }, [isVisible, persistColumnState, storageKey]);
+  }, [isVisible, persistColumnState, storageKey, stripHeaderlessHide]);
 
   // Memoizar columnDefs CON reordenamiento basado en estado guardado
   const memoizedColumnDefs = useMemo<ColDef<T>[]>(() => {

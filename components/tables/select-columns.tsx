@@ -25,12 +25,19 @@ export function setVisibilityColumns({
 }) {
   if (!gridApi) return;
   const gridColumns = gridApi.getAllGridColumns() ?? [];
-  
-  const toHide = gridColumns
+
+  // Columnas sin headerName (botones de acción, expandir, checkbox, etc.) no
+  // participan del selector "Ver Columnas" — nunca aparecen ahí como opción, así
+  // que si se incluyeran en este filtro quedarían ocultas para siempre sin forma
+  // de volver a mostrarlas (le pasó a la columna de expandir en Detalle de Ganancias).
+  // Se excluyen del hide/show y quedan siempre visibles.
+  const toggleables = gridColumns.filter((col) => !!col.getColDef().headerName);
+
+  const toHide = toggleables
     .filter((col) => !checkedList.includes(col.getColDef().headerName!))
     .map((col) => col.getColId());
-    
-  const toShow = gridColumns
+
+  const toShow = toggleables
     .filter((col) => checkedList.includes(col.getColDef().headerName!))
     .map((col) => col.getColId());
 
