@@ -58,7 +58,7 @@ export default function CierreCajaView() {
 
   // ELIMINADO: arqueoFinalizado ya no se usa, se reemplaza por cajaYaFinalizada del backend
   const [comentarios, setComentarios] = useState('')
-  const [ticketCaja, setTicketCaja] = useState(true)
+  // ticket siempre se abre automáticamente al finalizar (como en ventas)
   const [verCamposCiegoCierre, setVerCamposCiegoCierre] = useState(true)
   const [arqueoFinalizado, setArqueoFinalizado] = useState(false)
   const [montoDejarApertura, setMontoDejarApertura] = useState<number>(0)
@@ -331,10 +331,8 @@ export default function CierreCajaView() {
 
     if (success) {
       setArqueoFinalizado(true)
-      // Mostrar automáticamente el ticket de cierre (si el usuario dejó activo "Ticket Caja")
-      if (ticketCaja) {
-        setModalTicketOpen(true)
-      }
+      // Mostrar automáticamente el ticket de cierre (igual que en ventas, sin checkbox)
+      setModalTicketOpen(true)
       if (isReCierre) {
         // CORREGIDO: Después de re-cerrar exitosamente, quitar re_cierre=true de la URL
         // para que la vista vuelva a modo solo lectura
@@ -741,15 +739,6 @@ export default function CierreCajaView() {
                     </div>
 
                     <div className='mt-3 space-y-2.5'>
-                      <Checkbox
-                        checked={ticketCaja}
-                        onChange={(e) => setTicketCaja(e.target.checked)}
-                        className='text-sm'
-                        disabled={isFormDisabled}
-                      >
-                        Ticket Caja
-                      </Checkbox>
-
                       <div>
                         <div className='text-sm font-medium text-slate-600 mb-1'>Email para reporte (opcional)</div>
                         <Input
