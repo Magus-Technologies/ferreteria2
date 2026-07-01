@@ -18,6 +18,7 @@ interface ModalAnalisisPepsComprasProps {
 
 interface VentaEnCompra {
   venta_id: number
+  serie_numero?: string
   fecha: string
   cantidad: number
   precio: number
@@ -59,6 +60,7 @@ function buildComprasView(productos: PepsProductoAnalisis[]): CompraView[] {
     producto.ventas.forEach(venta => {
       ventasMap.set(venta.venta_id, {
         venta_id: venta.venta_id,
+        serie_numero: venta.serie_numero,
         fecha: venta.fecha,
         cantidad: venta.cantidad,
         precio: venta.precio,
@@ -446,11 +448,27 @@ export default function ModalAnalisisPepsCompras({ open, onClose, filtros: filtr
           <div className="flex flex-col gap-3">
 
             {/* Resumen compra */}
-            <div className="grid grid-cols-3 gap-3 mb-1">
+            <div className="grid grid-cols-4 gap-3 mb-1">
               <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-center">
                 <div className="text-[10px] text-slate-500 font-bold uppercase mb-1">Unidades consumidas</div>
                 <div className="text-base font-bold text-slate-700">{drawerCompra.cantidad_total.toFixed(2)} u</div>
               </div>
+              {/* Ganancia total de las ventas de esta compra (real si hay pago, si no con TC compra) */}
+              {(() => {
+                const gananciaCompra = drawerCompra.ventas.reduce((s, v) => s + (v.ganancia_tc_compra || 0), 0)
+                const gananciaPago = drawerCompra.ventas.reduce((s, v) => s + (v.ganancia_tc_pago || 0), 0)
+                const gananciaMostrar = drawerCompra.tc_pago_real ? gananciaPago : gananciaCompra
+                return (
+                  <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-3 text-center">
+                    <div className="text-[10px] text-emerald-600 font-bold uppercase mb-1">
+                      {drawerCompra.tc_pago_real ? 'Ganancia real' : 'Ganancia'}
+                    </div>
+                    <div className="text-base font-bold" style={{ color: colorPos(gananciaMostrar) }}>
+                      S/ {fmt(gananciaMostrar)}
+                    </div>
+                  </div>
+                )
+              })()}
               <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-center">
                 <div className="text-[10px] text-blue-600 font-bold uppercase mb-1">Costo TC compra</div>
                 <div className="text-base font-bold text-blue-700">S/ {fmt(drawerCompra.costo_tc_compra_total)}</div>
@@ -479,16 +497,24 @@ export default function ModalAnalisisPepsCompras({ open, onClose, filtros: filtr
 
             {drawerCompra.ventas.map((venta, idx) => {
               const numCompras = venta.fracciones.length
-              const badge = numCompras > 1
-                ? <span className="text-[11px] px-2 py-0.5 rounded font-medium bg-emerald-50 text-emerald-700">{numCompras} compras</span>
-                : <span className="text-[11px] px-2 py-0.5 rounded font-medium bg-blue-50 text-blue-700">{venta.fracciones[0]?.serie_numero}</span>
 
               return (
                 <div key={venta.venta_id} className="border border-slate-200 rounded-lg bg-white overflow-hidden">
                   {/* Header venta */}
                   <div className="flex items-center gap-2 px-3 py-2 border-b flex-wrap" style={{ backgroundColor: 'var(--color-rose-600)', borderColor: 'var(--color-rose-600)' }}>
                     <span className="font-semibold text-sm text-white">Venta {idx + 1}</span>
-                    {badge}
+                    {/* Serie del comprobante de VENTA */}
+                    {venta.serie_numero && (
+                      <span className="text-[11px] px-2 py-0.5 rounded font-semibold bg-white text-rose-700" title="Comprobante de venta">
+                        {venta.serie_numero}
+                      </span>
+                    )}
+                    {/* Origen de la mercadería (compras) */}
+                    {numCompras > 1 && (
+                      <span className="text-[11px] px-2 py-0.5 rounded font-medium bg-emerald-50 text-emerald-700" title="Se surtió de varias compras">
+                        {numCompras} compras
+                      </span>
+                    )}
                     <span className="text-xs text-rose-100">
                       {dayjs(venta.fecha).format('DD/MM/YYYY')}
                       <span className="mx-1">·</span>
@@ -501,8 +527,8 @@ export default function ModalAnalisisPepsCompras({ open, onClose, filtros: filtr
                     {venta.fracciones.map((f, i) => (
                       <div key={i} className="flex items-center justify-between py-1.5 border-b border-slate-100 last:border-0 flex-wrap gap-2">
                         <div className="flex items-center gap-2 text-xs">
-                          <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-medium text-[11px] shrink-0">
-                            {f.serie_numero}
+                          <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-medium text-[11px] shrink-0" title="Compra de origen (PEPS)">
+                            Compra {f.serie_numero}
                           </span>
                           <span className="text-slate-600">
                             {f.cantidad.toFixed(2)} u × ${f.costo_usd.toFixed(4)}

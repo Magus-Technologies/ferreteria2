@@ -321,6 +321,7 @@ export interface PepsFraccionAnalisis {
 
 export interface PepsVentaAnalisis {
   venta_id: number;
+  serie_numero?: string;
   fecha: string;
   cantidad: number;
   precio: number;
