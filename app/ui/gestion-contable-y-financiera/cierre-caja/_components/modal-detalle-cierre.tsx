@@ -56,6 +56,12 @@ export default function ModalDetalleCierre({ open, onClose, tipo, resumen, apert
     const columnasMovimientosTransacciones: ColDef[] = [
         { headerName: 'Concepto / Motivo', field: 'concepto', flex: 1, valueGetter: (params) => params.data.concepto || params.data.motivo || 'N/A' },
         { headerName: 'Sub-Caja', field: 'sub_caja', width: 150, valueGetter: (params) => params.data.sub_caja || params.data.sub_caja_origen || params.data.sub_caja_destino || 'N/A' },
+        { headerName: 'Método', field: 'despliegue', width: 140, valueGetter: (params) => params.data.despliegue || params.data.metodo || '-' },
+        {
+            headerName: 'Efectivo', field: 'es_efectivo', width: 90,
+            valueGetter: (params) => (params.data.es_efectivo ? 'Sí' : 'No'),
+            cellStyle: (params: any) => ({ color: params.data?.es_efectivo ? '#059669' : '#64748b', fontWeight: 600 }),
+        },
         { headerName: 'Monto', field: 'monto', width: 110, valueFormatter: (params) => `S/. ${Number(params.value).toFixed(2)}`, cellStyle: { fontWeight: 'bold' } },
         { headerName: 'Fecha', field: 'created_at', width: 140, valueFormatter: (params) => formatFechaPeru(params.data.created_at || params.data.fecha_transferencia || params.data.fecha, 'DD/MM HH:mm') },
     ]
