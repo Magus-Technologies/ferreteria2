@@ -154,6 +154,8 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
   const totalCompraTC    = esDolares && totalCompraDolares && tipoDeCambio ? totalCompraDolares * tipoDeCambio : totalCompra
   const totalPagadoTC    = esDolares && totalPagadoDolares && tipoDeCambio ? totalPagadoDolares * tipoDeCambio : totalPagado
   const saldoTC          = totalCompraTC - totalPagadoTC
+  // Compra ya cancelada: sin saldo por pagar (con tolerancia por redondeo)
+  const yaPagada         = saldoTC <= 0.01
 
   // Autofill monto con el saldo visible (saldoTC para compras en dólares, saldoPendiente para soles)
   useEffect(() => {
@@ -456,6 +458,7 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
       okText='Guardar Pago'
       cancelText='Cerrar'
       confirmLoading={mutation.isPending}
+      okButtonProps={{ disabled: yaPagada }}
       width={1000}
       destroyOnHidden
     >
@@ -533,7 +536,7 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
           </LabelBase>
 
           <LabelBase label='Monto:' orientation='column'>
-            <Form.Item name='monto' rules={[
+            <Form.Item name='monto' rules={yaPagada ? [] : [
               { required: true, message: 'Requerido' },
               { type: 'number', min: 0.01, message: 'Mínimo S/. 0.01' },
               // Tope = saldo en soles al TC actual (saldoTC ya equivale al saldo en soles
@@ -545,8 +548,10 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
                 prefix='S/.'
                 precision={2}
                 min={0.01}
-                max={Number(saldoTC.toFixed(2))}
+                // Sin tope cuando ya está pagada: evita el estado inválido (rojo) con max=0
+                max={yaPagada ? undefined : Number(saldoTC.toFixed(2))}
                 placeholder='0.00'
+                disabled={yaPagada}
               />
             </Form.Item>
           </LabelBase>
