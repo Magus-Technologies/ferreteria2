@@ -536,14 +536,16 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
             <Form.Item name='monto' rules={[
               { required: true, message: 'Requerido' },
               { type: 'number', min: 0.01, message: 'Mínimo S/. 0.01' },
-              { type: 'number', max: Number(saldoPendiente.toFixed(2)), message: `Máximo S/. ${saldoPendiente.toFixed(2)}` },
+              // Tope = saldo en soles al TC actual (saldoTC ya equivale al saldo en soles
+              // para compras en soles). Evita pagar más de lo debido en compras en dólares.
+              { type: 'number', max: Number(saldoTC.toFixed(2)), message: `No puedes pagar más de lo debido (máx S/. ${saldoTC.toFixed(2)})` },
             ]} noStyle>
               <InputNumber
                 className='w-full'
                 prefix='S/.'
                 precision={2}
                 min={0.01}
-                max={Number(saldoPendiente.toFixed(2))}
+                max={Number(saldoTC.toFixed(2))}
                 placeholder='0.00'
               />
             </Form.Item>
