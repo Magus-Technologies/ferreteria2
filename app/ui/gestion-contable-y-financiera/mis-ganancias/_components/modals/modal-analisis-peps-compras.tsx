@@ -23,6 +23,8 @@ interface FilaVentaCompra {
   costo_usd: number
   tc_compra: number
   tc_pago?: number
+  costo_tc_compra: number
+  costo_tc_pago?: number
   ganancia_tc_compra: number
   ganancia_tc_pago?: number
   impacto?: number
@@ -206,6 +208,8 @@ export default function ModalAnalisisPepsCompras({ open, onClose, filtros: filtr
             costo_usd: f.costo_usd,
             tc_compra: f.tc_compra,
             tc_pago: f.costo_tc_pago !== undefined ? f.tc_pago : undefined,
+            costo_tc_compra: f.costo_tc_compra,
+            costo_tc_pago: f.costo_tc_pago,
             ganancia_tc_compra: gananciaTcCompra,
             ganancia_tc_pago: gananciaTcPago,
             impacto,
@@ -240,6 +244,24 @@ export default function ModalAnalisisPepsCompras({ open, onClose, filtros: filtr
       width: 110,
       type: 'numericColumn',
       valueFormatter: (p) => (p.value !== undefined ? p.value.toFixed(4) : '-'),
+      cellStyle: { color: '#16a34a', fontWeight: 'bold' } as CellStyle,
+    },
+    {
+      headerName: 'Costo TC compra',
+      field: 'costo_tc_compra',
+      width: 140,
+      type: 'numericColumn',
+      // Cantidad × Costo en dólar × T.C. compra = costo total en soles a ese TC.
+      valueFormatter: (p) => `S/ ${fmt(p.value)}`,
+      cellStyle: { color: '#2563eb', fontWeight: 'bold' } as CellStyle,
+    },
+    {
+      headerName: 'Costo TC pago (real)',
+      field: 'costo_tc_pago',
+      width: 150,
+      type: 'numericColumn',
+      // Cantidad × Costo en dólar × T.C. pago = costo real en soles al TC con el que se pagó.
+      valueFormatter: (p) => (p.value !== undefined ? `S/ ${fmt(p.value)}` : '-'),
       cellStyle: { color: '#16a34a', fontWeight: 'bold' } as CellStyle,
     },
     {
