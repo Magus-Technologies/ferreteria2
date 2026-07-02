@@ -54,6 +54,13 @@ const formatFechaCorta = (iso?: string | null) => {
   return `${d}/${m}/${y} ${(hora || '00:00:00').slice(0, 8)}`
 }
 
+// Solo fecha, sin hora (compra_fecha_vencimiento no tiene una hora real registrada).
+const formatSoloFecha = (iso?: string | null) => {
+  if (!iso) return null
+  const [y, m, d] = iso.split(' ')[0].split('-')
+  return d && m && y ? `${d}/${m}/${y}` : iso
+}
+
 export default function TableMisGanancias() {
   const filtros = useStoreFiltrosMisGanancias((state) => state.filtros)
   const { data, isLoading, error } = useGetGanancias(filtros)
@@ -236,7 +243,7 @@ export default function TableMisGanancias() {
       width: 95,
       // Fila de subtotal: la venta no tiene "vencimiento"; se muestra el de la compra.
       valueFormatter: (p) =>
-        p.data?.__subtotal ? (formatFechaCorta(p.data.compra_fecha_vencimiento) || '-') : (p.value || '-'),
+        p.data?.__subtotal ? (formatSoloFecha(p.data.compra_fecha_vencimiento) || '-') : (p.value || '-'),
     },
     {
       headerName: 'TIPO DOCUMENTO',
