@@ -23,6 +23,19 @@ export interface TrasladoBoveda {
     id: string;
     nombre: string;
   };
+  despliegue_pago_id: string;
+  // Despliegue de pago de donde salió el efectivo (para saber "efectivo" vs "efectivo
+  // negro", ya que el nombre del despliegue suele ser genérico "efectivo" y el que
+  // distingue es el del método de pago real).
+  despliegue_pago?: {
+    id: string;
+    name: string;
+    metodo_de_pago?: {
+      id: string;
+      name: string;
+      cuenta_bancaria: string | null;
+    } | null;
+  };
 }
 
 export interface RegistrarTrasladoData {

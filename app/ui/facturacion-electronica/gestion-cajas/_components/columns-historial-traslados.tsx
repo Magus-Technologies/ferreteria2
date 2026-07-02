@@ -70,6 +70,27 @@ export const useColumnsHistorialTraslados = ({
       ),
     },
     {
+      colId: 'metodo_pago',
+      headerName: 'Método',
+      field: 'despliegue_pago',
+      width: 150,
+      minWidth: 130,
+      lockPosition: true,
+      suppressMovable: true,
+      cellRenderer: (params: any) => {
+        const despliegue = params.value
+        // El nombre del despliegue suele ser genérico ("efectivo"); el del método real
+        // es el que distingue "efectivo" de "efectivo negro", etc.
+        const nombre = despliegue?.metodo_de_pago?.name || despliegue?.name
+        if (!nombre) return <span className='text-slate-400'>-</span>
+        return (
+          <Tag color='blue' className='font-medium capitalize'>
+            {nombre}
+          </Tag>
+        )
+      },
+    },
+    {
       colId: 'supervisor',
       headerName: 'Supervisor',
       field: 'supervisor',
