@@ -185,8 +185,11 @@ const MODULE_TO_QUERY_KEYS: Record<string, string[]> = {
     // Query propia del "Resumen detalle" del cierre (traslados a bóveda).
     'traslados-boveda',
   ],
-  gastos: [QueryKeys.MIS_GASTOS, QueryKeys.EGRESOS_DINERO],
-  ingresos: [QueryKeys.GANANCIAS, QueryKeys.GANANCIAS_RESUMEN],
+  // Un gasto/ingreso extra también mueve efectivo entre sub-cajas (ManejaFlujoCajaExtra)
+  // → invalidar SUB_CAJAS para que el modal de Traslado a Bóveda ("efectivo-por-vendedor")
+  // refresque solo, sin que el usuario tenga que cerrar y reabrir el modal.
+  gastos: [QueryKeys.MIS_GASTOS, QueryKeys.EGRESOS_DINERO, QueryKeys.SUB_CAJAS],
+  ingresos: [QueryKeys.GANANCIAS, QueryKeys.GANANCIAS_RESUMEN, QueryKeys.SUB_CAJAS],
   'ordenes-compra': [QueryKeys.ORDENES_COMPRA, QueryKeys.SOLICITUD_ORDEN_COMPRA],
   almacenes: [QueryKeys.ALMACENES],
   categorias: [QueryKeys.CATEGORIAS],
