@@ -3,6 +3,7 @@ import { message, Modal } from 'antd'
 import { CheckCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import { useQueryClient } from '@tanstack/react-query'
 import { cierreCajaApi, type CerrarCajaRequest } from '../../../../../lib/api/cierre-caja'
+import { cajaApi } from '~/lib/api/caja'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { getAuthToken } from '~/lib/api'
 
@@ -32,9 +33,13 @@ export function useCerrarCaja() {
                 // Si hay email, enviar el ticket automáticamente
                 if (data.email_reporte && empresaData) {
                     try {
-                        // IMPORTANTE: Obtener los datos ACTUALIZADOS desde el backend
+                        // IMPORTANTE: Obtener los datos ACTUALIZADOS desde el backend.
+                        // Se busca por ID (no por "caja activa": la caja que acabamos de
+                        // cerrar ya NO está activa, así que ese endpoint siempre devolvería
+                        // 404 "No tienes una caja abierta" en este punto).
                         console.log('📥 Obteniendo datos actualizados del cierre...')
-                        const cajaActualizada: any = await cierreCajaApi.obtenerCajaActiva()
+                        const cajaActualizadaRes = await cajaApi.obtenerCierre(aperturaId)
+                        const cajaActualizada = cajaActualizadaRes?.data
 
                         if (!cajaActualizada?.success || !cajaActualizada?.data) {
                             throw new Error('No se pudieron obtener los datos actualizados del cierre')
