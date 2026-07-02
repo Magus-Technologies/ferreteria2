@@ -18,6 +18,8 @@ interface FilaVentaCompra {
   venta_serie: string
   fecha: string
   cantidad: number
+  p_unit: number
+  total_venta: number
   costo_usd: number
   tc_compra: number
   tc_pago?: number
@@ -199,6 +201,8 @@ export default function ModalAnalisisPepsCompras({ open, onClose, filtros: filtr
             venta_serie: venta.serie_numero || '-',
             fecha: venta.fecha,
             cantidad: f.cantidad,
+            p_unit: venta.precio,
+            total_venta: ingresoFraccion,
             costo_usd: f.costo_usd,
             tc_compra: f.tc_compra,
             tc_pago: f.costo_tc_pago !== undefined ? f.tc_pago : undefined,
@@ -212,7 +216,15 @@ export default function ModalAnalisisPepsCompras({ open, onClose, filtros: filtr
 
   const columnasVentasCompra = useMemo<ColDef<FilaVentaCompra>[]>(() => [
     { headerName: 'Producto', field: 'producto', flex: 1, minWidth: 180 },
+    {
+      headerName: 'Fecha',
+      field: 'fecha',
+      width: 110,
+      valueFormatter: (p) => (p.value ? dayjs(p.value).format('DD/MM/YYYY') : '-'),
+    },
     { headerName: 'Cantidad', field: 'cantidad', width: 100, type: 'numericColumn', valueFormatter: (p) => p.value?.toFixed(2) },
+    { headerName: 'P.Unit', field: 'p_unit', width: 90, type: 'numericColumn', valueFormatter: (p) => `S/ ${fmt(p.value)}` },
+    { headerName: 'Total Venta', field: 'total_venta', width: 120, type: 'numericColumn', valueFormatter: (p) => `S/ ${fmt(p.value)}`, cellStyle: { fontWeight: 'bold' } as CellStyle },
     { headerName: 'Costo en dólar', field: 'costo_usd', width: 120, type: 'numericColumn', valueFormatter: (p) => p.value?.toFixed(4) },
     {
       headerName: 'T.C. compra',
