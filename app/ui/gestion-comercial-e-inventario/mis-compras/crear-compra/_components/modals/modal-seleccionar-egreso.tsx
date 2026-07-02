@@ -85,10 +85,10 @@ export default function ModalSeleccionarEgreso({
   const rowData = useMemo(() => {
     let filtered = data
     if (fechaInicio) {
-      filtered = filtered.filter(item => dayjs(item.created_at).isAfter(fechaInicio.subtract(1, 'day')))
+      filtered = filtered.filter(item => !dayjs(item.created_at).isBefore(fechaInicio, 'day'))
     }
     if (fechaFin) {
-      filtered = filtered.filter(item => dayjs(item.created_at).isBefore(fechaFin.add(1, 'day')))
+      filtered = filtered.filter(item => !dayjs(item.created_at).isAfter(fechaFin, 'day'))
     }
     if (textoBusqueda) {
       filtered = filtered.filter(item =>
