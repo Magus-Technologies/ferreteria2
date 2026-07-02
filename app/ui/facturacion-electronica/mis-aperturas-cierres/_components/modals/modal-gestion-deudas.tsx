@@ -41,8 +41,15 @@ export default function ModalGestionDeudas({
     setActiveTab("abono");
   };
 
-  const handleAbonoSuccess = () => {
+  const handleAbonoSuccess = (deudaActualizada?: DeudaPersonal) => {
     setAbonoToEdit(null); // Limpiar modo edición
+    // Refrescar la deuda seleccionada con los montos ya actualizados (monto_abonado/
+    // saldo_pendiente/estado) — si no, los cards de "Registro de Abonos" siguen
+    // mostrando el snapshot de antes del abono, aunque la tabla de abonos sí se
+    // actualice (esa tiene su propio query).
+    if (deudaActualizada) {
+      setSelectedDeuda(deudaActualizada);
+    }
     // Cambiar a la pestaña de historial después de registrar el abono
     setActiveTab("historial");
   };
@@ -93,9 +100,10 @@ export default function ModalGestionDeudas({
         disabled: false,
         children: selectedDeuda ? (
           <div className="pt-2 animate-in slide-in-from-right-4 duration-500">
-            <HistorialAbonos 
-              deuda={selectedDeuda} 
+            <HistorialAbonos
+              deuda={selectedDeuda}
               onEditarAbono={handleEditarAbono}
+              onDeudaActualizada={setSelectedDeuda}
             />
           </div>
         ) : (

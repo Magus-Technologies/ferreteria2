@@ -36,9 +36,10 @@ interface AbonoDeuda {
 interface HistorialAbonosProps {
   deuda: DeudaPersonal;
   onEditarAbono: (abono: AbonoDeuda) => void;
+  onDeudaActualizada?: (deuda: DeudaPersonal) => void;
 }
 
-export function HistorialAbonos({ deuda, onEditarAbono }: HistorialAbonosProps) {
+export function HistorialAbonos({ deuda, onEditarAbono, onDeudaActualizada }: HistorialAbonosProps) {
   const gridRef = useRef<AgGridReact<AbonoDeuda>>(null);
   const queryClient = useQueryClient();
   const [selectedAbono, setSelectedAbono] = useState<AbonoDeuda | null>(null);
@@ -78,6 +79,11 @@ export function HistorialAbonos({ deuda, onEditarAbono }: HistorialAbonosProps) 
             message.success('Abono eliminado exitosamente');
             refetch();
             queryClient.invalidateQueries({ queryKey: ["resumen-deudas"] });
+            // Igual que al registrar/editar: refrescar los cards con la deuda ya
+            // actualizada (monto_abonado/saldo_pendiente/estado), no el snapshot viejo.
+            if (response.deuda) {
+              onDeudaActualizada?.(response.deuda);
+            }
           } else {
             message.error(response.message || 'Error al eliminar abono');
           }

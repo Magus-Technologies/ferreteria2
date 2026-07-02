@@ -13,7 +13,7 @@ import { QueryKeys } from "~/app/_lib/queryKeys";
 
 interface FormRegistrarAbonoProps {
   deuda: DeudaPersonal;
-  onSuccess: () => void;
+  onSuccess: (deudaActualizada?: DeudaPersonal) => void;
   abonoToEdit?: any;
 }
 
@@ -119,7 +119,7 @@ export function FormRegistrarAbono({
           queryClient.invalidateQueries({ queryKey: ["resumen-deudas"] });
           queryClient.invalidateQueries({ queryKey: ["historial-abonos"] });
 
-          onSuccess();
+          onSuccess(response.deuda);
         } else {
           message.error(response.message || "Error al actualizar abono");
         }
@@ -140,7 +140,7 @@ export function FormRegistrarAbono({
           queryClient.invalidateQueries({ queryKey: ["resumen-deudas"] });
           queryClient.invalidateQueries({ queryKey: ["historial-abonos"] });
 
-          onSuccess();
+          onSuccess(response.deuda);
         } else {
           message.error(response.message || "Error al registrar abono");
         }
