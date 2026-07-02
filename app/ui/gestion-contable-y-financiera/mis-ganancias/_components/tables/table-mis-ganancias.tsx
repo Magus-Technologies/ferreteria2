@@ -30,6 +30,14 @@ type SubtotalRow = {
   // Impacto TC total (S/ ±) del grupo y fecha en que se pagó la compra de origen.
   impacto_tc: number | null
   fecha_pago_compra: string | null
+  // Datos de la compra de origen (misma para todo el grupo, ya que se agrupa por
+  // documento_pagado): fecha de vencimiento, tipo de documento, forma de pago,
+  // proveedor y quién registró la compra.
+  compra_fecha_vencimiento: string | null
+  compra_tipo_documento: string | null
+  compra_forma_pago: string | null
+  compra_proveedor: string | null
+  compra_registrado_por: string | null
 }
 type GridRow = GananciaRow | DetalleRow | SubtotalRow
 
@@ -114,6 +122,13 @@ export default function TableMisGanancias() {
             : null,
           // Fecha del pago de la compra (misma para todo el grupo, viene de la 1ra que la tenga)
           fecha_pago_compra: miembros.find((r) => r.fecha_pago_compra)?.fecha_pago_compra ?? null,
+          // Datos de la compra de origen: mismos para todo el grupo (se agrupó por
+          // documento_pagado), se toman de cualquier miembro que los tenga.
+          compra_fecha_vencimiento: miembros.find((r) => r.compra_fecha_vencimiento)?.compra_fecha_vencimiento ?? null,
+          compra_tipo_documento: miembros.find((r) => r.compra_tipo_documento)?.compra_tipo_documento ?? null,
+          compra_forma_pago: miembros.find((r) => r.compra_forma_pago)?.compra_forma_pago ?? null,
+          compra_proveedor: miembros.find((r) => r.compra_proveedor)?.compra_proveedor ?? null,
+          compra_registrado_por: miembros.find((r) => r.compra_registrado_por)?.compra_registrado_por ?? null,
         })
       }
     })
@@ -217,13 +232,17 @@ export default function TableMisGanancias() {
       headerName: 'F.VENCE',
       field: 'fecha_vencimiento',
       width: 95,
-      valueFormatter: (p) => p.value || '-',
+      // Fila de subtotal: la venta no tiene "vencimiento"; se muestra el de la compra.
+      valueFormatter: (p) =>
+        p.data?.__subtotal ? (formatFechaCorta(p.data.compra_fecha_vencimiento) || '-') : (p.value || '-'),
     },
     {
       headerName: 'TIPO DOCUMENTO',
       field: 'tipo_doc',
       width: 140,
-      valueFormatter: (p) => tipoDocMap[p.value?.toUpperCase() || ''] || p.value || '-',
+      // El backend ya abrevia compra_tipo_documento (FAC/BOL/...) igual que tipoDocMap.
+      valueFormatter: (p) =>
+        p.data?.__subtotal ? (p.data.compra_tipo_documento || '-') : (tipoDocMap[p.value?.toUpperCase() || ''] || p.value || '-'),
     },
     {
       headerName: 'N° COMPROBANTE',
@@ -235,18 +254,25 @@ export default function TableMisGanancias() {
       headerName: 'FORMA PAGO',
       field: 'f_pago',
       width: 110,
-      valueFormatter: (p) => formaPagoMap[p.value?.toLowerCase() || ''] || p.value || '-',
+      valueFormatter: (p) => {
+        const valor = p.data?.__subtotal ? p.data.compra_forma_pago : p.value
+        return formaPagoMap[valor?.toLowerCase() || ''] || valor || '-'
+      },
     },
     {
       headerName: 'CLIENTE',
       field: 'cliente',
       flex: 2,
       minWidth: 200,
+      // Fila de subtotal: no hay "cliente", se muestra el proveedor de la compra.
+      valueFormatter: (p) => (p.data?.__subtotal ? (p.data.compra_proveedor || '-') : (p.value || '')),
     },
     {
       headerName: 'VENDED',
       field: 'vendedor',
       width: 100,
+      // Fila de subtotal: se muestra quién registró la compra.
+      valueFormatter: (p) => (p.data?.__subtotal ? (p.data.compra_registrado_por || '-') : (p.value || '')),
     },
     {
       headerName: 'PRODUCTO',
@@ -323,13 +349,12 @@ export default function TableMisGanancias() {
     {
       headerName: 'GANANC',
       field: 'ganancia',
-      // Un poco más ancho para que "Impacto TC: S/ +74.81" quepa en una sola línea
-      // en la fila de subtotal.
-      width: 170,
+      width: 90,
       type: 'numericColumn',
       valueFormatter: (p) => p.value?.toFixed(2) || '0.00',
       // Fila de subtotal: ya no suma ganancia, muestra el Impacto TC total (igual
-      // convención que el modal PEPS: positivo = ganaste por el TC, verde).
+      // convención que el modal PEPS: positivo = ganaste por el TC, verde). Solo el
+      // número, sin la etiqueta "Impacto TC:".
       cellRenderer: (p: any) => {
         if (p.data?.__subtotal) {
           const impacto = p.data.impacto_tc
@@ -337,7 +362,7 @@ export default function TableMisGanancias() {
           const positivo = impacto >= 0
           return (
             <span className="font-bold whitespace-nowrap" style={{ color: positivo ? '#16a34a' : '#dc2626' }}>
-              Impacto TC: S/ {positivo ? '+' : ''}{impacto.toFixed(2)}
+              S/ {positivo ? '+' : ''}{impacto.toFixed(2)}
             </span>
           )
         }

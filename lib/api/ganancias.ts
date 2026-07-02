@@ -36,6 +36,12 @@ export interface GananciaDetalle {
   impacto_tc?: number | null;
   // Fecha del pago de la compra de origen; null si no aplica.
   fecha_pago_compra?: string | null;
+  // Datos de la compra de origen (solo si todo el grupo viene de una única compra).
+  compra_fecha_vencimiento?: string | null;
+  compra_tipo_documento?: string | null;
+  compra_forma_pago?: string | null;
+  compra_proveedor?: string | null;
+  compra_registrado_por?: string | null;
 }
 
 export interface ResumenGanancias {
