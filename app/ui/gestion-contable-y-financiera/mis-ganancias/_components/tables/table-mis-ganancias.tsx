@@ -326,7 +326,7 @@ export default function TableMisGanancias() {
       field: 'subtot',
       width: 90,
       type: 'numericColumn',
-      valueFormatter: (p) => p.value?.toFixed(2) || '0.00',
+      valueFormatter: (p) => (p.data?.__subtotal ? '-' : p.value?.toFixed(2) || '0.00'),
       cellStyle: { fontWeight: 'bold' } as CellStyle,
     },
     {
@@ -343,7 +343,7 @@ export default function TableMisGanancias() {
       field: 'costo_total',
       width: 90,
       type: 'numericColumn',
-      valueFormatter: (p) => p.value?.toFixed(2) || '0.00',
+      valueFormatter: (p) => (p.data?.__subtotal ? '-' : p.value?.toFixed(2) || '0.00'),
       cellStyle: { color: '#dc2626', fontWeight: 'bold' } as CellStyle,
     },
     {
