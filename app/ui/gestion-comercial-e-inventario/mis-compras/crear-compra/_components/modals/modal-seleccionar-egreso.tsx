@@ -8,6 +8,7 @@ import { GastoExtraDisponible } from '~/app/_components/form/selects/select-egre
 import dayjs from 'dayjs'
 import { useMemo, useState } from 'react'
 import { useDebounce } from 'use-debounce'
+import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import InputBase from '~/app/_components/form/inputs/input-base'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { ColDef } from 'ag-grid-community'
@@ -63,6 +64,8 @@ export default function ModalSeleccionarEgreso({
   const [busqueda, setBusqueda] = useState('')
   const [gastoSeleccionado, setGastoSeleccionado] = useState<GastoExtraDisponible | undefined>()
   const [textoBusqueda] = useDebounce(busqueda, 500)
+  const [fechaInicio, setFechaInicio] = useState<dayjs.Dayjs | null>(dayjs().startOf('day'))
+  const [fechaFin, setFechaFin] = useState<dayjs.Dayjs | null>(dayjs().endOf('day'))
 
   const { data = [], isLoading } = useQuery({
     queryKey: [QueryKeys.EGRESOS_DINERO, excluirCompraId],
@@ -80,11 +83,20 @@ export default function ModalSeleccionarEgreso({
   })
 
   const rowData = useMemo(() => {
-    if (!textoBusqueda) return data
-    return data.filter(item =>
-      item.concepto.toLowerCase().includes(textoBusqueda.toLowerCase())
-    )
-  }, [data, textoBusqueda])
+    let filtered = data
+    if (fechaInicio) {
+      filtered = filtered.filter(item => dayjs(item.created_at).isAfter(fechaInicio.subtract(1, 'day')))
+    }
+    if (fechaFin) {
+      filtered = filtered.filter(item => dayjs(item.created_at).isBefore(fechaFin.add(1, 'day')))
+    }
+    if (textoBusqueda) {
+      filtered = filtered.filter(item =>
+        item.concepto.toLowerCase().includes(textoBusqueda.toLowerCase())
+      )
+    }
+    return filtered
+  }, [data, textoBusqueda, fechaInicio, fechaFin])
 
   const handleOk = () => {
     if (!gastoSeleccionado) return
@@ -95,6 +107,8 @@ export default function ModalSeleccionarEgreso({
   const handleClose = () => {
     setBusqueda('')
     setGastoSeleccionado(undefined)
+    setFechaInicio(dayjs().startOf('day'))
+    setFechaFin(dayjs().endOf('day'))
     onClose()
   }
 
@@ -124,12 +138,26 @@ export default function ModalSeleccionarEgreso({
       destroyOnHidden
     >
       <div className='flex items-center gap-2'>
+        <DatePickerBase
+          value={fechaInicio}
+          onChange={date => setFechaInicio(date ? date.startOf('day') : null)}
+          className='!w-[160px]'
+          placeholder='Fecha inicio'
+          allowClear
+        />
+        <DatePickerBase
+          value={fechaFin}
+          onChange={date => setFechaFin(date ? date.endOf('day') : null)}
+          className='!w-[160px]'
+          placeholder='Fecha fin'
+          allowClear
+        />
         <InputBase
           placeholder='Buscar por concepto...'
           value={busqueda}
           onChange={e => setBusqueda(e.target.value)}
           uppercase={false}
-          className='max-w-[400px]'
+          className='max-w-[200px]'
           allowClear
         />
       </div>

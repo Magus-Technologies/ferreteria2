@@ -28,9 +28,14 @@ export interface GananciaDetalle {
   updated_at: string;
   // "Lote 1/2" cuando la venta se desglosa por costos PEPS distintos; null si no.
   desglose_lote?: string | null;
-  // Serie-número de la compra de origen del costo (PEPS). "N compras" si el lote
-  // se surtió de varias; null si no hay registro de consumo (dato antiguo).
+  // Origen del costo (compra/recepción/transferencia/ingreso). "N orígenes" si el
+  // lote se surtió de varios; null si no hay registro de consumo (dato antiguo).
   documento_pagado?: string | null;
+  // Impacto de tipo de cambio (costo TC compra − costo TC pago real); solo para
+  // compras en dólares con pago registrado. null si no aplica.
+  impacto_tc?: number | null;
+  // Fecha del pago de la compra de origen; null si no aplica.
+  fecha_pago_compra?: string | null;
 }
 
 export interface ResumenGanancias {

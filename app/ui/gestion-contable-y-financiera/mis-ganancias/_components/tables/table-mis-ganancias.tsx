@@ -27,12 +27,22 @@ type SubtotalRow = {
   costo_total: number
   ganancia: number
   miembros: number
+  // Impacto TC total (S/ ±) del grupo y fecha en que se pagó la compra de origen.
+  impacto_tc: number | null
+  fecha_pago_compra: string | null
 }
 type GridRow = GananciaRow | DetalleRow | SubtotalRow
 
 // "N compras" no identifica una compra específica (una venta que se surtió de varios
 // lotes) — no se puede usar como llave de agrupación o mezclaría ventas no relacionadas.
 const esDocumentoAgrupable = (doc?: string | null): doc is string => !!doc && !/\d+ compras$/i.test(doc)
+
+// fecha_pago_compra llega del backend como "YYYY-MM-DD" (columna pagodecompra.fecha)
+const formatFechaCorta = (iso?: string | null) => {
+  if (!iso) return null
+  const [y, m, d] = iso.split(' ')[0].split('-')
+  return d && m && y ? `${d}/${m}/${y}` : iso
+}
 
 export default function TableMisGanancias() {
   const filtros = useStoreFiltrosMisGanancias((state) => state.filtros)
@@ -97,6 +107,13 @@ export default function TableMisGanancias() {
           costo_total: miembros.reduce((s, r) => s + Number(r.costo_total || 0), 0),
           ganancia: miembros.reduce((s, r) => s + Number(r.ganancia || 0), 0),
           miembros: miembros.length,
+          // Suma el impacto TC solo de los miembros que lo tengan (compras en dólares
+          // con pago registrado); null si ninguno aplica.
+          impacto_tc: miembros.some((r) => r.impacto_tc != null)
+            ? miembros.reduce((s, r) => s + Number(r.impacto_tc || 0), 0)
+            : null,
+          // Fecha del pago de la compra (misma para todo el grupo, viene de la 1ra que la tenga)
+          fecha_pago_compra: miembros.find((r) => r.fecha_pago_compra)?.fecha_pago_compra ?? null,
         })
       }
     })
@@ -186,6 +203,12 @@ export default function TableMisGanancias() {
       field: 'fecha',
       width: 160,
       valueFormatter: (p) => {
+        // Fila de subtotal: aquí no hay "emisión de venta", se muestra la fecha en que
+        // se pagó la compra de origen.
+        if (p.data?.__subtotal) {
+          const fechaPago = formatFechaCorta(p.data.fecha_pago_compra)
+          return fechaPago ? `Pagado: ${fechaPago}` : '-'
+        }
         if (!p.data?.fecha) return '-'
         return p.data.hora_emision ? `${p.data.fecha} ${p.data.hora_emision}` : p.data.fecha
       },
@@ -300,14 +323,34 @@ export default function TableMisGanancias() {
     {
       headerName: 'GANANC',
       field: 'ganancia',
-      width: 90,
+      // Un poco más ancho para que "Impacto TC: S/ +74.81" quepa en una sola línea
+      // en la fila de subtotal.
+      width: 170,
       type: 'numericColumn',
       valueFormatter: (p) => p.value?.toFixed(2) || '0.00',
-      cellStyle: (p): CellStyle => ({
-        color: (p.value ?? 0) >= 0 ? '#16a34a' : '#dc2626',
-        fontWeight: 'bold',
-        background: (p.value ?? 0) >= 0 ? '#f0fdf4' : '#fef2f2',
-      }),
+      // Fila de subtotal: ya no suma ganancia, muestra el Impacto TC total (igual
+      // convención que el modal PEPS: positivo = ganaste por el TC, verde).
+      cellRenderer: (p: any) => {
+        if (p.data?.__subtotal) {
+          const impacto = p.data.impacto_tc
+          if (impacto == null) return <span className="text-slate-400">-</span>
+          const positivo = impacto >= 0
+          return (
+            <span className="font-bold whitespace-nowrap" style={{ color: positivo ? '#16a34a' : '#dc2626' }}>
+              Impacto TC: S/ {positivo ? '+' : ''}{impacto.toFixed(2)}
+            </span>
+          )
+        }
+        return <span>{Number(p.value ?? 0).toFixed(2)}</span>
+      },
+      cellStyle: (p): CellStyle => {
+        if (p.data?.__subtotal) return { display: 'flex', alignItems: 'center' }
+        return {
+          color: (p.value ?? 0) >= 0 ? '#16a34a' : '#dc2626',
+          fontWeight: 'bold',
+          background: (p.value ?? 0) >= 0 ? '#f0fdf4' : '#fef2f2',
+        }
+      },
     },
   ], [despliegueMap, expandedKeys, toggleExpand])
 
