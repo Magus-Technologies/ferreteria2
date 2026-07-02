@@ -399,7 +399,7 @@ export default function ModalAnalisisPepsCompras({ open, onClose, filtros: filtr
               )}
             </div>
           )}
-
+/* */
           {/* Avisos */}
           {resumen?.aviso_sin_tc_pago && (
             <Alert type="info" showIcon
