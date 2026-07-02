@@ -4,11 +4,27 @@ import { Modal, Spin, Alert, Table, Drawer, Tag } from 'antd'
 import { useQuery } from '@tanstack/react-query'
 import { useState, useEffect, useMemo } from 'react'
 import dayjs from 'dayjs'
+import type { ColDef, CellStyle } from 'ag-grid-community'
 import { gananciasApi, type PepsProductoAnalisis, type PepsFraccionAnalisis } from '~/lib/api/ganancias'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import LabelBase from '~/components/form/label-base'
 import ButtonBase from '~/components/buttons/button-base'
+import TableWithTitle from '~/components/tables/table-with-title'
 import { FaSearch, FaExchangeAlt, FaChartLine } from 'react-icons/fa'
+
+interface FilaVentaCompra {
+  key: string
+  producto: string
+  venta_serie: string
+  fecha: string
+  cantidad: number
+  costo_usd: number
+  tc_compra: number
+  tc_pago?: number
+  ganancia_tc_compra: number
+  ganancia_tc_pago?: number
+  impacto?: number
+}
 
 interface ModalAnalisisPepsComprasProps {
   open: boolean
@@ -23,6 +39,7 @@ interface VentaEnCompra {
   cantidad: number
   precio: number
   ingreso: number
+  producto_nombre?: string
   ganancia_tc_compra: number
   ganancia_tc_pago?: number
   diferencia_cambio?: number
@@ -69,6 +86,7 @@ function buildComprasView(productos: PepsProductoAnalisis[]): CompraView[] {
         cantidad: venta.cantidad,
         precio: venta.precio,
         ingreso: venta.ingreso,
+        producto_nombre: producto.producto_nombre,
         ganancia_tc_compra: venta.ganancia_tc_compra,
         ganancia_tc_pago: venta.ganancia_tc_pago,
         diferencia_cambio: venta.diferencia_cambio,
@@ -152,6 +170,91 @@ export default function ModalAnalisisPepsCompras({ open, onClose, filtros: filtr
   const productos = resultado?.productos ?? []
   const pendingPayments = resultado?.pending_payments ?? []
   const comprasView = useMemo(() => buildComprasView(productos), [productos])
+
+  // Una tabla por venta: agrupa las fracciones (lotes) consumidas de la compra
+  // seleccionada dentro de cada venta, para el componente reutilizable
+  // TableWithTitle (una tabla independiente por card de venta).
+  const gruposVentasCompra = useMemo(() => {
+    if (!drawerCompra) return []
+    // Orden cronológico descendente (Venta 1 = la más reciente, la última que
+    // se hizo), sin depender del orden en que el backend/Map haya devuelto las
+    // ventas.
+    const ventasOrdenadas = [...drawerCompra.ventas].sort((a, b) => {
+      const diffFecha = dayjs(b.fecha).valueOf() - dayjs(a.fecha).valueOf()
+      return diffFecha !== 0 ? diffFecha : b.venta_id - a.venta_id
+    })
+    return ventasOrdenadas.map((venta) => ({
+      venta,
+      filas: venta.fracciones
+        .filter((f) => f.compra_id === drawerCompra.compra_id)
+        .map((f, i): FilaVentaCompra => {
+          const ingresoFraccion = venta.precio * f.cantidad
+          const gananciaTcCompra = ingresoFraccion - f.costo_tc_compra
+          const gananciaTcPago = f.costo_tc_pago !== undefined ? ingresoFraccion - f.costo_tc_pago : undefined
+          const impacto = f.costo_tc_pago !== undefined ? f.costo_tc_compra - f.costo_tc_pago : undefined
+
+          return {
+            key: `${venta.venta_id}-${i}`,
+            producto: venta.producto_nombre || '-',
+            venta_serie: venta.serie_numero || '-',
+            fecha: venta.fecha,
+            cantidad: f.cantidad,
+            costo_usd: f.costo_usd,
+            tc_compra: f.tc_compra,
+            tc_pago: f.costo_tc_pago !== undefined ? f.tc_pago : undefined,
+            ganancia_tc_compra: gananciaTcCompra,
+            ganancia_tc_pago: gananciaTcPago,
+            impacto,
+          }
+        }),
+    }))
+  }, [drawerCompra])
+
+  const columnasVentasCompra = useMemo<ColDef<FilaVentaCompra>[]>(() => [
+    { headerName: 'Producto', field: 'producto', flex: 1, minWidth: 180 },
+    { headerName: 'Cantidad', field: 'cantidad', width: 100, type: 'numericColumn', valueFormatter: (p) => p.value?.toFixed(2) },
+    { headerName: 'Costo en dólar', field: 'costo_usd', width: 120, type: 'numericColumn', valueFormatter: (p) => p.value?.toFixed(4) },
+    {
+      headerName: 'T.C. compra',
+      field: 'tc_compra',
+      width: 110,
+      type: 'numericColumn',
+      valueFormatter: (p) => p.value?.toFixed(4),
+      cellStyle: { color: '#2563eb', fontWeight: 'bold' } as CellStyle,
+    },
+    {
+      headerName: 'T.C. pago',
+      field: 'tc_pago',
+      width: 110,
+      type: 'numericColumn',
+      valueFormatter: (p) => (p.value !== undefined ? p.value.toFixed(4) : '-'),
+      cellStyle: { color: '#16a34a', fontWeight: 'bold' } as CellStyle,
+    },
+    {
+      headerName: 'Ganancia TC compra',
+      field: 'ganancia_tc_compra',
+      width: 150,
+      type: 'numericColumn',
+      valueFormatter: (p) => `S/ ${fmt(p.value)}`,
+      cellStyle: (p): CellStyle => ({ color: colorPos(p.value), fontWeight: 'bold' }),
+    },
+    {
+      headerName: 'Ganancia TC pago (real)',
+      field: 'ganancia_tc_pago',
+      width: 170,
+      type: 'numericColumn',
+      valueFormatter: (p) => (p.value !== undefined ? `S/ ${fmt(p.value)}` : '-'),
+      cellStyle: (p): CellStyle => (p.value !== undefined ? { color: colorPos(p.value), fontWeight: 'bold' } : {}),
+    },
+    {
+      headerName: 'Impacto',
+      field: 'impacto',
+      width: 120,
+      type: 'numericColumn',
+      valueFormatter: (p) => (p.value !== undefined ? `S/ ${fmtS(p.value)}` : '-'),
+      cellStyle: (p): CellStyle => (p.value !== undefined ? { color: colorImpacto(p.value), fontWeight: 'bold' } : {}),
+    },
+  ], [])
 
   const mainColumns = useMemo(() => [
     {
@@ -510,104 +613,34 @@ export default function ModalAnalisisPepsCompras({ open, onClose, filtros: filtr
               Ventas de esta compra ({drawerCompra.ventas.length})
             </div>
 
-            {drawerCompra.ventas.map((venta, idx) => {
-              const numCompras = venta.fracciones.length
-
-              return (
-                <div key={venta.venta_id} className="border border-slate-200 rounded-lg bg-white overflow-hidden">
-                  {/* Header venta */}
-                  <div className="flex items-center gap-2 px-3 py-2 border-b flex-wrap" style={{ backgroundColor: 'var(--color-rose-600)', borderColor: 'var(--color-rose-600)' }}>
-                    <span className="font-semibold text-sm text-white">Venta {idx + 1}</span>
-                    {/* Serie del comprobante de VENTA */}
-                    {venta.serie_numero && (
-                      <span className="text-[11px] px-2 py-0.5 rounded font-semibold bg-white text-rose-700" title="Comprobante de venta">
-                        {venta.serie_numero}
-                      </span>
-                    )}
-                    {/* Origen de la mercadería (compras) */}
-                    {numCompras > 1 && (
-                      <span className="text-[11px] px-2 py-0.5 rounded font-medium bg-emerald-50 text-emerald-700" title="Se surtió de varias compras">
-                        {numCompras} compras
-                      </span>
-                    )}
-                    <span className="text-xs text-rose-100">
-                      {dayjs(venta.fecha).format('DD/MM/YYYY')}
-                      <span className="mx-1">·</span>
-                      {venta.cantidad.toFixed(2)} u × S/{fmt(venta.precio)} = <b className="text-white">S/{fmt(venta.ingreso)}</b>
+            {gruposVentasCompra.map(({ venta, filas }, idx) => (
+              <div key={venta.venta_id} className="flex flex-col gap-1">
+                <div className="flex items-center gap-2 px-1 flex-wrap">
+                  <span className="font-semibold text-sm text-slate-700">Venta {idx + 1}</span>
+                  {venta.serie_numero && (
+                    <span className="text-[11px] px-2 py-0.5 rounded font-semibold bg-rose-600 text-white" title="Comprobante de venta">
+                      {venta.serie_numero}
                     </span>
-                  </div>
-
-                  {/* Desglose fracciones */}
-                  <div className="px-3 py-2 bg-slate-50/50">
-                    {venta.fracciones.map((f, i) => (
-                      <div key={i} className="flex items-center justify-between py-1.5 border-b border-slate-100 last:border-0 flex-wrap gap-2">
-                        <div className="flex items-center gap-2 text-xs">
-                          <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-medium text-[11px] shrink-0" title="Compra de origen (PEPS)">
-                            Compra {f.serie_numero}
-                          </span>
-                          <span className="text-slate-600">
-                            {f.cantidad.toFixed(2)} u × ${f.costo_usd.toFixed(4)}
-                          </span>
-                        </div>
-                        <div className="flex gap-4 text-xs shrink-0">
-                          <span className="text-slate-500">
-                            TC {f.tc_compra}:<b className="text-blue-600 ml-1">S/{fmt(f.costo_tc_compra)}</b>
-                          </span>
-                          {f.costo_tc_pago !== undefined && (
-                            <span className="text-slate-500">
-                              TC {f.tc_pago}:<b className="text-green-600 ml-1">S/{fmt(f.costo_tc_pago)}</b>
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                    {/* Total del desglose: solo aporta información cuando la venta se surtió de
-                        VARIAS compras (suma fracciones distintas). Con 1 sola fracción sería
-                        una fila duplicada de la de arriba, así que se oculta. */}
-                    {numCompras > 1 && (
-                      <div className="flex items-center justify-between pt-1.5 mt-0.5 border-t border-slate-200">
-                        <span className="text-[11px] font-semibold text-slate-600">
-                          Total ({venta.cantidad.toFixed(2)} u)
-                        </span>
-                        <div className="flex gap-4 text-xs shrink-0">
-                          <span className="text-slate-500">
-                            <b className="text-blue-700">S/{fmt(venta.total_costo_tc_compra)}</b>
-                          </span>
-                          {venta.total_costo_tc_pago !== undefined && (
-                            <span className="text-slate-500">
-                              <b className="text-green-700">S/{fmt(venta.total_costo_tc_pago)}</b>
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Totales venta */}
-                  <div className="px-3 py-2 border-t border-slate-200 flex flex-col gap-1">
-                    <div className="flex justify-between items-center text-sm font-medium">
-                      <span className="text-slate-600">Ganancia con TC compra</span>
-                      <span style={{ color: colorPos(venta.ganancia_tc_compra) }}>S/ {fmt(venta.ganancia_tc_compra)}</span>
-                    </div>
-                    {venta.ganancia_tc_pago !== undefined && (
-                      <>
-                        <div className="flex justify-between items-center text-xs">
-                          <span className="text-slate-500">Ganancia con TC pago (real)</span>
-                          <span style={{ color: colorPos(venta.ganancia_tc_pago) }}>S/ {fmt(venta.ganancia_tc_pago)}</span>
-                        </div>
-                        {/* Fila de la resta explícita: Ganancia TC pago − Ganancia TC compra = Diferencia TC */}
-                        <div className="flex justify-between items-center text-xs font-bold border-t border-slate-100 pt-1 mt-0.5">
-                          <span className="text-slate-500">Diferencia TC (impacto)</span>
-                          <span style={{ color: colorImpacto(venta.diferencia_cambio) }}>
-                            S/ {fmt(venta.ganancia_tc_pago)} − S/ {fmt(venta.ganancia_tc_compra)} = S/ {fmtS(venta.diferencia_cambio)}
-                          </span>
-                        </div>
-                      </>
-                    )}
-                  </div>
+                  )}
+                  <span className="text-xs text-slate-500">
+                    {dayjs(venta.fecha).format('DD/MM/YYYY')}
+                    <span className="mx-1">·</span>
+                    {venta.cantidad.toFixed(2)} u × S/{fmt(venta.precio)} = <b className="text-slate-700">S/{fmt(venta.ingreso)}</b>
+                  </span>
                 </div>
-              )
-            })}
+                <div className="h-[140px] w-full">
+                  <TableWithTitle<FilaVentaCompra>
+                    id={`peps-venta-${venta.venta_id}`}
+                    title=""
+                    rowData={filas}
+                    columnDefs={columnasVentasCompra}
+                    rowSelection={false}
+                    withNumberColumn={true}
+                    headerColor="var(--color-rose-600)"
+                  />
+                </div>
+              </div>
+            ))}
 
           </div>
         )}
