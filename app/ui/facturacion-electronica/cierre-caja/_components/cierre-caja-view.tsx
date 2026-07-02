@@ -38,6 +38,13 @@ export default function CierreCajaView() {
   useRealtime()
   const recargarRef = useRef(recargar)
   recargarRef.current = recargar
+  // Justo al cerrar la caja, el propio cierre dispara un evento realtime de módulo
+  // "cajas". Si ese evento llega ANTES de que el router.replace(...?cierre_id=)
+  // termine de propagar el nuevo cierreId, el listener de abajo (suscrito cuando
+  // cierreId aún era undefined) recarga vía "caja activa" -> 404 "No tienes caja
+  // abierta" -> pisa toda la vista (incluido el ticket que se acaba de abrir).
+  // Este ref corta esa carrera: una vez finalizado el arqueo, se ignoran refrescos.
+  const arqueoFinalizadoRef = useRef(false)
   useEffect(() => {
     // En modo edición (cierre ya cerrado) no auto-refrescamos; es un snapshot.
     if (cierreId) return
@@ -45,6 +52,7 @@ export default function CierreCajaView() {
       'ventas', 'gastos', 'ingresos', 'prestamos', 'prestamos-vendedores', 'cajas',
     ]
     const unsub = subscribeModelChanged((ev) => {
+      if (arqueoFinalizadoRef.current) return
       if (MODULOS_CIERRE.includes(ev.module)) {
         recargarRef.current()
       }
@@ -260,7 +268,10 @@ export default function CierreCajaView() {
     )
   }
 
-  if (error || !cajaActiva) {
+  // Solo mostramos el estado vacío si NUNCA se cargó nada; un error de fondo
+  // transitorio (ej. una recarga en tiempo real que llega justo al cerrar,
+  // ver el efecto de arriba) no debe borrar una caja ya cargada en pantalla.
+  if (!cajaActiva) {
     return (
       <div className='flex justify-center items-center h-96'>
         <Empty description={error || 'No hay caja activa'} />
@@ -330,6 +341,7 @@ export default function CierreCajaView() {
     const success = await cerrarCaja(cajaActiva.id, dataCierre, cajaActiva, empresaData, isReCierre)
 
     if (success) {
+      arqueoFinalizadoRef.current = true
       setArqueoFinalizado(true)
       // Mostrar automáticamente el ticket de cierre (igual que en ventas, sin checkbox)
       setModalTicketOpen(true)
