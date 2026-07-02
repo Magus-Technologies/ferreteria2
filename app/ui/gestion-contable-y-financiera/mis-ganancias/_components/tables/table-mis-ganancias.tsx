@@ -45,11 +45,13 @@ type GridRow = GananciaRow | DetalleRow | SubtotalRow
 // lotes) — no se puede usar como llave de agrupación o mezclaría ventas no relacionadas.
 const esDocumentoAgrupable = (doc?: string | null): doc is string => !!doc && !/\d+ compras$/i.test(doc)
 
-// fecha_pago_compra llega del backend como "YYYY-MM-DD" (columna pagodecompra.fecha)
+// fecha_pago_compra/compra_fecha_vencimiento llegan como "YYYY-MM-DD[ HH:mm:ss]"
 const formatFechaCorta = (iso?: string | null) => {
   if (!iso) return null
-  const [y, m, d] = iso.split(' ')[0].split('-')
-  return d && m && y ? `${d}/${m}/${y}` : iso
+  const [fecha, hora] = iso.split(' ')
+  const [y, m, d] = fecha.split('-')
+  if (!d || !m || !y) return iso
+  return `${d}/${m}/${y} ${(hora || '00:00:00').slice(0, 8)}`
 }
 
 export default function TableMisGanancias() {
@@ -240,9 +242,12 @@ export default function TableMisGanancias() {
       headerName: 'TIPO DOCUMENTO',
       field: 'tipo_doc',
       width: 140,
-      // El backend ya abrevia compra_tipo_documento (FAC/BOL/...) igual que tipoDocMap.
+      // El backend ya abrevia compra_tipo_documento (FAC/BOL/...) igual que tipoDocMap;
+      // se pasa por el mismo mapa para mostrar el nombre completo (FAC → FACTURA).
       valueFormatter: (p) =>
-        p.data?.__subtotal ? (p.data.compra_tipo_documento || '-') : (tipoDocMap[p.value?.toUpperCase() || ''] || p.value || '-'),
+        p.data?.__subtotal
+          ? (tipoDocMap[p.data.compra_tipo_documento?.toUpperCase() || ''] || p.data.compra_tipo_documento || '-')
+          : (tipoDocMap[p.value?.toUpperCase() || ''] || p.value || '-'),
     },
     {
       headerName: 'N° COMPROBANTE',
@@ -290,7 +295,7 @@ export default function TableMisGanancias() {
       field: 'cant',
       width: 65,
       type: 'numericColumn',
-      valueFormatter: (p) => p.value?.toFixed(2) || '0.00',
+      valueFormatter: (p) => (p.data?.__subtotal ? '-' : p.value?.toFixed(2) || '0.00'),
     },
     {
       headerName: 'UNIDAD',
@@ -334,6 +339,7 @@ export default function TableMisGanancias() {
       field: 'cc',
       width: 180,
       valueFormatter: (p) => {
+        if (p.data?.__subtotal) return '-'
         if (!p.value || p.value === 'SIN_METODO') return 'SIN ASIGNAR'
         return despliegueMap[p.value] || p.value
       },
@@ -393,7 +399,7 @@ export default function TableMisGanancias() {
       // Fila de subtotal: se resalta con fondo y borde superior, como un total de grupo.
       getRowStyle={(params: any) =>
         params.data?.__subtotal
-          ? { background: '#fef9c3', borderTop: '2px solid #ca8a04', fontWeight: '700' as const }
+          ? { background: '#fef9c3', borderTop: '2px solid #ca8a04' }
           : undefined
       }
       // IsFullWidthRowParams trae el dato en rowNode.data, NO en params.data directo
