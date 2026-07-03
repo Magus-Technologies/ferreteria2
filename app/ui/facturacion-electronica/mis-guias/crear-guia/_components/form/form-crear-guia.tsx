@@ -1,12 +1,14 @@
-import { FaCalendar, FaTruck, FaUserTag, FaWarehouse } from 'react-icons/fa6'
+import { FaBuilding, FaCalendar, FaIdCard, FaTruck, FaUserTag, FaWarehouse } from 'react-icons/fa6'
+import { FaSearch } from 'react-icons/fa'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import LabelBase from '~/components/form/label-base'
-import { Form, FormInstance, Tag, Input } from 'antd'
+import { Form, FormInstance, Tag, Input, message } from 'antd'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import InputBase from '~/app/_components/form/inputs/input-base'
+import InputConsultaRuc from '~/app/_components/form/inputs/input-consulta-ruc'
+import type { ConsultaRuc } from '~/app/_types/consulta-ruc'
 import SelectBase from '~/app/_components/form/selects/select-base'
 import SelectMotivoTraslado from '~/app/_components/form/selects/select-motivo-traslado'
-import { TbTruckDelivery } from 'react-icons/tb'
 import SelectClientes from '~/app/_components/form/selects/select-clientes'
 import RadioDireccionCliente from '~/app/_components/form/radio-direccion-cliente'
 import RadioDireccionEmpresa from '~/app/_components/form/radio-direccion-empresa'
@@ -33,6 +35,8 @@ import { QueryKeys } from '~/app/_lib/queryKeys'
 import type { Almacen } from '~/app/_types/almacen'
 import { useEmpresaPublica } from '~/hooks/use-empresa-publica'
 import { buildSlotsDireccionEmpresa } from '~/lib/utils/empresa-direcciones-form'
+import ModalSeleccionarTransportista from '../modals/modal-seleccionar-transportista'
+import type { Transportista } from '~/lib/api/transportista'
 
 // Motivos SUNAT que requieren Comprador (distinto al destinatario)
 const MOTIVOS_CON_COMPRADOR = ['03', '14']
@@ -68,11 +72,25 @@ export default function FormCrearGuia({
   // para evitar inconsistencias (no sabemos si el chofer debe ser interno o externo).
   const sinModalidad = !modalidad
 
+  // Datos del transportista TERCERO (Catálogo N° 18 SUNAT): solo aplica en
+  // transporte PÚBLICO de GRE-Remitente. En GRE-Transportista la empresa
+  // emisora YA es el transportista, no aplica.
+  const requiereTransportista = modalidad === 'PUBLICO' && !esTransportista
+
   // Vehículo asignado al despachador (para preseleccionar en SelectVehiculos)
   // y licencia del despachador (para mostrarla como info al usuario).
   // Ambos se llenan en el onChange de SelectUsuariosDespachadores.
   const [vehiculoDelDespachador, setVehiculoDelDespachador] = useState<Vehiculo | null>(null)
   const [licenciaDelDespachador, setLicenciaDelDespachador] = useState<string | null>(null)
+
+  // Modal de búsqueda de transportista tercero (catálogo, no formulario).
+  const [openModalTransportista, setOpenModalTransportista] = useState(false)
+
+  const handleSelectTransportista = useCallback((transportista: Transportista) => {
+    form.setFieldValue('transportista_ruc', transportista.ruc)
+    form.setFieldValue('transportista_razon_social', transportista.razon_social)
+    form.setFieldValue('transportista_nro_mtc', transportista.nro_mtc ?? '')
+  }, [form])
 
   // Limpiar remitente_id cuando se cambia de Transportista a otro tipo.
   useEffect(() => {
@@ -81,6 +99,16 @@ export default function FormCrearGuia({
       form.setFieldValue('remitente_nombre', undefined)
     }
   }, [esTransportista, form])
+
+  // Limpiar datos del transportista tercero cuando deja de aplicar
+  // (modalidad distinta de PUBLICO, o pasa a ser GRE-Transportista).
+  useEffect(() => {
+    if (!requiereTransportista) {
+      form.setFieldValue('transportista_ruc', undefined)
+      form.setFieldValue('transportista_razon_social', undefined)
+      form.setFieldValue('transportista_nro_mtc', undefined)
+    }
+  }, [requiereTransportista, form])
 
   // Al cambiar entre chofer interno (USER) y externo (tabla chofer),
   // limpiar el campo del modo opuesto para evitar enviar ambos al backend.
@@ -586,53 +614,10 @@ export default function FormCrearGuia({
         </div>
       )}
 
-      {/* Fila 3: Tipo Guía, Modalidad, Vehículo, Chofer */}
+      {/* Fila 3: Vehículo, Chofer.
+          (Tipo de Guía y Modalidad se movieron al header, junto al buscador
+          de productos — ver header-crear-guia.) */}
       <div className='flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 lg:gap-4'>
-        <LabelBase label='Tipo de Guía:' classNames={{ labelParent: 'mb-2' }} className='w-full sm:w-auto'>
-          <SelectBase
-            propsForm={{
-              name: 'tipo_guia',
-              rules: [
-                {
-                  required: true,
-                  message: 'Selecciona el tipo de guía',
-                },
-              ],
-            }}
-            placeholder='Seleccione...'
-            className='w-full sm:!min-w-[280px] sm:!w-[280px]'
-            prefix={<TbTruckDelivery className='text-cyan-700 mx-1' />}
-            options={[
-              { label: 'GRE - Remitente', value: 'ELECTRONICA_REMITENTE' },
-              { label: 'GRE - Transportista', value: 'ELECTRONICA_TRANSPORTISTA' },
-              // { label: 'Guía Física', value: 'FISICA' },
-            ]}
-          />
-        </LabelBase>
-        <ConfigurableElement
-          componentId='crear-guia.modalidad'
-          label='Campo Modalidad'
-        >
-          <LabelBase label='Modalidad:' classNames={{ labelParent: 'mb-2' }} className='w-full sm:w-auto'>
-            <SelectBase
-              propsForm={{
-                name: 'modalidad_transporte',
-                rules: [
-                  {
-                    required: true,
-                    message: 'Selecciona la modalidad',
-                  },
-                ],
-              }}
-              placeholder='Seleccione...'
-              className='w-full sm:!min-w-[180px] sm:!w-[180px]'
-              options={[
-                { label: 'Transporte privado', value: 'PRIVADO' },
-                { label: 'Transporte público', value: 'PUBLICO' },
-              ]}
-            />
-          </LabelBase>
-        </ConfigurableElement>
         <ConfigurableElement
           componentId='crear-guia.vehiculo'
           label='Campo Vehículo'
@@ -729,6 +714,110 @@ export default function FormCrearGuia({
           )}
         </ConfigurableElement>
       </div>
+
+      {/* Fila 3.5: Datos del Transportista — solo transporte PÚBLICO en
+          GRE-Remitente. Catálogo N° 18 SUNAT: exige RUC y razón social de
+          la empresa de transporte tercera que ejecuta el traslado. */}
+      {requiereTransportista && (
+        <div className='flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 lg:gap-4 items-start'>
+          <div className='w-full'>
+            <Tag color='gold' className='!text-xs !mb-2'>
+              <FaBuilding className='inline mr-1' />
+              Transporte público: informa la empresa transportista tercera (Catálogo N° 18 SUNAT)
+            </Tag>
+          </div>
+          <LabelBase
+            label={
+              <div className='flex items-center justify-between gap-2 w-full'>
+                <span>RUC Transportista:</span>
+                <FaSearch
+                  className='text-amber-600 cursor-pointer hover:text-amber-700'
+                  size={13}
+                  title='Buscar transportista'
+                  onClick={() => setOpenModalTransportista(true)}
+                />
+              </div>
+            }
+            classNames={{ labelParent: 'mb-2' }}
+            className='w-full sm:w-auto'
+          >
+            <InputConsultaRuc
+              form={form}
+              nameWatch='transportista_ruc'
+              propsForm={{
+                name: 'transportista_ruc',
+                hasFeedback: false,
+                rules: [
+                  {
+                    required: true,
+                    message: 'Ingresa el RUC del transportista',
+                  },
+                  {
+                    pattern: /^\d{11}$/,
+                    message: 'El RUC debe tener 11 dígitos',
+                  },
+                ],
+              }}
+              placeholder='20123456789'
+              maxLength={11}
+              prefix={<FaIdCard className='text-amber-600 mx-1' />}
+              className='w-full sm:!w-[160px] sm:!min-w-[160px]'
+              uppercase={false}
+              automatico
+              onSuccess={res => {
+                const rucData = (res as ConsultaRuc)?.ruc ? (res as ConsultaRuc) : undefined
+                if (rucData) {
+                  form.setFieldValue('transportista_razon_social', rucData.razonSocial)
+                } else {
+                  message.warning('No se encontró información para el RUC ingresado')
+                }
+              }}
+            />
+          </LabelBase>
+          <LabelBase
+            label='Razón Social Transportista:'
+            classNames={{ labelParent: 'mb-2' }}
+            className='w-full sm:flex-1'
+          >
+            <InputBase
+              propsForm={{
+                name: 'transportista_razon_social',
+                hasFeedback: false,
+                rules: [
+                  {
+                    required: true,
+                    message: 'Ingresa la razón social del transportista',
+                  },
+                ],
+              }}
+              placeholder='Nombre de la empresa transportista'
+              className='w-full'
+              uppercase={false}
+            />
+          </LabelBase>
+          <LabelBase
+            label='N° Registro MTC:'
+            classNames={{ labelParent: 'mb-2' }}
+            className='w-full sm:w-auto'
+          >
+            <InputBase
+              propsForm={{
+                name: 'transportista_nro_mtc',
+                hasFeedback: false,
+              }}
+              placeholder='Opcional'
+              className='w-full sm:!w-[160px] sm:!min-w-[160px]'
+              uppercase={false}
+            />
+          </LabelBase>
+        </div>
+      )}
+
+      <ModalSeleccionarTransportista
+        open={openModalTransportista}
+        setOpen={setOpenModalTransportista}
+        onSelect={handleSelectTransportista}
+      />
 
       {/* Fila 4: Punto de Partida y Punto de Llegada */}
       <div className='flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 lg:gap-4'>

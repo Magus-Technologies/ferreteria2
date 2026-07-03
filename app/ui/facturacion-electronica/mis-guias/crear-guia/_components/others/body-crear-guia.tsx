@@ -10,6 +10,7 @@ import useInitGuia from '../../_hooks/use-init-guia'
 import FormTableGuia from '../form/form-table-guia'
 import FormCrearGuia from '../form/form-crear-guia'
 import CardsInfoGuia from '../cards/cards-info-guia'
+import HeaderCrearGuia from './header-crear-guia'
 import { guiaRemisionApi } from '~/lib/api/guia-remision'
 
 export type FormCreateGuia = {
@@ -52,6 +53,14 @@ export type FormCreateGuia = {
   motivo_traslado: string
   modalidad_transporte: string
   tipo_transporte?: string
+  /**
+   * Datos del transportista TERCERO — solo aplica cuando
+   * `modalidad_transporte === 'PUBLICO'` y no es GRE-Transportista
+   * (Catálogo N° 18 SUNAT: RUC y razón social de la empresa de transporte).
+   */
+  transportista_ruc?: string
+  transportista_razon_social?: string
+  transportista_nro_mtc?: string
   vehiculo_placa?: string
   chofer_id?: number
   /** USER que actúa como chofer en transporte PRIVADO. */
@@ -93,17 +102,22 @@ export default function BodyCrearGuia({
     <FormBase<FormCreateGuia>
       form={form}
       name='guia'
-      className='flex flex-col xl:flex-row gap-4 xl:gap-6 w-full h-full'
+      className='flex flex-col w-full h-full'
       onFinish={handleSubmit}
     >
-      <div className='flex-1 flex flex-col gap-4 xl:gap-6 min-w-0 min-h-0'>
-        <div className='flex-1 min-h-0'>
-          <FormTableGuia form={form} guia={guia} />
+      {/* El header vive DENTRO del FormBase para que el select de Tipo de
+          Guía (Form.Item) quede conectado al mismo form del resto de campos. */}
+      <HeaderCrearGuia guia={guia} />
+      <div className='flex flex-col xl:flex-row gap-4 xl:gap-6 w-full flex-1 min-h-0'>
+        <div className='flex-1 flex flex-col gap-4 xl:gap-6 min-w-0 min-h-0'>
+          <div className='flex-1 min-h-0'>
+            <FormTableGuia form={form} guia={guia} />
+          </div>
+          <FormCrearGuia form={form} guia={guia} venta={venta} initialMotivoCodigo={motivoCodigo} />
         </div>
-        <FormCrearGuia form={form} guia={guia} venta={venta} initialMotivoCodigo={motivoCodigo} />
-      </div>
-      <div className='w-full xl:w-auto'>
-        <CardsInfoGuia form={form} guia={guia} isCreating={isCreating} />
+        <div className='w-full xl:w-auto'>
+          <CardsInfoGuia form={form} guia={guia} isCreating={isCreating} />
+        </div>
       </div>
     </FormBase>
   )

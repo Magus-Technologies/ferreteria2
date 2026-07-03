@@ -5,11 +5,13 @@ import { useRef, useState } from 'react'
 import { TbTruckDelivery } from 'react-icons/tb'
 import { MdOutlineLocalShipping } from 'react-icons/md'
 import SelectAlmacen from '~/app/_components/form/selects/select-almacen'
+import SelectBase from '~/app/_components/form/selects/select-base'
 import SelectProductos, { type RefSelectProductosProps } from '~/app/_components/form/selects/select-productos'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
 import usePermissionHook from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 import CardAgregarProductoGuia from '../cards/card-agregar-producto-guia'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import { useStoreProductoSeleccionadoSearch } from '~/app/ui/gestion-comercial-e-inventario/mi-almacen/_store/store-producto-seleccionado-search'
 
 export default function HeaderCrearGuia({
@@ -54,7 +56,7 @@ export default function HeaderCrearGuia({
         )
       }
       extra={
-        <div className='pl-0 lg:pl-8 flex items-center gap-2 lg:gap-4 w-full lg:w-auto'>
+        <div className='pl-0 lg:pl-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 lg:gap-4 w-full lg:w-auto'>
           <div data-select-productos="crear-guia" className="contents">
           <SelectProductos
             ref={selectProductosRef}
@@ -80,6 +82,54 @@ export default function HeaderCrearGuia({
             }}
           />
           </div>
+          {/* Tipo de Guía y Modalidad junto al buscador: son las dos decisiones
+              que condicionan el resto del formulario. Requieren estar dentro
+              del FormBase (ver body-crear-guia) para conectarse al form. */}
+          <SelectBase
+            propsForm={{
+              name: 'tipo_guia',
+              rules: [
+                {
+                  required: true,
+                  message: 'Selecciona el tipo de guía',
+                },
+              ],
+              className: '!mb-0',
+            }}
+            placeholder='Tipo de Guía...'
+            size='large'
+            className='w-full sm:!min-w-[230px] sm:!w-[230px] font-normal!'
+            prefix={<TbTruckDelivery className='text-cyan-700 mx-1' />}
+            options={[
+              { label: 'GRE - Remitente', value: 'ELECTRONICA_REMITENTE' },
+              { label: 'GRE - Transportista', value: 'ELECTRONICA_TRANSPORTISTA' },
+              // { label: 'Guía Física', value: 'FISICA' },
+            ]}
+          />
+          <ConfigurableElement
+            componentId='crear-guia.modalidad'
+            label='Campo Modalidad'
+          >
+            <SelectBase
+              propsForm={{
+                name: 'modalidad_transporte',
+                rules: [
+                  {
+                    required: true,
+                    message: 'Selecciona la modalidad',
+                  },
+                ],
+                className: '!mb-0',
+              }}
+              placeholder='Modalidad...'
+              size='large'
+              className='w-full sm:!min-w-[190px] sm:!w-[190px] font-normal!'
+              options={[
+                { label: 'Transporte privado', value: 'PRIVADO' },
+                { label: 'Transporte público', value: 'PUBLICO' },
+              ]}
+            />
+          </ConfigurableElement>
         </div>
       }
     >

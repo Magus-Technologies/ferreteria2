@@ -8,8 +8,9 @@ import { Suspense, lazy } from 'react'
 import { Spin } from 'antd'
 
 // Lazy loading de componentes pesados
+// El header se renderiza DENTRO de BodyCrearGuia (necesita el contexto del form
+// para el select de Tipo de Guía que vive junto al buscador de productos).
 const BodyCrearGuia = lazy(() => import('./_components/others/body-crear-guia'))
-const HeaderCrearGuia = lazy(() => import('./_components/others/header-crear-guia'))
 
 // Componente de loading optimizado
 const ComponentLoading = () => (
@@ -25,9 +26,6 @@ export default function CrearGuia() {
 
   return (
     <ContenedorGeneral>
-      <Suspense fallback={<ComponentLoading />}>
-        <HeaderCrearGuia />
-      </Suspense>
       <Suspense fallback={<ComponentLoading />}>
         <BodyCrearGuia />
       </Suspense>

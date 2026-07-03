@@ -28,6 +28,7 @@ export enum QueryKeys {
   CLIENTES_SEARCH = 'clientes_search',
   PROFESIONES = 'profesiones',
   CHOFERES = 'choferes',
+  TRANSPORTISTAS = 'transportistas',
   VEHICULOS = 'vehiculos',
   SERIES_DOCUMENTOS = 'series_documentos',
   VENTAS = 'ventas',
