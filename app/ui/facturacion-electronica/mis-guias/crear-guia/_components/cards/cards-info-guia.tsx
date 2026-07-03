@@ -57,7 +57,9 @@ export default function CardsInfoGuia({
 
   return (
     <>
-      <div className='flex flex-col gap-4 max-w-64'>
+      {/* Móvil/tablet: grid compacto de 3 columnas (stats en una fila,
+          checkboxes + botón debajo). Desktop xl: columna lateral de 256px. */}
+      <div className='grid grid-cols-3 gap-2 sm:gap-3 w-full xl:flex xl:flex-col xl:gap-4 xl:w-64 xl:max-w-64'>
         <CardInfoGuia title='Total Costo' value={totalCosto} />
         <CardInfoGuia title='Total Venta' value={totalVenta} className='border-cyan-500 border-2' />
         <CardInfoGuia
@@ -69,8 +71,8 @@ export default function CardsInfoGuia({
           valueColor='text-amber-600'
           className='border-amber-500 border-2'
         />
-        
-        <div className='flex flex-col gap-2 p-3 bg-white rounded-lg shadow-sm border border-gray-200'>
+
+        <div className='col-span-2 xl:col-span-1 flex flex-row xl:flex-col items-center xl:items-start gap-3 xl:gap-2 p-3 bg-white rounded-lg shadow-sm border border-gray-200'>
           <CheckboxBase
             propsForm={{
               name: 'validar_modalidad',
@@ -89,7 +91,8 @@ export default function CardsInfoGuia({
           </CheckboxBase>
         </div>
 
-        <div className='flex items-center justify-center p-6 bg-gradient-to-br from-cyan-50 to-blue-50 rounded-lg'>
+        {/* Ilustración decorativa: solo en la columna lateral de desktop. */}
+        <div className='hidden xl:flex items-center justify-center p-6 bg-gradient-to-br from-cyan-50 to-blue-50 rounded-lg'>
           <TbTruckDelivery size={80} className='text-cyan-600' />
         </div>
 

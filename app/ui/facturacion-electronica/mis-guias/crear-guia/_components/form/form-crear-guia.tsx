@@ -257,9 +257,11 @@ export default function FormCrearGuia({
       </Form.Item>
       <HiddenDireccionesFormItems />
 
-      {/* Fila 1: Fechas, Serie, Número, Motivo */}
-      <div className='flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 lg:gap-4'>
-        <LabelBase label='Fecha Emisión:' classNames={{ labelParent: 'mb-2' }} className='w-full sm:w-auto'>
+      {/* Fila 1: Fechas, Serie, Número, Referencia, Motivo.
+          Grid responsive: 2 col en móvil, 4 en tablet, 8 en desktop —
+          los campos se reacomodan sin anchos fijos que rompan el wrap. */}
+      <div className='grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-2 sm:gap-3 lg:gap-4'>
+        <LabelBase label='Fecha Emisión:' orientation='column' className='w-full'>
           <DatePickerBase
             propsForm={{
               name: 'fecha_emision',
@@ -271,11 +273,11 @@ export default function FormCrearGuia({
               ],
             }}
             placeholder='Fecha Emisión'
-            className='w-full sm:!w-[160px] sm:!min-w-[160px] sm:!max-w-[160px]'
+            className='w-full'
             prefix={<FaCalendar size={15} className='text-cyan-700 mx-1' />}
           />
         </LabelBase>
-        <LabelBase label='Fecha Traslado:' classNames={{ labelParent: 'mb-2' }} className='w-full sm:w-auto'>
+        <LabelBase label='Fecha Traslado:' orientation='column' className='w-full'>
           <DatePickerBase
             propsForm={{
               name: 'fecha_traslado',
@@ -287,26 +289,26 @@ export default function FormCrearGuia({
               ],
             }}
             placeholder='Fecha Traslado'
-            className='w-full sm:!w-[160px] sm:!min-w-[160px] sm:!max-w-[160px]'
+            className='w-full'
             prefix={<FaCalendar size={15} className='text-cyan-700 mx-1' />}
           />
         </LabelBase>
-        <LabelBase label='Serie:' classNames={{ labelParent: 'mb-2' }} className='w-full sm:w-auto'>
+        <LabelBase label='Serie:' orientation='column' className='w-full'>
           <InputBase
             propsForm={{
               name: 'serie',
             }}
             placeholder='T001'
-            className='w-full sm:!w-[100px] sm:!min-w-[100px] sm:!max-w-[100px]'
+            className='w-full'
           />
         </LabelBase>
-        <LabelBase label='Número:' classNames={{ labelParent: 'mb-2' }} className='w-full sm:w-auto'>
+        <LabelBase label='Número:' orientation='column' className='w-full'>
           <InputNumberBase
             propsForm={{
               name: 'numero',
             }}
             placeholder='000012'
-            className='w-full sm:!w-[120px] sm:!min-w-[120px] sm:!max-w-[120px]'
+            className='w-full'
             suffix={
               !guia ? (
                 <IoReload
@@ -319,19 +321,20 @@ export default function FormCrearGuia({
             }
           />
         </LabelBase>
-        <LabelBase label='Referencia (Comprobante):' classNames={{ labelParent: 'mb-2' }} className='w-full sm:w-auto'>
+        <LabelBase label='Referencia (Comprobante):' orientation='column' className='w-full col-span-2'>
           <InputBase
             propsForm={{ name: 'referencia' }}
             placeholder='Ej: Factura F001-00000123'
-            className='w-full sm:!min-w-[260px] sm:!w-[260px]'
+            className='w-full'
             uppercase={false}
           />
         </LabelBase>
         <ConfigurableElement
           componentId='crear-guia.motivo-traslado'
           label='Campo Motivo de Traslado'
+          className='col-span-2'
         >
-          <LabelBase label='Motivo de Traslado:' classNames={{ labelParent: 'mb-2' }} className='w-full sm:w-auto'>
+          <LabelBase label='Motivo de Traslado:' orientation='column' className='w-full col-span-2'>
             <SelectMotivoTraslado
               form={form}
               propsForm={{
@@ -344,7 +347,7 @@ export default function FormCrearGuia({
                 ],
               }}
               placeholder='Seleccione motivo...'
-              className='w-full sm:!min-w-[200px] sm:!w-[200px]'
+              className='w-full'
               onChange={handleMotivoChange}
             />
           </LabelBase>
@@ -353,15 +356,15 @@ export default function FormCrearGuia({
 
       {/* Fila 2: DNI/RUC Destinatario, Cliente, Radio Dirección — oculto para motivo 08 */}
       {!esEntreEstablecimientos && (
-        <div className='flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 lg:gap-4 items-start'>
+        <div className='grid grid-cols-1 md:grid-cols-[190px_1fr_auto] gap-2 sm:gap-3 lg:gap-4 items-start'>
           <ConfigurableElement
             componentId='crear-guia.dni-ruc'
             label='Campo DNI/RUC'
           >
             <LabelBase
               label={requiereComprador ? 'Destinatario (DNI/RUC):' : 'DNI/RUC:'}
-              classNames={{ labelParent: 'mb-2' }}
-              className='w-full sm:w-auto'
+              orientation='column'
+              className='w-full'
             >
               <SelectClientes
                 form={form}
@@ -370,7 +373,7 @@ export default function FormCrearGuia({
                 propsForm={{
                   name: 'cliente_id',
                   hasFeedback: false,
-                  className: 'w-full sm:!min-w-[150px] sm:!w-[150px] sm:!max-w-[150px]',
+                  className: 'w-full',
                 }}
                 className='w-full'
                 classNameIcon='text-rose-700 mx-1'
@@ -404,8 +407,8 @@ export default function FormCrearGuia({
           >
             <LabelBase
               label={requiereComprador ? 'Destinatario:' : 'Cliente:'}
-              classNames={{ labelParent: 'mb-2' }}
-              className='w-full sm:flex-1'
+              orientation='column'
+              className='w-full'
             >
               <InputBase
                 propsForm={{
@@ -425,7 +428,7 @@ export default function FormCrearGuia({
             componentId='crear-guia.radio-direccion'
             label='Selector de Dirección'
           >
-            <div className='mb-2'>
+            <div className='md:self-end md:pb-1'>
               <RadioDireccionCliente form={form} />
             </div>
           </ConfigurableElement>
@@ -434,8 +437,8 @@ export default function FormCrearGuia({
 
       {/* Fila 2.5: Comprador - solo para motivos 03 y 14 */}
       {requiereComprador && (
-        <div className='flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 lg:gap-4 items-start'>
-          <div className='w-full'>
+        <div className='grid grid-cols-1 md:grid-cols-[190px_1fr] gap-2 sm:gap-3 lg:gap-4 items-start'>
+          <div className='w-full md:col-span-2'>
             <Tag color='blue' className='!text-xs !mb-2'>
               <FaUserTag className='inline mr-1' />
               Motivo "{codigoMotivo}" requiere Comprador (quien paga) ademas del Destinatario (quien recibe)
@@ -443,8 +446,8 @@ export default function FormCrearGuia({
           </div>
           <LabelBase
             label='Comprador (DNI/RUC):'
-            classNames={{ labelParent: 'mb-2' }}
-            className='w-full sm:w-auto'
+            orientation='column'
+            className='w-full'
           >
             <SelectClientes
               form={form}
@@ -452,7 +455,7 @@ export default function FormCrearGuia({
               propsForm={{
                 name: 'comprador_id',
                 hasFeedback: false,
-                className: 'w-full sm:!min-w-[150px] sm:!w-[150px] sm:!max-w-[150px]',
+                className: 'w-full',
                 rules: [
                   {
                     required: true,
@@ -477,8 +480,8 @@ export default function FormCrearGuia({
           </LabelBase>
           <LabelBase
             label='Comprador:'
-            classNames={{ labelParent: 'mb-2' }}
-            className='w-full sm:flex-1'
+            orientation='column'
+            className='w-full'
           >
             <InputBase
               propsForm={{
@@ -499,8 +502,8 @@ export default function FormCrearGuia({
           contrata el servicio (dueño de la mercadería). Se mapea a
           `setTercero` de Greenter en el backend. */}
       {esTransportista && !esEntreEstablecimientos && (
-        <div className='flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 lg:gap-4 items-start'>
-          <div className='w-full'>
+        <div className='grid grid-cols-1 md:grid-cols-[190px_1fr] gap-2 sm:gap-3 lg:gap-4 items-start'>
+          <div className='w-full md:col-span-2'>
             <Tag color='purple' className='!text-xs !mb-2'>
               <FaTruck className='inline mr-1' />
               GRE-Transportista: tu empresa transporta — el Remitente es el cliente que CONTRATA el servicio (dueño de la mercadería)
@@ -508,8 +511,8 @@ export default function FormCrearGuia({
           </div>
           <LabelBase
             label='Remitente (DNI/RUC):'
-            classNames={{ labelParent: 'mb-2' }}
-            className='w-full sm:w-auto'
+            orientation='column'
+            className='w-full'
           >
             <SelectClientes
               form={form}
@@ -517,7 +520,7 @@ export default function FormCrearGuia({
               propsForm={{
                 name: 'remitente_id',
                 hasFeedback: false,
-                className: 'w-full sm:!min-w-[150px] sm:!w-[150px] sm:!max-w-[150px]',
+                className: 'w-full',
                 rules: [
                   {
                     required: true,
@@ -542,8 +545,8 @@ export default function FormCrearGuia({
           </LabelBase>
           <LabelBase
             label='Remitente:'
-            classNames={{ labelParent: 'mb-2' }}
-            className='w-full sm:flex-1'
+            orientation='column'
+            className='w-full'
           >
             <InputBase
               propsForm={{
@@ -567,8 +570,8 @@ export default function FormCrearGuia({
             <FaWarehouse className='inline mr-1' />
             Traslado entre establecimientos — el destinatario es la misma empresa
           </Tag>
-          <div className='flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 lg:gap-4'>
-            <LabelBase label='Almacén Origen:' classNames={{ labelParent: 'mb-2' }} className='w-full sm:flex-1'>
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 lg:gap-4'>
+            <LabelBase label='Almacén Origen:' orientation='column' className='w-full'>
               <SelectBase
                 propsForm={{
                   name: 'almacen_origen_id',
@@ -589,7 +592,7 @@ export default function FormCrearGuia({
                 onChange={handleAlmacenOrigenChange}
               />
             </LabelBase>
-            <LabelBase label='Almacén Destino:' classNames={{ labelParent: 'mb-2' }} className='w-full sm:flex-1'>
+            <LabelBase label='Almacén Destino:' orientation='column' className='w-full'>
               <SelectBase
                 propsForm={{
                   name: 'almacen_destino_id',
@@ -617,12 +620,12 @@ export default function FormCrearGuia({
       {/* Fila 3: Vehículo, Chofer.
           (Tipo de Guía y Modalidad se movieron al header, junto al buscador
           de productos — ver header-crear-guia.) */}
-      <div className='flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 lg:gap-4'>
+      <div className='grid grid-cols-1 md:grid-cols-[minmax(220px,280px)_1fr] gap-2 sm:gap-3 lg:gap-4'>
         <ConfigurableElement
           componentId='crear-guia.vehiculo'
           label='Campo Vehículo'
         >
-          <LabelBase label='Vehículo (Placa):' classNames={{ labelParent: 'mb-2' }} className='w-full sm:w-auto'>
+          <LabelBase label='Vehículo (Placa):' orientation='column' className='w-full'>
             {choferEsInterno ? (
               // PRIVADO: lupa que abre modal de vehículos. Se preselecciona el
               // vehículo asignado al despachador (campo `vehiculo_id` del user).
@@ -636,7 +639,7 @@ export default function FormCrearGuia({
                 allowClear
                 showCreate={false}
                 placeholder='Seleccionar vehículo...'
-                className='w-full sm:!w-[260px] sm:!min-w-[220px]'
+                className='w-full'
               />
             ) : (
               <InputBase
@@ -646,7 +649,7 @@ export default function FormCrearGuia({
                 }}
                 placeholder={sinModalidad ? 'Seleccione modalidad' : 'ABC-123'}
                 prefix={<FaTruck className='text-cyan-700 mx-1' />}
-                className='w-full sm:!w-[140px] sm:!min-w-[140px]'
+                className='w-full'
               />
             )}
           </LabelBase>
@@ -661,8 +664,8 @@ export default function FormCrearGuia({
             // en el backend. Se selecciona del listado de despachadores.
             <LabelBase
               label='Chofer (Despachador):'
-              classNames={{ labelParent: 'mb-2' }}
-              className='w-full sm:flex-1'
+              orientation='column'
+              className='w-full'
             >
               <SelectUsuariosDespachadores
                 form={form}
@@ -697,7 +700,7 @@ export default function FormCrearGuia({
           ) : (
             // Transporte PÚBLICO o GRE-Transportista: chofer EXTERNO con
             // MTC + DNI + licencia (tabla `chofer`).
-            <LabelBase label='Chofer:' classNames={{ labelParent: 'mb-2' }} className='w-full sm:flex-1'>
+            <LabelBase label='Chofer:' orientation='column' className='w-full'>
               <SelectChoferes
                 form={form}
                 disabled={sinModalidad}
@@ -719,8 +722,8 @@ export default function FormCrearGuia({
           GRE-Remitente. Catálogo N° 18 SUNAT: exige RUC y razón social de
           la empresa de transporte tercera que ejecuta el traslado. */}
       {requiereTransportista && (
-        <div className='flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 lg:gap-4 items-start'>
-          <div className='w-full'>
+        <div className='grid grid-cols-1 md:grid-cols-[200px_1fr_180px] gap-2 sm:gap-3 lg:gap-4 items-start'>
+          <div className='w-full md:col-span-3'>
             <Tag color='gold' className='!text-xs !mb-2'>
               <FaBuilding className='inline mr-1' />
               Transporte público: informa la empresa transportista tercera (Catálogo N° 18 SUNAT)
@@ -738,8 +741,9 @@ export default function FormCrearGuia({
                 />
               </div>
             }
-            classNames={{ labelParent: 'mb-2' }}
-            className='w-full sm:w-auto'
+            orientation='column'
+            classNames={{ labelParent: 'w-full', label: 'w-full' }}
+            className='w-full'
           >
             <InputConsultaRuc
               form={form}
@@ -761,7 +765,7 @@ export default function FormCrearGuia({
               placeholder='20123456789'
               maxLength={11}
               prefix={<FaIdCard className='text-amber-600 mx-1' />}
-              className='w-full sm:!w-[160px] sm:!min-w-[160px]'
+              className='w-full'
               uppercase={false}
               automatico
               onSuccess={res => {
@@ -776,8 +780,8 @@ export default function FormCrearGuia({
           </LabelBase>
           <LabelBase
             label='Razón Social Transportista:'
-            classNames={{ labelParent: 'mb-2' }}
-            className='w-full sm:flex-1'
+            orientation='column'
+            className='w-full'
           >
             <InputBase
               propsForm={{
@@ -797,8 +801,8 @@ export default function FormCrearGuia({
           </LabelBase>
           <LabelBase
             label='N° Registro MTC:'
-            classNames={{ labelParent: 'mb-2' }}
-            className='w-full sm:w-auto'
+            orientation='column'
+            className='w-full'
           >
             <InputBase
               propsForm={{
@@ -806,7 +810,7 @@ export default function FormCrearGuia({
                 hasFeedback: false,
               }}
               placeholder='Opcional'
-              className='w-full sm:!w-[160px] sm:!min-w-[160px]'
+              className='w-full'
               uppercase={false}
             />
           </LabelBase>
@@ -820,7 +824,7 @@ export default function FormCrearGuia({
       />
 
       {/* Fila 4: Punto de Partida y Punto de Llegada */}
-      <div className='flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 lg:gap-4'>
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 lg:gap-4'>
         <LabelBase
           label={
             <div className='flex items-center justify-between gap-2 w-full'>
@@ -832,8 +836,9 @@ export default function FormCrearGuia({
               />
             </div>
           }
-          classNames={{ labelParent: 'mb-2' }}
-          className='w-full sm:flex-1'
+          orientation='column'
+          classNames={{ labelParent: 'w-full', label: 'w-full' }}
+          className='w-full'
         >
           <InputBase
             propsForm={{
@@ -853,7 +858,7 @@ export default function FormCrearGuia({
         <Form.Item name='empresa_direccion_seleccionada' hidden initialValue='D1'>
           <Input type='hidden' />
         </Form.Item>
-        <LabelBase label='Punto de Llegada:' classNames={{ labelParent: 'mb-2' }} className='w-full sm:flex-1'>
+        <LabelBase label='Punto de Llegada:' orientation='column' className='w-full'>
           <InputBase
             propsForm={{
               name: 'punto_llegada',
