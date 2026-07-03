@@ -1,12 +1,10 @@
-import { FaBuilding, FaCalendar, FaIdCard, FaTruck, FaUserTag, FaWarehouse } from 'react-icons/fa6'
-import { FaSearch } from 'react-icons/fa'
+import { FaBuilding, FaCalendar, FaTruck, FaUserTag, FaWarehouse } from 'react-icons/fa6'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import LabelBase from '~/components/form/label-base'
-import { Form, FormInstance, Tag, Input, message } from 'antd'
+import { Form, FormInstance, Tag, Input } from 'antd'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import InputBase from '~/app/_components/form/inputs/input-base'
-import InputConsultaRuc from '~/app/_components/form/inputs/input-consulta-ruc'
-import type { ConsultaRuc } from '~/app/_types/consulta-ruc'
+import SelectTransportistas from '~/app/_components/form/selects/select-transportistas'
 import SelectBase from '~/app/_components/form/selects/select-base'
 import SelectMotivoTraslado from '~/app/_components/form/selects/select-motivo-traslado'
 import SelectClientes from '~/app/_components/form/selects/select-clientes'
@@ -35,8 +33,6 @@ import { QueryKeys } from '~/app/_lib/queryKeys'
 import type { Almacen } from '~/app/_types/almacen'
 import { useEmpresaPublica } from '~/hooks/use-empresa-publica'
 import { buildSlotsDireccionEmpresa } from '~/lib/utils/empresa-direcciones-form'
-import ModalSeleccionarTransportista from '../modals/modal-seleccionar-transportista'
-import type { Transportista } from '~/lib/api/transportista'
 
 // Motivos SUNAT que requieren Comprador (distinto al destinatario)
 const MOTIVOS_CON_COMPRADOR = ['03', '14']
@@ -82,15 +78,6 @@ export default function FormCrearGuia({
   // Ambos se llenan en el onChange de SelectUsuariosDespachadores.
   const [vehiculoDelDespachador, setVehiculoDelDespachador] = useState<Vehiculo | null>(null)
   const [licenciaDelDespachador, setLicenciaDelDespachador] = useState<string | null>(null)
-
-  // Modal de búsqueda de transportista tercero (catálogo, no formulario).
-  const [openModalTransportista, setOpenModalTransportista] = useState(false)
-
-  const handleSelectTransportista = useCallback((transportista: Transportista) => {
-    form.setFieldValue('transportista_ruc', transportista.ruc)
-    form.setFieldValue('transportista_razon_social', transportista.razon_social)
-    form.setFieldValue('transportista_nro_mtc', transportista.nro_mtc ?? '')
-  }, [form])
 
   // Limpiar remitente_id cuando se cambia de Transportista a otro tipo.
   useEffect(() => {
@@ -356,7 +343,7 @@ export default function FormCrearGuia({
 
       {/* Fila 2: DNI/RUC Destinatario, Cliente, Radio Dirección — oculto para motivo 08 */}
       {!esEntreEstablecimientos && (
-        <div className='grid grid-cols-1 md:grid-cols-[190px_1fr_auto] gap-2 sm:gap-3 lg:gap-4 items-start'>
+        <div className='grid grid-cols-1 md:grid-cols-[230px_1fr_auto] gap-2 sm:gap-3 lg:gap-4 items-start'>
           <ConfigurableElement
             componentId='crear-guia.dni-ruc'
             label='Campo DNI/RUC'
@@ -373,7 +360,9 @@ export default function FormCrearGuia({
                 propsForm={{
                   name: 'cliente_id',
                   hasFeedback: false,
-                  className: 'w-full',
+                  // flex-1 + min-w-0: deja sitio fijo a la lupa dentro de la
+                  // celda del grid (con w-full el ícono colapsaba a 0px).
+                  className: 'flex-1 min-w-0',
                 }}
                 className='w-full'
                 classNameIcon='text-rose-700 mx-1'
@@ -437,7 +426,7 @@ export default function FormCrearGuia({
 
       {/* Fila 2.5: Comprador - solo para motivos 03 y 14 */}
       {requiereComprador && (
-        <div className='grid grid-cols-1 md:grid-cols-[190px_1fr] gap-2 sm:gap-3 lg:gap-4 items-start'>
+        <div className='grid grid-cols-1 md:grid-cols-[230px_1fr] gap-2 sm:gap-3 lg:gap-4 items-start'>
           <div className='w-full md:col-span-2'>
             <Tag color='blue' className='!text-xs !mb-2'>
               <FaUserTag className='inline mr-1' />
@@ -455,7 +444,7 @@ export default function FormCrearGuia({
               propsForm={{
                 name: 'comprador_id',
                 hasFeedback: false,
-                className: 'w-full',
+                className: 'flex-1 min-w-0',
                 rules: [
                   {
                     required: true,
@@ -502,7 +491,7 @@ export default function FormCrearGuia({
           contrata el servicio (dueño de la mercadería). Se mapea a
           `setTercero` de Greenter en el backend. */}
       {esTransportista && !esEntreEstablecimientos && (
-        <div className='grid grid-cols-1 md:grid-cols-[190px_1fr] gap-2 sm:gap-3 lg:gap-4 items-start'>
+        <div className='grid grid-cols-1 md:grid-cols-[230px_1fr] gap-2 sm:gap-3 lg:gap-4 items-start'>
           <div className='w-full md:col-span-2'>
             <Tag color='purple' className='!text-xs !mb-2'>
               <FaTruck className='inline mr-1' />
@@ -520,7 +509,7 @@ export default function FormCrearGuia({
               propsForm={{
                 name: 'remitente_id',
                 hasFeedback: false,
-                className: 'w-full',
+                className: 'flex-1 min-w-0',
                 rules: [
                   {
                     required: true,
@@ -722,7 +711,7 @@ export default function FormCrearGuia({
           GRE-Remitente. Catálogo N° 18 SUNAT: exige RUC y razón social de
           la empresa de transporte tercera que ejecuta el traslado. */}
       {requiereTransportista && (
-        <div className='grid grid-cols-1 md:grid-cols-[200px_1fr_180px] gap-2 sm:gap-3 lg:gap-4 items-start'>
+        <div className='grid grid-cols-1 md:grid-cols-[260px_1fr_180px] gap-2 sm:gap-3 lg:gap-4 items-start'>
           <div className='w-full md:col-span-3'>
             <Tag color='gold' className='!text-xs !mb-2'>
               <FaBuilding className='inline mr-1' />
@@ -730,27 +719,22 @@ export default function FormCrearGuia({
             </Tag>
           </div>
           <LabelBase
-            label={
-              <div className='flex items-center justify-between gap-2 w-full'>
-                <span>RUC Transportista:</span>
-                <FaSearch
-                  className='text-amber-600 cursor-pointer hover:text-amber-700'
-                  size={13}
-                  title='Buscar transportista'
-                  onClick={() => setOpenModalTransportista(true)}
-                />
-              </div>
-            }
+            label='RUC Transportista:'
             orientation='column'
-            classNames={{ labelParent: 'w-full', label: 'w-full' }}
             className='w-full'
           >
-            <InputConsultaRuc
-              form={form}
-              nameWatch='transportista_ruc'
+            {/* Select con búsqueda en catálogo (como el de clientes): escribí
+                RUC o razón social para elegir uno guardado, o un RUC nuevo de
+                11 dígitos para consultarlo en SUNAT y autocompletar. La lupa
+                y el modal de búsqueda/creación ya vienen embebidos en el
+                propio select (igual que SelectChoferes). */}
+            <SelectTransportistas
               propsForm={{
                 name: 'transportista_ruc',
                 hasFeedback: false,
+                // flex-1 + min-w-0: deja sitio fijo a la lupa dentro de la
+                // celda del grid (con w-full el ícono colapsaba a 0px).
+                className: 'flex-1 min-w-0',
                 rules: [
                   {
                     required: true,
@@ -762,19 +746,10 @@ export default function FormCrearGuia({
                   },
                 ],
               }}
-              placeholder='20123456789'
-              maxLength={11}
-              prefix={<FaIdCard className='text-amber-600 mx-1' />}
               className='w-full'
-              uppercase={false}
-              automatico
-              onSuccess={res => {
-                const rucData = (res as ConsultaRuc)?.ruc ? (res as ConsultaRuc) : undefined
-                if (rucData) {
-                  form.setFieldValue('transportista_razon_social', rucData.razonSocial)
-                } else {
-                  message.warning('No se encontró información para el RUC ingresado')
-                }
+              onChange={t => {
+                form.setFieldValue('transportista_razon_social', t.razon_social)
+                form.setFieldValue('transportista_nro_mtc', t.nro_mtc ?? '')
               }}
             />
           </LabelBase>
@@ -816,12 +791,6 @@ export default function FormCrearGuia({
           </LabelBase>
         </div>
       )}
-
-      <ModalSeleccionarTransportista
-        open={openModalTransportista}
-        setOpen={setOpenModalTransportista}
-        onSelect={handleSelectTransportista}
-      />
 
       {/* Fila 4: Punto de Partida y Punto de Llegada */}
       <div className='grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 lg:gap-4'>
