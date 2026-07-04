@@ -63,15 +63,24 @@ export default function StepServicio({
         }
     }, [user?.vehiculo_id, vehiculoId, setVehiculoId])
 
+        // Hora obligatoria solo en el PRIMER servicio; a partir del segundo es
+        // opcional. Si no se pone, se deja vacía: no se asume ninguna hora
+        // (antes se rellenaba con "08:00" aunque el usuario no la hubiera tocado).
+    const esPrimerServicio = serviciosSeleccionados.length === 0
+
     const handleAdd = () => {
         if (!newItem.tipoServicio || !newItem.descripcionServicio) {
             return
         }
 
         const unidad = newItem.unidadDuracion || 'horas'
+        if (unidad === 'horas' && esPrimerServicio && !newItem.horaInicio) {
+            return
+        }
+
         const fecha = fechaRequerida || dayjs().format('YYYY-MM-DD')
-        const hora = unidad === 'horas' ? (newItem.horaInicio || '08:00') : '00:00'
-        const fechaHora = `${fecha} ${hora}`
+        const hora = unidad === 'horas' ? (newItem.horaInicio || '') : '00:00'
+        const fechaHora = hora ? `${fecha} ${hora}` : fecha
 
         const item: ServicioItem = {
             id: Math.random().toString(36).substr(2, 9),
@@ -80,7 +89,7 @@ export default function StepServicio({
             lugarEjecucion: newItem.lugarEjecucion || "",
             fechaInicioEstimada: fechaHora,
             unidadDuracion: unidad,
-            horaInicio: unidad === 'horas' ? hora : "",
+            horaInicio: unidad === 'horas' ? (newItem.horaInicio || "") : "",
             horaFin: unidad === 'horas' ? (newItem.horaFin || "") : "",
             cantidadDias: unidad === 'dias' ? (newItem.cantidadDias || "") : "",
             presupuestoReferencial: newItem.presupuestoReferencial || "",
@@ -301,7 +310,10 @@ export default function StepServicio({
                         {newItem.unidadDuracion === 'horas' ? (
                             <>
                                 <div>
-                                    <label className="block text-xs font-medium mb-1">Hora de Inicio</label>
+                                    <label className="block text-xs font-medium mb-1">
+                                        Hora de Inicio {esPrimerServicio && <span className="text-red-500">*</span>}
+                                        {!esPrimerServicio && <span className="text-gray-400 text-xs"> (opcional)</span>}
+                                    </label>
                                     <TimePicker
                                         format="HH:mm"
                                         minuteStep={5}
@@ -356,11 +368,15 @@ export default function StepServicio({
                     </div>
 
                     <div className="flex justify-end">
-                        <Button 
-                            type="primary" 
-                            icon={<PlusOutlined />} 
+                        <Button
+                            type="primary"
+                            icon={<PlusOutlined />}
                             onClick={handleAdd}
-                            disabled={!newItem.tipoServicio || !newItem.descripcionServicio}
+                            disabled={
+                                !newItem.tipoServicio ||
+                                !newItem.descripcionServicio ||
+                                ((newItem.unidadDuracion || 'horas') === 'horas' && esPrimerServicio && !newItem.horaInicio)
+                            }
                             className="w-1/2"
                         >
                             Agregar a la Lista
