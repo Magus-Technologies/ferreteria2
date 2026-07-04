@@ -382,7 +382,7 @@ export default function TableMisGanancias() {
         return <span>{Number(p.value ?? 0).toFixed(2)}</span>
       },
       cellStyle: (p): CellStyle => {
-        if (p.data?.__subtotal) return { display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }
+        if (p.data?.__subtotal) return { display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }
         return {
           color: (p.value ?? 0) >= 0 ? '#16a34a' : '#dc2626',
           fontWeight: 'bold',
