@@ -63,6 +63,15 @@ export interface CreateGuiaRemisionRequest {
   remitente_id?: number;
   motivo_traslado_id: number;
   modalidad_transporte: ModalidadTransporte;
+  /**
+   * Datos de la empresa de transporte TERCERA (Catálogo N° 18 SUNAT).
+   * Requeridos por el backend cuando `modalidad_transporte === 'PUBLICO'`
+   * y `tipo_guia !== 'ELECTRONICA_TRANSPORTISTA'` (ahí la empresa emisora
+   * ya es el transportista).
+   */
+  transportista_ruc?: string;
+  transportista_razon_social?: string;
+  transportista_nro_mtc?: string;
   vehiculo_placa?: string;
   /** Chofer EXTERNO (tabla `chofer`) — usado en transporte PÚBLICO o GRE-Transportista. */
   chofer_id?: number;
@@ -203,6 +212,9 @@ export interface GuiaRemision {
   cliente_id?: number;
   motivo_traslado_id: number;
   modalidad_transporte: ModalidadTransporte;
+  transportista_ruc?: string;
+  transportista_razon_social?: string;
+  transportista_nro_mtc?: string;
   vehiculo_placa?: string;
   chofer_id?: number;
   punto_partida: string;

@@ -17,10 +17,10 @@ export default function CardInfoGuia({
 }) {
   return (
     <div
-      className={`flex flex-col gap-1 p-4 rounded-lg bg-white shadow-sm border border-gray-200 ${className || ''}`}
+      className={`flex flex-col gap-1 p-2 sm:p-3 xl:p-4 rounded-lg bg-white shadow-sm border border-gray-200 ${className || ''}`}
     >
-      <span className='text-xs font-medium text-gray-500 uppercase'>{title}</span>
-      <span className={`text-2xl font-bold ${valueColor || 'text-cyan-600'}`}>
+      <span className='text-[10px] sm:text-xs font-medium text-gray-500 uppercase'>{title}</span>
+      <span className={`text-base sm:text-xl xl:text-2xl font-bold ${valueColor || 'text-cyan-600'}`}>
         {prefix ? `${prefix} ` : ''}{value.toFixed(precision)}{suffix ? ` ${suffix}` : ''}
       </span>
     </div>
