@@ -375,14 +375,14 @@ export default function TableMisGanancias() {
           const positivo = impacto >= 0
           return (
             <span className="font-bold whitespace-nowrap" style={{ color: positivo ? '#16a34a' : '#dc2626' }}>
-              S/ {positivo ? '+' : ''}{impacto.toFixed(2)}
+              {impacto.toFixed(2)}
             </span>
           )
         }
         return <span>{Number(p.value ?? 0).toFixed(2)}</span>
       },
       cellStyle: (p): CellStyle => {
-        if (p.data?.__subtotal) return { display: 'flex', alignItems: 'center' }
+        if (p.data?.__subtotal) return { display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }
         return {
           color: (p.value ?? 0) >= 0 ? '#16a34a' : '#dc2626',
           fontWeight: 'bold',
