@@ -73,6 +73,12 @@ export default function FormCrearGuia({
   // emisora YA es el transportista, no aplica.
   const requiereTransportista = modalidad === 'PUBLICO' && !esTransportista
 
+  // Link de consulta manual al MTC. El portal MTC bloquea la IP del servidor
+  // (datacenter extranjero), así que el autocompletado del N° MTC solo
+  // funciona en local. En producción el usuario abre este link desde su
+  // navegador (IP peruana), busca por RUC y copia el N° de registro al campo.
+  const MTC_CONSULTA_URL = 'https://www.mtc.gob.pe/tramitesenlinea/tweb_tLinea/tw_consultadgtt/Frm_rep_intra_mercancia.aspx'
+
   // Vehículo asignado al despachador (para preseleccionar en SelectVehiculos)
   // y licencia del despachador (para mostrarla como info al usuario).
   // Ambos se llenan en el onChange de SelectUsuariosDespachadores.
@@ -775,8 +781,24 @@ export default function FormCrearGuia({
             />
           </LabelBase>
           <LabelBase
-            label='N° Registro MTC:'
+            label={
+              <div className='flex items-center justify-between gap-2 w-full'>
+                <span>N° Registro MTC:</span>
+                {/* Consulta manual en el portal MTC (se abre en el navegador
+                    del usuario, con IP peruana). Copiar el código al campo. */}
+                <a
+                  href={MTC_CONSULTA_URL}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='text-xs font-normal text-cyan-600 hover:text-cyan-700 hover:underline whitespace-nowrap'
+                  title='Buscar el N° de Registro MTC en el portal del MTC por RUC'
+                >
+                  Consultar en MTC ↗
+                </a>
+              </div>
+            }
             orientation='column'
+            classNames={{ labelParent: 'w-full', label: 'w-full' }}
             className='w-full'
           >
             <InputBase
