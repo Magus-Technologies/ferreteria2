@@ -74,7 +74,7 @@ export default function StepServicio({
         }
 
         const unidad = newItem.unidadDuracion || 'horas'
-        if (unidad === 'horas' && esPrimerServicio && !newItem.horaInicio) {
+        if (unidad === 'horas' && esPrimerServicio && (!newItem.horaInicio || !newItem.horaFin)) {
             return
         }
 
@@ -325,7 +325,10 @@ export default function StepServicio({
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-medium mb-1">Hora de Fin</label>
+                                    <label className="block text-xs font-medium mb-1">
+                                        Hora de Fin {esPrimerServicio && <span className="text-red-500">*</span>}
+                                        {!esPrimerServicio && <span className="text-gray-400 text-xs"> (opcional)</span>}
+                                    </label>
                                     <TimePicker
                                         format="HH:mm"
                                         minuteStep={5}
@@ -375,7 +378,7 @@ export default function StepServicio({
                             disabled={
                                 !newItem.tipoServicio ||
                                 !newItem.descripcionServicio ||
-                                ((newItem.unidadDuracion || 'horas') === 'horas' && esPrimerServicio && !newItem.horaInicio)
+                                ((newItem.unidadDuracion || 'horas') === 'horas' && esPrimerServicio && (!newItem.horaInicio || !newItem.horaFin))
                             }
                             className="w-1/2"
                         >
