@@ -141,12 +141,14 @@ export function ModalProgramarOS({
 
     const verificarDisponibilidad = async () => {
       try {
-        const fecha = dayjs(slotPendiente.start).format('YYYY-MM-DD')
+        // Enviar fecha Y hora del slot elegido, no solo el día: un mantenimiento
+        // de unas horas (ej. 08:00-16:00) no debe bloquear el día completo.
+        const fecha = dayjs(slotPendiente.start).format('YYYY-MM-DD HH:mm:ss')
         const response = await apiRequest<{
           disponible: boolean
           razon?: string
           mantenimiento?: MantenimientoDetalle
-        }>(`/vehiculos/${vehiculoId}/disponibilidad?fecha=${fecha}`)
+        }>(`/vehiculos/${vehiculoId}/disponibilidad?fecha=${encodeURIComponent(fecha)}`)
 
         if (!response.data?.disponible) {
           setVehiculoNoDisponible(true)
