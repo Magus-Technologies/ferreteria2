@@ -61,7 +61,6 @@ export default function TotalCompras() {
 
   return (
     <div className='flex items-center gap-2 font-bold text-2xl'>
-      <div className='text-slate-700'>TOTAL:</div>
       <div className='text-slate-900 text-nowrap'>
         S/.{' '}
         {costo_total.toLocaleString('en-US', {
