@@ -482,7 +482,9 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
             </div>
             <div className='flex items-center gap-2'>
               <span className='text-xs text-gray-500 font-medium min-w-[80px]'>Tipo Pago:</span>
-              <span className='font-semibold text-sm text-red-600 bg-red-50 px-2 py-0.5 rounded'>CRÉDITO{localCompra?.numero_dias ? ` ${localCompra.numero_dias} DÍAS` : ''}</span>
+              <span className={`font-semibold text-sm px-2 py-0.5 rounded ${localCompra?.forma_de_pago === 'co' ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50'}`}>
+                {localCompra?.forma_de_pago === 'co' ? 'CONTADO' : `CRÉDITO${localCompra?.numero_dias ? ` ${localCompra.numero_dias} DÍAS` : ''}`}
+              </span>
             </div>
           </div>
           <div className='flex flex-col justify-center gap-2 pl-2'>
