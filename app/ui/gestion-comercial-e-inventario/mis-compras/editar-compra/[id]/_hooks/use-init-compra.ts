@@ -13,6 +13,8 @@ import { useStoreAlmacen } from '~/store/store-almacen'
 import { useStoreProductoAgregadoCompra } from '~/app/_stores/store-producto-agregado-compra'
 import { productosApiV2 } from '~/lib/api/producto'
 
+import { getCostoActualBase } from '~/app/ui/gestion-comercial-e-inventario/mi-almacen/_components/tables/columns-detalle-de-precios'
+
 // Helper para mapear valores de Laravel (raw DB) a enums de Prisma (para el formulario)
 function mapTipoMoneda(tipoMoneda: string): TipoMoneda {
   if (tipoMoneda === 's' || tipoMoneda === TipoMoneda.Soles) return TipoMoneda.Soles
@@ -125,7 +127,7 @@ export default function useInitCompra({
             )
             costoPorProducto.set(
               id,
-              Number(detalles[i]?.data?.producto_almacen?.costo ?? 0)
+              getCostoActualBase(detalles[i]?.data?.producto_almacen as any)
             )
           })
 

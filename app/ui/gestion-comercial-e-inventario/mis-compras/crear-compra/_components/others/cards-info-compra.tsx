@@ -166,6 +166,7 @@ export default function CardsInfoCompra({
           </ConfigurableElement>
         </>
       )}
+      <InputBase propsForm={{ name: 'estado_de_compra', hidden: true }} hidden />
       {(compra?.recepciones_almacen_count ?? 0) > 0 ||
       (compra?.pagos_de_compras_count ?? 0) > 0 ||
       compra?.estado_de_compra === EstadoDeCompra.Creado ? null : (
@@ -183,7 +184,6 @@ export default function CardsInfoCompra({
             color='warning'
             className='flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance'
           >
-            <InputBase propsForm={{ name: 'estado_de_compra', hidden: true }} hidden />
             <BsFillCartDashFill className='min-w-fit' size={30} /> Poner en Espera
           </ButtonBase>
         </ConfigurableElement>
