@@ -291,6 +291,7 @@ export function useColumnsComprar({
       minWidth: 85,
       width: 85,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
+        const esRecepcionada = (compra?.recepciones_almacen_count ?? 0) > 0
         return (
           <div className='flex items-center h-full'>
             <InputNumberBase
@@ -320,6 +321,7 @@ export function useColumnsComprar({
                   : undefined
               }
               formWithMessage={false}
+              disabled={esRecepcionada}
               onChange={val => {
                 form.setFieldValue(
                   ['productos', value, 'subtotal'],
