@@ -100,20 +100,6 @@ export default function useCreateCompra({
 
   const mutation = useMutation({
     mutationFn: async (values: FormCreateCompra) => {
-      // Si es edición y cambió alguna cantidad, forzar estado EnEspera
-      if (compra) {
-        const cantidadesOriginales = compra.productos_por_almacen.flatMap(ppa =>
-          ppa.unidades_derivadas.map(ud => Number(ud.cantidad))
-        )
-        const cantidadesNuevas = values.productos.map(p => Number(p.cantidad))
-        const cantidadCambio =
-          cantidadesOriginales.length !== cantidadesNuevas.length ||
-          cantidadesOriginales.some((c, i) => c !== cantidadesNuevas[i])
-        if (cantidadCambio) {
-          values.estado_de_compra = EstadoDeCompra.EnEspera
-        }
-      }
-
       const { productos, tipo_de_cambio, tipo_moneda } = values
 
       const productos_agrupados = agruparProductos({
