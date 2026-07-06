@@ -29,6 +29,7 @@ const tipoOptions = [
   { value: 'recepcion_anulada', label: 'Recepciones Anuladas' },
   { value: 'ingreso', label: 'Ingresos' },
   { value: 'salida', label: 'Salidas' },
+  { value: 'transferencia', label: 'Transferencias' },
   { value: 'cuadre', label: 'Cuadres' },
 ]
 
@@ -38,6 +39,7 @@ const tipoColors: Record<string, string> = {
   recepcion_anulada: 'volcano',
   ingreso: 'blue',
   salida: 'red',
+  transferencia: 'orange',
   cuadre: 'purple',
   // backward compat para registros anteriores
   ingreso_anulado: 'purple',
@@ -50,6 +52,7 @@ const tipoLabels: Record<string, string> = {
   recepcion_anulada: 'Recepcion',
   ingreso: 'Ingreso',
   salida: 'Salida',
+  transferencia: 'Transferencia',
   cuadre: 'Cuadre',
   // backward compat para registros anteriores
   ingreso_anulado: 'Cuadre',
@@ -66,11 +69,19 @@ const movimientoColors: Record<string, string> = {
   'SALIDA ANULADO': 'purple',
   ANULADA_ENTRADA: 'volcano',
   ANULADA_SALIDA: 'geekblue',
+  'SALIDA POR TRANSFERENCIA': 'orange',
+  'ENTRADA POR TRANSFERENCIA': 'lime',
+  'ENTRADA POR TRANSFERENCIA ANULADO': 'volcano',
+  'SALIDA POR TRANSFERENCIA ANULADO': 'volcano',
 }
 
 const movimientoLabels: Record<string, string> = {
   ANULADA_ENTRADA: 'Anulada Entrada',
   ANULADA_SALIDA: 'Anulada Salida',
+  'SALIDA POR TRANSFERENCIA': 'Salida Transf.',
+  'ENTRADA POR TRANSFERENCIA': 'Entrada Transf.',
+  'ENTRADA POR TRANSFERENCIA ANULADO': 'Entrada Transf. Anul.',
+  'SALIDA POR TRANSFERENCIA ANULADO': 'Salida Transf. Anul.',
 }
 
 export default function KardexInventarioView() {

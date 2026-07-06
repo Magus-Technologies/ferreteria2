@@ -1,7 +1,7 @@
 import { apiRequest, type ApiResponse } from '../api'
 
 export type TipoMovimientoKardex = 'venta' | 'cotizacion' | 'prestamo' | 'guia'
-export type TipoMovimientoInventario = 'compra' | 'recepcion' | 'ingreso' | 'salida'
+export type TipoMovimientoInventario = 'compra' | 'recepcion' | 'ingreso' | 'salida' | 'transferencia'
 export type TipoEfectoKardex = 'ENTRADA' | 'SALIDA' | 'REFERENCIA' | 'ANULADO' | 'DEVOLUCION' | 'COMPRA'
 
 export interface MovimientoKardex {
