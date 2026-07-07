@@ -21,7 +21,7 @@ export default function FormTableVender({
         <ConfigurableElement
           componentId="crear-venta.tabla-productos"
           label="Tabla de Productos"
-          className={configMode?.enabled ? "flex flex-col h-full min-h-[400px]" : "flex flex-col h-full"}
+          className={`flex flex-col h-full min-w-0 ${configMode?.enabled ? "min-h-[400px]" : "min-h-[300px] sm:min-h-0"}`}
         >
           <TableVender
             venta={venta}

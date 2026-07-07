@@ -80,6 +80,26 @@ export default function TableWithTitle<T, schemaType = unknown>({
 
   const { titleParent = "" } = classNames;
 
+  // Handlers de exportación compartidos entre la barra de escritorio (íconos
+  // sueltos) y el dropdown de móvil, para no duplicar la lógica.
+  const handleExportExcel = () => {
+    if (onExportExcel) {
+      onExportExcel();
+    } else if (tableRefInterno.current) {
+      exportAGGridDataToJSON({
+        gridOptions: tableRefInterno.current,
+        nameFile: title,
+        schema,
+        headersRequired,
+      });
+    }
+  };
+
+  const handleExportPdf = (orientation: "vertical" | "horizontal") => {
+    if (tableRefInterno.current)
+      exportAGGridDataToPDF(tableRefInterno.current, title, orientation);
+  };
+
   return (
     <div className={`flex flex-col gap-1 h-full ${className}`} style={style}>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 sm:gap-2 min-w-0">
@@ -120,20 +140,7 @@ export default function TableWithTitle<T, schemaType = unknown>({
           {exportExcel && (
             <Tooltip title="Exportar a Excel">
               <ButtonBase
-                onClick={() => {
-                  if (onExportExcel) {
-                    // Use custom export handler if provided
-                    onExportExcel();
-                  } else if (tableRefInterno.current) {
-                    // Use default export
-                    exportAGGridDataToJSON({
-                      gridOptions: tableRefInterno.current,
-                      nameFile: title,
-                      schema,
-                      headersRequired,
-                    });
-                  }
-                }}
+                onClick={handleExportExcel}
                 color="success"
                 size="md"
                 className="!px-3"
@@ -146,14 +153,7 @@ export default function TableWithTitle<T, schemaType = unknown>({
             <>
               <Tooltip title="Exportar a PDF Vertical">
                 <ButtonBase
-                  onClick={() => {
-                    if (tableRefInterno.current)
-                      exportAGGridDataToPDF(
-                        tableRefInterno.current,
-                        title,
-                        "vertical"
-                      );
-                  }}
+                  onClick={() => handleExportPdf("vertical")}
                   color="danger"
                   size="md"
                   className="!px-3"
@@ -163,14 +163,7 @@ export default function TableWithTitle<T, schemaType = unknown>({
               </Tooltip>
               <Tooltip title="Exportar a PDF Horizontal">
                 <ButtonBase
-                  onClick={() => {
-                    if (tableRefInterno.current)
-                      exportAGGridDataToPDF(
-                        tableRefInterno.current,
-                        title,
-                        "horizontal"
-                      );
-                  }}
+                  onClick={() => handleExportPdf("horizontal")}
                   color="danger"
                   size="md"
                   className="!px-3"

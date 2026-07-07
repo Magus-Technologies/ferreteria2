@@ -317,6 +317,7 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
 
   return (
     <>
+      <div className="flex items-center gap-1 w-full lg:w-auto lg:min-w-0">
       {withTipoBusqueda && (
         <SelectTipoBusquedaProducto
           className={classNameTipoBusqueda}
@@ -325,6 +326,7 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
           value={tipoBusqueda}
         />
       )}
+      <div className="flex-1 min-w-0">
       <SelectBase
         ref={selectProductoRef}
         showSearch
@@ -337,7 +339,6 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
           const producto = productos?.find((item) => item.id === value)
 
           if (producto) {
-            // Ejecutar handleOnlyOneResult si existe
             handleOnlyOneResult?.(producto)
           }
 
@@ -410,12 +411,10 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
             if (withSearch) {
               handleSearch()
             } else {
-              // Si withSearch está desactivado, seleccionar el primer resultado
               if (productos && productos.length > 0) {
                 const primerProducto = productos[0]
                 handleOnlyOneResult?.(primerProducto)
                 onChange?.(primerProducto.id, primerProducto)
-                // setText('') 
               }
             }
           }
@@ -423,16 +422,32 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
         open={props.mode === 'multiple' ? undefined : false}
         {...props}
       />
+      </div>
       {withSearch && (
         <FaSearch
           className={`text-yellow-600 mb-7 cursor-pointer min-w-fit ${classIconSearch}`}
           size={15}
           onMouseDown={(e) => {
-            e.preventDefault() // Prevenir pérdida de foco inmediata
+            e.preventDefault()
             handleSearch()
           }}
         />
       )}
+      {showButtonCreate && (
+        <ButtonCreateProductoPlus
+          onSuccess={(res) => {
+            setProductoCreado(res)
+            iterarChangeValue({
+              refObject: selectProductoRef,
+              value: res.id,
+            })
+          }}
+          textDefault={textDefault}
+          setTextDefault={setTextDefault}
+          className={classIconPlus}
+        />
+      )}
+      </div>
       {withSearch && (
         <ModalProductoSearch
           open={openModalProductoSearch}
@@ -458,27 +473,12 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
           stockFilterMode={stockFilterMode}
           requireSearchToShow={requireSearchToShow}
           onAfterClose={() => {
-            // Devolver focus al buscador después de cerrar el modal
             ;[0, 50, 150, 300, 500].forEach((delay) => {
               setTimeout(() => {
                 selectProductoRef.current?.focus()
               }, delay)
             })
           }}
-        />
-      )}
-      {showButtonCreate && (
-        <ButtonCreateProductoPlus
-          onSuccess={(res) => {
-            setProductoCreado(res)
-            iterarChangeValue({
-              refObject: selectProductoRef,
-              value: res.id,
-            })
-          }}
-          textDefault={textDefault}
-          setTextDefault={setTextDefault}
-          className={classIconPlus}
         />
       )}
     </>

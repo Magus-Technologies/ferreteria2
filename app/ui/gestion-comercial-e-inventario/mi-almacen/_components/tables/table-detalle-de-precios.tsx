@@ -143,7 +143,7 @@ export default function TableDetalleDePrecios() {
             Ver Todo
           </ButtonBase>
           {can(permissions.PRODUCTO_IMPORT) && (
-            <ActionButtonsWrapper>
+            <ActionButtonsWrapper label="Importar">
               <InputImport
               tableRef={tableRef}
               schema={ProductoAlmacenUnidadDerivadaCreateInputSchema}

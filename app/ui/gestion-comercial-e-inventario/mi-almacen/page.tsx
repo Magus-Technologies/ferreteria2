@@ -8,6 +8,7 @@ import { usePermission } from "~/hooks/use-permission";
 import { Suspense, lazy } from "react";
 import { Spin } from "antd";
 import ProgressiveLoader from "~/app/_components/others/progressive-loader";
+import ActionButtonsWrapper from "./_components/others/action-buttons-wrapper";
 
 // Lazy loading de componentes pesados
 const FiltersMiAlmacen = lazy(
@@ -68,9 +69,12 @@ export default function MiAlmacen() {
       </Suspense>
       {/* Layout responsivo */}
       <div className="w-full mt-4">
-        {/* Botones de acción - Móvil/Tablet: Arriba en fila horizontal */}
+        {/* Botones de acción - Móvil/Tablet.
+            En teléfono se colapsan en un botón "Acciones" (dropdown); en
+            tablet quedan en fila; en desktop (lg+) este bloque se oculta y
+            los botones viven en la columna derecha. */}
         <div className="lg:hidden mb-4">
-          <div className="flex items-center gap-2 overflow-x-auto pb-2">
+          <ActionButtonsWrapper>
             {canCreateProducto && (
               <Suspense fallback={<Spin />}>
                 <div className="flex-shrink-0 min-w-[120px]">
@@ -97,7 +101,7 @@ export default function MiAlmacen() {
                 <ButtonProductosVencidos />
               </div>
             </Suspense>
-          </div>
+          </ActionButtonsWrapper>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 sm:gap-5 md:gap-6 lg:gap-8">
