@@ -18,6 +18,44 @@ import ActionButtonsWrapper from '../others/action-buttons-wrapper'
 import { useStoreFiltrosProductos } from '../../_store/store-filtros-productos'
 import { useProductosInfiniteScroll } from '../../_hooks/useProductosInfiniteScroll'
 import { greenColors } from '~/lib/colors'
+import dayjs from 'dayjs'
+import utc from 'dayjs/plugin/utc'
+import customParseFormat from 'dayjs/plugin/customParseFormat'
+
+dayjs.extend(utc)
+dayjs.extend(customParseFormat)
+
+/**
+ * Convierte el valor crudo de la celda "Fecha de Vencimiento" del Excel a un
+ * string 'YYYY-MM-DD'. xlsx-js-style (sin `cellDates: true` en el `read()`
+ * global de InputImport, que no debe tocarse porque lo comparten TODOS los
+ * imports) entrega las fechas como número de serie de Excel (días desde
+ * 1899-12-30), no como Date. También soportamos string y Date por si el
+ * origen del dato cambia.
+ */
+function excelDateToISODate(value: unknown): string | undefined {
+  if (value === undefined || value === null || value === '') return undefined
+
+  if (typeof value === 'number' && !isNaN(value)) {
+    // Fórmula estándar de conversión de serial de Excel a fecha UTC
+    const utcMs = Math.round((value - 25569) * 86400 * 1000)
+    const date = dayjs.utc(utcMs)
+    return date.isValid() ? date.format('YYYY-MM-DD') : undefined
+  }
+
+  if (value instanceof Date) {
+    const date = dayjs(value)
+    return date.isValid() ? date.format('YYYY-MM-DD') : undefined
+  }
+
+  // String: soporta 'DD/MM/YYYY' (formato típico de planillas locales) y el
+  // parseo por defecto de dayjs (ISO, 'YYYY-MM-DD', etc.)
+  const asDMY = dayjs(String(value), 'DD/MM/YYYY', true)
+  if (asDMY.isValid()) return asDMY.format('YYYY-MM-DD')
+
+  const asDefault = dayjs(String(value))
+  return asDefault.isValid() ? asDefault.format('YYYY-MM-DD') : undefined
+}
 
 export default function TableDetalleDePrecios() {
   const tableRef = useRef<AgGridReact>(null)
@@ -170,6 +208,10 @@ export default function TableDetalleDePrecios() {
                 { headerName: 'precio_ultimo', field: 'precio_ultimo' },
                 { headerName: 'comision_ultimo', field: 'comision_ultimo' },
                 { headerName: 'activador_ultimo', field: 'activador_ultimo' },
+                // Lote/vencimiento del ingreso inicial (solo aplican a la fila de la
+                // unidad base). Columnas de Excel: "Lote" y "Fecha de Vencimiento".
+                { headerName: 'lote', field: 'lote' },
+                { headerName: 'vencimiento', field: 'vencimiento' },
               ]}
               preProcessData={async data => {
                 if (!almacen_id) throw new Error('No se selecciono un almacén')
@@ -236,6 +278,19 @@ export default function TableDetalleDePrecios() {
                         }
                       }
                     });
+
+                    // Lote / Fecha de Vencimiento: opcionales, solo tienen efecto en el
+                    // backend para la fila cuyo Factor coincide con la unidad base del
+                    // producto (ver DetallePreciosController::import). Si la celda viene
+                    // vacía, se omite el campo (no se envía null explícito).
+                    if (item['Lote'] !== undefined && item['Lote'] !== null && item['Lote'] !== '') {
+                      row.lote = String(item['Lote']);
+                    }
+
+                    const vencimiento = excelDateToISODate(item['Fecha de Vencimiento']);
+                    if (vencimiento !== undefined) {
+                      row.vencimiento = vencimiento;
+                    }
 
                     return row;
                   })
