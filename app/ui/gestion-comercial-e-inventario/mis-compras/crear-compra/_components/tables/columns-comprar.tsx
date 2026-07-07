@@ -39,7 +39,9 @@ export function useColumnsComprar({
   // (que NO cambian tipo_moneda/tipo_de_cambio), se devuelve el MISMO array de
   // columnDefs. Así ag-grid no recibe columnas nuevas y no remonta la celda
   // editable, conservando el foco del input.
-  const columns = useMemo<ColDef<FormListFieldData>[]>(() => [
+  const columns = useMemo<ColDef<FormListFieldData>[]>(() => {
+    const isTableDisabled = !!compra && compra.estado_de_compra !== 'ee'
+    return [
     {
       colId: 'codigo',
       headerName: 'Código',
@@ -191,6 +193,7 @@ export function useColumnsComprar({
               form={form}
               fieldIndex={value}
               productoId={form.getFieldValue(['productos', value, 'producto_id'])}
+              disabled={isTableDisabled}
             />
           </div>
         )
@@ -291,6 +294,7 @@ export function useColumnsComprar({
       minWidth: 85,
       width: 85,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
+        const esRecepcionada = (compra?.recepciones_almacen_count ?? 0) > 0
         return (
           <div className='flex items-center h-full'>
             <InputNumberBase
@@ -320,6 +324,7 @@ export function useColumnsComprar({
                   : undefined
               }
               formWithMessage={false}
+              disabled={isTableDisabled || esRecepcionada}
               onChange={val => {
                 form.setFieldValue(
                   ['productos', value, 'subtotal'],
@@ -365,6 +370,7 @@ export function useColumnsComprar({
               precision={4}
               min={0}
               formWithMessage={false}
+              disabled={isTableDisabled}
               onChange={(val) => {
                 if (val !== null && val !== undefined) {
                   dollarValueRefs.current.set(value, Number(val))
@@ -503,6 +509,7 @@ export function useColumnsComprar({
               precision={4}
               min={0}
               formWithMessage={false}
+              disabled={isTableDisabled}
               nextInEnter={false}
               onChange={(val) => {
                 if (val !== null && val !== undefined) {
@@ -606,6 +613,7 @@ export function useColumnsComprar({
               precision={2}
               min={0}
               formWithMessage={false}
+              disabled={isTableDisabled}
               onChange={() => {
                 // El flete NO forma parte del subtotal (cantidad * precio).
                 // Se suma aparte en el total. Recalculamos el subtotal solo con
@@ -644,6 +652,7 @@ export function useColumnsComprar({
                 name: [value, 'bonificacion'],
                 valuePropName: 'checked',
               }}
+              disabled={isTableDisabled}
               onChange={val => {
                 if (val.target.checked) {
                   form.setFieldValue(['productos', value, 'subtotal'], 0)
@@ -672,6 +681,7 @@ export function useColumnsComprar({
               }}
               size='small'
               formWithMessage={false}
+              disabled={isTableDisabled}
             />
           </div>
         )
@@ -692,6 +702,7 @@ export function useColumnsComprar({
               }}
               size='small'
               formWithMessage={false}
+              disabled={isTableDisabled}
             />
           </div>
         )
@@ -717,8 +728,10 @@ export function useColumnsComprar({
           </div>
         )
       },
+      hide: isTableDisabled,
     },
-  ], [form, remove, incluye_precios, cantidad_pendiente, tipo_moneda, tipo_de_cambio])
+  ];
+  }, [form, remove, incluye_precios, cantidad_pendiente, tipo_moneda, tipo_de_cambio, compra])
 
   return columns
 }

@@ -53,6 +53,10 @@ export default function BotonesAccionesCompra() {
       message.warning('Seleccione una compra primero')
       return
     }
+    if (compraSeleccionada.esta_pagado) {
+      message.warning('La compra ya está pagada')
+      return
+    }
     if (!hasApertura) {
       setOpenApertura(true)
       return
@@ -146,7 +150,7 @@ export default function BotonesAccionesCompra() {
             size='sm'
             type='button'
             onClick={handleRegistrarPagos}
-            disabled={!compraSeleccionada}
+            disabled={!compraSeleccionada || compraSeleccionada.esta_pagado}
             className='flex items-center gap-2'
           >
             <FaMoneyBillWave />

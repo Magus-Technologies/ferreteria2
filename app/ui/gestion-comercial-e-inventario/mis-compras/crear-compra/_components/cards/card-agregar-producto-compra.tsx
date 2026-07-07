@@ -113,7 +113,7 @@ export default function CardAgregarProductoCompra({
       unidad_derivada_name: unidad_derivada?.unidad_derivada.name,
       unidad_derivada_factor: Number(unidad_derivada?.factor),
       precio_compra: values.bonificacion ? 0 : values.precio_compra,
-      costo_actual: Number(producto_en_almacen?.costo ?? 0),
+      costo_actual: Number(producto_en_almacen?.costo_actual ?? producto_en_almacen?.costo ?? 0),
       stock_max: productoSeleccionadoSearchStore?.stock_max,
       unidades_contenidas: Number(productoSeleccionadoSearchStore?.unidades_contenidas ?? 1),
       stock_fraccion: Number(producto_en_almacen?.stock_fraccion ?? 0),
@@ -150,14 +150,8 @@ export default function CardAgregarProductoCompra({
   useEffect(() => {
     // Autocompletar el costo al seleccionar el producto / unidad derivada.
     if (autoFillPrecioCompraWithCosto && unidad_derivada_seleccionada && producto_en_almacen) {
-      // Se autocompleta con el "Costo Actual" del detalle de precios (capa PEPS
-      // vigente). Se usa el MISMO cálculo que la columna "Costo Actual" para que
-      // el Precio Compra coincida exactamente con lo que ve el usuario en esa tabla.
-      const costoActualBase = getCostoActualBase(producto_en_almacen as any)
-      // Fallback: si no se pudo resolver el costo actual, usar el costo del almacén
-      // para que el precio SIEMPRE se autocomplete al elegir el producto.
-      const costoBase = costoActualBase > 0 ? costoActualBase : Number(producto_en_almacen?.costo ?? 0)
-      const costo = Number(unidad_derivada_seleccionada.factor ?? 0) * costoBase
+      const costoActualBase = Number(producto_en_almacen?.costo_actual ?? producto_en_almacen?.costo ?? 0)
+      const costo = Number(unidad_derivada_seleccionada.factor ?? 0) * costoActualBase
       if (costo > 0) {
         handleChange(costo, 'precio_compra')
       }
@@ -269,7 +263,7 @@ export default function CardAgregarProductoCompra({
               Number(unidad_derivada_seleccionada?.factor ?? 0) *
               // Costo ACTUAL: el MISMO valor que muestra la columna "Costo Actual"
               // del detalle de precios (capa PEPS vigente = última compra recibida).
-              getCostoActualBase(producto_en_almacen as any)
+              Number(producto_en_almacen?.costo_actual ?? producto_en_almacen?.costo ?? 0)
             ).toLocaleString('en-US', {
               minimumFractionDigits: 2,
               maximumFractionDigits: 4,

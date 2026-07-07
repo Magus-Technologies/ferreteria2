@@ -4,6 +4,7 @@ import CardMiniInfo from '../cards/card-mini-info'
 import { useStoreFiltrosMisCompras } from '../../_store/store-filtros-mis-compras'
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import dayjs from 'dayjs'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { compraApi, type Compra, type CompraFilters } from '~/lib/api/compra'
 import { EstadoDeCompra } from '~/types'
@@ -88,9 +89,9 @@ function convertirFiltros(filtros: CompraWhereInput | undefined): CompraFilters 
     }
   }
 
-  const fechaFilter = filtros.fecha as any
-  const desde = fechaFilter?.gte ? new Date(fechaFilter.gte).toISOString().split('T')[0] : undefined
-  const hasta = fechaFilter?.lte ? new Date(fechaFilter.lte).toISOString().split('T')[0] : undefined
+    const fechaFilter = filtros.fecha as any
+    const desde = fechaFilter?.gte ? dayjs(fechaFilter.gte).format('YYYY-MM-DD') : undefined
+    const hasta = fechaFilter?.lte ? dayjs(fechaFilter.lte).format('YYYY-MM-DD') : undefined
 
   return {
     almacen_id: filtros.almacen_id as number | undefined,

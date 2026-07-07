@@ -3,6 +3,7 @@
 import TableWithTitle from '~/components/tables/table-with-title'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useRef, memo, useCallback, useMemo, useState, useEffect } from 'react'
+import dayjs from 'dayjs'
 import { greenColors, orangeColors, redColors } from '~/lib/colors'
 import { AgGridReact } from 'ag-grid-react'
 import { CompraCreateInputSchema } from '~/types/zod-schemas'
@@ -113,8 +114,8 @@ const TableCompras = memo(function TableCompras({
 
     // Extraer fechas
     const fechaFilter = filtros.fecha as any;
-    const desde = fechaFilter?.gte ? new Date(fechaFilter.gte).toISOString().split('T')[0] : undefined;
-    const hasta = fechaFilter?.lte ? new Date(fechaFilter.lte).toISOString().split('T')[0] : undefined;
+    const desde = fechaFilter?.gte ? dayjs(fechaFilter.gte).format('YYYY-MM-DD') : undefined;
+    const hasta = fechaFilter?.lte ? dayjs(fechaFilter.lte).format('YYYY-MM-DD') : undefined;
 
     return {
       almacen_id: filtros.almacen_id as number | undefined,

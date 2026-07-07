@@ -92,11 +92,10 @@ export default function useInitCompra({
       form.setFieldsValue(dataFormated)
       setAlmacenId(compra.almacen_id)
 
-      // En recuperación (compra anulada / en espera) la columna Unidad debe ser
-      // un select, igual que al recuperar una orden de compra. Para ello hay que
-      // consultar las unidades derivadas disponibles de cada producto y poblar el
-      // store que lee SelectUnidadDerivadaCompra.
-      if (isRecuperacion && dataFormated.productos.length > 0) {
+      // En recuperación o edición normal, la columna Unidad debe ser
+      // un select. Para ello hay que consultar las unidades derivadas 
+      // disponibles de cada producto y poblar el store.
+      if (dataFormated.productos.length > 0) {
         let cancelado = false
 
         ;(async () => {
@@ -126,7 +125,7 @@ export default function useInitCompra({
             )
             costoPorProducto.set(
               id,
-              Number(detalles[i]?.data?.producto_almacen?.costo ?? 0)
+              Number((detalles[i]?.data?.producto_almacen as any)?.costo_actual ?? detalles[i]?.data?.producto_almacen?.costo ?? 0)
             )
           })
 

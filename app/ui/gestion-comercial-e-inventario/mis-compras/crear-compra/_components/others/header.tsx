@@ -59,7 +59,8 @@ export default function HeaderCrearCompra({
       }
       extra={
         (compra?.recepciones_almacen_count ?? 0) > 0 ||
-        (compra?.pagos_de_compras_count ?? 0) > 0 ? null : (
+        (compra?.pagos_de_compras_count ?? 0) > 0 ||
+        (!!compra && compra.estado_de_compra !== 'ee') ? null : (
           <ConfigurableElement
             componentId="gestion-comercial.crear-compra.agregar-producto"
             label="Selector Agregar Producto"
