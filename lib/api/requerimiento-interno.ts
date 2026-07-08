@@ -31,6 +31,8 @@ export interface RequerimientoInternoServicio {
     descripcion_servicio: string;
     lugar_ejecucion: string | null;
     fecha_inicio_estimada: string | null;
+    hora_inicio?: string | null;
+    hora_fin?: string | null;
     presupuesto_referencial: number | null;
     detalles: string | null;
     duracion_cantidad?: number | null;
@@ -82,6 +84,9 @@ export interface CreateRequerimientoServicioRequest {
     descripcion_servicio: string;
     lugar_ejecucion?: string;
     fecha_inicio_estimada?: string;
+    hora_inicio?: string; // formato HH:mm
+    hora_fin?: string; // formato HH:mm
+    cantidad_dias?: string;
     presupuesto_referencial?: number;
     detalles?: string;
     duracion_cantidad?: number;

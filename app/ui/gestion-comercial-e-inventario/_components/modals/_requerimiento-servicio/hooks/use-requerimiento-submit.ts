@@ -22,9 +22,17 @@ export function useRequerimientoSubmit() {
                 vehiculo_id: form.vehiculoId ? Number(form.vehiculoId) : undefined,
                 afecta_calendario: form.afectaCalendario ?? undefined,
                 servicios: servicios.map(s => {
-                    const duracionMinutos = s.unidadDuracion === 'dias'
-                        ? (parseInt(s.cantidadDias) || 0) * 24 * 60
-                        : (parseInt(s.horaInicio?.split(':')[0] || '0') * 60 + parseInt(s.horaInicio?.split(':')[1] || '0'))
+                    // Duración = hora fin − hora inicio (no la hora de inicio
+                    // en minutos desde medianoche, que era el bug: 14:00 → 840)
+                    let duracionMinutos = 0
+                    if (s.unidadDuracion === 'dias') {
+                        duracionMinutos = (parseInt(s.cantidadDias) || 0) * 24 * 60
+                    } else if (s.horaInicio && s.horaFin) {
+                        const [hi, mi] = s.horaInicio.split(':').map(Number)
+                        const [hf, mf] = s.horaFin.split(':').map(Number)
+                        const total = ((hf || 0) * 60 + (mf || 0)) - ((hi || 0) * 60 + (mi || 0))
+                        duracionMinutos = total > 0 ? total : 0
+                    }
 
                     return {
                         tipo_servicio: s.tipoServicio,

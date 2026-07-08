@@ -70,6 +70,8 @@ export function useRequerimientoSubmit() {
                         descripcion_servicio: s.descripcionServicio,
                         lugar_ejecucion: s.lugarEjecucion || undefined,
                         fecha_inicio_estimada: s.fechaInicioEstimada || undefined,
+                        hora_inicio: s.horaInicio || undefined,
+                        hora_fin: s.horaFin || undefined,
                         presupuesto_referencial: s.presupuestoReferencial ? Number(s.presupuestoReferencial) : undefined,
                         detalles: s.detalles || undefined,
                         duracion_cantidad,
