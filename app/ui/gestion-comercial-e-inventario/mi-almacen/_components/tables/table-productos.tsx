@@ -109,7 +109,7 @@ function TableProductos() {
       quickFilterText={quickFilter} // Aplicar Quick Filter directamente como prop
       extraTitle={
         can(permissions.PRODUCTO_IMPORT) && (
-          <ActionButtonsWrapper>
+          <ActionButtonsWrapper label="Importar">
             <InputImport
               tableRef={tableRef}
               schema={ProductoCreateInputSchema}

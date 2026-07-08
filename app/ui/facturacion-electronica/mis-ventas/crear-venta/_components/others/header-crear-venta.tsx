@@ -291,79 +291,91 @@ export default function HeaderCrearVenta({
         )
       }
       extra={
-        <div className="pl-0 lg:pl-8 flex flex-col lg:flex-row items-start lg:items-center gap-2 lg:gap-4 w-full lg:w-auto min-w-0">
-          <ConfigurableElement
-            componentId="crear-venta.buscar-producto"
-            label="Buscar Producto"
-          >
-            <div data-select-productos="crear-venta" className="contents">
-            <SelectProductos
-              ref={selectProductosRef}
-              autoFocus
-              allowClear
-              size="large"
-              className="w-full lg:!min-w-[400px] lg:!w-[400px] lg:!max-w-[400px] font-normal!"
-              classNameIcon="text-cyan-600 mx-1"
-              classIconSearch="!mb-0"
-              classIconPlus="mb-0!"
-              showButtonCreate={can(permissions.PRODUCTO_CREATE)}
-              withSearch
-              withTipoBusqueda
-              showCardAgregarProductoVenta
-              showUltimasCompras={false}
-              stockFilterMode="venta"
-              requireSearchToShow
-              handleOnlyOneResult={(producto) => {
-                setProductoSeleccionadoSearchStore(producto);
-                if (producto) setOpenModalAgregarProducto(true);
-              }}
-              onChange={(_, producto) => {
-                setProductoSeleccionadoSearchStore(producto);
-                if (producto) setOpenModalAgregarProducto(true);
-              }}
-            />
-            </div>
-          </ConfigurableElement>
+        <div className="pl-0 lg:pl-8 flex flex-col lg:flex-row lg:flex-nowrap items-stretch lg:items-center gap-2 lg:gap-3 w-full lg:w-auto min-w-0">
+          {/* Cada buscador va en un contenedor lg:shrink-0 con ancho propio:
+              así ninguno se encoge (desbordándose sobre el vecino) ni se
+              estira robando espacio. Producto incluye el selector de tipo. */}
+          <div className="w-full lg:w-auto lg:shrink-0">
+            <ConfigurableElement
+              componentId="crear-venta.buscar-producto"
+              label="Buscar Producto"
+            >
+              <div data-select-productos="crear-venta" className="contents">
+              <SelectProductos
+                ref={selectProductosRef}
+                autoFocus
+                allowClear
+                size="large"
+                className="w-full lg:!min-w-[300px] lg:!w-[300px] lg:!max-w-[300px] font-normal!"
+                classNameIcon="text-cyan-600 mx-1"
+                classIconSearch="!mb-0"
+                classIconPlus="mb-0!"
+                showButtonCreate={can(permissions.PRODUCTO_CREATE)}
+                withSearch
+                withTipoBusqueda
+                showCardAgregarProductoVenta
+                showUltimasCompras={false}
+                stockFilterMode="venta"
+                requireSearchToShow
+                handleOnlyOneResult={(producto) => {
+                  setProductoSeleccionadoSearchStore(producto);
+                  if (producto) setOpenModalAgregarProducto(true);
+                }}
+                onChange={(_, producto) => {
+                  setProductoSeleccionadoSearchStore(producto);
+                  if (producto) setOpenModalAgregarProducto(true);
+                }}
+              />
+              </div>
+            </ConfigurableElement>
+          </div>
 
-          <ConfigurableElement
-            componentId="crear-venta.buscar-paquete"
-            label="Buscar Paquete"
-          >
-            <SelectPaquetes
-              placeholder="Buscar Paquete..."
-              className="w-full lg:!min-w-[300px] lg:!w-[300px] lg:!max-w-[300px]"
-              classNameIcon="text-cyan-600"
-              onSelect={(paquete) => {
-                handleAgregarPaquete(paquete);
-              }}
-            />
-          </ConfigurableElement>
+          <div className="w-full lg:w-[210px] lg:shrink-0">
+            <ConfigurableElement
+              componentId="crear-venta.buscar-paquete"
+              label="Buscar Paquete"
+            >
+              <SelectPaquetes
+                placeholder="Buscar Paquete..."
+                size="large"
+                className="w-full"
+                classNameIcon="text-cyan-600"
+                onSelect={(paquete) => {
+                  handleAgregarPaquete(paquete);
+                }}
+              />
+            </ConfigurableElement>
+          </div>
 
-          <ConfigurableElement
-            componentId="crear-venta.buscar-servicio"
-            label="Buscar Servicio"
-          >
-            <SelectServicios
-              placeholder="Buscar Servicio..."
-              className="w-full lg:!min-w-[250px] lg:!w-[250px] lg:!max-w-[250px]"
-              classNameIcon="text-violet-600"
-              onSelect={(servicio) => {
-                handleAgregarServicio({
-                  servicio,
-                  cantidad: 1,
-                  precio_unitario: Number(servicio.precio),
-                });
-              }}
-              onOpenModal={() => setOpenModalBuscarServicio(true)}
-            />
-          </ConfigurableElement>
+          <div className="w-full lg:w-[190px] lg:shrink-0">
+            <ConfigurableElement
+              componentId="crear-venta.buscar-servicio"
+              label="Buscar Servicio"
+            >
+              <SelectServicios
+                placeholder="Buscar Servicio..."
+                className="w-full"
+                classNameIcon="text-violet-600"
+                onSelect={(servicio) => {
+                  handleAgregarServicio({
+                    servicio,
+                    cantidad: 1,
+                    precio_unitario: Number(servicio.precio),
+                  });
+                }}
+                onOpenModal={() => setOpenModalBuscarServicio(true)}
+              />
+            </ConfigurableElement>
+          </div>
 
-          <ConfigurableElement
-            componentId="crear-venta.canjear-vale"
-            label="Canjear Vale"
-          >
-            <BotonCanjearValeHeader />
-          </ConfigurableElement>
+          <div className="lg:shrink-0">
+            <ConfigurableElement
+              componentId="crear-venta.canjear-vale"
+              label="Canjear Vale"
+            >
+              <BotonCanjearValeHeader />
+            </ConfigurableElement>
+          </div>
         </div>
       }
     >

@@ -233,53 +233,53 @@ export const ubicacionesApi = {
   ): Promise<ApiResponse<Ubicacion[]>> {
     const results: Ubicacion[] = [];
     const errors: string[] = [];
+    const norm = (s: string) => s.trim().toUpperCase();
 
-    for (const ubicacion of ubicaciones) {
-      try {
-        // Primero intentar obtener si ya existe
-        const existing = await this.getAll({
-          almacen_id: ubicacion.almacen_id,
-          search: ubicacion.name,
-        });
+    // OPTIMIZACIÓN: antes se hacía getAll + create EN SERIE por cada ubicación
+    // (hasta 2 pedidos HTTP secuenciales por ubicación → waterfall lento).
+    // Ahora: 1 solo getAll por almacén para traer las existentes, y las
+    // faltantes se crean EN PARALELO.
+    const porAlmacen = new Map<number, Set<string>>();
+    for (const u of ubicaciones) {
+      if (!porAlmacen.has(u.almacen_id)) porAlmacen.set(u.almacen_id, new Set());
+      porAlmacen.get(u.almacen_id)!.add(u.name.trim());
+    }
 
-        if (existing.data?.data && existing.data.data.length > 0) {
-          const match = existing.data.data.find(
-            (u) => u.name.trim().toUpperCase() === ubicacion.name.trim().toUpperCase()
-          );
-          if (match) {
-            results.push(match);
-            continue;
-          }
-        }
+    for (const [almacen_id, nombresSet] of porAlmacen) {
+      // 1) Traer TODAS las ubicaciones existentes del almacén en UN pedido.
+      const existentes = await this.getAll({ almacen_id });
+      const mapa = new Map<string, Ubicacion>();
+      for (const e of existentes.data?.data ?? []) mapa.set(norm(e.name), e);
 
-        // Si no existe, crear
-        const created = await this.create(ubicacion);
-        
-        if (created.data) {
-          // El backend devuelve { data: Ubicacion, message: string }
-          // y apiRequest lo envuelve en otro { data: ... }, causando doble wrapping
-          const ubicacionData = (created.data as any).data ?? created.data;
-          results.push(ubicacionData);
-        } else if (created.error) {
-          // Si falla por duplicado, intentar obtener de nuevo
-          const retry = await this.getAll({
-            almacen_id: ubicacion.almacen_id,
-            search: ubicacion.name,
-          });
-          
-          const match = retry.data?.data.find(
-            (u) => u.name.trim().toUpperCase() === ubicacion.name.trim().toUpperCase()
-          );
-          if (match) {
-            results.push(match);
-          } else {
-            errors.push(`No se pudo crear ni encontrar la ubicación "${ubicacion.name}"`);
-          }
-        }
-      } catch (error) {
-        const errorMsg = error instanceof Error ? error.message : 'Error desconocido';
-        errors.push(`Error en "${ubicacion.name}": ${errorMsg}`);
+      // 2) Separar las que ya existen de las que faltan crear.
+      const faltantes: string[] = [];
+      for (const nombre of nombresSet) {
+        const match = mapa.get(norm(nombre));
+        if (match) results.push(match);
+        else faltantes.push(nombre);
       }
+
+      // 3) Crear las faltantes EN PARALELO.
+      const creadas = await Promise.all(
+        faltantes.map(async (nombre) => {
+          try {
+            const created = await this.create({ name: nombre, almacen_id });
+            const data = (created.data as any)?.data ?? created.data;
+            if (data) return data as Ubicacion;
+            // Falló (posible duplicado por carrera): reintentar buscando.
+            const retry = await this.getAll({ almacen_id, search: nombre });
+            return (
+              (retry.data?.data ?? []).find((u) => norm(u.name) === norm(nombre)) ??
+              null
+            );
+          } catch (error) {
+            const msg = error instanceof Error ? error.message : "desconocido";
+            errors.push(`Error en "${nombre}": ${msg}`);
+            return null;
+          }
+        }),
+      );
+      for (const c of creadas) if (c) results.push(c);
     }
 
     return { data: results };

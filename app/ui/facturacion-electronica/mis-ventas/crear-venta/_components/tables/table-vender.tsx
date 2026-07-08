@@ -14,6 +14,7 @@ import { useEffect, useMemo, useCallback, useRef } from 'react'
 import { AgGridReact } from 'ag-grid-react'
 import { FormCreateVenta } from '../others/body-vender'
 import { useConfigMode } from '~/app/ui/configuracion/permisos-visuales/_components/config-mode-context'
+import { Grid } from 'antd'
 import type { ValeCompra } from '~/lib/api/vales-compra'
 
 function condicionEditarProductoVenta({
@@ -319,6 +320,7 @@ export default function TableVender({
 
   // Detectar si estamos en modo configuración
   const configMode = useConfigMode()
+  const screens = Grid.useBreakpoint()
   
   // Datos de demostración para modo configuración - agregar al formulario
   const demoProductos = useMemo(() => [
@@ -452,7 +454,7 @@ export default function TableVender({
         rowSelection={false}
         suppressCellFocus={true}
         withNumberColumn={false}
-        domLayout={configMode?.enabled ? 'normal' : undefined}
+        domLayout={configMode?.enabled ? 'normal' : screens.xl ? undefined : 'autoHeight'}
         getRowStyle={(params) => {
           const idx = params.data?.name
           if (idx == null) return undefined

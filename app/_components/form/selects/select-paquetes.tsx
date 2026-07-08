@@ -15,6 +15,7 @@ interface SelectPaquetesProps {
   onSelect?: (paquete: Paquete) => void
   disabled?: boolean
   autoFocus?: boolean
+  size?: 'small' | 'middle' | 'large'
 }
 
 /**
@@ -31,6 +32,7 @@ export default function SelectPaquetes({
   onSelect,
   disabled = false,
   autoFocus = false,
+  size,
 }: SelectPaquetesProps) {
   const selectRef = useRef<RefSelectBaseProps>(null)
   const [text, setText] = useState('')
@@ -62,35 +64,40 @@ export default function SelectPaquetes({
 
   return (
     <>
-      <SelectBase
-        ref={selectRef}
-        showSearch
-        uppercase={true}
-        filterOption={false}
-        onSearch={setText}
-        searchValue={text}
-        prefix={<FaBoxOpen className={classNameIcon} size={sizeIcon} />}
-        variant='filled'
-        placeholder={placeholder}
-        className={className}
-        disabled={disabled}
-        open={false}
-        options={[]}
-        onKeyUp={(e) => {
-          if (e.key === 'Enter' && text) {
+      {/* Select + lupa en una fila (items-center) para que el conjunto mida
+          lo mismo que el buscador y quede alineado con Producto/Servicio. */}
+      <div className='flex items-center gap-2 w-full'>
+        <SelectBase
+          ref={selectRef}
+          showSearch
+          uppercase={true}
+          filterOption={false}
+          onSearch={setText}
+          searchValue={text}
+          prefix={<FaBoxOpen className={classNameIcon} size={sizeIcon} />}
+          variant='filled'
+          size={size}
+          placeholder={placeholder}
+          className={className}
+          disabled={disabled}
+          open={false}
+          options={[]}
+          onKeyUp={(e) => {
+            if (e.key === 'Enter' && text) {
+              setTextDefault(text)
+              setOpenModal(true)
+            }
+          }}
+        />
+        <FaSearch
+          className='text-yellow-600 cursor-pointer min-w-fit'
+          size={15}
+          onClick={() => {
             setTextDefault(text)
             setOpenModal(true)
-          }
-        }}
-      />
-      <FaSearch
-        className='text-yellow-600 mb-7 cursor-pointer min-w-fit'
-        size={15}
-        onClick={() => {
-          setTextDefault(text)
-          setOpenModal(true)
-        }}
-      />
+          }}
+        />
+      </div>
       <ModalBuscarPaquete
         open={openModal}
         setOpen={setOpenModal}
