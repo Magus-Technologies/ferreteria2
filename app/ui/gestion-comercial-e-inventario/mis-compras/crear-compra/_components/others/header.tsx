@@ -58,9 +58,9 @@ export default function HeaderCrearCompra({
         )
       }
       extra={
-        (compra?.recepciones_almacen_count ?? 0) > 0 ||
-        (compra?.pagos_de_compras_count ?? 0) > 0 ||
-        (!!compra && compra.estado_de_compra !== 'ee') ? null : (
+        // El selector solo se oculta cuando la compra ya tiene recepciones;
+        // sin recepcionar se pueden seguir agregando productos.
+        (compra?.recepciones_almacen_count ?? 0) > 0 ? null : (
           <ConfigurableElement
             componentId="gestion-comercial.crear-compra.agregar-producto"
             label="Selector Agregar Producto"

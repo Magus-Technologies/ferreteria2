@@ -40,7 +40,10 @@ export function useColumnsComprar({
   // columnDefs. Así ag-grid no recibe columnas nuevas y no remonta la celda
   // editable, conservando el foco del input.
   const columns = useMemo<ColDef<FormListFieldData>[]>(() => {
-    const isTableDisabled = !!compra && compra.estado_de_compra !== 'ee'
+    // Los productos solo se bloquean cuando la compra ya tiene recepciones de
+    // almacén; una compra sin recepcionar se puede editar por completo.
+    const isTableDisabled =
+      !!compra && (compra.recepciones_almacen_count ?? 0) > 0
     return [
     {
       colId: 'codigo',
@@ -294,7 +297,6 @@ export function useColumnsComprar({
       minWidth: 85,
       width: 85,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
-        const esRecepcionada = (compra?.recepciones_almacen_count ?? 0) > 0
         return (
           <div className='flex items-center h-full'>
             <InputNumberBase
@@ -324,7 +326,7 @@ export function useColumnsComprar({
                   : undefined
               }
               formWithMessage={false}
-              disabled={isTableDisabled || esRecepcionada}
+              disabled={isTableDisabled}
               onChange={val => {
                 form.setFieldValue(
                   ['productos', value, 'subtotal'],

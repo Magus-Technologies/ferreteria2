@@ -106,6 +106,11 @@ export default function useCreateCompra({
         productos: productos,
       })
 
+      // Con recepciones activas los productos no son editables: no se envían
+      // para que el backend no borre/recree los detalles (perdería el avance
+      // de recepción y resetearía cantidad_pendiente).
+      const esRecepcionada = (compra?.recepciones_almacen_count ?? 0) > 0
+
       // Enums now match backend codes (cr, co, s, d, etc.)
 
       // Transform to Laravel API format
@@ -178,8 +183,14 @@ export default function useCreateCompra({
       console.log('💸 Gasto extra ID:', dataFormated.gasto_extra_id)
       console.log('🏦 Despliegue de pago ID:', dataFormated.despliegue_de_pago_id)
 
+      const { productos_por_almacen: _productos, ...dataSinProductos } =
+        dataFormated
+
       const result = compra
-        ? await compraApi.update(compra.id, dataFormated)
+        ? await compraApi.update(
+            compra.id,
+            esRecepcionada ? dataSinProductos : dataFormated
+          )
         : await compraApi.create(dataFormated)
 
       if (result.error) {
