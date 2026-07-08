@@ -260,6 +260,16 @@ export function useColumnsCompras({
       },
     },
     {
+      colId: 'fecha_pago_referencial',
+      headerName: 'Fecha Pago Ref.',
+      field: 'ultima_fecha_pago_referencial',
+      width: 130,
+      minWidth: 130,
+      filter: 'agDateColumnFilter',
+      valueFormatter: (params) =>
+        params.value ? formatFechaPeru(params.value, 'DD/MM/YYYY') : '-',
+    },
+    {
       colId: 'tipo_cambio',
       headerName: 'T.Cambio',
       field: 'tipo_de_cambio',
