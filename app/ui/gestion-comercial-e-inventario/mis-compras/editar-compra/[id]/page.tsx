@@ -21,7 +21,7 @@ export default function EditarCompra() {
   const isRecuperacion = searchParams.get('recuperar') === '1'
 
   // Cargar la compra desde la API
-  const { data: compraData, isLoading: isLoadingCompra, error: errorCompra } = useQuery({
+  const { data: compraData, isLoading: isLoadingCompra, isFetching: isFetchingCompra, error: errorCompra } = useQuery({
     queryKey: ['compra', id],
     queryFn: async () => {
       const result = await compraApi.getById(id)
@@ -31,6 +31,11 @@ export default function EditarCompra() {
       return result.data.data
     },
     enabled: !!id && canAccess,
+    // El staleTime global (5 min) serviría una compra cacheada de antes de
+    // recepcionar/pagar y el formulario no bloquearía los productos. Editar
+    // siempre necesita el estado real actual.
+    staleTime: 0,
+    refetchOnMount: 'always',
   })
 
   // Cargar las unidades derivadas desde la API
@@ -49,8 +54,9 @@ export default function EditarCompra() {
   if (!canAccess) return <NoAutorizado />
   if (!id) return <NoAutorizado />
 
-  // Mostrar loading mientras se cargan los datos
-  if (isLoadingCompra || isLoadingUnidades) {
+  // Mostrar loading mientras se cargan los datos (isFetching cubre el refetch
+  // sobre datos cacheados: el form no debe montarse con una compra desactualizada)
+  if (isLoadingCompra || isFetchingCompra || isLoadingUnidades) {
     return (
       <ContenedorGeneral className='h-full flex items-center justify-center'>
         <Spin size='large' tip='Cargando compra...' />

@@ -140,7 +140,9 @@ export default function useCreateCompra({
         egreso_dinero_id: values.egreso_dinero_id ?? null,
         gasto_extra_id: values.gasto_extra_id ?? null,
         despliegue_de_pago_id: values.despliegue_de_pago_id ?? null,
-        metodos_de_pago: values.metodos_de_pago ?? [],
+        // Recepcionada: el pago existente se conserva, no se reenvían métodos
+        // (el backend anularía los pagos previos y crearía nuevos)
+        metodos_de_pago: esRecepcionada ? [] : values.metodos_de_pago ?? [],
         orden_compra_id: values.orden_compra_id ?? null,
         user_id: user_id!,
         almacen_id: almacen_id!,

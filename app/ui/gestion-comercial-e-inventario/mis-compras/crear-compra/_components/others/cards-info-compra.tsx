@@ -78,6 +78,7 @@ export default function CardsInfoCompra({
 
   const totalAPagar = subTotal + flete + (percepcion ?? 0)
   const esContado = forma_de_pago === FormaDePago.Contado
+  const esRecepcionada = (compra?.recepciones_almacen_count ?? 0) > 0
 
   const handleCrearCompra = async () => {
     form.setFieldValue('estado_de_compra', EstadoDeCompra.Creado)
@@ -97,6 +98,13 @@ export default function CardsInfoCompra({
     if (!proveedorId) camposFaltantes.push('Proveedor')
     if (camposFaltantes.length > 0) {
       message.error(`Falta completar: ${camposFaltantes.join(', ')}`)
+      return
+    }
+
+    // Compra recepcionada: solo se edita la información; los productos están
+    // bloqueados y el pago ya registrado se conserva, no se vuelve a pedir.
+    if (esRecepcionada) {
+      form.submit()
       return
     }
 
