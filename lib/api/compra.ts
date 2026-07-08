@@ -360,9 +360,10 @@ export const compraApi = {
   /**
    * Eliminar compra (anular)
    */
-  delete: async (id: string): Promise<ApiResponse<{ data: string }>> => {
+  delete: async (id: string, params?: Record<string, any>): Promise<ApiResponse<{ data: string }>> => {
     return apiRequest<{ data: string }>(`/compras/${id}`, {
       method: 'DELETE',
+      params,
     });
   },
 

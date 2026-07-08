@@ -21,6 +21,9 @@ import useApp from 'antd/es/app/useApp'
 import { useState } from 'react'
 import ModalFinalizarRecepcion from '../modals/modal-finalizar-recepcion'
 import ModalDocCompra from '../modals/modal-doc-compra'
+import { fetchCajaActivaOrNull } from '~/lib/api/caja'
+import ModalCrearIngresoExtra from '~/app/ui/gestion-contable-y-financiera/mis-ingresos/_components/others/modal-crear-ingreso-extra'
+import { crearIngresoExtra } from '~/lib/api/ingreso-extra'
 
 // Helper para formatear moneda: Siempre en Soles por requerimiento del usuario
 const formatCurrencySoles = (value: number) => {
@@ -47,6 +50,25 @@ export function useColumnsCompras({
   const [compraAFinalizar, setCompraAFinalizar] = useState<string | null>(null)
   const [modalPdfOpen, setModalPdfOpen] = useState(false)
   const [compraPdfSeleccionada, setCompraPdfSeleccionada] = useState<Compra | undefined>()
+  const [modalIngresoExtraOpen, setModalIngresoExtraOpen] = useState(false)
+  const [ingresoExtraData, setIngresoExtraData] = useState<{
+    monto: number
+    concepto: string
+    despliegue_pago_id?: string
+  }>({})
+
+  const crearIngresoExtraMutation = useMutation({
+    mutationFn: crearIngresoExtra,
+    onSuccess: () => {
+      message.success('Ingreso registrado con éxito')
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.COMPRAS] })
+      queryClient.invalidateQueries({ queryKey: ['ingresos-extras'] })
+      setModalIngresoExtraOpen(false)
+    },
+    onError: (error: Error) => {
+      message.error(error.message || 'Error al registrar el Ingreso Extra')
+    },
+  })
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: { estado_de_compra: string } }) => {
@@ -462,20 +484,50 @@ export function useColumnsCompras({
             id={params.value}
             permiso={permissions.COMPRAS_BASE}
             showDelete={params.data?.estado_de_compra !== 'an'}
-            propsDelete={{
-              disabled: params.data?.estado_de_compra === 'pr',
-              disabledTooltip:
-                'No se puede anular: la compra ya tiene productos recepcionados en almacén',
-              action: async ({ id }: { id: string }) => {
-                const result = await compraApi.delete(id)
-                if (result.error) {
-                  throw new Error(result.error.message)
-                }
-                return { data: 'ok' }
-              },
-              msgSuccess: 'Compra anulada correctamente',
-              queryKey: [QueryKeys.COMPRAS],
-            }}
+               propsDelete={{
+               disabled: params.data?.estado_de_compra === 'pr',
+               disabledTooltip:
+                 'No se puede anular: la compra ya tiene productos recepcionados en almacén',
+               action: async ({ id }: { id: string }) => {
+                 const data = params.data
+                 const { data: cajaActivaResponse } = await fetchCajaActivaOrNull()
+                 const cajaActiva = cajaActivaResponse
+
+                 const isSameTurnover = cajaActiva && (
+                   dayjs(data.created_at).isSame(dayjs(cajaActiva.fecha_apertura), 'minute') ||
+                   dayjs(data.created_at).isAfter(dayjs(cajaActiva.fecha_apertura))
+                 )
+
+                 if (isSameTurnover) {
+                   const result = await compraApi.delete(id)
+                   if (result.error) {
+                     throw new Error(result.error.message)
+                   }
+                   queryClient.invalidateQueries({ queryKey: [QueryKeys.COMPRAS] })
+                   message.success('Compra anulada correctamente')
+                 } else {
+                   // Anulamos la compra sin devolver dinero (skip_refund=true)
+                   const result = await compraApi.delete(id, { params: { skip_refund: true } })
+                   if (result.error) {
+                     throw new Error(result.error.message)
+                   }
+
+                   // Abrimos el modal de ingreso extra
+                   const total = Number(getSubTotal(data.productos_por_almacen)) + (Number(data.percepcion) || 0)
+                   setIngresoExtraData({
+                     monto: total,
+                     concepto: `Devolución por anulación de compra ${data.serie || ''}-${data.numero || ''}`,
+                   })
+                   setModalIngresoExtraOpen(true)
+
+                   queryClient.invalidateQueries({ queryKey: [QueryKeys.COMPRAS] })
+                 }
+                 return { data: 'ok' }
+               },
+               msgSuccess: 'Compra anulada correctamente',
+               queryKey: [QueryKeys.COMPRAS],
+             }}
+
             onEdit={() =>
               router.push(
                 `/ui/gestion-comercial-e-inventario/mis-compras/editar-compra/${params.value}`
@@ -538,14 +590,20 @@ export function useColumnsCompras({
           onConfirm={handleFinalizarConfirm}
           loading={finalizarRecepcionMutation.isPending}
         />
-        <ModalDocCompra
-          open={modalPdfOpen}
-          setOpen={setModalPdfOpen}
-          compra={compraPdfSeleccionada}
-        />
-      </>
-    )
-  }
+         <ModalDocCompra
+           open={modalPdfOpen}
+           setOpen={setModalPdfOpen}
+           compra={compraPdfSeleccionada}
+         />
+         <ModalCrearIngresoExtra
+           open={modalIngresoExtraOpen}
+           onClose={() => setModalIngresoExtraOpen(false)}
+           initialValues={ingresoExtraData as any}
+         />
+       </>
+     )
+   }
+
 }
 
 function getSubTotal(productos: Compra['productos_por_almacen']) {
