@@ -90,6 +90,7 @@ export interface InventarioReporteFilters {
   categoria_id?: number;
   marca_id?: number;
   con_stock?: boolean;
+  cs_stock?: 'con_stock' | 'sin_stock' | 'all';
   per_page?: number;
   page?: number;
   anio?: number;

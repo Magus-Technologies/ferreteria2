@@ -11,13 +11,14 @@ export default function CardsInfo() {
   const filtros = useStoreFiltrosProductos(store => store.filtros)
 
   const { data: resumen } = useQuery({
-    queryKey: ['inventario-resumen', almacen_id, filtros?.categoria_id, filtros?.marca_id, filtros?.search],
+    queryKey: ['inventario-resumen', almacen_id, filtros?.categoria_id, filtros?.marca_id, filtros?.search, filtros?.cs_stock],
     queryFn: async () => {
       const res = await inventarioReporteApi.getResumen({
         almacen_id,
         categoria_id: filtros?.categoria_id,
         marca_id: filtros?.marca_id,
         search: filtros?.search,
+        cs_stock: filtros?.cs_stock,
       })
       if (res.error) throw new Error(res.error.message)
       return res.data?.data ?? null
