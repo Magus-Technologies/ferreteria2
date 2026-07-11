@@ -632,8 +632,8 @@ export default function ModalDetalleRequerimiento({
                     </div>
                   )}
                 </div>
-                {(inicioDayjs || srv.duracion_cantidad) && (
-                  <div className="grid grid-cols-3 gap-2 pt-3 border-t border-emerald-100/50">
+                {(inicioDayjs || srv.duracion_cantidad || srv.hora_inicio) && (
+                  <div className="grid grid-cols-4 gap-2 pt-3 border-t border-emerald-100/50">
                     <div className="flex flex-col gap-0.5">
                       <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider flex items-center gap-1"><CalendarOutlined /> Inicio</span>
                       <span className="font-semibold text-slate-700 text-sm">{inicioDayjs ? inicioDayjs.format('DD/MM/YYYY HH:mm') : '—'}</span>
@@ -641,6 +641,14 @@ export default function ModalDetalleRequerimiento({
                     <div className="flex flex-col gap-0.5">
                       <span className="text-[10px] text-rose-700 font-bold uppercase tracking-wider flex items-center gap-1"><FaCalendarTimes size={10} /> Fin estimado</span>
                       <span className="font-semibold text-slate-700 text-sm">{finDayjs ? finDayjs.format('DD/MM/YYYY HH:mm') : '—'}</span>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider flex items-center gap-1"><ClockCircleOutlined /> Horario</span>
+                      <span className="font-semibold text-slate-700 text-sm">
+                        {srv.hora_inicio && srv.hora_fin
+                          ? `${srv.hora_inicio} - ${srv.hora_fin}`
+                          : srv.hora_inicio ?? '—'}
+                      </span>
                     </div>
                     <div className="flex flex-col gap-0.5">
                       <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider flex items-center gap-1"><FaHourglassHalf size={10} /> Duración</span>

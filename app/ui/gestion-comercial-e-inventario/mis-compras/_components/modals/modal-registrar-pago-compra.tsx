@@ -258,6 +258,16 @@ export default function ModalRegistrarPagoCompra({
       cellStyle: { textAlign: 'center' },
     },
     {
+      headerName: 'FECHA REF.',
+      field: 'fecha_pago_referencial',
+      width: 110,
+      valueFormatter: (params) => {
+        if (!params.value) return '-'
+        return toLocalString({ date: dayjs(params.value), format: 'DD/MM/YYYY' }) || '-'
+      },
+      cellStyle: { textAlign: 'center' },
+    },
+    {
       headerName: 'MONTO',
       field: 'monto',
       width: 110,

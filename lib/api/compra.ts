@@ -83,6 +83,7 @@ export interface Compra {
   saldo_pendiente?: number | null;
   // true = pagado, false = por pagar, null = no aplica (anulada / no calculado)
   esta_pagado?: boolean | null;
+  ultima_fecha_pago_referencial?: string | null;
   orden_compra_id?: number | null;
   orden_compra?: { id: number; codigo: string } | null;
 }
@@ -147,6 +148,7 @@ export interface PagoDeCompra {
   observacion: string | null;
   numero_letra: string | null;
   numero_operacion: string | null;
+  fecha_pago_referencial: string | null;
   estado: boolean;
   created_at?: string;
   despliegue_de_pago?: {
@@ -360,9 +362,10 @@ export const compraApi = {
   /**
    * Eliminar compra (anular)
    */
-  delete: async (id: string): Promise<ApiResponse<{ data: string }>> => {
+  delete: async (id: string, params?: Record<string, any>): Promise<ApiResponse<{ data: string }>> => {
     return apiRequest<{ data: string }>(`/compras/${id}`, {
       method: 'DELETE',
+      params,
     });
   },
 

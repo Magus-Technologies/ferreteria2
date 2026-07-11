@@ -1,6 +1,6 @@
 'use client'
 
-import { Form, FormInstance, Modal } from 'antd'
+import { Form, FormInstance, Modal, DatePicker } from 'antd'
 import useApp from 'antd/es/app/useApp'
 import { useEffect, useMemo, useState } from 'react'
 import ButtonBase from '~/components/buttons/button-base'
@@ -25,6 +25,7 @@ interface MetodoPago {
   monto: number
   referencia?: string
   recibe_efectivo?: number
+  fecha_pago_referencial?: string
 }
 
 export default function ModalMetodosPagoCompra({
@@ -152,6 +153,9 @@ export default function ModalMetodosPagoCompra({
         monto: montoFinal,
         referencia: values.referencia || undefined,
         recibe_efectivo: values.recibe_efectivo || undefined,
+        fecha_pago_referencial: values.fecha_pago_referencial
+          ? values.fecha_pago_referencial.format('YYYY-MM-DD')
+          : undefined,
       }])
       modalForm.resetFields()
       setDespliegueName('')
@@ -207,6 +211,7 @@ export default function ModalMetodosPagoCompra({
       despliegue_de_pago_id: m.despliegue_de_pago_id,
       monto: m.monto,
       numero_operacion: m.referencia || undefined,
+      fecha_pago_referencial: m.fecha_pago_referencial || undefined,
     }))
     
     console.log('💳 Guardando metodos_de_pago:', metodosPagoFormateados)
@@ -312,6 +317,7 @@ export default function ModalMetodosPagoCompra({
                   <tr>
                     <th className='px-4 py-2 text-left text-sm font-semibold text-slate-700'>#</th>
                     <th className='px-4 py-2 text-left text-sm font-semibold text-slate-700'>Tipo de Pago</th>
+                    <th className='px-4 py-2 text-left text-sm font-semibold text-slate-700'>Fecha Pago Ref.</th>
                     <th className='px-4 py-2 text-right text-sm font-semibold text-slate-700'>Monto</th>
                     <th className='px-4 py-2 text-left text-sm font-semibold text-slate-700'>Referencia</th>
                     <th className='px-4 py-2 text-right text-sm font-semibold text-slate-700'>Monto Recibe</th>
@@ -359,6 +365,7 @@ export default function ModalMetodosPagoCompra({
                       <tr key={metodo.id} className='border-t hover:bg-slate-50'>
                         <td className='px-4 py-3 text-sm text-slate-600'>{index + 1}</td>
                         <td className='px-4 py-3 text-sm font-medium text-slate-700'>{metodo.despliegue_name}</td>
+                        <td className='px-4 py-3 text-sm text-slate-600'>{metodo.fecha_pago_referencial || '-'}</td>
                         <td className='px-4 py-3 text-sm font-semibold text-right text-blue-600'>
                           {monedaSymbol} {metodo.monto.toFixed(2)}
                         </td>
@@ -456,6 +463,22 @@ export default function ModalMetodosPagoCompra({
                   />
                 </div>
               )}
+
+              <div className='w-[150px]'>
+                <label className='block text-xs font-medium text-slate-600 mb-1'>
+                  Fecha Pago Ref.
+                </label>
+                <Form.Item
+                  name='fecha_pago_referencial'
+                  className='mb-0'
+                >
+                  <DatePicker
+                    className='w-full'
+                    placeholder='Seleccionar'
+                    format='YYYY-MM-DD'
+                  />
+                </Form.Item>
+              </div>
 
               <div className='w-[140px]'>
                 <label className='block text-xs font-medium text-slate-600 mb-1'>

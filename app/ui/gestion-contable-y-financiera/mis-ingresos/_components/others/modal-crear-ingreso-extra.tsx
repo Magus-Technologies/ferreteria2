@@ -9,14 +9,16 @@ import ModalForm from '~/components/modals/modal-form'
 import SelectDespliegueDePago from '~/app/_components/form/selects/select-despliegue-de-pago'
 import LabelBase from '~/components/form/label-base'
 import TitleForm from '~/components/form/title-form'
+import { type CrearIngresoExtraData } from '~/lib/api/ingreso-extra'
 
 interface ModalCrearIngresoExtraProps {
     open: boolean
     onClose: () => void
     ingresoEdit?: IngresoExtra
+    initialValues?: Partial<CrearIngresoExtraData>
 }
 
-export default function ModalCrearIngresoExtra({ open, onClose, ingresoEdit }: ModalCrearIngresoExtraProps) {
+export default function ModalCrearIngresoExtra({ open, onClose, ingresoEdit, initialValues }: ModalCrearIngresoExtraProps) {
     const [form] = Form.useForm<CrearIngresoExtraData>()
     const queryClient = useQueryClient()
     const { message } = useApp()
@@ -49,14 +51,20 @@ export default function ModalCrearIngresoExtra({ open, onClose, ingresoEdit }: M
     })
 
     useEffect(() => {
-        if (open && ingresoEdit) {
-            form.setFieldsValue({
-                monto: ingresoEdit.monto,
-                concepto: ingresoEdit.concepto,
-                despliegue_pago_id: ingresoEdit.despliegue_pago_id || undefined,
-            })
+        if (open) {
+            if (ingresoEdit) {
+                form.setFieldsValue({
+                    monto: ingresoEdit.monto,
+                    concepto: ingresoEdit.concepto,
+                    despliegue_pago_id: ingresoEdit.despliegue_pago_id || undefined,
+                })
+            } else if (initialValues) {
+                form.setFieldsValue(initialValues)
+            } else {
+                form.resetFields()
+            }
         }
-    }, [open, ingresoEdit, form])
+    }, [open, ingresoEdit, initialValues, form])
 
     const handleClose = () => {
         form.resetFields()

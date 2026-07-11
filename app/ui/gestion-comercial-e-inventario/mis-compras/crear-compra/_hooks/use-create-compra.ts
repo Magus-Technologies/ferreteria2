@@ -106,6 +106,11 @@ export default function useCreateCompra({
         productos: productos,
       })
 
+      // Con recepciones activas los productos no son editables: no se envían
+      // para que el backend no borre/recree los detalles (perdería el avance
+      // de recepción y resetearía cantidad_pendiente).
+      const esRecepcionada = (compra?.recepciones_almacen_count ?? 0) > 0
+
       // Enums now match backend codes (cr, co, s, d, etc.)
 
       // Transform to Laravel API format
@@ -135,7 +140,9 @@ export default function useCreateCompra({
         egreso_dinero_id: values.egreso_dinero_id ?? null,
         gasto_extra_id: values.gasto_extra_id ?? null,
         despliegue_de_pago_id: values.despliegue_de_pago_id ?? null,
-        metodos_de_pago: values.metodos_de_pago ?? [],
+        // Recepcionada: el pago existente se conserva, no se reenvían métodos
+        // (el backend anularía los pagos previos y crearía nuevos)
+        metodos_de_pago: esRecepcionada ? [] : values.metodos_de_pago ?? [],
         orden_compra_id: values.orden_compra_id ?? null,
         user_id: user_id!,
         almacen_id: almacen_id!,
@@ -178,8 +185,14 @@ export default function useCreateCompra({
       console.log('💸 Gasto extra ID:', dataFormated.gasto_extra_id)
       console.log('🏦 Despliegue de pago ID:', dataFormated.despliegue_de_pago_id)
 
+      const { productos_por_almacen: _productos, ...dataSinProductos } =
+        dataFormated
+
       const result = compra
-        ? await compraApi.update(compra.id, dataFormated)
+        ? await compraApi.update(
+            compra.id,
+            esRecepcionada ? dataSinProductos : dataFormated
+          )
         : await compraApi.create(dataFormated)
 
       if (result.error) {
