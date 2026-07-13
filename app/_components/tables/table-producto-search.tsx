@@ -259,7 +259,6 @@ export default function TableProductoSearch({
   ]);
 
   function handleRefetch() {
-    setProductosCompra([]);
     refetch();
     if (isActiveSearch) {
       refetchBusquedaRemota();
