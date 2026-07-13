@@ -55,14 +55,27 @@ export default function SelectUnidadDerivadaCompra({
   }))
 
   const handleChange = (newUnidadDerivadaId: number) => {
-    // Buscar la nueva unidad derivada seleccionada
     const nuevaUnidadDerivada = unidadesDerivadas.find(
       (ud: any) => ud.unidad_derivada.id === newUnidadDerivadaId
     )
 
     if (!nuevaUnidadDerivada) return
 
-    // Actualizar todos los campos relacionados en el formulario
+    const nuevoFactor = Number(nuevaUnidadDerivada.factor)
+    const factorActual = Number(form.getFieldValue(['productos', fieldIndex, 'unidad_derivada_factor']) ?? 1)
+
+    // Convertir cantidad al nuevo factor
+    let cantidad = Number(form.getFieldValue(['productos', fieldIndex, 'cantidad']) ?? 0)
+    if (factorActual > 0 && nuevoFactor > 0 && factorActual !== nuevoFactor) {
+      cantidad = (cantidad * factorActual) / nuevoFactor
+      form.setFieldValue(['productos', fieldIndex, 'cantidad'], cantidad)
+
+      const cantidadPendiente = Number(form.getFieldValue(['productos', fieldIndex, 'cantidad_pendiente']) ?? 0)
+      if (cantidadPendiente > 0) {
+        form.setFieldValue(['productos', fieldIndex, 'cantidad_pendiente'], (cantidadPendiente * factorActual) / nuevoFactor)
+      }
+    }
+
     form.setFieldValue(
       ['productos', fieldIndex, 'unidad_derivada_id'],
       nuevaUnidadDerivada.unidad_derivada.id
@@ -73,14 +86,10 @@ export default function SelectUnidadDerivadaCompra({
     )
     form.setFieldValue(
       ['productos', fieldIndex, 'unidad_derivada_factor'],
-      Number(nuevaUnidadDerivada.factor)
+      nuevoFactor
     )
 
-    // Al cambiar la unidad, el precio de compra debe recalcularse basado en el costo_actual * nuevo_factor
-    // o simplemente mantenerse si el usuario quiere editarlo. 
-    // Pero usualmente se ajusta al factor.
     const costoActual = form.getFieldValue(['productos', fieldIndex, 'costo_actual']) || 0
-    const nuevoFactor = Number(nuevaUnidadDerivada.factor)
     const nuevoPrecioCompra = costoActual * nuevoFactor
 
     form.setFieldValue(
@@ -88,18 +97,13 @@ export default function SelectUnidadDerivadaCompra({
       nuevoPrecioCompra
     )
 
-    // Recalcular subtotal
-    const cantidad = Number(
-      form.getFieldValue(['productos', fieldIndex, 'cantidad']) ?? 0
-    )
     const flete = Number(
       form.getFieldValue(['productos', fieldIndex, 'flete']) ?? 0
     )
-    
+
     const nuevoSubtotal = (nuevoPrecioCompra * cantidad) + flete
     form.setFieldValue(['productos', fieldIndex, 'subtotal'], nuevoSubtotal)
 
-    // Sincronizar con el store para que los cambios se mantengan
     setProductosCompra((prev) =>
       prev.map((p) =>
         p.producto_id === productoId
@@ -108,6 +112,7 @@ export default function SelectUnidadDerivadaCompra({
               unidad_derivada_id: nuevaUnidadDerivada.unidad_derivada.id,
               unidad_derivada_name: nuevaUnidadDerivada.unidad_derivada.name,
               unidad_derivada_factor: nuevoFactor,
+              cantidad,
               precio_compra: nuevoPrecioCompra,
               subtotal: nuevoSubtotal,
             }
@@ -115,7 +120,6 @@ export default function SelectUnidadDerivadaCompra({
       )
     )
 
-    // Disparar lógica de ajuste de otros productos (si aplica)
     onChangeCostoTablaCompras({
         form,
         value: fieldIndex,
