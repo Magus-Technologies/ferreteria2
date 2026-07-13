@@ -5,7 +5,7 @@ import { TipoBusquedaProducto } from "../form/selects/select-tipo-busqueda-produ
 import { ProductoCreateInputSchema } from "~/types/zod-schemas";
 import { useStoreProductoSeleccionadoSearch } from "~/app/ui/gestion-comercial-e-inventario/mi-almacen/_store/store-producto-seleccionado-search";
 import { useStoreAlmacen } from "~/store/store-almacen";
-import { RefObject, useEffect, useImperativeHandle, useMemo, useRef } from "react";
+import { RefObject, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { useStoreProductoAgregadoCompra } from "~/app/_stores/store-producto-agregado-compra";
 import { useProductosListadoCompleto } from "~/app/ui/gestion-comercial-e-inventario/mi-almacen/_hooks/useProductosListadoCompleto";
 import { usePathname } from "next/navigation";
@@ -153,6 +153,8 @@ export default function TableProductoSearch({
     (store) => store.setProductos
   );
 
+  const [showAllProducts, setShowAllProducts] = useState(false);
+
   /**
    * Filtros en memoria sobre el set cacheado:
    *  1) Excluir productos ya agregados al carrito de compra
@@ -175,8 +177,8 @@ export default function TableProductoSearch({
 
     let productos = isActiveSearch ? productosBusquedaRemota : productosCompletos;
 
-    // 1) Excluir productos ya agregados
-    if (productosCompra.length > 0) {
+    // 1) Excluir productos ya agregados (excepto en refetch)
+    if (productosCompra.length > 0 && !showAllProducts) {
       productos = productos.filter(
         (p) => !productosCompra.find((pc) => pc.producto_id === p.id)
       );
@@ -256,14 +258,21 @@ export default function TableProductoSearch({
     value,
     tipoBusqueda,
     requireSearchToShow,
+    showAllProducts,
   ]);
 
   function handleRefetch() {
+    setShowAllProducts(true);
     refetch();
     if (isActiveSearch) {
       refetchBusquedaRemota();
     }
   }
+
+  // Al cambiar el texto de búsqueda, volver a filtrar productos ya agregados
+  useEffect(() => {
+    setShowAllProducts(false);
+  }, [value]);
 
   useImperativeHandle(ref, () => ({
     handleRefetch: () => handleRefetch(),
