@@ -73,13 +73,16 @@ export function useRequerimientoData(open: boolean) {
             }
 
             // Cargar vehículos
-            const resVehiculos = await vehiculosApi.getAll()
+            const resVehiculos = await vehiculosApi.getAll({ estado: true })
             if (resVehiculos.data?.data) {
+                // Solo vehículos activos (los inactivos no deben aparecer)
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const vehiculosData = resVehiculos.data.data.map((v: any) => ({
-                    label: `${v.name || v.placa || 'Vehículo'} (${v.tipo || 'N/A'})`,
-                    value: String(v.id)
-                }))
+                const vehiculosData = resVehiculos.data.data
+                    .filter((v: any) => v.estado !== false)
+                    .map((v: any) => ({
+                        label: `${v.name || v.placa || 'Vehículo'} (${v.tipo || 'N/A'})`,
+                        value: String(v.id)
+                    }))
                 setVehiculos(vehiculosData)
             }
 

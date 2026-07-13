@@ -47,13 +47,26 @@ export default function StepServicio({
         tipoServicio: "",
         descripcionServicio: "",
         lugarEjecucion: "",
-        fechaInicioEstimada: "",
-        unidadDuracion: "horas",
-        horaInicio: "",
-        horaFin: "",
-        cantidadDias: "",
         presupuestoReferencial: "",
         detalles: "",
+    })
+
+    // Horario / duración GLOBAL: se elige una sola vez y se aplica a TODOS los
+    // servicios (antes se pedía por cada servicio agregado). Se hidrata desde el
+    // primer servicio ya agregado para no perderse al volver atrás de paso.
+    const [config, setConfig] = useState<{
+        unidadDuracion: 'horas' | 'dias'
+        horaInicio: string
+        horaFin: string
+        cantidadDias: string
+    }>(() => {
+        const first = serviciosSeleccionados[0]
+        return {
+            unidadDuracion: first?.unidadDuracion || 'horas',
+            horaInicio: first?.horaInicio || '',
+            horaFin: first?.horaFin || '',
+            cantidadDias: first?.cantidadDias || '',
+        }
     })
 
     // Auto-rellenar vehículo del usuario si tiene uno asignado
@@ -63,52 +76,59 @@ export default function StepServicio({
         }
     }, [user?.vehiculo_id, vehiculoId, setVehiculoId])
 
-        // Hora obligatoria solo en el PRIMER servicio; a partir del segundo es
-        // opcional. Si no se pone, se deja vacía: no se asume ninguna hora
-        // (antes se rellenaba con "08:00" aunque el usuario no la hubiera tocado).
-    const esPrimerServicio = serviciosSeleccionados.length === 0
+    // ¿El horario/duración global está completo? Es obligatorio para poder agregar.
+    const configCompleta = config.unidadDuracion === 'horas'
+        ? Boolean(config.horaInicio && config.horaFin)
+        : Boolean(config.cantidadDias)
+
+    // Fecha/hora de inicio a partir de la fecha requerida + el horario global
+    const buildFechaHora = (cfg: typeof config) => {
+        const fecha = fechaRequerida || dayjs().format('YYYY-MM-DD')
+        const hora = cfg.unidadDuracion === 'horas' ? (cfg.horaInicio || '') : '00:00'
+        return hora ? `${fecha} ${hora}` : fecha
+    }
+
+    // Cambia el horario/duración GLOBAL y re-sincroniza los servicios ya agregados
+    const updateConfig = (patch: Partial<typeof config>) => {
+        const next = { ...config, ...patch }
+        setConfig(next)
+        if (serviciosSeleccionados.length > 0) {
+            const fechaHora = buildFechaHora(next)
+            setServiciosSeleccionados(serviciosSeleccionados.map(s => ({
+                ...s,
+                unidadDuracion: next.unidadDuracion,
+                horaInicio: next.unidadDuracion === 'horas' ? next.horaInicio : '',
+                horaFin: next.unidadDuracion === 'horas' ? next.horaFin : '',
+                cantidadDias: next.unidadDuracion === 'dias' ? next.cantidadDias : '',
+                fechaInicioEstimada: fechaHora,
+            })))
+        }
+    }
 
     const handleAdd = () => {
-        if (!newItem.tipoServicio || !newItem.descripcionServicio) {
+        if (!newItem.tipoServicio || !newItem.descripcionServicio || !configCompleta) {
             return
         }
-
-        const unidad = newItem.unidadDuracion || 'horas'
-        if (unidad === 'horas' && esPrimerServicio && (!newItem.horaInicio || !newItem.horaFin)) {
-            return
-        }
-
-        const fecha = fechaRequerida || dayjs().format('YYYY-MM-DD')
-        const hora = unidad === 'horas' ? (newItem.horaInicio || '') : '00:00'
-        const fechaHora = hora ? `${fecha} ${hora}` : fecha
 
         const item: ServicioItem = {
-            id: Math.random().toString(36).substr(2, 9),
+            id: Date.now().toString(),
             tipoServicio: newItem.tipoServicio!,
             descripcionServicio: newItem.descripcionServicio!,
             lugarEjecucion: newItem.lugarEjecucion || "",
-            fechaInicioEstimada: fechaHora,
-            unidadDuracion: unidad,
-            horaInicio: unidad === 'horas' ? (newItem.horaInicio || "") : "",
-            horaFin: unidad === 'horas' ? (newItem.horaFin || "") : "",
-            cantidadDias: unidad === 'dias' ? (newItem.cantidadDias || "") : "",
+            fechaInicioEstimada: buildFechaHora(config),
+            unidadDuracion: config.unidadDuracion,
+            horaInicio: config.unidadDuracion === 'horas' ? config.horaInicio : "",
+            horaFin: config.unidadDuracion === 'horas' ? config.horaFin : "",
+            cantidadDias: config.unidadDuracion === 'dias' ? config.cantidadDias : "",
             presupuestoReferencial: newItem.presupuestoReferencial || "",
             detalles: newItem.detalles || "",
         }
 
-        setServiciosSeleccionados([...serviciosSeleccionados, {
-            ...item,
-            id: Date.now().toString()
-        }])
+        setServiciosSeleccionados([...serviciosSeleccionados, item])
         setNewItem({
             tipoServicio: "",
             descripcionServicio: "",
             lugarEjecucion: "",
-            fechaInicioEstimada: "",
-            unidadDuracion: "horas",
-            horaInicio: "",
-            horaFin: "",
-            cantidadDias: "",
             presupuestoReferencial: "",
             detalles: "",
         })
@@ -238,6 +258,85 @@ export default function StepServicio({
                 </div>
             </Card>
 
+            {/* Horario / Duración GLOBAL — se elige una sola vez para todos los servicios */}
+            <Card size="small" title={<span className="text-sm font-semibold">Horario / Duración del Servicio</span>} className="bg-emerald-50 border-emerald-200">
+                <p className="text-[11px] text-slate-500 mb-3 italic">
+                    Se elige una sola vez y se aplica a todos los servicios que agregues.
+                </p>
+                <div className="grid grid-cols-3 gap-4">
+                    <div>
+                        <label className="block text-xs font-medium mb-1">Unidad de Tiempo</label>
+                        <SelectBase
+                            value={config.unidadDuracion}
+                            onChange={(value) => updateConfig({
+                                unidadDuracion: value as 'horas' | 'dias',
+                                horaInicio: "",
+                                horaFin: "",
+                                cantidadDias: "",
+                            })}
+                            options={[
+                                { label: 'Horas', value: 'horas' },
+                                { label: 'Días', value: 'dias' },
+                            ]}
+                            className="w-full"
+                        />
+                    </div>
+
+                    {config.unidadDuracion === 'horas' ? (
+                        <>
+                            <div>
+                                <label className="block text-xs font-medium mb-1">
+                                    Hora de Inicio <span className="text-red-500">*</span>
+                                </label>
+                                <TimePicker
+                                    format="HH:mm"
+                                    minuteStep={5}
+                                    needConfirm={false}
+                                    showNow={false}
+                                    placeholder="Seleccionar hora"
+                                    value={config.horaInicio ? dayjs(config.horaInicio, 'HH:mm') : null}
+                                    onChange={(time) => updateConfig({ horaInicio: time ? time.format('HH:mm') : '' })}
+                                    className="w-full"
+                                    size="middle"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium mb-1">
+                                    Hora de Fin <span className="text-red-500">*</span>
+                                </label>
+                                <TimePicker
+                                    format="HH:mm"
+                                    minuteStep={5}
+                                    needConfirm={false}
+                                    showNow={false}
+                                    placeholder="Seleccionar hora"
+                                    value={config.horaFin ? dayjs(config.horaFin, 'HH:mm') : null}
+                                    onChange={(time) => updateConfig({ horaFin: time ? time.format('HH:mm') : '' })}
+                                    className="w-full"
+                                    size="middle"
+                                />
+                            </div>
+                        </>
+                    ) : (
+                        <div className="col-span-2">
+                            <label className="block text-xs font-medium mb-1">
+                                Cantidad de Días <span className="text-red-500">*</span>
+                            </label>
+                            <InputNumberBase
+                                placeholder="Ej: 3"
+                                value={config.cantidadDias ? Number(config.cantidadDias) : undefined}
+                                onChange={(value) => updateConfig({ cantidadDias: value?.toString() ?? "" })}
+                                min={1}
+                                className="w-full"
+                            />
+                            <p className="text-[11px] text-slate-500 mt-1 italic">
+                                Se contará desde la Fecha Requerida (ej: fecha 23 + 3 días → del 23 al 25).
+                            </p>
+                        </div>
+                    )}
+                </div>
+            </Card>
+
             {/* Formulario de Adición */}
             <Card size="small" title={<span className="text-sm font-semibold">Configurar Nuevo Servicio</span>} className="bg-slate-50">
                 <div className="space-y-4">
@@ -287,76 +386,6 @@ export default function StepServicio({
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-4">
-                        <div>
-                            <label className="block text-xs font-medium mb-1">Unidad de Tiempo</label>
-                            <SelectBase
-                                value={newItem.unidadDuracion}
-                                onChange={(value) => setNewItem(prev => ({
-                                    ...prev,
-                                    unidadDuracion: value as 'horas' | 'dias',
-                                    horaInicio: "",
-                                    horaFin: "",
-                                    cantidadDias: "",
-                                }))}
-                                options={[
-                                    { label: 'Horas', value: 'horas' },
-                                    { label: 'Días', value: 'dias' },
-                                ]}
-                                className="w-full"
-                            />
-                        </div>
-
-                        {newItem.unidadDuracion === 'horas' ? (
-                            <>
-                                <div>
-                                    <label className="block text-xs font-medium mb-1">
-                                        Hora de Inicio {esPrimerServicio && <span className="text-red-500">*</span>}
-                                        {!esPrimerServicio && <span className="text-gray-400 text-xs"> (opcional)</span>}
-                                    </label>
-                                    <TimePicker
-                                        format="HH:mm"
-                                        minuteStep={5}
-                                        placeholder="Seleccionar hora"
-                                        value={newItem.horaInicio ? dayjs(newItem.horaInicio, 'HH:mm') : null}
-                                        onChange={(time) => setNewItem(prev => ({ ...prev, horaInicio: time ? time.format('HH:mm') : '' }))}
-                                        className="w-full"
-                                        size="middle"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-medium mb-1">
-                                        Hora de Fin {esPrimerServicio && <span className="text-red-500">*</span>}
-                                        {!esPrimerServicio && <span className="text-gray-400 text-xs"> (opcional)</span>}
-                                    </label>
-                                    <TimePicker
-                                        format="HH:mm"
-                                        minuteStep={5}
-                                        placeholder="Seleccionar hora"
-                                        value={newItem.horaFin ? dayjs(newItem.horaFin, 'HH:mm') : null}
-                                        onChange={(time) => setNewItem(prev => ({ ...prev, horaFin: time ? time.format('HH:mm') : '' }))}
-                                        className="w-full"
-                                        size="middle"
-                                    />
-                                </div>
-                            </>
-                        ) : (
-                            <div className="col-span-2">
-                                <label className="block text-xs font-medium mb-1">Cantidad de Días</label>
-                                <InputNumberBase
-                                    placeholder="Ej: 3"
-                                    value={newItem.cantidadDias ? Number(newItem.cantidadDias) : undefined}
-                                    onChange={(value) => setNewItem(prev => ({ ...prev, cantidadDias: value?.toString() ?? "" }))}
-                                    min={1}
-                                    className="w-full"
-                                />
-                                <p className="text-[11px] text-slate-500 mt-1 italic">
-                                    Se contará desde la Fecha Requerida (ej: fecha 23 + 3 días → del 23 al 25).
-                                </p>
-                            </div>
-                        )}
-                    </div>
-
                     <div>
                         <label className="block text-xs font-medium mb-1">
                             Detalles Específicos/Tareas <span className="text-slate-400 font-normal">(Ej: Cambio de aceite, Lavado, etc.)</span>
@@ -378,7 +407,7 @@ export default function StepServicio({
                             disabled={
                                 !newItem.tipoServicio ||
                                 !newItem.descripcionServicio ||
-                                ((newItem.unidadDuracion || 'horas') === 'horas' && esPrimerServicio && (!newItem.horaInicio || !newItem.horaFin))
+                                !configCompleta
                             }
                             className="w-1/2"
                         >

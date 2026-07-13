@@ -24,7 +24,7 @@ export function useRequerimientoData(open: boolean) {
             try {
                 const [resTipos, resVehiculos, allCargosResult] = await Promise.all([
                     tiposServicio.length === 0 ? tipoServicioApi.getAll() : Promise.resolve(null),
-                    vehiculos.length === 0 ? vehiculosApi.getAll() : Promise.resolve(null),
+                    vehiculos.length === 0 ? vehiculosApi.getAll({ estado: true }) : Promise.resolve(null),
                     cargosHierarchyApi.getAllCargos(),
                 ])
 
@@ -38,10 +38,13 @@ export function useRequerimientoData(open: boolean) {
                 if (resVehiculos && !(resVehiculos as any).error) {
                     const data = (resVehiculos as any).data?.data
                     if (data) {
-                        setVehiculos(data.map((v: any) => ({
-                            label: `${v.name || v.placa || 'Vehículo'} (${v.tipo || 'N/A'})`,
-                            value: String(v.id)
-                        })))
+                        // Solo vehículos activos (los inactivos no deben aparecer)
+                        setVehiculos(data
+                            .filter((v: any) => v.estado !== false)
+                            .map((v: any) => ({
+                                label: `${v.name || v.placa || 'Vehículo'} (${v.tipo || 'N/A'})`,
+                                value: String(v.id)
+                            })))
                     }
                 }
 
