@@ -32,7 +32,12 @@ function buildDetalleOS(
         lugar: (s) => s.lugar_ejecucion || '—',
         duracion: (s) =>
             s.duracion_cantidad
-                ? `${s.duracion_cantidad} ${s.duracion_unidad || ''}`.trim()
+                ? (() => {
+                      const cantidad = s.duracion_cantidad
+                      const unidad = s.duracion_unidad
+                      const horas = unidad === 'minutos' ? Math.round(cantidad / 60) : cantidad
+                      return `${horas} h`
+                  })()
                 : '—',
         presupuesto: (s) =>
             s.presupuesto_referencial

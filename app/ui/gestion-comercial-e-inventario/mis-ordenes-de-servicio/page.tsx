@@ -188,11 +188,17 @@ export default function MisOrdenesDeServicio() {
       field: 'duracion_cantidad',
       width: 110,
       minWidth: 90,
-      cellRenderer: ({ data }: ICellRendererParams) => (
-        <div className="flex items-center h-full font-semibold text-emerald-600 text-xs">
-          {data?.duracion_cantidad ? `${data.duracion_cantidad} ${data.duracion_unidad || ''}` : '—'}
-        </div>
-      ),
+      cellRenderer: ({ data }: ICellRendererParams) => {
+        const cantidad = data?.duracion_cantidad
+        const unidad = data?.duracion_unidad
+        if (!cantidad) return <div className="flex items-center h-full font-semibold text-emerald-600 text-xs">—</div>
+        const horas = unidad === 'minutos' ? Math.round(cantidad / 60) : cantidad
+        return (
+          <div className="flex items-center h-full font-semibold text-emerald-600 text-xs">
+            {horas} h
+          </div>
+        )
+      },
     },
     {
       headerName: 'Presupuesto',

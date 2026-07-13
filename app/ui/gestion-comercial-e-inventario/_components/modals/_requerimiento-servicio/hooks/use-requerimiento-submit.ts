@@ -24,14 +24,14 @@ export function useRequerimientoSubmit() {
                 servicios: servicios.map(s => {
                     // Duración = hora fin − hora inicio (no la hora de inicio
                     // en minutos desde medianoche, que era el bug: 14:00 → 840)
-                    let duracionMinutos = 0
+                    let duracionHoras = 0
                     if (s.unidadDuracion === 'dias') {
-                        duracionMinutos = (parseInt(s.cantidadDias) || 0) * 24 * 60
+                        duracionHoras = (parseInt(s.cantidadDias) || 0) * 24
                     } else if (s.horaInicio && s.horaFin) {
                         const [hi, mi] = s.horaInicio.split(':').map(Number)
                         const [hf, mf] = s.horaFin.split(':').map(Number)
                         const total = ((hf || 0) * 60 + (mf || 0)) - ((hi || 0) * 60 + (mi || 0))
-                        duracionMinutos = total > 0 ? total : 0
+                        duracionHoras = total > 0 ? total / 60 : 0
                     }
 
                     return {
@@ -42,8 +42,8 @@ export function useRequerimientoSubmit() {
                         hora_inicio: s.horaInicio || undefined,
                         hora_fin: s.horaFin || undefined,
                         cantidad_dias: s.cantidadDias || undefined,
-                        duracion_cantidad: duracionMinutos || undefined,
-                        duracion_unidad: 'minutos',
+                        duracion_cantidad: duracionHoras || undefined,
+                        duracion_unidad: 'horas',
                         presupuesto_referencial: s.presupuestoReferencial ? Number(s.presupuestoReferencial) : undefined,
                         detalles: s.detalles || undefined,
                     }
