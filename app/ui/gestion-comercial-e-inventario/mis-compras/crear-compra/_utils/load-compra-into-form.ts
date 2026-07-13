@@ -109,6 +109,7 @@ export const loadCompraIntoForm = async (
           unidad_derivada_factor: Number(matchUnidad.factor) || 1,
           cantidad: producto.cantidad,
           precio_compra: producto.precio,
+          costo_actual: Number((detalle?.producto_almacen as any)?.costo_actual ?? (detalle?.producto_almacen as any)?.costo ?? 0),
           flete: producto.flete || 0,
           bonificacion: false,
           lote: producto.lote || '',
