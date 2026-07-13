@@ -105,6 +105,10 @@ export function useColumnsDetalleDePreciosEdicion({
                   form,
                   value,
                 })
+                onChangePeso({
+                  form,
+                  value,
+                })
                 setTimeout(() => {
                   form.focusField(['unidades_derivadas', value, 'factor'])
                 }, 100)
@@ -133,6 +137,16 @@ export function useColumnsDetalleDePreciosEdicion({
               placeholder='Peso (kg)'
               precision={3}
               min={0}
+              onChange={val => {
+                // El peso escala con el factor igual que el costo:
+                // p.ej. si la unidad (factor 1) pesa 1 kg, el millar
+                // (factor 1000) se autocompleta en 1000 kg.
+                onChangePeso({
+                  form,
+                  value,
+                  peso: val ? Number(val) : undefined,
+                })
+              }}
             />
           </div>
         )
@@ -843,6 +857,76 @@ function onChangeComisiones({
     ['unidades_derivadas', value, `comision_${suffix}`],
     comision_suffix > 0 ? comision_suffix : 0
   )
+}
+
+// Escala el PESO de todas las unidades derivadas en función del factor,
+// igual que onChangeCosto hace con el costo. La relación base es
+// peso_por_unidad = peso / factor; luego cada fila = factor × peso_por_unidad.
+// Ej: unidad (factor 1) = 1 kg  →  millar (factor 1000) = 1000 kg.
+function onChangePeso({
+  form,
+  value,
+  peso,
+}: {
+  form: FormInstance
+  value?: number
+  peso?: number
+}) {
+  const unidades_derivadas = form.getFieldValue(
+    'unidades_derivadas'
+  ) as FormCreateProductoProps['unidades_derivadas']
+  const factores = (unidades_derivadas ?? []).map(item => item.factor)
+  const pesos = (unidades_derivadas ?? []).map(
+    item => (item as { peso?: number }).peso
+  )
+
+  const factor = form.getFieldValue(['unidades_derivadas', value, 'factor'])
+  let factor_disponible = Number(factor)
+  let peso_disponible = peso
+
+  // Si no se pasó un peso explícito (p.ej. cambió el factor), buscar otra
+  // fila con factor y peso válidos para deducir el peso por unidad base.
+  if (peso === undefined) {
+    const index_factor_and_peso = factores.findIndex((factor, index) => {
+      return (
+        factor &&
+        Number(factor) !== 0 &&
+        pesos[index] &&
+        Number(pesos[index]) !== 0 &&
+        index !== value
+      )
+    })
+    if (index_factor_and_peso !== -1) {
+      peso_disponible = pesos[index_factor_and_peso]
+      factor_disponible = Number(factores[index_factor_and_peso])
+    }
+  }
+
+  // Peso por unidad base
+  const peso_unidad = (peso_disponible ?? 0) / Number(factor_disponible)
+
+  // Sin relación válida (factor 0/NaN o sin peso de referencia): no tocar nada.
+  if (!Number.isFinite(peso_unidad) || peso_unidad === 0) return
+
+  const fields = unidades_derivadas
+    .map((item, index) => {
+      // Saltar la fila en edición si se pasó un peso explícito.
+      if (peso !== undefined && index === value) return null
+
+      const factor = Number(item.factor)
+      if (!factor || isNaN(factor)) return null
+
+      const pesoCalculado = factor * peso_unidad
+      return {
+        name: ['unidades_derivadas', index, 'peso'] as (string | number)[],
+        value: pesoCalculado,
+      }
+    })
+    .filter(
+      (f): f is { name: (string | number)[]; value: number } => f !== null
+    )
+
+  if (fields.length > 0) form.setFields(fields)
 }
 
 function onChangeCosto({
