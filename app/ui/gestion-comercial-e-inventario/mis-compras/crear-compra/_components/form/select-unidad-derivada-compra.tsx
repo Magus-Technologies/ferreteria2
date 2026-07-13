@@ -74,6 +74,11 @@ export default function SelectUnidadDerivadaCompra({
       if (cantidadPendiente > 0) {
         form.setFieldValue(['productos', fieldIndex, 'cantidad_pendiente'], (cantidadPendiente * factorActual) / nuevoFactor)
       }
+
+      const cantidadRecepcionada = Number(form.getFieldValue(['productos', fieldIndex, 'cantidad_recepcionada']) ?? 0)
+      if (cantidadRecepcionada > 0) {
+        form.setFieldValue(['productos', fieldIndex, 'cantidad_recepcionada'], (cantidadRecepcionada * factorActual) / nuevoFactor)
+      }
     }
 
     form.setFieldValue(
