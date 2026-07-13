@@ -27,8 +27,10 @@ import { useStoreAlmacen } from '~/store/store-almacen'
 import { CompraConUnidadDerivadaNormal } from './header'
 import useInitCompra from '../../../editar-compra/[id]/_hooks/use-init-compra'
 import { ordenCompraApi } from '~/lib/api/orden-compra'
+import { loadCompraIntoForm } from '../../_utils/load-compra-into-form'
 import dayjs from 'dayjs'
 import { useUltimaCalificacionProveedor } from '../../_hooks/use-ultima-calificacion-proveedor'
+import { message } from 'antd'
 import FloatingCalificacionProveedor from '../alerts/floating-calificacion-proveedor'
 import ModalEditarPreciosProducto from '~/app/_components/modals/modal-editar-precios-producto'
 
@@ -215,62 +217,43 @@ export default function BodyComprar({
 
   useEffect(() => {
     if (!ordenCompraId) return
-    ordenCompraApi.getById(ordenCompraId).then(res => {
-      const orden = res.data?.data
-      if (!orden) return
-      const productos = (orden.productos ?? []).map(p => ({
-        producto_id: p.producto_id,
-        producto_name: p.nombre ?? '',
-        producto_codigo: p.codigo ?? '',
-        marca_name: p.marca ?? '',
-        unidad_derivada_id: 0,
-        unidad_derivada_name: p.unidad ?? 'UND',
-        unidad_derivada_factor: 1,
-        cantidad: p.cantidad,
-        precio_compra: p.precio,
-        flete: p.flete,
-        vencimiento: p.vencimiento ? dayjs(p.vencimiento) as unknown as Dayjs : undefined,
-        lote: p.lote ?? '',
-        bonificacion: false,
-        subtotal: p.subtotal,
-        costo_actual: (p as any).costo_actual ?? 0,
-      }))
-      // Pre-cargar proveedor en el SelectProveedores para mostrar RUC correctamente
-      if (orden.proveedor) {
-        setProveedorDefault([{
-          id: orden.proveedor.id,
-          ruc: orden.proveedor.ruc,
-          razon_social: orden.proveedor.razon_social,
-        }])
-        setProveedorRucInicial(orden.proveedor.ruc)
+    const loadOrdenCompra = async () => {
+      try {
+        const res = await ordenCompraApi.getById(ordenCompraId)
+        const orden = res.data?.data
+        if (!orden) return
+
+        // Pre-cargar proveedor en el SelectProveedores para mostrar RUC correctamente
+        if (orden.proveedor) {
+          setProveedorDefault([{
+            id: orden.proveedor.id,
+            ruc: orden.proveedor.ruc,
+            razon_social: orden.proveedor.razon_social,
+          }])
+          setProveedorRucInicial(orden.proveedor.ruc)
+        }
+
+        if (orden.proveedor_id) {
+          setProveedorId(orden.proveedor_id)
+        }
+
+        const result = await loadCompraIntoForm(orden, form, setProductosCompra)
+
+        if (result.success) {
+          // Auto-submit después de cargar los datos
+          setTimeout(() => {
+            form.submit()
+          }, 1500)
+        } else {
+          message.error(result.message || 'Error al cargar la orden de compra')
+        }
+      } catch (error) {
+        console.error('Error loading orden compra:', error)
+        message.error('Error al cargar la orden de compra')
       }
+    }
 
-      form.setFieldsValue({
-        fecha: dayjs(orden.fecha) as unknown as Dayjs,
-        orden_compra_id: orden.id,
-        proveedor_id: orden.proveedor_id ?? undefined,
-        proveedor_ruc: orden.proveedor?.ruc ?? '',
-        proveedor_razon_social: orden.proveedor?.razon_social ?? '',
-        tipo_moneda: orden.tipo_moneda as TipoMoneda,
-        tipo_de_cambio: orden.tipo_de_cambio,
-        forma_de_pago: orden.forma_de_pago as FormaDePago,
-        numero_dias: orden.numero_dias ?? undefined,
-        fecha_vencimiento: orden.fecha_vencimiento ? dayjs(orden.fecha_vencimiento) as unknown as Dayjs : undefined,
-        tipo_documento: TipoDocumento.Factura,
-        productos,
-        estado_de_compra: EstadoDeCompra.Creado,
-      })
-
-      // Set proveedor ID for calificación
-      if (orden.proveedor_id) {
-        setProveedorId(orden.proveedor_id)
-      }
-
-      // Auto-submit después de cargar los datos - aumentar timeout para asegurar que los valores se propaguen
-      setTimeout(() => {
-        form.submit()
-      }, 1500)
-    })
+    loadOrdenCompra()
   }, [ordenCompraId])
 
   useEffect(() => {
