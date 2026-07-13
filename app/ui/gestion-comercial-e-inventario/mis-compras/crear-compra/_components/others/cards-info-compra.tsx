@@ -81,7 +81,9 @@ export default function CardsInfoCompra({
   const esRecepcionada = (compra?.recepciones_almacen_count ?? 0) > 0
 
   const handleCrearCompra = async () => {
-    form.setFieldValue('estado_de_compra', EstadoDeCompra.Creado)
+    if (!esRecepcionada) {
+      form.setFieldValue('estado_de_compra', EstadoDeCompra.Creado)
+    }
     try {
       await form.validateFields()
     } catch {
