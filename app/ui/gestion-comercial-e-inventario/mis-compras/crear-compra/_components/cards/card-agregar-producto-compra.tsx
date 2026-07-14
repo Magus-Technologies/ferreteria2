@@ -163,7 +163,7 @@ export default function CardAgregarProductoCompra({
   }, [values])
 
   const costoActualEnUnidad = Number(unidad_derivada_seleccionada?.factor ?? 0) * getCostoActualBase(producto_en_almacen as any)
-  const mostrarBotonPrecios = !values.bonificacion && costoActualEnUnidad > 0 && Number(values.precio_compra ?? 0) > 0 && Number(values.precio_compra ?? 0) !== costoActualEnUnidad
+  const mostrarBotonPrecios = !values.bonificacion && costoActualEnUnidad > 0 && Number(values.precio_compra ?? 0) > 0 && Math.abs(Number(values.precio_compra ?? 0) - costoActualEnUnidad) > 0.0001
 
   const [openModalPrecios, setOpenModalPrecios] = useState(false)
 
