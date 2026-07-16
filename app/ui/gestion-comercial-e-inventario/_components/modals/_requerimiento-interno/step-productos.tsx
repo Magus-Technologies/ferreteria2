@@ -166,8 +166,10 @@ export default function StepProductos({
         setShowManualForm(false)
     }
 
+    // La clave incluye la unidad: el mismo producto puede estar en varias filas
+    // con unidades distintas (ej. 10 MILLAR y 500 UND), como en Crear Compra.
     const getUniqueId = (p: ItemBuscado, idx: number) => {
-        return p.id || `manual-${idx}-${p.nombre}`
+        return p.id ? `${p.id}-${p.unidad}` : `manual-${idx}-${p.nombre}`
     }
 
     const columnDefs: ColDef<ItemBuscado>[] = [

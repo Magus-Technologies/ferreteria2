@@ -185,31 +185,52 @@ export default function ModalRequerimientoInterno({
                                     productosDisponibles={productosSource}
                                     productosSeleccionados={formHook.productosSeleccionados}
                                     onAgregarProducto={(p) => {
-                                        const exists = p.id
-                                            ? formHook.productosSeleccionados.find(s => s.id === p.id)
-                                            : formHook.productosSeleccionados.find(s => s.nombre === p.nombre && s.id === null)
+                                        // Igual que en Crear Compra: mismo producto + misma unidad ⇒ sumar
+                                        // cantidades; unidad distinta ⇒ fila nueva.
+                                        const esMismaFila = (s: typeof p) => p.id
+                                            ? s.id === p.id && s.unidad === p.unidad
+                                            : s.id === null && s.nombre === p.nombre && s.unidad === p.unidad
 
-                                        if (!exists) {
-                                            formHook.setProductosSeleccionados([...formHook.productosSeleccionados, { ...p, cantidad: 1 }])
+                                        const cantidadNueva = p.cantidad ?? 1
+                                        const exists = formHook.productosSeleccionados.find(esMismaFila)
+
+                                        if (exists) {
+                                            formHook.setProductosSeleccionados(formHook.productosSeleccionados.map(s =>
+                                                esMismaFila(s) ? { ...s, cantidad: Number(s.cantidad) + cantidadNueva } : s
+                                            ))
+                                        } else {
+                                            formHook.setProductosSeleccionados([...formHook.productosSeleccionados, { ...p, cantidad: cantidadNueva }])
                                         }
                                     }}
                                     onQuitarProducto={(id) => {
-                                        formHook.setProductosSeleccionados(prev => prev.filter(p => {
-                                            const uniqueId = p.id || `manual-${formHook.productosSeleccionados.indexOf(p)}-${p.nombre}`
+                                        formHook.setProductosSeleccionados(prev => prev.filter((p, idx) => {
+                                            const uniqueId = p.id ? `${p.id}-${p.unidad}` : `manual-${idx}-${p.nombre}`
                                             return uniqueId !== id
                                         }))
                                     }}
                                     onCambiarCantidad={(id, cantidad) => {
-                                        formHook.setProductosSeleccionados(prev => prev.map(p => {
-                                            const uniqueId = p.id || `manual-${prev.indexOf(p)}-${p.nombre}`
+                                        formHook.setProductosSeleccionados(prev => prev.map((p, idx) => {
+                                            const uniqueId = p.id ? `${p.id}-${p.unidad}` : `manual-${idx}-${p.nombre}`
                                             return uniqueId === id ? { ...p, cantidad } : p
                                         }))
                                     }}
                                     onCambiarUnidad={(id, unidad) => {
-                                        formHook.setProductosSeleccionados(prev => prev.map(p => {
-                                            const uniqueId = p.id || `manual-${prev.indexOf(p)}-${p.nombre}`
-                                            return uniqueId === id ? { ...p, unidad } : p
-                                        }))
+                                        formHook.setProductosSeleccionados(prev => {
+                                            const next = prev.map((p, idx) => {
+                                                const uniqueId = p.id ? `${p.id}-${p.unidad}` : `manual-${idx}-${p.nombre}`
+                                                return uniqueId === id ? { ...p, unidad } : p
+                                            })
+                                            // Si al cambiar la unidad la fila queda igual a otra del mismo
+                                            // producto, fusionarlas sumando cantidades (la clave id-unidad
+                                            // debe ser única por fila).
+                                            const merged: typeof next = []
+                                            for (const p of next) {
+                                                const i = merged.findIndex(s => (p.id ? s.id === p.id : s.id === null && s.nombre === p.nombre) && s.unidad === p.unidad)
+                                                if (i >= 0) merged[i] = { ...merged[i], cantidad: Number(merged[i].cantidad) + Number(p.cantidad) }
+                                                else merged.push(p)
+                                            }
+                                            return merged
+                                        })
                                     }}
                                 />
                             )}
