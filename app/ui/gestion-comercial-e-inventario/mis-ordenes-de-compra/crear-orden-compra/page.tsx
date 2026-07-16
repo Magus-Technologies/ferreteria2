@@ -56,6 +56,18 @@ import { useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import { fechaSubmit } from '~/utils/fechas'
 
+// Costo del producto en la unidad indicada: costo base (fracción) × factor de la
+// unidad derivada. Igual que en Crear Compra, donde el costo mostrado es
+// factor × costo_actual (capa PEPS vigente, con fallback al costo).
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const getCostoPorUnidad = (prodAlmacen: any, unidad: string): { costo: number; factor: number | null } => {
+  const costoBase = Number(prodAlmacen?.costo_actual ?? prodAlmacen?.costo ?? 0)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const derivada = prodAlmacen?.unidades_derivadas?.find((ud: any) => ud.unidad_derivada?.name === unidad)
+  const factor = derivada ? Number(derivada.factor) : null
+  return { costo: costoBase * (factor ?? 1), factor }
+}
+
 export default function CrearOrdenCompraPage() {
   const router = useRouter()
   const queryClient = useQueryClient()
@@ -218,7 +230,9 @@ export default function CrearOrdenCompraPage() {
     }
 
     setProductos(prev => {
-      const existingIndex = prev.findIndex(e => e.producto_id === p.producto_id)
+      // Mismo producto + misma unidad ⇒ sumar cantidades; unidad distinta ⇒ fila nueva
+      // (igual que en Crear Compra).
+      const existingIndex = prev.findIndex(e => e.producto_id === p.producto_id && e.unidad === newProduct.unidad)
       if (existingIndex >= 0) {
         const updated = [...prev]
         const existing = updated[existingIndex]
@@ -644,16 +658,18 @@ export default function CrearOrdenCompraPage() {
         
         if (productoMatch) {
           message.success({ content: 'Producto auto-enlazado desde catálogo', key: 'verificandoProducto' })
-          
-          const precio_compra = productoMatch.producto_en_almacenes?.[0]?.costo || 0
-          
+
+          const unidadFila = productoMatch.unidad_medida?.name || product.unidad
+          // Costo en la unidad de la fila (costo base × factor de la unidad derivada).
+          const { costo: precio_compra, factor } = getCostoPorUnidad(productoMatch.producto_en_almacenes?.[0], unidadFila)
+
           const newProduct: ProductoEnOC = {
             id: product.id,
             producto_id: productoMatch.id,
             codigo: productoMatch.cod_producto,
             nombre: productoMatch.name,
             marca: productoMatch.marca?.name || product.marca,
-            unidad: productoMatch.unidad_medida?.name || product.unidad,
+            unidad: unidadFila,
             cantidad: product.cantidad,
             precio_compra: Number(precio_compra),
             flete: product.flete,
@@ -662,12 +678,12 @@ export default function CrearOrdenCompraPage() {
             subtotal: product.cantidad * Number(precio_compra),
             stock_max: productoMatch.stock_max,
             stock_actual: Number(productoMatch.producto_en_almacenes?.[0]?.stock_fraccion ?? 0),
-            unidad_factor: Number(productoMatch.unidades_contenidas ?? 1),
+            unidad_factor: factor ?? Number(productoMatch.unidades_contenidas ?? 1),
             unidades_contenidas: Number(productoMatch.unidades_contenidas ?? 1),
           }
-          
+
           setProductos(prev => {
-            const existingIndex = prev.findIndex(p => p.producto_id === newProduct.producto_id)
+            const existingIndex = prev.findIndex(p => p.producto_id === newProduct.producto_id && p.unidad === newProduct.unidad)
             if (existingIndex >= 0) {
               const updated = [...prev]
               const existing = updated[existingIndex]
@@ -714,14 +730,18 @@ export default function CrearOrdenCompraPage() {
         const almacenId = form.getFieldValue('almacen_id') || 1
         const stockAlmacen = prodData.producto_en_almacenes?.find((pa: any) => pa.almacen_id === almacenId) || prodData.producto_en_almacenes?.[0]
         
-        if (stockAlmacen && stockAlmacen.costo) {
-          precio_compra_actual = Number(stockAlmacen.costo)
+        // Costo en la unidad de la fila: costo base × factor de la unidad derivada
+        // (ej. MILLAR ⇒ costo unitario × 1000). Antes se usaba el costo base directo,
+        // lo que traía el precio de la unidad mínima aunque la fila fuera MILLAR.
+        const { costo, factor } = getCostoPorUnidad(stockAlmacen, product.unidad)
+        if (costo > 0) {
+          precio_compra_actual = costo
         }
-        
+
         // Agregar info de stock
         (product as any).stock_max = prodData.stock_max;
         (product as any).stock_actual = Number(stockAlmacen?.stock_fraccion ?? 0);
-        (product as any).unidad_factor = Number(prodData.unidades_contenidas ?? 1);
+        (product as any).unidad_factor = factor ?? Number(prodData.unidades_contenidas ?? 1);
         (product as any).unidades_contenidas = Number(prodData.unidades_contenidas ?? 1);
       }
       message.destroy('cargandoExtra')
@@ -750,7 +770,8 @@ export default function CrearOrdenCompraPage() {
     }
     
     setProductos(prev => {
-      const existingIndex = prev.findIndex(p => p.producto_id === product.producto_id)
+      // Mismo producto + misma unidad ⇒ sumar; unidad distinta ⇒ fila nueva.
+      const existingIndex = prev.findIndex(p => p.producto_id === product.producto_id && p.unidad === newProduct.unidad)
       if (existingIndex >= 0) {
         const updated = [...prev]
         const existing = updated[existingIndex]
@@ -840,15 +861,19 @@ export default function CrearOrdenCompraPage() {
     
     const newProductsPromises = products.map(async (p) => {
       let precio_compra_actual = p.precio_compra
+      let unidad_factor: number | undefined
 
       if (p.producto_id) {
         try {
           const res = await productosApiV2.getById(p.producto_id)
           if (res.data) {
             const stockAlmacen = res.data.producto_en_almacenes?.find((pa: any) => pa.almacen_id === almacenId) || res.data.producto_en_almacenes?.[0]
-            if (stockAlmacen && stockAlmacen.costo) {
-              precio_compra_actual = Number(stockAlmacen.costo)
+            // Costo en la unidad de la fila (costo base × factor de la unidad derivada).
+            const { costo, factor } = getCostoPorUnidad(stockAlmacen, p.unidad)
+            if (costo > 0) {
+              precio_compra_actual = costo
             }
+            unidad_factor = factor ?? undefined
           }
         } catch (e) {
           console.error("Error al obtener precio", e)
@@ -868,17 +893,19 @@ export default function CrearOrdenCompraPage() {
         vencimiento: p.vencimiento,
         lote: p.lote,
         subtotal: p.cantidad * precio_compra_actual,
+        unidad_factor,
       }
     })
 
     const newProducts = await Promise.all(newProductsPromises)
     message.destroy('cargandoCostos')
-    
+
     setProductos(prev => {
       let updated = [...prev]
-      
+
       for (const newProduct of newProducts) {
-        const existingIndex = updated.findIndex(p => p.producto_id === newProduct.producto_id)
+        // Mismo producto + misma unidad ⇒ sumar; unidad distinta ⇒ fila nueva.
+        const existingIndex = updated.findIndex(p => p.producto_id === newProduct.producto_id && p.unidad === newProduct.unidad)
         if (existingIndex >= 0) {
           const existing = updated[existingIndex]
           const nuevaCantidad = existing.cantidad + newProduct.cantidad
@@ -1020,7 +1047,7 @@ export default function CrearOrdenCompraPage() {
                 rowData={productos}
                 columnDefs={columns}
                 withNumberColumn={true}
-                getRowId={(params) => String(params.data.producto_id ?? params.data.id)}
+                getRowId={(params) => `${params.data.producto_id ?? params.data.id}-${params.data.unidad ?? ''}`}
               />
             </div>
 
