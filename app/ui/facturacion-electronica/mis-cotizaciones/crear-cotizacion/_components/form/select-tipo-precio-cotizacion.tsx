@@ -126,15 +126,43 @@ export default function SelectTipoPrecioCotizacion({
     form.setFieldValue(['productos', fieldIndex, 'subtotal'], Number(nuevoSubtotal))
   }
 
+  // Siguiente escalón de precio aún no alcanzado, para avisar al vendedor.
+  const nextHint = (() => {
+    const cant = Number(cantidad || 0)
+    if (cant < 1) return null
+    const tiers = [
+      { key: 'precio_especial', activadorKey: 'activador_especial' },
+      { key: 'precio_minimo', activadorKey: 'activador_minimo' },
+      { key: 'precio_ultimo', activadorKey: 'activador_ultimo' },
+    ] as const
+    const next = tiers
+      .map(t => ({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        activador: Number((unidadDerivadaActual as any)[t.activadorKey] ?? 0),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        precio: Number((unidadDerivadaActual as any)[t.key] ?? 0),
+      }))
+      .find(t => t.activador > 0 && cant < t.activador)
+    if (!next) return null
+    return `Llevando ${next.activador} → S/${next.precio.toFixed(2)}`
+  })()
+
   return (
-    <SelectBase
-      size='small'
-      variant='borderless'
-      className='w-full'
-      value={tipoPrecioActual}
-      options={opciones}
-      onChange={handleChange}
-      prefix={<MdPriceChange size={14} className='text-emerald-600' />}
-    />
+    <div className='flex flex-col gap-0.5 w-full'>
+      <SelectBase
+        size='small'
+        variant='borderless'
+        className='w-full'
+        value={tipoPrecioActual}
+        options={opciones}
+        onChange={handleChange}
+        prefix={<MdPriceChange size={14} className='text-emerald-600' />}
+      />
+      {nextHint && (
+        <span className='text-emerald-600 text-[10px] leading-tight px-1'>
+          {nextHint}
+        </span>
+      )}
+    </div>
   )
 }
