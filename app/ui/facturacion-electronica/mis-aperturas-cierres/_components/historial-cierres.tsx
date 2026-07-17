@@ -120,35 +120,36 @@ export default function HistorialCierres() {
     console.log('🎫 Ver ticket de cierre:', cierre);
     setSelectedCierre(cierre);
 
-    // Cargar el cierre completo con resumen desde el backend
+    const abrirModales = (data: any) => {
+      setCierreConResumen(data);
+
+      // Verificar si hay múltiples vendedores
+      const tieneMultiplesVendedores = cierre.distribuciones_vendedores &&
+        cierre.distribuciones_vendedores.length > 1;
+
+      if (tieneMultiplesVendedores) {
+        // Mostrar modal de vendedores primero
+        console.log('👥 Cierre con múltiples vendedores, mostrando modal de selección');
+        setModalVendedoresVisible(true);
+      } else {
+        // Mostrar ticket directamente
+        console.log('👤 Cierre con un solo vendedor o sin distribución, mostrando ticket directo');
+        setModalTicketVisible(true);
+      }
+    };
+
+    // Intentar enriquecer con el resumen completo, pero SIN bloquear la apertura
+    // del ticket: el modal solo necesita el id (el PDF lo genera el backend en
+    // /pdf/cierre-caja/{id}), así que si este endpoint falla o no existe se abre
+    // igual con los datos que ya tiene la fila del historial.
     setLoadingCierre(true);
     try {
       const response = await cajaApi.obtenerCierre(cierre.id);
       console.log('📦 Cierre completo con resumen:', response);
-
-      if (response.data?.data) {
-        const cierreCompleto = response.data.data;
-        setCierreConResumen(cierreCompleto);
-
-        // Verificar si hay múltiples vendedores
-        const tieneMultiplesVendedores = cierre.distribuciones_vendedores &&
-          cierre.distribuciones_vendedores.length > 1;
-
-        if (tieneMultiplesVendedores) {
-          // Mostrar modal de vendedores primero
-          console.log('👥 Cierre con múltiples vendedores, mostrando modal de selección');
-          setModalVendedoresVisible(true);
-        } else {
-          // Mostrar ticket directamente
-          console.log('👤 Cierre con un solo vendedor o sin distribución, mostrando ticket directo');
-          setModalTicketVisible(true);
-        }
-      } else {
-        message.error('No se pudo cargar el cierre completo');
-      }
+      abrirModales(response.data?.data ?? cierre);
     } catch (err) {
-      console.error('❌ Error al cargar cierre:', err);
-      message.error('Error al cargar el cierre');
+      console.error('⚠️ No se pudo cargar el resumen del cierre, abriendo con datos de la fila:', err);
+      abrirModales(cierre);
     } finally {
       setLoadingCierre(false);
     }
