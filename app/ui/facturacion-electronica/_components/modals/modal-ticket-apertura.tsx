@@ -58,16 +58,24 @@ export default function ModalTicketApertura({
     }
   }, [open, apertura?.id, fetchPdf])
 
+  // La ruta /pdf/apertura-caja/{id} es pública en el backend, por eso el
+  // enlace puede enviarse por WhatsApp.
+  const pdfPublicUrl = apertura?.id
+    ? `${process.env.NEXT_PUBLIC_API_URL}/pdf/apertura-caja/${apertura.id}?formato=ticket`
+    : undefined
+
   return (
     <ModalShowDoc
       open={open}
       setOpen={(isOpen) => !isOpen && onClose()}
-      nro_doc=""
+      nro_doc={apertura?.id ? `APERTURA-${apertura.id}` : ''}
       tipoDocumento='apertura_caja'
       esTicket={true}
       aperturaId={apertura?.id}
       backendPdfUrl={pdfUrl}
       backendPdfLoading={loading && !pdfUrl}
+      pdfPublicUrl={pdfPublicUrl}
+      whatsappMensajeAuto={`Hola, le comparto el ticket de apertura de caja APERTURA-${apertura?.id ?? ''}.`}
     >
       <></>
     </ModalShowDoc>

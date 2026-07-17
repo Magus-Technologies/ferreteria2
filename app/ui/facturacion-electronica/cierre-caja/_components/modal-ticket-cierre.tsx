@@ -107,17 +107,25 @@ export default function ModalTicketCierre({
   const currentPdfUrl = esTicket ? ticketPdfUrl : a4PdfUrl
   const currentLoading = esTicket ? loading : !a4PdfUrl
 
+  // La ruta /pdf/cierre-caja/{id} es pública en el backend (grupo "PDF - para
+  // compartir con clientes"), por eso el enlace puede enviarse por WhatsApp.
+  const pdfPublicUrl = data?.id
+    ? `${process.env.NEXT_PUBLIC_API_URL}/pdf/cierre-caja/${data.id}?formato=ticket`
+    : undefined
+
   return (
     <ModalShowDoc
       open={open}
       setOpen={setOpen}
-      nro_doc=""
+      nro_doc={data?.id ? `CIERRE-${data.id}` : ''}
       setEsTicket={setEsTicket}
       esTicket={esTicket}
       tipoDocumento='cierre_caja'
       cierreId={data?.id}
       backendPdfUrl={currentPdfUrl}
       backendPdfLoading={currentLoading && !currentPdfUrl}
+      pdfPublicUrl={pdfPublicUrl}
+      whatsappMensajeAuto={`Hola, le comparto el ticket de cierre de caja CIERRE-${data?.id ?? ''}.`}
     >
       <></>
     </ModalShowDoc>
