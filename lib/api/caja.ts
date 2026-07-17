@@ -450,12 +450,14 @@ export const cajaApi = {
       resumen?: any
     }
   }>> {
+    // Los ULID se guardan en MAYÚSCULAS; en producción la búsqueda puede ser
+    // case-sensitive y un id en minúsculas da 404.
     return apiRequest<{
       success: boolean
       data: AperturaYCierreCaja & {
         resumen?: any
       }
-    }>(`/cajas/cierre/${id}`, {
+    }>(`/cajas/cierre/${String(id).toUpperCase()}`, {
       method: 'GET',
     })
   },
