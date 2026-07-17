@@ -124,6 +124,13 @@ export default function useInitGuia({
         cantidad: Number(d.cantidad),
         costo: 0,
         precio_venta: 0,
+        // La guía guardada solo trae el total. Reconstruimos el unitario
+        // (peso_total = unitario x cantidad) para poder recalcular el peso si
+        // se edita la cantidad.
+        peso_unitario:
+          Number(d.cantidad) > 0
+            ? Number(d.peso_total ?? 0) / Number(d.cantidad)
+            : 0,
         peso_total: d.peso_total,
         unidad_derivada_venta_id: d.unidad_derivada_venta_id,
       }))
@@ -191,6 +198,7 @@ export default function useInitGuia({
             cantidad,
             costo: Number(unidad.precio) || 0,
             precio_venta: Number(unidad.precio) || 0,
+            peso_unitario: pesoUnit,
             peso_total,
             unidad_derivada_venta_id: unidad.id, // ID de unidadderivadainmutableventa para rastrear cantidad_guiada
           }

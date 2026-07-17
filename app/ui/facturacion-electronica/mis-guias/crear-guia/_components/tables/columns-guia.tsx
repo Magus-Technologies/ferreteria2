@@ -169,6 +169,18 @@ export function useColumnsGuia({
             precision={2}
             min={0}
             formWithMessage={false}
+            onChange={cantidad => {
+              // El peso de la línea sigue a la cantidad. Sin esto quedaba
+              // congelado con el valor calculado al agregar el producto.
+              const pesoUnit = Number(
+                form.getFieldValue(['productos', value, 'peso_unitario']) ?? 0
+              )
+              if (pesoUnit <= 0) return
+              form.setFieldValue(
+                ['productos', value, 'peso_total'],
+                Number((pesoUnit * Number(cantidad ?? 0)).toFixed(3))
+              )
+            }}
           />
         </div>
       ),

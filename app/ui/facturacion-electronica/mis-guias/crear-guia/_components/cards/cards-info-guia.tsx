@@ -67,7 +67,7 @@ export default function CardsInfoGuia({
           value={pesoTotal}
           prefix=''
           suffix='kg'
-          precision={3}
+          trimDecimales
           valueColor='text-amber-600'
           className='border-amber-500 border-2'
         />

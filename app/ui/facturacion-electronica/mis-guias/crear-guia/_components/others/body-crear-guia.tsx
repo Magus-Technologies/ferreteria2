@@ -26,6 +26,12 @@ export type FormCreateGuia = {
     cantidad: number
     costo: number
     precio_venta: number
+    /**
+     * Peso por unidad de la unidad derivada. Se persiste en la línea para poder
+     * recalcular `peso_total` cuando cambia la cantidad (antes solo se guardaba
+     * el total y el unitario se perdía, así que el peso quedaba congelado).
+     */
+    peso_unitario?: number
     peso_total?: number
     unidad_derivada_venta_id?: number
   }>

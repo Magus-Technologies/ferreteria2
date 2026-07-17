@@ -97,6 +97,7 @@ export default function CardAgregarProductoGuia({
       cantidad: values.cantidad,
       costo: values.costo,
       precio_venta: values.precio_venta,
+      peso_unitario: pesoUnit,
       peso_total: pesoTotal,
     })
 
