@@ -64,7 +64,9 @@ export default function ModalTicketCierre({
   const fetchPdf = useCallback(async (id: number, formato: 'ticket' | 'a4') => {
     const token = getAuthToken()
     const API_URL = process.env.NEXT_PUBLIC_API_URL
-    const res = await fetch(`${API_URL}/pdf/cierre-caja/${id}?formato=${formato}`, {
+    // Los ULID se guardan en MAYÚSCULAS; en producción la búsqueda puede ser
+    // case-sensitive y un id en minúsculas da 404.
+    const res = await fetch(`${API_URL}/pdf/cierre-caja/${String(id).toUpperCase()}?formato=${formato}`, {
       headers: {
         Authorization: `Bearer ${token}`,
         Accept: 'application/pdf',
@@ -107,25 +109,28 @@ export default function ModalTicketCierre({
   const currentPdfUrl = esTicket ? ticketPdfUrl : a4PdfUrl
   const currentLoading = esTicket ? loading : !a4PdfUrl
 
+  // Los ULID se guardan en MAYÚSCULAS; normalizar para las URLs y el nro de doc.
+  const idUpper = data?.id ? String(data.id).toUpperCase() : undefined
+
   // La ruta /pdf/cierre-caja/{id} es pública en el backend (grupo "PDF - para
   // compartir con clientes"), por eso el enlace puede enviarse por WhatsApp.
-  const pdfPublicUrl = data?.id
-    ? `${process.env.NEXT_PUBLIC_API_URL}/pdf/cierre-caja/${data.id}?formato=ticket`
+  const pdfPublicUrl = idUpper
+    ? `${process.env.NEXT_PUBLIC_API_URL}/pdf/cierre-caja/${idUpper}?formato=ticket`
     : undefined
 
   return (
     <ModalShowDoc
       open={open}
       setOpen={setOpen}
-      nro_doc={data?.id ? `CIERRE-${data.id}` : ''}
+      nro_doc={idUpper ? `CIERRE-${idUpper}` : ''}
       setEsTicket={setEsTicket}
       esTicket={esTicket}
       tipoDocumento='cierre_caja'
-      cierreId={data?.id}
+      cierreId={idUpper}
       backendPdfUrl={currentPdfUrl}
       backendPdfLoading={currentLoading && !currentPdfUrl}
       pdfPublicUrl={pdfPublicUrl}
-      whatsappMensajeAuto={`Hola, le comparto el ticket de cierre de caja CIERRE-${data?.id ?? ''}.`}
+      whatsappMensajeAuto={`Hola, le comparto el ticket de cierre de caja CIERRE-${idUpper ?? ''}.`}
     >
       <></>
     </ModalShowDoc>

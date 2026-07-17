@@ -30,6 +30,28 @@ export function useCerrarCaja() {
                 queryClient.invalidateQueries({ queryKey: [QueryKeys.HISTORIAL_APERTURAS] })
                 queryClient.invalidateQueries({ queryKey: [QueryKeys.HISTORIAL_APERTURAS_TODAS] })
 
+                // Los ULID se guardan en MAYÚSCULAS; normalizar para las URLs de PDF.
+                const idUpper = String(aperturaId).toUpperCase()
+
+                // Si hay WhatsApp, abrir el chat con el enlace público del PDF.
+                // wa.me solo permite pre-llenar texto (no adjuntar archivos), por eso
+                // se envía el enlace: la ruta /pdf/cierre-caja/{id} es pública.
+                let waUrl: string | null = null
+                if (data.whatsapp_reporte) {
+                    const tel = String(data.whatsapp_reporte).replace(/\D/g, '')
+                    if (tel) {
+                        const numero = tel.startsWith('51') ? tel : `51${tel}`
+                        const pdfPublicUrl = `${process.env.NEXT_PUBLIC_API_URL}/pdf/cierre-caja/${idUpper}?formato=ticket`
+                        const texto = encodeURIComponent(
+                            `Reporte de cierre de caja CIERRE-${idUpper}.\n\n📎 Ver/descargar PDF:\n${pdfPublicUrl}`
+                        )
+                        waUrl = `https://wa.me/${numero}?text=${texto}`
+                        // Intentar abrir directamente; si el navegador bloquea el popup,
+                        // queda el enlace en el modal de éxito.
+                        window.open(waUrl, '_blank')
+                    }
+                }
+
                 // Si hay email, enviar el ticket automáticamente
                 if (data.email_reporte && empresaData) {
                     try {
@@ -50,7 +72,7 @@ export function useCerrarCaja() {
                         // Generar el PDF desde el backend
                         const token = getAuthToken()
                         const API_URL = process.env.NEXT_PUBLIC_API_URL
-                        const pdfRes = await fetch(`${API_URL}/pdf/cierre-caja/${aperturaId}?formato=ticket`, {
+                        const pdfRes = await fetch(`${API_URL}/pdf/cierre-caja/${idUpper}?formato=ticket`, {
                             headers: {
                                 Authorization: `Bearer ${token}`,
                                 Accept: 'application/pdf',
@@ -79,6 +101,14 @@ export function useCerrarCaja() {
                             {data.email_reporte && (
                                 <p className='text-sm text-green-600'>
                                     ✓ Ticket enviado automáticamente a: <strong>{data.email_reporte}</strong>
+                                </p>
+                            )}
+                            {waUrl && (
+                                <p className='text-sm text-green-600'>
+                                    ✓ Reporte por WhatsApp a <strong>{data.whatsapp_reporte}</strong>:{' '}
+                                    <a href={waUrl} target='_blank' rel='noopener noreferrer' className='underline font-semibold text-green-700'>
+                                        abrir chat
+                                    </a>
                                 </p>
                             )}
                             <p className='text-sm text-blue-600'>Puede continuar operando normalmente. La caja se reiniciará automáticamente al día siguiente.</p>

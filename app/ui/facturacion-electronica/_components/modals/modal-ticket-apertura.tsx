@@ -25,7 +25,9 @@ export default function ModalTicketApertura({
   const fetchPdf = useCallback(async (id: string) => {
     const token = getAuthToken()
     const API_URL = process.env.NEXT_PUBLIC_API_URL
-    const res = await fetch(`${API_URL}/pdf/apertura-caja/${id}?formato=ticket`, {
+    // Los ULID se guardan en MAYÚSCULAS; en producción la búsqueda puede ser
+    // case-sensitive y un id en minúsculas da 404.
+    const res = await fetch(`${API_URL}/pdf/apertura-caja/${id.toUpperCase()}?formato=ticket`, {
       headers: {
         Authorization: `Bearer ${token}`,
         Accept: 'application/pdf',
@@ -58,24 +60,27 @@ export default function ModalTicketApertura({
     }
   }, [open, apertura?.id, fetchPdf])
 
+  // Los ULID se guardan en MAYÚSCULAS; normalizar para las URLs y el nro de doc.
+  const idUpper = apertura?.id ? String(apertura.id).toUpperCase() : undefined
+
   // La ruta /pdf/apertura-caja/{id} es pública en el backend, por eso el
   // enlace puede enviarse por WhatsApp.
-  const pdfPublicUrl = apertura?.id
-    ? `${process.env.NEXT_PUBLIC_API_URL}/pdf/apertura-caja/${apertura.id}?formato=ticket`
+  const pdfPublicUrl = idUpper
+    ? `${process.env.NEXT_PUBLIC_API_URL}/pdf/apertura-caja/${idUpper}?formato=ticket`
     : undefined
 
   return (
     <ModalShowDoc
       open={open}
       setOpen={(isOpen) => !isOpen && onClose()}
-      nro_doc={apertura?.id ? `APERTURA-${apertura.id}` : ''}
+      nro_doc={idUpper ? `APERTURA-${idUpper}` : ''}
       tipoDocumento='apertura_caja'
       esTicket={true}
-      aperturaId={apertura?.id}
+      aperturaId={idUpper}
       backendPdfUrl={pdfUrl}
       backendPdfLoading={loading && !pdfUrl}
       pdfPublicUrl={pdfPublicUrl}
-      whatsappMensajeAuto={`Hola, le comparto el ticket de apertura de caja APERTURA-${apertura?.id ?? ''}.`}
+      whatsappMensajeAuto={`Hola, le comparto el ticket de apertura de caja APERTURA-${idUpper ?? ''}.`}
     >
       <></>
     </ModalShowDoc>
