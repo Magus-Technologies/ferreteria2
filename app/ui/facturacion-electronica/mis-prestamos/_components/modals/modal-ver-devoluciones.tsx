@@ -199,9 +199,9 @@ export default function ModalVerDevoluciones({
     {
       headerName: 'Fecha',
       field: 'fecha_pago',
-      width: 120,
+      width: 160,
       valueFormatter: (params) =>
-        params.value ? dayjs(params.value).format('DD/MM/YYYY') : '',
+        params.value ? dayjs(params.value).format('DD/MM/YYYY HH:mm') : '',
     },
     {
       headerName: 'Tipo de Operación',
