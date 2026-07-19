@@ -2,13 +2,14 @@
 
 import { Form, FormInstance, Tooltip, FormListFieldData, Image } from 'antd'
 import { ColDef, ICellRendererParams } from 'ag-grid-community'
-import type { FormCreateCotizacion, DescuentoTipo } from '../../_types/cotizacion.types'
+import type { FormCreateCotizacion, DescuentoTipo, TipoPrecio } from '../../_types/cotizacion.types'
 import { FaTrash } from 'react-icons/fa'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import InputBase from '~/app/_components/form/inputs/input-base'
 import SelectBase from '~/app/_components/form/selects/select-base'
 import SelectUnidadDerivadaCotizacion from '../form/select-unidad-derivada-cotizacion'
 import SelectTipoPrecioCotizacion from '../form/select-tipo-precio-cotizacion'
+import { useStoreProductoAgregadoCotizacion } from '../../_store/store-producto-agregado-cotizacion'
 import {getStorageUrl} from '~/utils/upload'
 
 export function calcularSubtotalCotizacion({
@@ -69,6 +70,111 @@ function calcularSubtotalForm({
   form.setFieldValue(['productos', value, 'subtotal'], Number(subtotal))
 }
 
+/**
+ * Aplica un tipo de precio a la línea: setea precio, comisión y recalcula el
+ * subtotal. Espejo de `aplicarPrecio` en venta.
+ */
+function aplicarPrecioCotizacion(
+  form: FormInstance,
+  fieldIndex: number,
+  tipo: TipoPrecio,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ud: any,
+  cantidad: number
+) {
+  const preciosMap: Record<TipoPrecio, { precio: string; comision: string }> = {
+    publico: { precio: 'precio_publico', comision: 'comision_publico' },
+    especial: { precio: 'precio_especial', comision: 'comision_especial' },
+    minimo: { precio: 'precio_minimo', comision: 'comision_minimo' },
+    ultimo: { precio: 'precio_ultimo', comision: 'comision_ultimo' },
+  }
+  const { precio: precioKey, comision: comisionKey } = preciosMap[tipo]
+  const precio = Number(ud[precioKey] ?? 0)
+  const comision = Number(ud[comisionKey] ?? 0)
+
+  form.setFieldValue(['productos', fieldIndex, 'tipo_precio'], tipo)
+  form.setFieldValue(['productos', fieldIndex, 'precio_venta'], precio)
+  form.setFieldValue(['productos', fieldIndex, 'comision'], comision)
+
+  const recargo = Number(form.getFieldValue(['productos', fieldIndex, 'recargo']) ?? 0)
+  const descuento_tipo = form.getFieldValue(['productos', fieldIndex, 'descuento_tipo']) as DescuentoTipo
+  const descuento = Number(form.getFieldValue(['productos', fieldIndex, 'descuento']) ?? 0)
+
+  form.setFieldValue(
+    ['productos', fieldIndex, 'subtotal'],
+    Number(
+      calcularSubtotalCotizacion({
+        precio_venta: precio,
+        recargo,
+        descuento_tipo: descuento_tipo || 'Monto',
+        descuento,
+        cantidad,
+      })
+    )
+  )
+}
+
+/**
+ * Auto-selecciona el mejor tipo de precio según la cantidad y los activadores.
+ * "Mejor" = el tier habilitado con el activador MÁS ALTO. Si la cantidad baja y
+ * el tier actual ya no es válido, cae al mejor disponible. Espejo de venta
+ * (`autoSeleccionarMejorPrecio`) — antes cotización no analizaba activadores.
+ */
+function autoSeleccionarMejorPrecioCotizacion({
+  form,
+  fieldIndex,
+  productosStore,
+}: {
+  form: FormInstance
+  fieldIndex: number
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  productosStore: any[]
+}) {
+  const productoId = form.getFieldValue(['productos', fieldIndex, 'producto_id'])
+  const unidadDerivadaId = form.getFieldValue(['productos', fieldIndex, 'unidad_derivada_id'])
+  const cantidad = Number(form.getFieldValue(['productos', fieldIndex, 'cantidad']) ?? 0)
+  const tipoPrecioActual = (form.getFieldValue(['productos', fieldIndex, 'tipo_precio']) || 'publico') as TipoPrecio
+
+  const productoEnStore = productosStore.find((p) => p.producto_id === productoId)
+  const unidadesDerivadas = productoEnStore?.unidades_derivadas_disponibles || []
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ud = unidadesDerivadas.find((u: any) => u.unidad_derivada.id === unidadDerivadaId)
+  if (!ud) return
+
+  const activadores: Record<TipoPrecio, number> = {
+    publico: 0,
+    especial: Number(ud.activador_especial ?? 0),
+    minimo: Number(ud.activador_minimo ?? 0),
+    ultimo: Number(ud.activador_ultimo ?? 0),
+  }
+
+  const estaHabilitado = (tipo: TipoPrecio) => {
+    const act = activadores[tipo]
+    return act <= 0 || cantidad >= act
+  }
+
+  let mejor: TipoPrecio = 'publico'
+  let mejorAct = 0
+  for (const tipo of ['especial', 'minimo', 'ultimo'] as TipoPrecio[]) {
+    if (estaHabilitado(tipo) && activadores[tipo] > mejorAct) {
+      mejor = tipo
+      mejorAct = activadores[tipo]
+    }
+  }
+
+  // Si el tier actual ya no aplica (bajó la cantidad), usar el mejor disponible.
+  if (!estaHabilitado(tipoPrecioActual)) {
+    if (mejor !== tipoPrecioActual) aplicarPrecioCotizacion(form, fieldIndex, mejor, ud, cantidad)
+    return
+  }
+
+  // Solo subir de tier automáticamente; respeta una baja manual si la cantidad no sube.
+  const activadorActual = activadores[tipoPrecioActual] ?? 0
+  if (mejorAct > activadorActual) {
+    aplicarPrecioCotizacion(form, fieldIndex, mejor, ud, cantidad)
+  }
+}
+
 export function useColumnsCotizar({
   form,
   remove,
@@ -76,6 +182,8 @@ export function useColumnsCotizar({
   form: FormInstance<FormCreateCotizacion>
   remove: (index: number | number[]) => void
 }): ColDef[] {
+  const productosStore = useStoreProductoAgregadoCotizacion((s) => s.productos)
+
   return [
     // {
     //   headerName: '#',
@@ -331,7 +439,10 @@ export function useColumnsCotizar({
               precision={2}
               min={0}
               formWithMessage={false}
-              onChange={() => calcularSubtotalForm({ form, value })}
+              onChange={() => {
+                calcularSubtotalForm({ form, value })
+                autoSeleccionarMejorPrecioCotizacion({ form, fieldIndex: value, productosStore })
+              }}
             />
             {stockInsuficiente && cantidad && (
               <div className='text-red-600 text-[11px] mt-1 font-medium leading-tight'>
