@@ -210,8 +210,14 @@ export default function ModalDetallesEntregaCompleto({
         const recibido = esCancelada
           ? rawEntregada
           : (mostrarRecibido ? Math.max(cantidadAnterior - cantidadActual, 0) : 0)
-        // pedida = max(original, current) so the Total column always shows the larger qty
-        const pedida = mostrarRecibido ? Math.max(cantidadAnterior, cantidadActual) : rawEntregada
+        // Total de la línea. En una DISMINUCIÓN (recibido > 0) el total correcto es
+        // la cantidad ya resincronizada (rawEntregada = entrega_detalle.cantidad),
+        // no el máximo con la cantidad vieja. En un AUMENTO se mantiene el máximo.
+        // Espejo de EntregaNuevaPdfService::prepararProductosDesdeDetalles (backend),
+        // que es la fuente que usa el ticket (correcto).
+        const pedida = mostrarRecibido
+          ? (recibido > 0 ? rawEntregada : Math.max(cantidadAnterior, cantidadActual))
+          : rawEntregada
         const entregada = (!esCancelada && entregaTieneEntregaFisica)
           ? (esAumentoConfirmado ? cantidadActual : (mostrarRecibido ? Math.min(cantidadAnterior, cantidadActual) : rawEntregada))
           : 0

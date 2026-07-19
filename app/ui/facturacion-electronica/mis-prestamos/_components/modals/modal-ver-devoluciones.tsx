@@ -1,7 +1,7 @@
   'use client'
 
 import { Modal, message, Input } from 'antd'
-import { FaClockRotateLeft, FaBan } from 'react-icons/fa6'
+import { FaClockRotateLeft, FaBan, FaFilePdf } from 'react-icons/fa6'
 import { Prestamo, prestamoApi, PagoPrestamo } from '~/lib/api/prestamo'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
@@ -12,6 +12,7 @@ import TableWithTitle from '~/components/tables/table-with-title'
 import { AgGridReact } from 'ag-grid-react'
 import { ColDef } from 'ag-grid-community'
 import { orangeColors } from '~/lib/colors'
+import { getAuthToken } from '~/lib/api'
 
 interface ProductoDevueltoRow {
   producto: string
@@ -190,6 +191,41 @@ export default function ModalVerDevoluciones({
     anularMutation.mutate({ pagoId: pagoAAnular.id, motivo: motivoAnular.trim() })
   }
 
+  // Abre en una pestaña nueva el comprobante PDF de UNA devolución puntual (no del préstamo completo)
+  const [pdfDevolucionLoadingId, setPdfDevolucionLoadingId] = useState<string | null>(null)
+
+  const verPdfDevolucion = async (pago: PagoPrestamo) => {
+    if (!prestamo) return
+    const numeroDev = getNumeroDevolucionFromObs(pago.observaciones)
+    if (!numeroDev) {
+      message.warning('No se pudo determinar el número de devolución')
+      return
+    }
+    setPdfDevolucionLoadingId(pago.id)
+    try {
+      const token = getAuthToken()
+      const API_URL = process.env.NEXT_PUBLIC_API_URL
+      const res = await fetch(
+        `${API_URL}/pdf/prestamo/${prestamo.id}/devolucion/${numeroDev}?formato=a4`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: 'application/pdf',
+          },
+        }
+      )
+      if (!res.ok) throw new Error(`Error PDF: ${res.status}`)
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      window.open(url)
+    } catch (err: any) {
+      console.error('Error al obtener PDF de devolución:', err)
+      message.error(err?.message || 'Error al generar el PDF de la devolución')
+    } finally {
+      setPdfDevolucionLoadingId(null)
+    }
+  }
+
   const columns: ColDef<PagoPrestamo>[] = [
     {
       headerName: 'N° Devolución',
@@ -267,17 +303,11 @@ export default function ModalVerDevoluciones({
     },
     {
       headerName: 'Acciones',
-      width: 100,
+      width: 150,
       pinned: 'right',
       cellRenderer: (params: { data: PagoPrestamo }) => {
         const anulado = params.data?.estado === false
-        if (anulado) {
-          return (
-            <div className='flex items-center justify-center h-full text-gray-400 text-xs'>
-              —
-            </div>
-          )
-        }
+        const numeroDev = getNumeroDevolucionFromObs(params.data?.observaciones)
         return (
           <div
             style={{
@@ -289,14 +319,27 @@ export default function ModalVerDevoluciones({
             }}
           >
             <ButtonBase
-              color='danger'
+              color='info'
               size='md'
               className='flex items-center !px-3'
-              title='Anular devolución'
-              onClick={() => abrirAnular(params.data)}
+              title={numeroDev ? 'Ver PDF de la devolución' : 'No se encontró N° de devolución'}
+              disabled={!numeroDev}
+              loading={pdfDevolucionLoadingId === params.data.id}
+              onClick={() => verPdfDevolucion(params.data)}
             >
-              <FaBan />
+              <FaFilePdf />
             </ButtonBase>
+            {!anulado && (
+              <ButtonBase
+                color='danger'
+                size='md'
+                className='flex items-center !px-3'
+                title='Anular devolución'
+                onClick={() => abrirAnular(params.data)}
+              >
+                <FaBan />
+              </ButtonBase>
+            )}
           </div>
         )
       },
