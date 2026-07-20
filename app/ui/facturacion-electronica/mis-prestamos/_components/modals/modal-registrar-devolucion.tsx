@@ -127,6 +127,9 @@ export default function ModalRegistrarDevolucion({
   const [form] = Form.useForm<FormValues>()
   const [loading, setLoading] = useState(false)
   const [productos, setProductos] = useState<ProductoDevolucion[]>([])
+  // IDs quitados con la "x": se ocultan de la tabla pero conservan su cantidad,
+  // para poder restaurarlos sin reabrir el modal.
+  const [ocultos, setOcultos] = useState<Set<number>>(new Set())
   const queryClient = useQueryClient()
 
   const { data: prestamoDetalle } = useQuery({
@@ -214,6 +217,7 @@ export default function ModalRegistrarDevolucion({
     } else {
       setProductos([])
     }
+    setOcultos(new Set())
   }, [open, prestamoActual])
 
   const mutation = useMutation({
@@ -221,7 +225,7 @@ export default function ModalRegistrarDevolucion({
       if (!prestamo) throw new Error('No hay préstamo seleccionado')
 
       const selectedProductos = productos
-        .filter(p => p.devolver > 0)
+        .filter(p => !ocultos.has(p.producto_almacen_prestamo_id) && p.devolver > 0)
         .map(p => ({
           producto_almacen_prestamo_id: p.producto_almacen_prestamo_id,
           cantidad: p.devolver,
@@ -282,10 +286,16 @@ export default function ModalRegistrarDevolucion({
     )
   }, [])
 
-  // Quita el producto del listado (no se devuelve). Se repuebla al reabrir el modal.
+  // Oculta el producto de la tabla (no se devuelve) conservando su cantidad.
   const handleQuitarProducto = useCallback((id: number) => {
-    setProductos(prev => prev.filter(p => p.producto_almacen_prestamo_id !== id))
+    setOcultos(prev => {
+      const next = new Set(prev)
+      next.add(id)
+      return next
+    })
   }, [])
+
+  const handleRestaurarProductos = useCallback(() => setOcultos(new Set()), [])
 
   const columns: ColDef<ProductoDevolucion>[] = [
     {
@@ -368,7 +378,11 @@ export default function ModalRegistrarDevolucion({
     },
   ]
 
-  const totalSelected = productos
+  const productosVisibles = productos.filter(
+    p => !ocultos.has(p.producto_almacen_prestamo_id)
+  )
+
+  const totalSelected = productosVisibles
     .reduce((sum, p) => sum + (p.devolver * p.factor), 0)
 
   return (
@@ -430,13 +444,28 @@ export default function ModalRegistrarDevolucion({
         </div>
       )}
 
+      {ocultos.size > 0 && (
+        <div className='flex items-center justify-end gap-2 mb-1.5'>
+          <span className='text-xs text-gray-500'>
+            {ocultos.size} producto{ocultos.size !== 1 ? 's' : ''} quitado{ocultos.size !== 1 ? 's' : ''}
+          </span>
+          <button
+            type='button'
+            onClick={handleRestaurarProductos}
+            className='text-xs font-semibold text-orange-600 hover:text-orange-800 underline'
+          >
+            Restaurar todos
+          </button>
+        </div>
+      )}
+
       <div className='w-full h-[220px] mb-6'>
         <TableWithTitle<ProductoDevolucion>
           id='productos-devolucion-prestamo'
           title='PRODUCTOS A DEVOLVER'
           selectionColor={orangeColors[10]}
           columnDefs={columns}
-          rowData={productos}
+          rowData={productosVisibles}
         />
       </div>
 

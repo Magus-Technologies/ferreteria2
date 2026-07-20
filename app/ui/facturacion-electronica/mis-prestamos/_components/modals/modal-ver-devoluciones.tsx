@@ -219,9 +219,9 @@ export default function ModalVerDevoluciones({
       // created_at = momento real en que se registró la devolución (con hora).
       // `fecha_pago` viene del date-picker y queda a medianoche → mostraba 00:00.
       field: 'created_at',
-      width: 170,
+      width: 185,
       valueFormatter: (params) =>
-        params.value ? dayjs(params.value).format('DD/MM/YYYY HH:mm:ss') : '',
+        params.value ? dayjs(params.value).format('DD/MM/YYYY hh:mm:ss A') : '',
     },
     {
       headerName: 'Tipo de Operación',
