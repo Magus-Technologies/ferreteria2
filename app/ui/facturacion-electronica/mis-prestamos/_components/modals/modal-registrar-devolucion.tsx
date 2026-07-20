@@ -282,6 +282,11 @@ export default function ModalRegistrarDevolucion({
     )
   }, [])
 
+  // Quita el producto del listado (no se devuelve). Se repuebla al reabrir el modal.
+  const handleQuitarProducto = useCallback((id: number) => {
+    setProductos(prev => prev.filter(p => p.producto_almacen_prestamo_id !== id))
+  }, [])
+
   const columns: ColDef<ProductoDevolucion>[] = [
     {
       headerName: 'Producto',
@@ -344,8 +349,8 @@ export default function ModalRegistrarDevolucion({
       width: 50,
       sortable: false,
       filter: false,
-      // "x" para poner en 0 de un click (no devolver este producto), en vez de
-      // tener que escribir 0 a mano — igual que "configurar entrega" en ventas.
+      // "x" que quita el producto del listado (no se devuelve) — igual que
+      // "configurar entrega" en ventas. Se repuebla al reabrir el modal.
       cellRenderer: (params: any) => {
         const data = params.data as ProductoDevolucion
         if (!data) return null
@@ -353,7 +358,7 @@ export default function ModalRegistrarDevolucion({
           <span
             style={{ cursor: 'pointer' }}
             title='Quitar (no devolver este producto)'
-            onClick={() => handleProductoChange(data.producto_almacen_prestamo_id, 0)}
+            onClick={() => handleQuitarProducto(data.producto_almacen_prestamo_id)}
           >
             ❌
           </span>
