@@ -481,6 +481,7 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
         >
           <ButtonBase
             onClick={() => {
+              form.setFieldValue("metodos_de_pago", undefined);
               form.setFieldValue("estado_de_venta", EstadoDeVenta.EN_ESPERA);
               form.submit();
             }}
