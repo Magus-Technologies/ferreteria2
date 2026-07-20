@@ -223,12 +223,15 @@ export default function BodyCrearPrestamo() {
         setOpenDoc(true);
       }
 
-      // Limpiar formulario Y stores (mismo reset que en edición). Sin resetear
-      // los stores, tipo_entidad quedaba pegado (ej. PROVEEDOR) mientras el form
-      // volvía a CLIENTE → toggle en proveedor pero buscador en clientes.
+      // Reset al estado de carga inicial. tipo_entidad = PROVEEDOR: es el default
+      // TANTO del store (línea 33 del store) COMO del initialValue del form field
+      // (el toggle). resetFields() devuelve el toggle a PROVEEDOR; si el store se
+      // dejaba en CLIENTE, toggle y buscador/input quedaban desincronizados
+      // (toggle PROVEEDOR ↔ input DNI de cliente). Seteamos ambos a PROVEEDOR.
       form.resetFields();
       setTipoOperacion(TipoOperacion.PRESTAR);
-      setTipoEntidad(TipoEntidad.CLIENTE);
+      setTipoEntidad(TipoEntidad.PROVEEDOR);
+      form.setFieldValue('tipo_entidad', TipoEntidad.PROVEEDOR);
       setTipoMoneda(TipoMoneda.SOLES);
       setProductosPrefill([]);
       setClienteSearchText('');
