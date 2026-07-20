@@ -32,6 +32,8 @@ export default function BodyCrearPrestamo() {
   const setTipoMoneda = useStoreProductoAgregadoPrestamo((s) => s.setTipoMoneda);
   const setProductosPrefill = useStoreProductoAgregadoPrestamo((s) => s.setProductosPrefill);
   const setClienteSearchText = useStoreClienteSeleccionado((s) => s.setSearchText);
+  const setProveedorSearchText = useStoreProveedorSeleccionado((s) => s.setSearchText);
+  const setProveedorSel = useStoreProveedorSeleccionado((s) => s.setProveedor);
 
   // Precargar datos del préstamo en modo edición
   useEffect(() => {
@@ -221,8 +223,17 @@ export default function BodyCrearPrestamo() {
         setOpenDoc(true);
       }
 
-      // Limpiar formulario
+      // Limpiar formulario Y stores (mismo reset que en edición). Sin resetear
+      // los stores, tipo_entidad quedaba pegado (ej. PROVEEDOR) mientras el form
+      // volvía a CLIENTE → toggle en proveedor pero buscador en clientes.
       form.resetFields();
+      setTipoOperacion(TipoOperacion.PRESTAR);
+      setTipoEntidad(TipoEntidad.CLIENTE);
+      setTipoMoneda(TipoMoneda.SOLES);
+      setProductosPrefill([]);
+      setClienteSearchText('');
+      setProveedorSearchText('');
+      setProveedorSel(undefined);
     } catch (error) {
       console.error("Error al guardar préstamo:", error);
       message.error(
