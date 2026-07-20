@@ -96,9 +96,12 @@ export function useColumnsMisVentas() {
     {
       headerName: "F.Venta",
       field: "fecha",
-      width: 180,
+      width: 140,
+      // La fecha de emisión del comprobante es un DÍA, no un instante. Mostrar
+      // hora sacaba "12:00:00 AM" en ventas cuya fecha se fijó a medianoche
+      // (al concretar un borrador). Solo día.
       valueFormatter: (params) =>
-        formatFechaPeru(params.value, "DD/MM/YYYY hh:mm:ss A"),
+        formatFechaPeru(params.value, "DD/MM/YYYY"),
     },
     {
       headerName: "S.Numero",
@@ -381,10 +384,11 @@ export function useColumnsMisVentas() {
     {
       headerName: "F.Vencimiento",
       field: "fecha_vencimiento",
-      width: 180,
+      width: 140,
+      // Fecha de vencimiento de crédito: también es un día, no un instante.
       valueFormatter: (params) =>
         params.value
-          ? formatFechaPeru(params.value, "DD/MM/YYYY hh:mm:ss A")
+          ? formatFechaPeru(params.value, "DD/MM/YYYY")
           : "-",
     },
     {
