@@ -338,6 +338,29 @@ export default function ModalRegistrarDevolucion({
         backgroundColor: '#f0fdf4',
       },
     },
+    {
+      headerName: '',
+      colId: 'excluir',
+      width: 50,
+      sortable: false,
+      filter: false,
+      // "x" para poner en 0 de un click (no devolver este producto), en vez de
+      // tener que escribir 0 a mano — igual que "configurar entrega" en ventas.
+      cellRenderer: (params: any) => {
+        const data = params.data as ProductoDevolucion
+        if (!data) return null
+        return (
+          <span
+            style={{ cursor: 'pointer' }}
+            title='Quitar (no devolver este producto)'
+            onClick={() => handleProductoChange(data.producto_almacen_prestamo_id, 0)}
+          >
+            ❌
+          </span>
+        )
+      },
+      cellStyle: { textAlign: 'center' } as Record<string, string>,
+    },
   ]
 
   const totalSelected = productos
