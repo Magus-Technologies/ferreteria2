@@ -24,7 +24,10 @@ export function useColumnsMisPrestamos(
     {
       colId: "fecha",
       headerName: "Fecha",
-      field: "fecha",
+      // Usa created_at (timestamp real de registro) en vez de `fecha`, que puede
+      // quedar a medianoche cuando viene de un date-picker. Los préstamos no son
+      // comprobantes fiscales, así que la fecha de registro real es lo correcto.
+      field: "created_at",
       width: 180,
       valueFormatter: (params) =>
         params.value ? formatFechaPeru(params.value, "DD/MM/YYYY hh:mm:ss A") : "",
