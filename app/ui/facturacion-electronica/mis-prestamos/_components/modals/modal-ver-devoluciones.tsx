@@ -12,7 +12,7 @@ import TableWithTitle from '~/components/tables/table-with-title'
 import { AgGridReact } from 'ag-grid-react'
 import { ColDef } from 'ag-grid-community'
 import { orangeColors } from '~/lib/colors'
-import { getAuthToken } from '~/lib/api'
+import ModalDocDevolucion from './modal-doc-devolucion'
 
 interface ProductoDevueltoRow {
   producto: string
@@ -191,39 +191,21 @@ export default function ModalVerDevoluciones({
     anularMutation.mutate({ pagoId: pagoAAnular.id, motivo: motivoAnular.trim() })
   }
 
-  // Abre en una pestaña nueva el comprobante PDF de UNA devolución puntual (no del préstamo completo)
-  const [pdfDevolucionLoadingId, setPdfDevolucionLoadingId] = useState<string | null>(null)
+  // Visor del comprobante PDF de UNA devolución puntual: abre un modal con
+  // toggle Ticket / A4 (igual que mis-ventas), no una pestaña directa al A4.
+  const [pdfDevModal, setPdfDevModal] = useState<{
+    open: boolean
+    numeroDev?: string
+    nroDoc?: string
+  }>({ open: false })
 
-  const verPdfDevolucion = async (pago: PagoPrestamo) => {
-    if (!prestamo) return
+  const abrirPdfDevolucion = (pago: PagoPrestamo) => {
     const numeroDev = getNumeroDevolucionFromObs(pago.observaciones)
     if (!numeroDev) {
       message.warning('No se pudo determinar el número de devolución')
       return
     }
-    setPdfDevolucionLoadingId(pago.id)
-    try {
-      const token = getAuthToken()
-      const API_URL = process.env.NEXT_PUBLIC_API_URL
-      const res = await fetch(
-        `${API_URL}/pdf/prestamo/${prestamo.id}/devolucion/${numeroDev}?formato=a4`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: 'application/pdf',
-          },
-        }
-      )
-      if (!res.ok) throw new Error(`Error PDF: ${res.status}`)
-      const blob = await res.blob()
-      const url = URL.createObjectURL(blob)
-      window.open(url)
-    } catch (err: any) {
-      console.error('Error al obtener PDF de devolución:', err)
-      message.error(err?.message || 'Error al generar el PDF de la devolución')
-    } finally {
-      setPdfDevolucionLoadingId(null)
-    }
+    setPdfDevModal({ open: true, numeroDev, nroDoc: pago.numero_pago })
   }
 
   const columns: ColDef<PagoPrestamo>[] = [
@@ -321,15 +303,14 @@ export default function ModalVerDevoluciones({
             }}
           >
             <ButtonBase
-              color='info'
+              color='default'
               size='md'
               className='flex items-center !px-3'
               title={numeroDev ? 'Ver PDF de la devolución' : 'No se encontró N° de devolución'}
               disabled={!numeroDev}
-              loading={pdfDevolucionLoadingId === params.data.id}
-              onClick={() => verPdfDevolucion(params.data)}
+              onClick={() => abrirPdfDevolucion(params.data)}
             >
-              <FaFilePdf />
+              <FaFilePdf className='text-red-600' />
             </ButtonBase>
             {!anulado && (
               <ButtonBase
@@ -484,6 +465,15 @@ export default function ModalVerDevoluciones({
         </div>
       </div>
     </Modal>
+
+    {/* Visor del comprobante de la devolución (ticket / A4) */}
+    <ModalDocDevolucion
+      open={pdfDevModal.open}
+      setOpen={(open) => setPdfDevModal((prev) => ({ ...prev, open }))}
+      prestamoId={prestamo?.id}
+      numeroDevolucion={pdfDevModal.numeroDev}
+      nroDoc={pdfDevModal.nroDoc}
+    />
     </>
   )
 }
