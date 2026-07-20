@@ -2,9 +2,10 @@
 
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Spin, Tag, Empty, Input, Select, DatePicker, Pagination, Card } from 'antd'
+import { Spin, Tag, Empty, Input, Select, Form, Pagination, Card } from 'antd'
 import dayjs from 'dayjs'
 import { formatFechaPeru } from '~/utils/fechas'
+import FilterDateRangeFields from '~/app/_components/filters/filter-date-range-fields'
 import ContenedorGeneral from '~/app/_components/containers/contenedor-general'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { ventaApi, type VentaHistorialItem } from '~/lib/api/venta'
@@ -12,8 +13,6 @@ import { useRouter } from 'next/navigation'
 import NoAutorizado from '~/components/others/no-autorizado'
 import { usePermission } from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
-
-const { RangePicker } = DatePicker
 
 const FIELD_LABELS: Record<string, string> = {
   tipo_documento: 'Tipo Documento',
@@ -83,7 +82,9 @@ export default function HistorialVentasPage() {
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
   const [accion, setAccion] = useState<string | undefined>(undefined)
-  const [fechas, setFechas] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>(null)
+  // Por defecto filtra HOY (antes arrancaba vacío y traía todo el historial).
+  const [fechas, setFechas] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null]>([dayjs(), dayjs()])
+  const [form] = Form.useForm()
   const perPage = 20
 
   const { data, isLoading } = useQuery({
@@ -131,10 +132,26 @@ export default function HistorialVentasPage() {
               { value: 'creacion', label: 'Creación' },
             ]}
           />
-          <RangePicker
-            onChange={(dates) => { setFechas(dates as [dayjs.Dayjs | null, dayjs.Dayjs | null] | null); setPage(1) }}
-            format='DD/MM/YYYY'
-          />
+          <Form
+            form={form}
+            layout='inline'
+            initialValues={{ desde: dayjs(), hasta: dayjs() }}
+            onValuesChange={() => {
+              setFechas([
+                form.getFieldValue('desde') ?? null,
+                form.getFieldValue('hasta') ?? null,
+              ])
+              setPage(1)
+            }}
+            className='flex items-center gap-3'
+          >
+            <FilterDateRangeFields
+              fromName='desde'
+              toName='hasta'
+              fromLabel='Desde:'
+              toLabel='Hasta:'
+            />
+          </Form>
         </div>
 
         {/* Contenido */}
