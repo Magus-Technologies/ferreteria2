@@ -79,7 +79,7 @@ export default function HistorialCierres() {
   const { data: cierres = [], isLoading, refetch, error } = useQuery({
     queryKey: [QueryKeys.HISTORIAL_CIERRES, selectedUserId, dateRange, selectedCajaPrincipalId],
     queryFn: async () => {
-      console.log('📊 Cargando historial de arqueos diarios...');
+      // console.log('📊 Cargando historial de arqueos diarios...');
 
       const filters: any = {};
       if (selectedUserId) {
@@ -95,7 +95,7 @@ export default function HistorialCierres() {
 
       const response = await cajaApi.listarArqueos(filters);
 
-      console.log('📦 Respuesta arqueos diarios:', response);
+      // console.log('📦 Respuesta arqueos diarios:', response);
 
       if (response.error) {
         console.error("❌ Error al cargar arqueos:", response.error);
@@ -104,7 +104,7 @@ export default function HistorialCierres() {
 
       if (response.data) {
         const arqueosData = response.data.data?.data || response.data.data || [];
-        console.log('✨ Arqueos diarios a mostrar:', arqueosData.length);
+        // console.log('✨ Arqueos diarios a mostrar:', arqueosData.length);
         return arqueosData;
       }
 
