@@ -64,6 +64,9 @@ export default function ModalResumenEntregaVenta({
   // Ref síncrono para cantidades — evita stale closure cuando el usuario
   // tipea y hace clic en "Programar" antes de que React re-renderice.
   const cantidadesRef = useRef<Record<string, number>>({})
+  // Se activa tras "Programar Entrega": el siguiente merge NO preserva el valor
+  // tipeado, sino que resetea "a programar" al nuevo pendiente (el restante).
+  const resetAProgramarRef = useRef(false)
   const [quienEntrega,  setQuienEntrega]  = useState<'almacen' | 'vendedor'>('almacen')
 
   // Config de despacho a domicilio (dirección + GPS + fecha + chofer).
@@ -145,16 +148,23 @@ export default function ModalResumenEntregaVenta({
       })
     )
 
+    // Leemos y limpiamos la bandera acá (no dentro del updater) para que el valor
+    // sea estable aunque React invoque el updater más de una vez (StrictMode).
+    const resetear = resetAProgramarRef.current
+    resetAProgramarRef.current = false
+
     setFilas((prev) => {
       if (filasIguales(prev, siguientesFilas)) return prev
-      // Server data changed (different pendiente/total/etc). Preserve the user's
-      // cantAProgramar where possible, but cap it to the new pendiente so we never
-      // try to deliver more than what's actually pending.
+      // Server data changed (different pendiente/total/etc). Normalmente se
+      // preserva el cantAProgramar tipeado (capado al nuevo pendiente) para no
+      // pisar al usuario en refetches de fondo. PERO tras "Programar Entrega"
+      // (resetear=true) se resetea al pendiente restante, así el input no se
+      // queda con la cantidad que ya se programó.
       const merged = siguientesFilas.map((siguiente: FilaProducto) => {
         // Match por udvId (id real de la unidad derivada), no por key: las keys
         // son índices ("0-0") y colisionan entre ventas distintas.
         const prevFila = prev.find(p => p.udvId === siguiente.udvId)
-        const cantAProgramar = prevFila
+        const cantAProgramar = (prevFila && !resetear)
           ? Math.min(prevFila.cantAProgramar, siguiente.pendiente)
           : siguiente.pendiente
         return { ...siguiente, cantAProgramar }
@@ -249,6 +259,9 @@ export default function ModalResumenEntregaVenta({
     }),
     onSuccess: () => {
       message.success('Entrega registrada')
+      // El próximo merge debe resetear "a programar" al pendiente restante,
+      // no conservar la cantidad recién programada.
+      resetAProgramarRef.current = true
       queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS] })
       refetchHistorial()
       // Reseteamos la config de domicilio: el historial ya refleja la entrega
