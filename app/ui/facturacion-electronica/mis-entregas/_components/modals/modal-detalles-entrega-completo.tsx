@@ -206,24 +206,36 @@ export default function ModalDetallesEntregaCompleto({
         const rawEntregada = Number(p.cantidad_entregada || 0)
         const esCancelada = entregaView?.estado_entrega === 'ca'
         const esConfirmadaAhora = entregaView?.estado_entrega === 'en'
+        // Producto AGREGADO en la edición: no existía al momento de la entrega, así
+        // que NO fue entregado físicamente. Sin este flag, el fallback
+        // `?? cantidadActual` fabrica una "cantidad anterior" igual a la actual y el
+        // Math.min lo hace pasar por entregado. Solo aplica si hubo edición
+        // (mostrarRecibido), donde prevQuantities está poblado con el estado previo.
+        const esProductoNuevo = mostrarRecibido && !prevQuantities.has(prevKey)
         const esAumentoConfirmado = mostrarRecibido && cantidadActual > cantidadAnterior && esConfirmadaAhora
         const recibido = esCancelada
           ? rawEntregada
-          : (mostrarRecibido ? Math.max(cantidadAnterior - cantidadActual, 0) : 0)
+          : (esProductoNuevo ? 0 : (mostrarRecibido ? Math.max(cantidadAnterior - cantidadActual, 0) : 0))
         // Total de la línea. En una DISMINUCIÓN (recibido > 0) el total correcto es
         // la cantidad ya resincronizada (rawEntregada = entrega_detalle.cantidad),
         // no el máximo con la cantidad vieja. En un AUMENTO se mantiene el máximo.
         // Espejo de EntregaNuevaPdfService::prepararProductosDesdeDetalles (backend),
         // que es la fuente que usa el ticket (correcto).
-        const pedida = mostrarRecibido
-          ? (recibido > 0 ? rawEntregada : Math.max(cantidadAnterior, cantidadActual))
-          : rawEntregada
-        const entregada = (!esCancelada && entregaTieneEntregaFisica)
-          ? (esAumentoConfirmado ? cantidadActual : (mostrarRecibido ? Math.min(cantidadAnterior, cantidadActual) : rawEntregada))
-          : 0
-        const pendiente = esCancelada ? 0 : (esAumentoConfirmado ? 0 : (mostrarRecibido
-          ? Math.max(cantidadActual - cantidadAnterior, 0)
-          : (entregaTieneEntregaFisica ? 0 : rawEntregada)))
+        const pedida = esProductoNuevo
+          ? cantidadActual
+          : (mostrarRecibido
+            ? (recibido > 0 ? rawEntregada : Math.max(cantidadAnterior, cantidadActual))
+            : rawEntregada)
+        const entregada = esProductoNuevo
+          ? 0
+          : ((!esCancelada && entregaTieneEntregaFisica)
+            ? (esAumentoConfirmado ? cantidadActual : (mostrarRecibido ? Math.min(cantidadAnterior, cantidadActual) : rawEntregada))
+            : 0)
+        const pendiente = esProductoNuevo
+          ? cantidadActual
+          : (esCancelada ? 0 : (esAumentoConfirmado ? 0 : (mostrarRecibido
+            ? Math.max(cantidadActual - cantidadAnterior, 0)
+            : (entregaTieneEntregaFisica ? 0 : rawEntregada))))
         return {
           codigo,
           nombre: prod?.name || 'Producto',
