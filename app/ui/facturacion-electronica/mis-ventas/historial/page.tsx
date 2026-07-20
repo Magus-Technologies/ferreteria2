@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { Spin, Tag, Empty, Input, Select, Form, Pagination, Card } from 'antd'
+import { useState, useEffect, useRef } from 'react'
+import { useInfiniteQuery } from '@tanstack/react-query'
+import { Spin, Tag, Empty, Input, Select, Form, Card } from 'antd'
 import dayjs from 'dayjs'
 import { formatFechaPeru } from '~/utils/fechas'
 import FilterDateRangeFields from '~/app/_components/filters/filter-date-range-fields'
@@ -79,7 +79,6 @@ function getClienteNombre(venta: VentaHistorialItem['venta']): string {
 export default function HistorialVentasPage() {
   const router = useRouter()
   const canAccess = usePermission(permissions.FACTURACION_ELECTRONICA_HISTORIAL_VENTAS_INDEX)
-  const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
   const [accion, setAccion] = useState<string | undefined>(undefined)
   // Por defecto filtra HOY (antes arrancaba vacío y traía todo el historial).
@@ -87,10 +86,10 @@ export default function HistorialVentasPage() {
   const [form] = Form.useForm()
   const perPage = 20
 
-  const { data, isLoading } = useQuery({
-    queryKey: [QueryKeys.VENTAS_HISTORIAL_GENERAL, page, search, accion, fechas?.[0]?.format('YYYY-MM-DD'), fechas?.[1]?.format('YYYY-MM-DD')],
-    queryFn: async () => {
-      const filters: Record<string, any> = { page, per_page: perPage }
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
+    queryKey: [QueryKeys.VENTAS_HISTORIAL_GENERAL, search, accion, fechas?.[0]?.format('YYYY-MM-DD'), fechas?.[1]?.format('YYYY-MM-DD')],
+    queryFn: async ({ pageParam = 1 }) => {
+      const filters: Record<string, any> = { page: pageParam, per_page: perPage }
       if (search) filters.search = search
       if (accion) filters.accion = accion
       if (fechas?.[0]) filters.desde = fechas[0].format('YYYY-MM-DD')
@@ -98,13 +97,35 @@ export default function HistorialVentasPage() {
 
       const result = await ventaApi.getHistorialGeneral(filters)
       if (result.error) throw new Error(result.error.message)
-      return result.data!
+      return { ...result.data!, page: pageParam }
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) => {
+      const cargados = allPages.reduce((acc, p) => acc + (p.data?.length ?? 0), 0)
+      return cargados < (lastPage.total ?? 0) ? (lastPage.page ?? allPages.length) + 1 : undefined
     },
     enabled: canAccess,
   })
 
-  const items = data?.data ?? []
-  const total = data?.total ?? 0
+  const items = data?.pages.flatMap((p) => p.data ?? []) ?? []
+  const total = data?.pages[0]?.total ?? 0
+
+  // Scroll infinito: cargar la siguiente página cuando el centinela entra en vista.
+  const loadMoreRef = useRef<HTMLDivElement | null>(null)
+  useEffect(() => {
+    const el = loadMoreRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage()
+        }
+      },
+      { rootMargin: '200px' },
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage, items.length])
 
   if (!canAccess) return <NoAutorizado />
 
@@ -118,13 +139,13 @@ export default function HistorialVentasPage() {
           <Input.Search
             placeholder='Buscar por serie, número...'
             allowClear
-            onSearch={(val) => { setSearch(val); setPage(1) }}
+            onSearch={(val) => setSearch(val)}
             style={{ width: 250 }}
           />
           <Select
             placeholder='Acción'
             allowClear
-            onChange={(val) => { setAccion(val); setPage(1) }}
+            onChange={(val) => setAccion(val)}
             style={{ width: 150 }}
             options={[
               { value: 'edicion', label: 'Edición' },
@@ -141,7 +162,6 @@ export default function HistorialVentasPage() {
                 form.getFieldValue('desde') ?? null,
                 form.getFieldValue('hasta') ?? null,
               ])
-              setPage(1)
             }}
             className='flex items-center gap-3'
           >
@@ -217,15 +237,18 @@ export default function HistorialVentasPage() {
               })}
             </div>
 
-            <div className='flex justify-center mt-4'>
-              <Pagination
-                current={page}
-                total={total}
-                pageSize={perPage}
-                onChange={(p) => setPage(p)}
-                showSizeChanger={false}
-                showTotal={(t) => `${t} registros`}
-              />
+            {/* Centinela de scroll infinito */}
+            <div
+              ref={loadMoreRef}
+              className='flex justify-center items-center py-4 text-xs text-slate-400'
+            >
+              {isFetchingNextPage ? (
+                <Spin size='small' />
+              ) : hasNextPage ? (
+                'Desliza para cargar más...'
+              ) : (
+                `${total} registro${total !== 1 ? 's' : ''} · fin del historial`
+              )}
             </div>
           </>
         )}
