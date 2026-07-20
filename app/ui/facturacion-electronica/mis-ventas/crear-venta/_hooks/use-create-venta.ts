@@ -119,21 +119,15 @@ export default function useCreateVenta({
     const esEnEspera = values.estado_de_venta === EstadoDeVenta.EN_ESPERA
     const valesExcluidos = useStoreProductoAgregadoVenta.getState().valesExcluidos
 
-    // Validar apertura de caja solo para ventas finalizadas (no para "en espera")
+    // Validar apertura de caja solo para ventas finalizadas (no para "en espera").
+    // NO se valida que la apertura sea del mismo día: el cliente puede aperturar
+    // y cerrar con varios días de diferencia según su operación.
     if (!esEnEspera) {
       try {
         const cajaResponse = await cajaApi.cajaActiva()
         const cajaActiva = cajaResponse.data?.data
 
         if (!cajaActiva) {
-          onMissingApertura?.()
-          return
-        }
-
-        const fechaApertura = dayjs(cajaActiva.fecha_apertura)
-        const hoy = dayjs()
-
-        if (!fechaApertura.isSame(hoy, 'day')) {
           onMissingApertura?.()
           return
         }
@@ -370,7 +364,9 @@ export default function useCreateVenta({
       // En ventas a CRÉDITO el dinero no ingresa al crear (queda como cuenta por
       // cobrar), así que nunca se envían métodos de pago aunque el form los
       // arrastre de una edición previa al contado — el backend los rechazaría.
-      despliegue_de_pago_ventas: restValues.forma_de_pago !== FormaDePago.CREDITO && metodos_de_pago && metodos_de_pago.length > 0
+      // En ventas "en espera" el pago no está confirmado, no enviar métodos
+      // de pago aunque el form los tenga de una edición previa al contado.
+      despliegue_de_pago_ventas: !esEnEspera && restValues.forma_de_pago !== FormaDePago.CREDITO && metodos_de_pago && metodos_de_pago.length > 0
         ? metodos_de_pago
             .map(mp => {
               const id = extractDesplieguePagoId(mp.despliegue_de_pago_id)
