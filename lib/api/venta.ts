@@ -97,7 +97,12 @@ export interface CreateVentaRequest {
   fecha_vencimiento?: string;
   tipo_moneda: TipoMoneda;
   tipo_de_cambio?: number;
-  fecha: string;
+  /**
+   * Fecha/hora de emisión. Se envía al CREAR. En una EDICIÓN se omite a
+   * propósito: editar una venta no cambia cuándo se emitió (el backend solo
+   * actualiza los campos presentes). Al concretar un borrador la fija el backend.
+   */
+  fecha?: string;
   estado_de_venta: EstadoDeVenta;
   cliente_id?: number; // Opcional: Para Boleta/NV sin cliente, backend usa "CLIENTE VARIOS" automáticamente
   direccion_seleccionada?: TipoDireccion; // Dirección seleccionada del cliente

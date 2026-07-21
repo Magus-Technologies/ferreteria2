@@ -320,9 +320,13 @@ export default function useCreateVenta({
       }),
       tipo_moneda: tipo_moneda as TipoMoneda,
       tipo_de_cambio: tipoMonedaValue === 's' ? 1 : (tipo_de_cambio || 1),
-      fecha: isEditing
-        ? dayjs(restValues.fecha).format('YYYY-MM-DD HH:mm:ss')
-        : fechaSubmit(restValues.fecha),
+      // La fecha de emisión NO se toca al editar: una edición no cambia cuándo se
+      // emitió el comprobante. Por eso al editar el campo NO se envía (el backend
+      // solo actualiza los campos presentes en el request).
+      // Antes se reenviaba con `dayjs(...).format(...)`, sin la hora del submit: si
+      // el usuario tocaba el DatePicker, la fecha se guardaba a MEDIANOCHE.
+      // Al concretar un borrador (ee→cr) la fecha la fija el backend con now().
+      ...(isEditing ? {} : { fecha: fechaSubmit(restValues.fecha) }),
       estado_de_venta: estadoVenta as EstadoDeVenta,
       // Enviar cliente_id solo si existe, sino undefined (backend usará "CLIENTE VARIOS")
       cliente_id: clienteIdFinal,

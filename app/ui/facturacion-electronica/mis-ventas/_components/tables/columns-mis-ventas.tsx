@@ -96,12 +96,13 @@ export function useColumnsMisVentas() {
     {
       headerName: "F.Venta",
       field: "fecha",
-      width: 140,
-      // La fecha de emisión del comprobante es un DÍA, no un instante. Mostrar
-      // hora sacaba "12:00:00 AM" en ventas cuya fecha se fijó a medianoche
-      // (al concretar un borrador). Solo día.
+      width: 180,
+      // Fecha Y HORA de emisión: `venta.fecha` alimenta tanto `fecha_emision`
+      // como `hora_emision` del comprobante SUNAT, así que la hora es dato real.
+      // OJO: ventas viejas guardadas a medianoche seguirán mostrando 12:00:00 AM
+      // hasta que se corrijan en la base (el fix solo aplica a las nuevas).
       valueFormatter: (params) =>
-        formatFechaPeru(params.value, "DD/MM/YYYY"),
+        formatFechaPeru(params.value, "DD/MM/YYYY hh:mm:ss A"),
     },
     {
       headerName: "S.Numero",
