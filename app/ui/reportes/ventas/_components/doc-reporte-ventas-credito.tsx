@@ -22,8 +22,9 @@ type Props = {
  */
 
 const C = {
-  amarillo: '#FACC15',   // header principal — color de la empresa
-  grisHead: '#D9D9D9',   // header de la sub-tabla de productos
+  amarillo: '#FACC15',       // header principal — color de la empresa
+  amarilloSuave: '#FEF3C7',  // relleno tenue para la franja de totales
+  grisHead: '#D9D9D9',       // header de la sub-tabla de productos
   texto: '#1F2937',
   textoSuave: '#6B7280',
   borde: '#9CA3AF',
@@ -106,10 +107,16 @@ const styles = StyleSheet.create({
   totalRow: {
     flexDirection: 'row',
     fontWeight: 'bold',
-    fontSize: 8,
-    borderWidth: 0.5,
-    borderColor: C.borde,
+    fontSize: 9,
+    marginTop: 4,
+    paddingVertical: 2,
+    backgroundColor: C.amarilloSuave,
+    borderTopWidth: 1.5,
+    borderTopColor: C.amarillo,
+    borderBottomWidth: 1.5,
+    borderBottomColor: C.amarillo,
   },
+  totalLabel: { textAlign: 'right', letterSpacing: 0.5 },
 
   cell: { paddingHorizontal: 3, paddingVertical: 3 },
   right: { textAlign: 'right' },
@@ -239,23 +246,20 @@ export default function DocReporteVentasCredito({
           )
         })}
 
-        {/* Totales */}
-        <View wrap={false}>
-          {CabeceraTabla}
-          <View style={styles.totalRow}>
-            <Text
-              style={[
-                styles.cell,
-                styles.center,
-                { width: `${4 + 11 + 11 + 14 + 22 + 8}%` },
-              ]}
-            >
-              Totales
-            </Text>
-            <Text style={[styles.cell, styles.right, { width: W.pagado }]}>{fmt(sumPagado)}</Text>
-            <Text style={[styles.cell, styles.right, { width: W.porCobrar }]}>{fmt(sumPorCobrar)}</Text>
-            <Text style={[styles.cell, styles.right, { width: W.total }]}>{fmt(sumTotal)}</Text>
-          </View>
+        {/* Totales — franja limpia: sin repetir los títulos de columna. */}
+        <View style={styles.totalRow} wrap={false}>
+          <Text
+            style={[
+              styles.cell,
+              styles.totalLabel,
+              { width: `${4 + 11 + 11 + 14 + 22 + 8}%` },
+            ]}
+          >
+            Totales
+          </Text>
+          <Text style={[styles.cell, styles.right, { width: W.pagado }]}>{fmt(sumPagado)}</Text>
+          <Text style={[styles.cell, styles.right, { width: W.porCobrar }]}>{fmt(sumPorCobrar)}</Text>
+          <Text style={[styles.cell, styles.right, { width: W.total }]}>{fmt(sumTotal)}</Text>
         </View>
 
         <View style={styles.footer} fixed>
