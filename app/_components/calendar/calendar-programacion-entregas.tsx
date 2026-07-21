@@ -400,11 +400,14 @@ export default function CalendarProgramacionEntregas({
     showMore: (total: number) => `+ Ver más (${total})`,
   }
 
-  // Horario de trabajo (5 AM - 8 PM). max a las 20:30 para que react-big-calendar
-  // dibuje y ROTULE la hora "8 PM" (solo etiqueta el inicio de cada grupo, nunca
-  // el borde inferior; con max=20:00 la última etiqueta quedaba en "7 PM").
+  // Horario de trabajo (5 AM - 8 PM). `max` es el BORDE inferior del rango, no un
+  // slot: con step=15 y timeslots=4 la hora de las 20:00 son 4 filas (20:00, 20:15,
+  // 20:30, 20:45). Poniendo max=20:45 la última fila quedaba cortada (solo 3
+  // visibles). Con max=21:00 la hora "8 PM" se completa y se sigue rotulando, ya
+  // que react-big-calendar etiqueta el inicio de cada grupo (21:00 es sólo borde,
+  // no genera un grupo "9 PM").
   const minTime = useMemo(() => new Date(1970, 1, 1, 5, 0, 0), [])
-  const maxTime = useMemo(() => new Date(1970, 1, 1, 20, 45, 0), [])
+  const maxTime = useMemo(() => new Date(1970, 1, 1, 21, 0, 0), [])
 
   // Comprobar si un slot es pasado (antes del momento actual)
   const slotEsPassado = useCallback((start: Date) => {
