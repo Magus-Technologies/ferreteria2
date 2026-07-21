@@ -86,6 +86,9 @@ export default function ModalResumenEntregaVenta({
   useEffect(() => {
     setFilas([])
     cantidadesRef.current = {}
+    // Venta nueva: arranca sin reseteo pendiente (las filas se construyen ya con
+    // cantAProgramar = pendiente).
+    resetAProgramarRef.current = false
   }, [ventaId])
 
   const { data: ventaResp, isLoading: isLoadingVenta } = useQuery({
@@ -148,10 +151,12 @@ export default function ModalResumenEntregaVenta({
       })
     )
 
-    // Leemos y limpiamos la bandera acá (no dentro del updater) para que el valor
-    // sea estable aunque React invoque el updater más de una vez (StrictMode).
+    // La bandera NO se consume acá a propósito. Este efecto puede correr varias
+    // veces tras programar (el historial refresca antes que el detalle de venta);
+    // si la limpiáramos en la primera corrida —que suele salir por `filasIguales`
+    // sin aplicar nada— se perdería y el input quedaría con la cantidad ya
+    // programada. Se limpia recién cuando el usuario tipea (onChangeRef/onCommit).
     const resetear = resetAProgramarRef.current
-    resetAProgramarRef.current = false
 
     setFilas((prev) => {
       if (filasIguales(prev, siguientesFilas)) return prev
@@ -185,11 +190,15 @@ export default function ModalResumenEntregaVenta({
     }
   }, [tipo])
 
+  // Al tipear, el usuario "toma el control": desde acá se vuelve a preservar su
+  // cantidad en los refetches (se apaga el reseteo post-programación).
   const onChangeRef = useCallback((key: string, value: number) => {
+    resetAProgramarRef.current = false
     cantidadesRef.current[key] = value
   }, [])
 
   const onCommit = useCallback((key: string, value: number) => {
+    resetAProgramarRef.current = false
     cantidadesRef.current[key] = value
     setFilas(prev => prev.map(f => f.key === key ? { ...f, cantAProgramar: value } : f))
   }, [])
