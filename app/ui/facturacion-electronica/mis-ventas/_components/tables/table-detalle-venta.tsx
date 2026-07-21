@@ -19,7 +19,7 @@ type DetalleProducto = {
 export default function TableDetalleVenta() {
   const ventaSeleccionada = useStoreVentaSeleccionada(state => state.venta)
 
-  const detalleProductos: DetalleProducto[] =
+  const filasProductos: DetalleProducto[] =
     ventaSeleccionada?.productos_por_almacen?.flatMap((productoAlmacen: any) =>
       productoAlmacen.unidades_derivadas.map((unidad: any) => ({
         producto: productoAlmacen.producto_almacen.producto.name,
@@ -32,6 +32,28 @@ export default function TableDetalleVenta() {
         pendiente: Number(unidad.cantidad_pendiente || 0),
       }))
     ) || []
+
+  // Servicios de la venta: también son parte del detalle (ya salían en el ticket
+  // y en la boleta, pero faltaban acá). No pasan por el flujo de entrega, así que
+  // van con pendiente 0.
+  const filasServicios: DetalleProducto[] =
+    (ventaSeleccionada as any)?.servicios_venta?.map((sv: any) => {
+      const nombre = sv.servicio?.nombre ?? 'SERVICIO'
+      const referencia = String(sv.referencia ?? '').trim()
+      const cantidad = Number(sv.cantidad ?? 0)
+      return {
+        producto: referencia !== '' ? `${nombre} (${referencia})` : nombre,
+        marca: '—',
+        unidad: 'SERV',
+        cantidad,
+        precio: Number(sv.precio_unitario ?? 0),
+        subtotal: Number(sv.subtotal ?? 0),
+        entregado: cantidad,
+        pendiente: 0,
+      }
+    }) || []
+
+  const detalleProductos: DetalleProducto[] = [...filasProductos, ...filasServicios]
 
   const columnDefs: ColDef<DetalleProducto>[] = [
     // Columna # comentada porque ya viene automáticamente en la tabla
