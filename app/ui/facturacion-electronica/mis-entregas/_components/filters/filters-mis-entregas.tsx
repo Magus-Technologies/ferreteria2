@@ -48,20 +48,26 @@ export default function FiltersMisEntregas() {
   const esAdmin = user?.rol_sistema === 'ADMINISTRADOR'
 
   // Initialize estado filter once when user loads.
-  // Non-admin: default to ['pe'] (pending only). Admin: no filter (all).
-  // After this, the user can freely clear or change the filter.
+  // Non-admin: default to ['pe', 'ec'] — PENDIENTE y EN CAMINO. Son los dos
+  // estados operativos: lo que falta despachar y lo que ya salió y sigue en
+  // tránsito. Con solo ['pe'] las entregas ya despachadas desaparecían de la
+  // lista y el usuario no podía darles seguimiento.
+  // Admin: sin filtro (ve todos los estados).
+  // Después de esto el usuario puede cambiarlo o limpiarlo libremente.
+  const ESTADOS_DEFAULT_NO_ADMIN = ['pe', 'ec']
   const defaultApplied = useRef(false)
   useEffect(() => {
     if (!user || defaultApplied.current) return
     defaultApplied.current = true
     if (!esAdmin) {
-      form.setFieldsValue({ estado_entrega: ['pe'] })
+      form.setFieldsValue({ estado_entrega: ESTADOS_DEFAULT_NO_ADMIN })
       setFiltros({
         fecha_desde: dayjs().startOf('day'),
         fecha_hasta: dayjs().endOf('day'),
-        estado_entrega: ['pe'],
+        estado_entrega: ESTADOS_DEFAULT_NO_ADMIN,
       })
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, esAdmin, form, setFiltros])
   const entregaSeleccionada = useStoreEntregaSeleccionada((s) => s.entrega)
   const triggerAccion = useStoreEntregaSeleccionada((s) => s.triggerAccion)
