@@ -91,6 +91,21 @@ export default function ModalResumenEntregaVenta({
     resetAProgramarRef.current = false
   }, [ventaId])
 
+  // Al ABRIR el modal, "a programar" vuelve al pendiente. Sin esto, si el usuario
+  // escribía 2 y cerraba sin programar, al reabrir seguía en 2. No vaciamos filas
+  // (el efecto que las construye depende de los datos del server y no volvería a
+  // correr): reescribimos el valor sobre las filas que ya están.
+  useEffect(() => {
+    if (!open) return
+    setFilas(prev => {
+      const updated = prev.map(f => ({ ...f, cantAProgramar: f.pendiente }))
+      updated.forEach(f => { cantidadesRef.current[f.key] = f.cantAProgramar })
+      return updated
+    })
+    // Y que el próximo merge con datos del server también respete el pendiente.
+    resetAProgramarRef.current = true
+  }, [open])
+
   const { data: ventaResp, isLoading: isLoadingVenta } = useQuery({
     queryKey: [QueryKeys.VENTAS, 'resumen-entrega', ventaId],
     queryFn:  () => ventaApi.getById(ventaId!),

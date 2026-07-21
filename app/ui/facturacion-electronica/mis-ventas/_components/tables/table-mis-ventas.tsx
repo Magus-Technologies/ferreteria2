@@ -65,7 +65,14 @@ export default function TableMisVentas() {
   // Si ya no existe en los nuevos datos (fue borrada o filtrada), seleccionar la primera.
   // Esto evita que un WebSocket refresh pise la selección mientras el usuario tiene un modal abierto.
   React.useEffect(() => {
-    if (!response || response.length === 0 || !tableRef.current) return;
+    // Lista vacía (filtro sin resultados, p. ej. cambiar de día): hay que LIMPIAR
+    // la selección. El store es global y sobrevive a la navegación, así que sin
+    // esto el detalle de abajo seguía mostrando la venta del filtro anterior.
+    if (!response || response.length === 0) {
+      if (ventaActual) setVentaSeleccionada(undefined);
+      return;
+    }
+    if (!tableRef.current) return;
     setTimeout(() => {
       const api = tableRef.current?.api;
       if (!api) return;
