@@ -44,6 +44,13 @@ export default function FiltersMisPrestamos() {
   const setFiltros = useStoreFiltrosMisPrestamos((state) => state.setFiltros)
   const prestamoSeleccionado = UseStorePrestamoSeleccionada((state) => state.prestamo)
 
+  // Si ya se devolvió/entregó todo, no queda nada por registrar: se bloquea el
+  // botón verde. Se valida por estado y por saldo pendiente (lo que llegue antes).
+  const todoDevuelto =
+    !!prestamoSeleccionado &&
+    (prestamoSeleccionado.estado_prestamo === 'pagado_total' ||
+      Number(prestamoSeleccionado.monto_pendiente ?? 0) <= 0)
+
   useEffect(() => {
     const hoy = dayjs().format('YYYY-MM-DD')
     const data = {
@@ -273,8 +280,15 @@ export default function FiltersMisPrestamos() {
                 size='md'
                 type='button'
                 className='flex items-center gap-2 whitespace-nowrap w-full justify-center'
-                onClick={() => prestamoSeleccionado && setModalDevolucionOpen(true)}
-                disabled={!prestamoSeleccionado}
+                onClick={() =>
+                  prestamoSeleccionado && !todoDevuelto && setModalDevolucionOpen(true)
+                }
+                disabled={!prestamoSeleccionado || todoDevuelto}
+                title={
+                  todoDevuelto
+                    ? 'Este préstamo ya fue devuelto en su totalidad'
+                    : undefined
+                }
               >
                 <FaBoxOpen />
                 Registrar Devolución
