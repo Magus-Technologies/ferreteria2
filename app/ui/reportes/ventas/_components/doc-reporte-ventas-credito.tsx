@@ -21,15 +21,15 @@ type Props = {
  *  - colores de la empresa (amarillo).
  */
 
-// Paleta tomada del LOGO de la empresa (public/logo-horizontal.svg), donde
-// #FFA500 es el tono dominante. Los demás son derivados del mismo matiz para
-// que todo el reporte quede en la identidad real y no en un amarillo genérico.
+// Amarillo corporativo: #FADC06. El resto son derivados del MISMO matiz
+// (más oscuro para bordes, más claros para rellenos) para que todo el reporte
+// quede en la identidad de la empresa.
 const C = {
-  amarillo: '#FFA500',        // cabecera principal — color del logo
-  amarilloBorde: '#E08A00',   // borde: más oscuro, no desaparece al imprimir
-  amarilloTenue: '#FFD08A',   // header de la sub-tabla de productos
-  amarilloSuave: '#FFF1DC',   // relleno muy claro (fila del comprobante / totales)
-  amarilloLinea: '#FFE0B3',   // separador interno entre productos
+  amarillo: '#FADC06',        // cabecera principal — amarillo corporativo
+  amarilloBorde: '#C4AB05',   // borde: más oscuro, no desaparece al imprimir
+  amarilloTenue: '#FCEC80',   // header de la sub-tabla de productos
+  amarilloSuave: '#FEFBDB',   // relleno muy claro (fila del comprobante / totales)
+  amarilloLinea: '#FDF4A8',   // separador interno entre productos
   texto: '#1F2937',
   textoSuave: '#6B7280',
 }
