@@ -1,0 +1,268 @@
+import { Document, Page, StyleSheet, Text, View } from '@react-pdf/renderer'
+import type { GananciaDetalle } from '~/lib/api/ganancias'
+import type { EmpresaInfoPdf } from './doc-reporte-ventas'
+
+type Props = {
+  items: GananciaDetalle[]
+  titulo: string
+  fechaDesde: string
+  fechaHasta: string
+  empresa?: EmpresaInfoPdf
+}
+
+/**
+ * PDF del reporte de VENTAS AL CRÉDITO.
+ *
+ * Documento aparte de `DocReporteVentas` (que es compartido por los demás tipos
+ * de reporte y sí muestra costo/ganancia). Acá el cliente pidió:
+ *  - el layout del "Reporte Cuentas Por Cobrar" (cabecera + sub-tabla por
+ *    comprobante + fila de totales),
+ *  - SIN costo ni ganancia,
+ *  - colores de la empresa (amarillo).
+ */
+
+const C = {
+  amarillo: '#FACC15',   // header principal — color de la empresa
+  grisHead: '#D9D9D9',   // header de la sub-tabla de productos
+  texto: '#1F2937',
+  textoSuave: '#6B7280',
+  borde: '#9CA3AF',
+  bordeSuave: '#E5E7EB',
+}
+
+// Anchos tabla principal (suman 100)
+const W = {
+  num: '4%',
+  emision: '11%',
+  venc: '11%',
+  numero: '14%',
+  cliente: '22%',
+  moneda: '8%',
+  pagado: '10%',
+  porCobrar: '10%',
+  total: '10%',
+}
+
+// Anchos sub-tabla de productos (suman 100)
+const S = {
+  desc: '52%',
+  cant: '12%',
+  punit: '18%',
+  total: '18%',
+}
+
+const styles = StyleSheet.create({
+  page: {
+    paddingHorizontal: 24,
+    paddingVertical: 22,
+    fontSize: 8,
+    color: C.texto,
+    backgroundColor: 'white',
+    fontFamily: 'Helvetica',
+  },
+  titulo: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    textDecoration: 'underline',
+    marginBottom: 14,
+  },
+  empresa: { fontSize: 9, fontWeight: 'bold' },
+  empresaMeta: { fontSize: 7.5, color: C.textoSuave, marginTop: 1 },
+  fechaLinea: { fontSize: 8, fontWeight: 'bold', marginBottom: 10 },
+
+  thead: {
+    flexDirection: 'row',
+    backgroundColor: C.amarillo,
+    fontWeight: 'bold',
+    fontSize: 7.5,
+    borderWidth: 0.5,
+    borderColor: C.borde,
+  },
+  invoiceRow: {
+    flexDirection: 'row',
+    fontSize: 7.5,
+    borderWidth: 0.5,
+    borderTopWidth: 0,
+    borderColor: C.borde,
+  },
+  subHead: {
+    flexDirection: 'row',
+    backgroundColor: C.grisHead,
+    fontWeight: 'bold',
+    fontSize: 7.5,
+    borderWidth: 0.5,
+    borderTopWidth: 0,
+    borderColor: C.borde,
+  },
+  subRow: {
+    flexDirection: 'row',
+    fontSize: 7.5,
+    borderBottomWidth: 0.5,
+    borderLeftWidth: 0.5,
+    borderRightWidth: 0.5,
+    borderColor: C.bordeSuave,
+  },
+  totalRow: {
+    flexDirection: 'row',
+    fontWeight: 'bold',
+    fontSize: 8,
+    borderWidth: 0.5,
+    borderColor: C.borde,
+  },
+
+  cell: { paddingHorizontal: 3, paddingVertical: 3 },
+  right: { textAlign: 'right' },
+  center: { textAlign: 'center' },
+  grupo: { marginBottom: 8 },
+
+  footer: {
+    position: 'absolute',
+    bottom: 12,
+    left: 24,
+    right: 24,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    fontSize: 7,
+    color: C.textoSuave,
+  },
+})
+
+function fmt(val?: number) {
+  return Number(val ?? 0).toLocaleString('es-PE', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+}
+
+function groupByInvoice(items: GananciaDetalle[]): GananciaDetalle[][] {
+  const groups = new Map<string, GananciaDetalle[]>()
+  for (const item of items) {
+    const key = item.numero ?? item.id
+    if (!groups.has(key)) groups.set(key, [])
+    groups.get(key)!.push(item)
+  }
+  return Array.from(groups.values())
+}
+
+export default function DocReporteVentasCredito({
+  items,
+  titulo,
+  fechaDesde,
+  fechaHasta,
+  empresa,
+}: Props) {
+  const groups = groupByInvoice(items)
+
+  let sumPagado = 0
+  let sumPorCobrar = 0
+  let sumTotal = 0
+  for (const lines of groups) {
+    const totalComp = lines.reduce((a, l) => a + Number(l.subtot ?? 0), 0)
+    // total_pagado viene por venta (repetido en cada línea): tomar el de la
+    // primera, NO sumar las líneas, o se multiplicaría por la cantidad de items.
+    const pagado = Number(lines[0]?.total_pagado ?? 0)
+    sumTotal += totalComp
+    sumPagado += pagado
+    sumPorCobrar += Math.max(0, totalComp - pagado)
+  }
+
+  const CabeceraTabla = (
+    <View style={styles.thead} fixed>
+      <Text style={[styles.cell, styles.center, { width: W.num }]}>#</Text>
+      <Text style={[styles.cell, styles.center, { width: W.emision }]}>Fecha Emisión</Text>
+      <Text style={[styles.cell, styles.center, { width: W.venc }]}>Fecha Vencimiento</Text>
+      <Text style={[styles.cell, styles.center, { width: W.numero }]}>Número</Text>
+      <Text style={[styles.cell, styles.center, { width: W.cliente }]}>Cliente</Text>
+      <Text style={[styles.cell, styles.center, { width: W.moneda }]}>Moneda</Text>
+      <Text style={[styles.cell, styles.center, { width: W.pagado }]}>Total pagado</Text>
+      <Text style={[styles.cell, styles.center, { width: W.porCobrar }]}>Por cobrar</Text>
+      <Text style={[styles.cell, styles.center, { width: W.total }]}>Total</Text>
+    </View>
+  )
+
+  return (
+    <Document title={titulo}>
+      <Page size="A4" style={styles.page}>
+        <Text style={styles.titulo}>{titulo}</Text>
+
+        {empresa?.razon_social ? (
+          <View>
+            <Text style={styles.empresa}>{empresa.razon_social}</Text>
+            {empresa.ruc ? <Text style={styles.empresaMeta}>RUC: {empresa.ruc}</Text> : null}
+          </View>
+        ) : null}
+
+        <Text style={styles.fechaLinea}>
+          Fecha: {fechaDesde} al {fechaHasta}
+        </Text>
+
+        {CabeceraTabla}
+
+        {groups.map((lines, gi) => {
+          const first = lines[0]
+          const totalComp = lines.reduce((a, l) => a + Number(l.subtot ?? 0), 0)
+          const pagado = Number(first.total_pagado ?? 0)
+          const porCobrar = Math.max(0, totalComp - pagado)
+
+          return (
+            <View key={`${first.numero}-${gi}`} style={styles.grupo} wrap={false}>
+              {/* Fila del comprobante */}
+              <View style={styles.invoiceRow}>
+                <Text style={[styles.cell, styles.center, { width: W.num }]}>{gi + 1}</Text>
+                <Text style={[styles.cell, styles.center, { width: W.emision }]}>{first.fecha ?? ''}</Text>
+                <Text style={[styles.cell, styles.center, { width: W.venc }]}>{first.fecha_vencimiento ?? ''}</Text>
+                <Text style={[styles.cell, styles.center, { width: W.numero }]}>{first.numero ?? ''}</Text>
+                <Text style={[styles.cell, { width: W.cliente }]}>{first.cliente ?? ''}</Text>
+                <Text style={[styles.cell, styles.center, { width: W.moneda }]}>{first.moneda ?? 'PEN'}</Text>
+                <Text style={[styles.cell, styles.right, { width: W.pagado }]}>{fmt(pagado)}</Text>
+                <Text style={[styles.cell, styles.right, { width: W.porCobrar }]}>{fmt(porCobrar)}</Text>
+                <Text style={[styles.cell, styles.right, { width: W.total }]}>{fmt(totalComp)}</Text>
+              </View>
+
+              {/* Sub-tabla de productos del comprobante */}
+              <View style={styles.subHead}>
+                <Text style={[styles.cell, styles.center, { width: S.desc }]}>Descripción</Text>
+                <Text style={[styles.cell, styles.center, { width: S.cant }]}>Cantidad</Text>
+                <Text style={[styles.cell, styles.center, { width: S.punit }]}>Precio unit.</Text>
+                <Text style={[styles.cell, styles.center, { width: S.total }]}>Total</Text>
+              </View>
+              {lines.map((line, li) => (
+                <View key={`${first.numero}-${gi}-${li}`} style={styles.subRow}>
+                  <Text style={[styles.cell, { width: S.desc }]}>{line.producto ?? ''}</Text>
+                  <Text style={[styles.cell, styles.center, { width: S.cant }]}>{fmt(line.cant)}</Text>
+                  <Text style={[styles.cell, styles.right, { width: S.punit }]}>{fmt(line.p_unit)}</Text>
+                  <Text style={[styles.cell, styles.right, { width: S.total }]}>{fmt(line.subtot)}</Text>
+                </View>
+              ))}
+            </View>
+          )
+        })}
+
+        {/* Totales */}
+        <View wrap={false}>
+          {CabeceraTabla}
+          <View style={styles.totalRow}>
+            <Text
+              style={[
+                styles.cell,
+                styles.center,
+                { width: `${4 + 11 + 11 + 14 + 22 + 8}%` },
+              ]}
+            >
+              Totales
+            </Text>
+            <Text style={[styles.cell, styles.right, { width: W.pagado }]}>{fmt(sumPagado)}</Text>
+            <Text style={[styles.cell, styles.right, { width: W.porCobrar }]}>{fmt(sumPorCobrar)}</Text>
+            <Text style={[styles.cell, styles.right, { width: W.total }]}>{fmt(sumTotal)}</Text>
+          </View>
+        </View>
+
+        <View style={styles.footer} fixed>
+          <Text>Generado: {new Date().toLocaleString('es-PE')}</Text>
+          <Text render={({ pageNumber, totalPages }) => `Página ${pageNumber} de ${totalPages}`} />
+        </View>
+      </Page>
+    </Document>
+  )
+}

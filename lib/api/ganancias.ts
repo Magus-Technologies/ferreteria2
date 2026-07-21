@@ -24,6 +24,10 @@ export interface GananciaDetalle {
   costo_total: number;
   ganancia: number;
   cc: string;
+  // Cobranza (reporte de ventas al crédito). 'por_cobrar' se deriva en el front:
+  // total del comprobante (suma de sus líneas) − total_pagado.
+  moneda?: string;
+  total_pagado?: number;
   created_at: string;
   updated_at: string;
   // "Lote 1/2" cuando la venta se desglosa por costos PEPS distintos; null si no.

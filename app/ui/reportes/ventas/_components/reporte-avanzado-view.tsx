@@ -12,6 +12,7 @@ import { exportReporteVentasToExcel } from '~/utils/export-reporte-ventas-excel'
 import { useDownloadPdf } from '~/hooks/use-download-pdf'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import DocReporteVentas from './doc-reporte-ventas'
+import DocReporteVentasCredito from './doc-reporte-ventas-credito'
 
 const { RangePicker } = DatePicker
 
@@ -138,15 +139,28 @@ export default function ReporteAvanzadoView({ tipo, almacenId, empresaInfo }: Pr
         setResult({ type: 'warning', text: 'No hay ventas en el rango de fechas seleccionado.' })
         return
       }
+      // Ventas al crédito usa un PDF propio (layout de cuentas por cobrar,
+      // colores de la empresa y SIN costo/ganancia). El resto de los reportes
+      // sigue con el documento compartido.
       await downloadPdf(
-        <DocReporteVentas
-          items={items}
-          resumen={res.data?.resumen}
-          titulo={TITLES[tipo]}
-          fechaDesde={dayjs(desde).format('DD/MM/YYYY')}
-          fechaHasta={dayjs(hasta).format('DD/MM/YYYY')}
-          empresa={empresaInfo}
-        />,
+        tipo === 'ventas_credito' ? (
+          <DocReporteVentasCredito
+            items={items}
+            titulo={TITLES[tipo]}
+            fechaDesde={dayjs(desde).format('DD/MM/YYYY')}
+            fechaHasta={dayjs(hasta).format('DD/MM/YYYY')}
+            empresa={empresaInfo}
+          />
+        ) : (
+          <DocReporteVentas
+            items={items}
+            resumen={res.data?.resumen}
+            titulo={TITLES[tipo]}
+            fechaDesde={dayjs(desde).format('DD/MM/YYYY')}
+            fechaHasta={dayjs(hasta).format('DD/MM/YYYY')}
+            empresa={empresaInfo}
+          />
+        ),
         `${tipo}_${dayjs().format('YYYYMMDD_HHmmss')}`,
       )
       setResult({ type: 'success', text: 'PDF generado correctamente.' })
