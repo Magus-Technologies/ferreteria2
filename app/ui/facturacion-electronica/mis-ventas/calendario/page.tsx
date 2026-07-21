@@ -332,17 +332,24 @@ export default function CalendarioEntregasPage() {
                 }}
               />
             </div>
-            <Suspense fallback={<ComponentLoading />}>
-              <CalendarProgramacionEntregas
-                onSelectEvent={(event) => {
-                  if (event.id === -1) return
-                  setEventoSeleccionado(event)
-                }}
-                onSelectSlot={() => setEventoSeleccionado(null)}
-                soloProgramadasActivas={false}
-                vehiculo_ids={vehiculoIds}
-              />
-            </Suspense>
+            {/* Altura CONCRETA: react-big-calendar usa height:100%, que necesita un
+                padre con altura definida. Sin esto el calendario se dibujaba a su
+                alto natural (~1500px) y el `overflow-hidden` de la tarjeta le
+                cortaba el final (la última franja de las 8 PM) sin poder scrollear.
+                Con altura fija, RBC habilita su propio scroll interno. */}
+            <div className="h-[70vh] min-h-[520px]">
+              <Suspense fallback={<ComponentLoading />}>
+                <CalendarProgramacionEntregas
+                  onSelectEvent={(event) => {
+                    if (event.id === -1) return
+                    setEventoSeleccionado(event)
+                  }}
+                  onSelectSlot={() => setEventoSeleccionado(null)}
+                  soloProgramadasActivas={false}
+                  vehiculo_ids={vehiculoIds}
+                />
+              </Suspense>
+            </div>
           </div>
 
           {/* Panel lateral de detalle */}

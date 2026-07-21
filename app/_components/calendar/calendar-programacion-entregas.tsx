@@ -380,7 +380,9 @@ export default function CalendarProgramacionEntregas({
       `${format(start, 'd MMM', { locale: es })} - ${format(end, 'd MMM', { locale: es })}`,
     monthHeaderFormat: (date: Date) => format(date, 'MMMM yyyy', { locale: es }),
     weekdayFormat: (date: Date) => format(date, 'EEEE', { locale: es }),
-    timeGutterFormat: (date: Date) => format(date, 'h aa', { locale: es }),
+    // Con minutos: cada franja de 15' se rotula (8:00 PM, 8:15 PM, ...). Con
+    // 'h aa' solo salía la hora y las franjas intermedias quedaban sin etiqueta.
+    timeGutterFormat: (date: Date) => format(date, 'h:mm aa', { locale: es }),
   }
 
   // Mensajes en español
@@ -595,7 +597,11 @@ export default function CalendarProgramacionEntregas({
         onSelecting={soloSeleccion ? handleSelecting : undefined}
         onSelectEvent={handleSelectEvent}
         step={15}
-        timeslots={4}
+        // timeslots=1 → cada franja de 15' es su propio grupo y por lo tanto
+        // recibe etiqueta. react-big-calendar solo rotula el slot 0 de cada grupo
+        // (TimeGutter.js: `if (idx) return null`), así que con timeslots=4 salía
+        // una sola etiqueta por hora y las otras 3 filas quedaban mudas.
+        timeslots={1}
         min={minTime}
         max={maxTime}
         slotPropGetter={slotPropGetter}

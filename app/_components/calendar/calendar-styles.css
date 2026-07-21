@@ -26,8 +26,11 @@
   border-top: none;
 }
 
+/* Con timeslots=1 cada grupo es UNA franja de 15', no una hora completa.
+   44px por franja: una entrega de 15 min (ej. 20:30–20:45) necesita alto para
+   sus 3 líneas (hora, documento, cliente). Con 24px la tarjeta salía cortada. */
 .rbc-timeslot-group {
-  min-height: 96px;
+  min-height: 44px;
   border-left: 1px solid #e5e7eb;
 }
 
