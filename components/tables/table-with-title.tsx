@@ -195,11 +195,21 @@ export default function TableWithTitle<T, schemaType = unknown>({
             setAvailableColumns(cols);
           }
 
-          if (defaultColumns.length) {
-            setVisibilityColumns({
-              gridApi: params.api,
-              checkedList: defaultColumns,
-            });
+          // `defaultColumns` viene de localStorage (`table-columns-*`) y puede
+          // estar DESACTUALIZADO: guardado con otros headerName, de una versión
+          // anterior de la tabla, o incompleto. Como setVisibilityColumns oculta
+          // todo lo que no esté en la lista, aplicarlo a ciegas dejaba la tabla
+          // EN BLANCO (y el usuario tenía que ir a "Ver Todo" para recuperarla).
+          // Solo se aplica la intersección con las columnas que existen de verdad;
+          // si no queda ninguna válida, se deja la tabla como está (todo visible).
+          if (defaultColumns.length && cols.length > 0) {
+            const columnasValidas = defaultColumns.filter((c) => cols.includes(c));
+            if (columnasValidas.length > 0) {
+              setVisibilityColumns({
+                gridApi: params.api,
+                checkedList: columnasValidas,
+              });
+            }
           }
           setTimeout(() => {
             params.api.refreshHeader();
