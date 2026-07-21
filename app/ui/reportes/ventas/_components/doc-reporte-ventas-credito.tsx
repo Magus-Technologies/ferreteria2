@@ -21,14 +21,17 @@ type Props = {
  *  - colores de la empresa (amarillo).
  */
 
+// Paleta tomada del LOGO de la empresa (public/logo-horizontal.svg), donde
+// #FFA500 es el tono dominante. Los demás son derivados del mismo matiz para
+// que todo el reporte quede en la identidad real y no en un amarillo genérico.
 const C = {
-  amarillo: '#FACC15',       // header principal — color de la empresa
-  amarilloSuave: '#FEF3C7',  // relleno tenue para la franja de totales
-  grisHead: '#D9D9D9',       // header de la sub-tabla de productos
+  amarillo: '#FFA500',        // cabecera principal — color del logo
+  amarilloBorde: '#E08A00',   // borde: más oscuro, no desaparece al imprimir
+  amarilloTenue: '#FFD08A',   // header de la sub-tabla de productos
+  amarilloSuave: '#FFF1DC',   // relleno muy claro (fila del comprobante / totales)
+  amarilloLinea: '#FFE0B3',   // separador interno entre productos
   texto: '#1F2937',
   textoSuave: '#6B7280',
-  borde: '#9CA3AF',
-  bordeSuave: '#E5E7EB',
 }
 
 // Anchos tabla principal (suman 100)
@@ -65,63 +68,75 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     textAlign: 'center',
-    textDecoration: 'underline',
-    marginBottom: 14,
+    letterSpacing: 0.5,
+  },
+  // Barra amarilla bajo el título (reemplaza el subrayado, se ve más prolijo).
+  tituloBarra: {
+    height: 3,
+    backgroundColor: C.amarillo,
+    borderRadius: 2,
+    marginTop: 5,
+    marginBottom: 12,
   },
   empresa: { fontSize: 9, fontWeight: 'bold' },
   empresaMeta: { fontSize: 7.5, color: C.textoSuave, marginTop: 1 },
-  fechaLinea: { fontSize: 8, fontWeight: 'bold', marginBottom: 10 },
+  fechaLinea: { fontSize: 8, fontWeight: 'bold', marginBottom: 8 },
 
   thead: {
     flexDirection: 'row',
     backgroundColor: C.amarillo,
     fontWeight: 'bold',
     fontSize: 7.5,
-    borderWidth: 0.5,
-    borderColor: C.borde,
+    borderWidth: 1,
+    borderColor: C.amarilloBorde,
+    borderRadius: 2,
+    marginBottom: 5,
+  },
+  // Cada comprobante es una "tarjeta" con borde amarillo.
+  grupo: {
+    marginBottom: 7,
+    borderWidth: 1,
+    borderColor: C.amarilloBorde,
+    borderRadius: 2,
   },
   invoiceRow: {
     flexDirection: 'row',
     fontSize: 7.5,
-    borderWidth: 0.5,
-    borderTopWidth: 0,
-    borderColor: C.borde,
+    fontWeight: 'bold',
+    backgroundColor: C.amarilloSuave,
+    borderBottomWidth: 1,
+    borderBottomColor: C.amarilloBorde,
   },
   subHead: {
     flexDirection: 'row',
-    backgroundColor: C.grisHead,
+    backgroundColor: C.amarilloTenue,
     fontWeight: 'bold',
     fontSize: 7.5,
-    borderWidth: 0.5,
-    borderTopWidth: 0,
-    borderColor: C.borde,
+    borderBottomWidth: 0.8,
+    borderBottomColor: C.amarilloBorde,
   },
   subRow: {
     flexDirection: 'row',
     fontSize: 7.5,
     borderBottomWidth: 0.5,
-    borderLeftWidth: 0.5,
-    borderRightWidth: 0.5,
-    borderColor: C.bordeSuave,
+    borderBottomColor: C.amarilloLinea,
   },
   totalRow: {
     flexDirection: 'row',
     fontWeight: 'bold',
     fontSize: 9,
-    marginTop: 4,
-    paddingVertical: 2,
+    marginTop: 6,
+    paddingVertical: 3,
     backgroundColor: C.amarilloSuave,
-    borderTopWidth: 1.5,
-    borderTopColor: C.amarillo,
-    borderBottomWidth: 1.5,
-    borderBottomColor: C.amarillo,
+    borderWidth: 1,
+    borderColor: C.amarilloBorde,
+    borderRadius: 2,
   },
   totalLabel: { textAlign: 'right', letterSpacing: 0.5 },
 
-  cell: { paddingHorizontal: 3, paddingVertical: 3 },
+  cell: { paddingHorizontal: 3, paddingVertical: 3.5 },
   right: { textAlign: 'right' },
   center: { textAlign: 'center' },
-  grupo: { marginBottom: 8 },
 
   footer: {
     position: 'absolute',
@@ -192,6 +207,7 @@ export default function DocReporteVentasCredito({
     <Document title={titulo}>
       <Page size="A4" style={styles.page}>
         <Text style={styles.titulo}>{titulo}</Text>
+        <View style={styles.tituloBarra} />
 
         {empresa?.razon_social ? (
           <View>
