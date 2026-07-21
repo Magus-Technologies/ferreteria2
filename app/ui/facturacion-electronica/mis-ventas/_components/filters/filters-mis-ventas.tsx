@@ -21,6 +21,21 @@ import SelectDespliegueDePago from "~/app/_components/form/selects/select-despli
 import { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import { useEffect } from "react";
+import { useAuth } from "~/lib/auth-context";
+
+/**
+ * Roles que ven TODAS las ventas: para ellos el filtro "Vendedor" arranca vacío.
+ * Cualquier otro rol arranca filtrado por el usuario logueado (ve solo lo suyo).
+ * Se comparan en MAYÚSCULAS y contra los dos identificadores (`role_name`, el
+ * nuevo, y `rol_sistema`, el legacy), igual que en mis-entregas.
+ */
+const ROLES_VEN_TODAS_LAS_VENTAS = [
+  "ADMINISTRADOR",
+  "ADMIN",
+  "ADMIN GLOBAL",
+  "ADMINISTRADOR GLOBAL",
+  "GERENTE",
+];
 import { useStoreAlmacen } from "~/store/store-almacen";
 import { useDebounce } from "use-debounce";
 import InputBase from "~/app/_components/form/inputs/input-base";
@@ -70,18 +85,35 @@ export default function FiltersMisVentas() {
   const filtros = useStoreFiltrosMisVentas((state) => state.filtros);
   const setFiltros = useStoreFiltrosMisVentas((state) => state.setFiltros);
 
+  const { user } = useAuth();
+  const veTodasLasVentas = useMemo(() => {
+    const norm = (r?: string | null) => (r ?? "").trim().toUpperCase();
+    return (
+      ROLES_VEN_TODAS_LAS_VENTAS.includes(norm(user?.role_name)) ||
+      ROLES_VEN_TODAS_LAS_VENTAS.includes(norm(user?.rol_sistema))
+    );
+  }, [user?.role_name, user?.rol_sistema]);
+
 
   useEffect(() => {
+    // Admin / gerente ven todo (Vendedor vacío). El resto arranca viendo
+    // únicamente SUS ventas, con el filtro precargado con su usuario.
+    const filtrarPorMi = !veTodasLasVentas && !!user?.id;
+
     const data = {
       almacen_id,
       desde: dayjs().format("YYYY-MM-DD"),
       hasta: dayjs().format("YYYY-MM-DD"),
       // Por defecto mostrar solo ventas en estado Creado.
       estado_de_venta: EstadoDeVenta.CREADO,
+      ...(filtrarPorMi ? { user_id: user!.id } : {}),
     };
+
+    if (filtrarPorMi) form.setFieldValue("user_id", user!.id);
+
     setFiltros(data);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [veTodasLasVentas, user?.id]);
 
   // Cuando el usuario cambia de sucursal desde el dropdown global del nav,
   // actualizar el campo del form y re-buscar automáticamente.
