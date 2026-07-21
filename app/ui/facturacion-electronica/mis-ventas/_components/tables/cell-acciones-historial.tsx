@@ -52,7 +52,10 @@ export default function CellAccionesHistorial({ entrega, onRefetch }: Props) {
         open={anularOpen}
         onClose={() => setAnularOpen(false)}
         entrega={entrega as any}
-        onSuccess={() => { setAnularOpen(false); onRefetch?.() }}
+        // No se llama onRefetch: el modal ya actualiza la caché al instante e
+        // invalida ENTREGAS_PRODUCTOS (que refetchea este historial). Pedir otro
+        // refetch acá disparaba una request duplicada del mismo dato.
+        onSuccess={() => setAnularOpen(false)}
       />
     </>
   )

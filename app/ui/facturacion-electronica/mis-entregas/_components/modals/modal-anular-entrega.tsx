@@ -8,6 +8,7 @@ import { FaExclamationTriangle } from 'react-icons/fa'
 import ButtonBase from '~/components/buttons/button-base'
 import { entregasNuevasApi } from '~/lib/api/entregas'
 import { invalidarEntregaYVenta } from '../../_lib/invalidar-entrega-venta'
+import { QueryKeys } from '~/app/_lib/queryKeys'
 
 interface ModalAnularEntregaProps {
   open: boolean
@@ -57,6 +58,34 @@ export default function ModalAnularEntrega({
         return
       }
       message.success('Entrega anulada — vuelve a Pendiente')
+
+      // Actualización INMEDIATA de la caché con la entrega que devuelve el
+      // backend. Antes había que esperar a que terminara el refetch (y el de la
+      // lista de ventas, que es pesado) para ver el cambio de estado; ahora la
+      // fila cambia al instante y el refetch solo reconcilia.
+      // Se usa la respuesta del server, no un estado inventado.
+      const entregaActualizada = (response.data as any)?.data
+      if (entregaActualizada?.id != null) {
+        queryClient.setQueriesData(
+          { queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, 'por-venta'] },
+          (old: any) => {
+            const lista = old?.data?.data
+            if (!Array.isArray(lista)) return old
+            return {
+              ...old,
+              data: {
+                ...old.data,
+                data: lista.map((e: any) =>
+                  String(e.id) === String(entregaActualizada.id)
+                    ? { ...e, ...entregaActualizada }
+                    : e,
+                ),
+              },
+            }
+          },
+        )
+      }
+
       invalidarEntregaYVenta(queryClient)
       form.resetFields()
       onSuccess?.()
