@@ -78,17 +78,43 @@ export default function TableMisPrestamos() {
     }
   }
 
-  const { data: response, isLoading: loading } = useQuery({
+  const {
+    data: response,
+    isLoading: loading,
+    isError,
+    error,
+  } = useQuery({
     queryKey: [QueryKeys.PRESTAMOS, almacen_id ?? 0, filtros],
     queryFn: async () => {
       const result = await prestamoApi.getAll({
         almacen_id: almacen_id ?? undefined,
         ...filtros,
       })
+      if (result.error) {
+        throw new Error(result.error.message || 'Error al cargar los préstamos')
+      }
       return result.data?.data || []
     },
     enabled: !!almacen_id,
+    retry: (failureCount, error) => {
+      if (error.message?.includes('caja') || error.message?.includes('No tienes permiso')) {
+        return false
+      }
+      return failureCount < 2
+    },
   })
+
+  // Mostrar error al usuario si falla la carga (solo una vez por error)
+  const errorShownRef = useRef(false)
+  React.useEffect(() => {
+    if (isError && error && !errorShownRef.current) {
+      message.error(error.message || 'Error al cargar los préstamos. Verifica tu conexión o intenta de nuevo.')
+      errorShownRef.current = true
+    }
+    if (!isError) {
+      errorShownRef.current = false
+    }
+  }, [isError, error])
 
   const setPrestamoSeleccionada = UseStorePrestamoSeleccionada(
     (state) => state.setPrestamo

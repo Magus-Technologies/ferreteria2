@@ -255,8 +255,13 @@ export default function ModalVerDevoluciones({
     },
     {
       headerName: 'Usuario',
-      valueGetter: (params) => params.data?.user?.name || '',
       width: 150,
+      valueGetter: (params) => {
+        const userName = params.data?.user?.name
+        const userId = params.data?.user_id
+        return userName || (userId ? `ID: ${userId}` : '-')
+      },
+      cellStyle: { fontWeight: 'bold' },
     },
     {
       headerName: 'Estado',
