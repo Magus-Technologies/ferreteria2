@@ -23,6 +23,7 @@ export interface GastoExtra {
     }
     compra?: {
         id: string
+        tipo_documento?: string
         serie?: string
         numero?: string
         fecha?: string

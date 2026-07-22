@@ -7,6 +7,7 @@ import { useGetGastos } from '../../_hooks/use-get-gastos'
 import { type GastoExtra, eliminarGastoExtra } from '~/lib/api/gasto-extra'
 import dayjs from 'dayjs'
 import { formatFechaPeru } from '~/utils/fechas'
+import { TiposDocumentos } from '~/lib/docs'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { Button, Popconfirm, Tooltip } from 'antd'
 import useApp from 'antd/es/app/useApp'
@@ -107,11 +108,14 @@ const TableMisGastos = memo(function TableMisGastos() {
     {
       headerName: 'COMPRA ASOCIADA',
       field: 'compra',
-      width: 200,
+      width: 220,
       valueGetter: (params) => {
         const compra = params.data?.compra
         if (!compra) return '—'
-        const doc = [compra.serie, compra.numero].filter(Boolean).join('-')
+        const tipoDoc = compra.tipo_documento as keyof typeof TiposDocumentos
+        const prefijo = tipoDoc && TiposDocumentos[tipoDoc] ? TiposDocumentos[tipoDoc].cod_serie.charAt(0) : ''
+        const serie = prefijo ? `${prefijo}${compra.serie ?? ''}` : (compra.serie ?? '')
+        const doc = [serie, compra.numero].filter(Boolean).join('-')
         const proveedor = compra.proveedor?.nombre ?? ''
         return [doc, proveedor].filter(Boolean).join(' | ')
       },

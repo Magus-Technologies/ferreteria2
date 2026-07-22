@@ -319,7 +319,7 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
       valueGetter: (p) => {
         if (!p.data?.id) return ''
         const date = ulidToDate(p.data.id)
-        return date ? dayjs(date).format('DD/MM/YYYY hh:mm:ss A') : (p.data?.fecha ? dayjs(p.data.fecha).format('DD/MM/YYYY') : '')
+        return date ? dayjs(date).format('DD/MM/YYYY hh:mm:ss A') : (p.data?.fecha ? dayjs(p.data.fecha).format('DD/MM/YYYY hh:mm A') : '')
       },
     },
     {
@@ -679,7 +679,7 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
           <div className='bg-red-50 border border-red-200 rounded-lg p-3 text-sm'>
             <div className='font-semibold text-red-700 mb-1'>Pago a anular:</div>
             <div>Monto: <span className='font-bold'>S/. {Number(pagoAAnular.monto || 0).toFixed(2)}</span></div>
-            <div>Fecha: {pagoAAnular.fecha ? new Date(pagoAAnular.fecha).toLocaleDateString('es-PE') : '-'}</div>
+            <div>Fecha: {pagoAAnular.fecha ? dayjs(pagoAAnular.fecha).format('DD/MM/YYYY hh:mm A') : '-'}</div>
             {pagoAAnular.observacion && <div>Obs: {pagoAAnular.observacion}</div>}
           </div>
           <div>
