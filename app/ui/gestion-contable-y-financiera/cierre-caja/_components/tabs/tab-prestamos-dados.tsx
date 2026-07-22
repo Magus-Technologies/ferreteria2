@@ -53,7 +53,6 @@ export default function TabPrestamosDados({ data, total }: TabPrestamosDadosProp
         columnDefs={columnasPrestamosDados}
         rowSelection={false}
         withNumberColumn={true}
-        headerColor='var(--color-amber-600)'
       />
     </div>
   )

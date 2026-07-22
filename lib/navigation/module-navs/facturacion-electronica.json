@@ -150,27 +150,6 @@
         "permission": "facturacion-electronica.mis-contactos.index"
       },
       {
-        "id": "aperturas-cierres",
-        "label": "Mis Aperturas y Cierres de Caja",
-        "icon": "HistoryOutlined",
-        "route": "/ui/facturacion-electronica/mis-aperturas-cierres",
-        "permission": "facturacion-electronica.mis-aperturas-cierres.index"
-      },
-      {
-        "id": "arqueos-diarios",
-        "label": "Arqueos Diarios",
-        "icon": "FaBalanceScale",
-        "route": "/ui/facturacion-electronica/arqueos-diarios",
-        "permission": "facturacion-electronica.arqueos-diarios.index"
-      },
-      {
-        "id": "movimientos-caja",
-        "label": "Movimientos de Caja",
-        "icon": "SwapOutlined",
-        "route": "/ui/facturacion-electronica/movimientos-caja",
-        "permission": "facturacion-electronica.movimientos-caja.index"
-      },
-      {
         "id": "mis-vales",
         "label": "Mis Vales",
         "icon": "FaGift",

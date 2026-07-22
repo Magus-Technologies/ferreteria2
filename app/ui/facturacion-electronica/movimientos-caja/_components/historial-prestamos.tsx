@@ -201,7 +201,6 @@ export default function HistorialPrestamos() {
           columnDefs={columns}
           rowSelection={false}
           withNumberColumn={true}
-          headerColor="var(--color-amber-600)"
         />
       </div>
     </div>

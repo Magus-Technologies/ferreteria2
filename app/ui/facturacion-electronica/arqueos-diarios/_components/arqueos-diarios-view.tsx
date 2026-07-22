@@ -16,6 +16,7 @@ import TabPrestamosRecibidos from '~/app/ui/facturacion-electronica/cierre-caja/
 import TabGastos from '~/app/ui/facturacion-electronica/cierre-caja/_components/tabs/tab-gastos'
 import TabPrestamosDados from '~/app/ui/facturacion-electronica/cierre-caja/_components/tabs/tab-prestamos-dados'
 import TabMovimientos from '~/app/ui/facturacion-electronica/cierre-caja/_components/tabs/tab-movimientos'
+import TabTrasladosBoveda from '~/app/ui/facturacion-electronica/cierre-caja/_components/tabs/tab-traslados-boveda'
 import TabBancos from '~/app/ui/facturacion-electronica/cierre-caja/_components/tabs/tab-bancos'
 import TabResumenFinal from '~/app/ui/facturacion-electronica/cierre-caja/_components/tabs/tab-resumen-final'
 import TabIngresosOperativos from '~/app/ui/facturacion-electronica/cierre-caja/_components/tabs/tab-ingresos-operativos'
@@ -153,6 +154,7 @@ export default function ArqueosDiariosView() {
   const gastosExtrasData = resumenDetalle?.detalle_gastos_extras ? Object.values(resumenDetalle.detalle_gastos_extras) : []
   const prestamosDadosData = resumenDetalle?.prestamos_dados || []
   const movimientosData = resumenDetalle?.movimientos_internos || []
+  const trasladosBovedaData = resumenDetalle?.traslados_boveda || []
   const bancosData = resumenDetalle?.resumen_bancos || []
 
   const totalOtrosIngresos = resumenDetalle?.total_otros_ingresos || 0
@@ -197,6 +199,11 @@ export default function ArqueosDiariosView() {
       key: '7',
       label: `Movimientos Internos (${movimientosData.length})`,
       children: <TabMovimientos data={movimientosData} />,
+    },
+    {
+      key: 'traslados_boveda',
+      label: `Traslados a Bóveda (${trasladosBovedaData.length})`,
+      children: <TabTrasladosBoveda data={trasladosBovedaData} />,
     },
     {
       key: '8',
@@ -244,7 +251,6 @@ export default function ArqueosDiariosView() {
           columnDefs={columnasArqueos}
           rowSelection={false}
           withNumberColumn={true}
-          headerColor='var(--color-amber-600)'
           loading={loadingArqueos}
           onRowClicked={e => e.data && handleVerDetalle(e.data)}
           rowStyle={{ cursor: 'pointer' }}

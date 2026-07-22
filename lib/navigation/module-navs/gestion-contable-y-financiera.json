@@ -158,6 +158,30 @@
         "icon": "FaHandHoldingDollar",
         "route": "/ui/gestion-contable-y-financiera/comisiones",
         "permission": "gestion-contable-y-financiera.comisiones.index"
+      },
+      {
+        "id": "movimientos-caja",
+        "type": "button",
+        "label": "Movimientos de Caja",
+        "icon": "SwapOutlined",
+        "route": "/ui/gestion-contable-y-financiera/movimientos-caja",
+        "permission": null
+      },
+      {
+        "id": "arqueos-diarios",
+        "type": "button",
+        "label": "Arqueos Diarios",
+        "icon": "FaBalanceScale",
+        "route": "/ui/gestion-contable-y-financiera/arqueos-diarios",
+        "permission": null
+      },
+      {
+        "id": "aperturas-cierres",
+        "type": "button",
+        "label": "Mis Aperturas y Cierres de Caja",
+        "icon": "HistoryOutlined",
+        "route": "/ui/gestion-contable-y-financiera/mis-aperturas-cierres",
+        "permission": null
       }
     ]
   }

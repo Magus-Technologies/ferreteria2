@@ -18,22 +18,25 @@ const columnas: ColDef[] = [
     width: 160,
     valueFormatter: (p) => formatFechaPeru(p.value, 'DD/MM/YYYY hh:mm:ss A'),
   },
+  // Los valueGetters aceptan las DOS formas de datos: la del API de traslados
+  // (objetos anidados) y la del resumen_snapshot del arqueo (strings planos).
   {
     headerName: 'Sub Caja',
     width: 160,
-    valueGetter: (p) => p.data?.sub_caja?.nombre ?? '-',
+    valueGetter: (p) => p.data?.sub_caja?.nombre
+      ?? (typeof p.data?.sub_caja === 'string' ? p.data.sub_caja : '-'),
   },
   {
     headerName: 'Vendedor',
     flex: 1,
     minWidth: 140,
-    valueGetter: (p) => p.data?.vendedor?.name ?? '-',
+    valueGetter: (p) => p.data?.vendedor?.name ?? p.data?.vendedor_nombre ?? '-',
   },
   {
     headerName: 'Supervisor',
     flex: 1,
     minWidth: 140,
-    valueGetter: (p) => p.data?.supervisor?.name ?? '-',
+    valueGetter: (p) => p.data?.supervisor?.name ?? p.data?.supervisor_nombre ?? '-',
   },
   {
     headerName: 'Justificación',
@@ -75,7 +78,6 @@ export default function TabTrasladosBoveda({ data }: TabTrasladosBovedaProps) {
           columnDefs={columnas}
           rowSelection={false}
           withNumberColumn={true}
-          headerColor='var(--color-amber-600)'
         />
       </div>
     </div>

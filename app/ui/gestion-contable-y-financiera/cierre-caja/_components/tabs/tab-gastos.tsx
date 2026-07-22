@@ -42,7 +42,6 @@ export default function TabGastos({ data, total }: TabGastosProps) {
         columnDefs={columnasGastos}
         rowSelection={false}
         withNumberColumn={true}
-        headerColor='var(--color-amber-600)'
       />
     </div>
   )

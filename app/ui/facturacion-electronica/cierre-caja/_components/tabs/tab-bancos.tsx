@@ -61,7 +61,6 @@ export default function TabBancos({ data }: TabBancosProps) {
           columnDefs={columnasBancos}
           rowSelection={false}
           withNumberColumn={true}
-          headerColor='var(--color-amber-600)'
         />
       </div>
       <div className='mt-3 p-3 bg-blue-50 rounded space-y-2'>

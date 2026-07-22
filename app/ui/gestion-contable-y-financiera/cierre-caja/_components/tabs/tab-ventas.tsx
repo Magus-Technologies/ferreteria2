@@ -98,7 +98,6 @@ export default function TabVentas({ data, totalVentas }: TabVentasProps) {
         columnDefs={columnasVentas}
         rowSelection={false}
         withNumberColumn={true}
-        headerColor='var(--color-amber-600)'
       />
     </div>
   )
