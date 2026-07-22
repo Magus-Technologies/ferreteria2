@@ -121,16 +121,20 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0.5,
     borderBottomColor: C.amarilloLinea,
   },
+  totalsContainer: {
+    marginTop: 6,
+    borderWidth: 1,
+    borderColor: C.amarilloBorde,
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
   totalHeaderRow: {
     flexDirection: 'row',
     fontSize: 7,
     fontWeight: 'bold',
     backgroundColor: C.amarilloTenue,
-    borderWidth: 1,
-    borderColor: C.amarilloBorde,
-    borderBottomWidth: 0,
-    borderRadius: 0,
-    marginTop: 6,
+    borderBottomWidth: 0.5,
+    borderBottomColor: C.amarilloBorde,
   },
   totalRow: {
     flexDirection: 'row',
@@ -138,10 +142,6 @@ const styles = StyleSheet.create({
     fontSize: 9,
     paddingVertical: 3,
     backgroundColor: C.amarilloSuave,
-    borderWidth: 1,
-    borderColor: C.amarilloBorde,
-    borderTopWidth: 0,
-    borderRadius: 0,
   },
   totalLabel: { textAlign: 'right', letterSpacing: 0.5 },
 
@@ -273,35 +273,38 @@ export default function DocReporteVentasCredito({
           )
         })}
 
-        {/* Fila de títulos de los totales */}
-        <View style={styles.totalHeaderRow} wrap={false}>
-          <Text
-            style={[
-              styles.cell,
-              { width: `${4 + 11 + 11 + 14 + 22 + 8}%` },
-            ]}
-          >
-            {' '}
-          </Text>
-          <Text style={[styles.cell, styles.center, { width: W.pagado }]}>Total pagado</Text>
-          <Text style={[styles.cell, styles.center, { width: W.porCobrar }]}>Por cobrar</Text>
-          <Text style={[styles.cell, styles.center, { width: W.total }]}>Total</Text>
-        </View>
+        {/* Totales - contenedor con borde */}
+        <View style={styles.totalsContainer} wrap={false}>
+          {/* Fila de títulos */}
+          <View style={styles.totalHeaderRow}>
+            <Text
+              style={[
+                styles.cell,
+                { width: `${4 + 11 + 11 + 14 + 22 + 8}%` },
+              ]}
+            >
+              {' '}
+            </Text>
+            <Text style={[styles.cell, styles.center, { width: W.pagado }]}>Total pagado</Text>
+            <Text style={[styles.cell, styles.center, { width: W.porCobrar }]}>Por cobrar</Text>
+            <Text style={[styles.cell, styles.center, { width: W.total }]}>Total</Text>
+          </View>
 
-        {/* Totales */}
-        <View style={styles.totalRow} wrap={false}>
-          <Text
-            style={[
-              styles.cell,
-              styles.totalLabel,
-              { width: `${4 + 11 + 11 + 14 + 22 + 8}%` },
-            ]}
-          >
-            Totales
-          </Text>
-          <Text style={[styles.cell, styles.right, { width: W.pagado }]}>{fmt(sumPagado)}</Text>
-          <Text style={[styles.cell, styles.right, { width: W.porCobrar }]}>{fmt(sumPorCobrar)}</Text>
-          <Text style={[styles.cell, styles.right, { width: W.total }]}>{fmt(sumTotal)}</Text>
+          {/* Fila de valores */}
+          <View style={styles.totalRow}>
+            <Text
+              style={[
+                styles.cell,
+                styles.totalLabel,
+                { width: `${4 + 11 + 11 + 14 + 22 + 8}%` },
+              ]}
+            >
+              Totales
+            </Text>
+            <Text style={[styles.cell, styles.right, { width: W.pagado }]}>{fmt(sumPagado)}</Text>
+            <Text style={[styles.cell, styles.right, { width: W.porCobrar }]}>{fmt(sumPorCobrar)}</Text>
+            <Text style={[styles.cell, styles.right, { width: W.total }]}>{fmt(sumTotal)}</Text>
+          </View>
         </View>
 
         <View style={styles.footer} fixed>
