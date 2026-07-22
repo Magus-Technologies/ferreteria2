@@ -252,6 +252,7 @@ export default function useInitGuia({
             const tipo = comp.tipo_comprobante === 'FACTURA' ? 'Factura' : comp.tipo_comprobante === 'BOLETA' ? 'Boleta' : comp.tipo_comprobante
             return `${tipo} ${comp.serie}-${comp.correlativo}`
           }
+          if (!venta?.serie || !venta?.numero) return ''
           return `Venta ${venta.serie}-${venta.numero}`
         })(),
         // Pre-llenar placa si viene por URL (desde mis-entregas)
@@ -351,6 +352,7 @@ export default function useInitGuia({
         tipo_guia: 'ELECTRONICA_REMITENTE',
         punto_partida: primerSlot?.direccion?.direccion || '',
         empresa_direccion_seleccionada: primerSlot?.tipo || 'D1',
+        referencia: '',
         productos: [],
       })
     }

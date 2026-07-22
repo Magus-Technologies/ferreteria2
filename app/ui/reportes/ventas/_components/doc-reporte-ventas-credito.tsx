@@ -121,16 +121,27 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0.5,
     borderBottomColor: C.amarilloLinea,
   },
+  totalHeaderRow: {
+    flexDirection: 'row',
+    fontSize: 7,
+    fontWeight: 'bold',
+    backgroundColor: C.amarilloTenue,
+    borderWidth: 1,
+    borderColor: C.amarilloBorde,
+    borderBottomWidth: 0,
+    borderRadius: 0,
+    marginTop: 6,
+  },
   totalRow: {
     flexDirection: 'row',
     fontWeight: 'bold',
     fontSize: 9,
-    marginTop: 6,
     paddingVertical: 3,
     backgroundColor: C.amarilloSuave,
     borderWidth: 1,
     borderColor: C.amarilloBorde,
-    borderRadius: 2,
+    borderTopWidth: 0,
+    borderRadius: 0,
   },
   totalLabel: { textAlign: 'right', letterSpacing: 0.5 },
 
@@ -262,7 +273,22 @@ export default function DocReporteVentasCredito({
           )
         })}
 
-        {/* Totales — franja limpia: sin repetir los títulos de columna. */}
+        {/* Fila de títulos de los totales */}
+        <View style={styles.totalHeaderRow} wrap={false}>
+          <Text
+            style={[
+              styles.cell,
+              { width: `${4 + 11 + 11 + 14 + 22 + 8}%` },
+            ]}
+          >
+            {' '}
+          </Text>
+          <Text style={[styles.cell, styles.center, { width: W.pagado }]}>Total pagado</Text>
+          <Text style={[styles.cell, styles.center, { width: W.porCobrar }]}>Por cobrar</Text>
+          <Text style={[styles.cell, styles.center, { width: W.total }]}>Total</Text>
+        </View>
+
+        {/* Totales */}
         <View style={styles.totalRow} wrap={false}>
           <Text
             style={[
