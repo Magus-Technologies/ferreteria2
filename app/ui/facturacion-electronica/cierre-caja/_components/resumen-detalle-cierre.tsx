@@ -44,7 +44,9 @@ export default function ResumenDetalleCierre({ resumen, montoEsperado, fecha, ap
     enabled: !!aperturaId,
   })
 
-  const trasladosBoveda = (trasladosData as any)?.data ?? []
+  // Fallback al snapshot del resumen cuando el endpoint aún no responde
+  // (o no hay aperturaId), para que el tab siempre tenga datos que mostrar.
+  const trasladosBoveda = (trasladosData as any)?.data ?? resumen.traslados_boveda ?? []
 
   const items = [
     {
@@ -82,11 +84,12 @@ export default function ResumenDetalleCierre({ resumen, montoEsperado, fecha, ap
       label: `Movimientos Internos (${movimientosData.length})`,
       children: <TabMovimientos data={movimientosData} />,
     },
-    ...(trasladosBoveda.length > 0 ? [{
+    {
+      // Siempre visible (con contador), igual que el resto de tabs.
       key: 'traslados_boveda',
-      label: `Traslados Bóveda (${trasladosBoveda.length}) — no afecta total`,
+      label: `Traslados a Bóveda (${trasladosBoveda.length})`,
       children: <TabTrasladosBoveda data={trasladosBoveda} />,
-    }] : []),
+    },
     {
       key: '8',
       label: `Resumen de Bancos (${bancosData.length})`,
