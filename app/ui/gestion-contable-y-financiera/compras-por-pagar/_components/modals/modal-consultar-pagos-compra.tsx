@@ -3,6 +3,7 @@
 import { Modal, DatePicker, Input, Select } from 'antd'
 import { useQuery } from '@tanstack/react-query'
 import { compraApi, type Compra, type PagoDeCompra } from '~/lib/api/compra'
+import { FormaDePago } from '~/lib/api/venta'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useStoreFiltrosComprasPorPagar } from '../../_store/store-filtros-compras-por-pagar'
 import dayjs, { Dayjs } from 'dayjs'
@@ -52,6 +53,7 @@ export default function ModalConsultarPagosCompra({ open, setOpen }: ModalConsul
       // Primero obtener todas las compras
       const comprasResult = await compraApi.getAll({ 
         almacen_id: apiFilters?.almacen_id,
+        forma_de_pago: FormaDePago.CREDITO,
         per_page: -1 
       })
       
@@ -171,18 +173,18 @@ export default function ModalConsultarPagosCompra({ open, setOpen }: ModalConsul
     },
     {
       headerName: 'F. Compra',
-      width: 110,
+      width: 140,
       valueGetter: (p) => {
         const c = (p.data as any)?.compra
-        return c?.fecha ? dayjs(c.fecha).format('DD/MM/YYYY') : ''
+        return c?.fecha ? dayjs(c.fecha).format('DD/MM/YYYY hh:mm A') : ''
       },
     },
     {
       headerName: 'F. Vence',
-      width: 110,
+      width: 140,
       valueGetter: (p) => {
         const c = (p.data as any)?.compra
-        return c?.fecha_vencimiento ? dayjs(c.fecha_vencimiento).format('DD/MM/YYYY') : ''
+        return c?.fecha_vencimiento ? dayjs(c.fecha_vencimiento).format('DD/MM/YYYY hh:mm A') : ''
       },
     },
     {
