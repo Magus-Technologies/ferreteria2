@@ -184,6 +184,11 @@ const MODULE_TO_QUERY_KEYS: Record<string, string[]> = {
     QueryKeys.MOVIMIENTOS_INTERNOS,
     // Query propia del "Resumen detalle" del cierre (traslados a bóveda).
     'traslados-boveda',
+    // Efectivo de apertura: al asignar/reasignar/anular desde el modal
+    // "Efectivo de Apertura", el modal de aperturar caja del vendedor debe
+    // reflejarlo al instante (sin recargar la página), y viceversa.
+    'efectivo-asignado-para-mi',
+    'efectivo-disponible-apertura',
   ],
   // Un gasto/ingreso extra también mueve efectivo entre sub-cajas (ManejaFlujoCajaExtra)
   // → invalidar SUB_CAJAS para que el modal de Traslado a Bóveda ("efectivo-por-vendedor")
