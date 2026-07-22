@@ -113,7 +113,7 @@ export default function BodyCrearGuia({
     >
       {/* El header vive DENTRO del FormBase para que el select de Tipo de
           Guía (Form.Item) quede conectado al mismo form del resto de campos. */}
-      <HeaderCrearGuia guia={guia} />
+      <HeaderCrearGuia guia={guia} form={form} />
       <div className='flex flex-col xl:flex-row gap-4 xl:gap-6 w-full flex-1 min-h-0'>
         <div className='flex-1 flex flex-col gap-4 xl:gap-6 min-w-0 min-h-0'>
           <div className='flex-1 min-h-0'>

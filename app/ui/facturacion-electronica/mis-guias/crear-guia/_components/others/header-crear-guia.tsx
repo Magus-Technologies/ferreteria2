@@ -1,7 +1,7 @@
 'use client'
 
-import { Modal } from 'antd'
-import { useRef, useState } from 'react'
+import { Form, Modal, Tag, type FormInstance } from 'antd'
+import { useEffect, useRef, useState } from 'react'
 import { TbTruckDelivery } from 'react-icons/tb'
 import { MdOutlineLocalShipping } from 'react-icons/md'
 import SelectAlmacen from '~/app/_components/form/selects/select-almacen'
@@ -16,10 +16,25 @@ import { useStoreProductoSeleccionadoSearch } from '~/app/ui/gestion-comercial-e
 
 export default function HeaderCrearGuia({
   guia,
+  form,
 }: {
   guia?: any
+  form: FormInstance
 }) {
   const { can } = usePermissionHook()
+
+  // SUNAT (gob.pe/7899): la GRE-Transportista SOLO se usa cuando el traslado
+  // es por transporte público. No existe GRE-Transportista privada — eso es
+  // siempre una GRE-Remitente. Por eso, al elegir GRE-Transportista se fuerza
+  // modalidad = PUBLICO y se bloquea el selector.
+  const tipoGuia = Form.useWatch('tipo_guia', form) as string | undefined
+  const esTransportista = tipoGuia === 'ELECTRONICA_TRANSPORTISTA'
+
+  useEffect(() => {
+    if (esTransportista) {
+      form.setFieldValue('modalidad_transporte', 'PUBLICO')
+    }
+  }, [esTransportista, form])
 
   const selectProductosRef = useRef<RefSelectProductosProps>(null)
 
@@ -106,30 +121,44 @@ export default function HeaderCrearGuia({
               // { label: 'Guía Física', value: 'FISICA' },
             ]}
           />
-          <ConfigurableElement
-            componentId='crear-guia.modalidad'
-            label='Campo Modalidad'
-          >
-            <SelectBase
-              propsForm={{
-                name: 'modalidad_transporte',
-                rules: [
-                  {
-                    required: true,
-                    message: 'Selecciona la modalidad',
-                  },
-                ],
-                className: '!mb-0',
-              }}
-              placeholder='Modalidad...'
-              size='large'
-              className='w-full sm:!min-w-[190px] sm:!w-[190px] font-normal!'
-              options={[
-                { label: 'Transporte privado', value: 'PRIVADO' },
-                { label: 'Transporte público', value: 'PUBLICO' },
-              ]}
-            />
-          </ConfigurableElement>
+          {/* La Modalidad solo se elige en GRE-Remitente (privado = vehículo
+              propio, público = transportista tercero). En GRE-Transportista
+              SUNAT exige siempre transporte público: se oculta el selector y
+              se muestra solo como referencia (el valor PUBLICO ya quedó
+              forzado en el form vía useEffect). */}
+          {esTransportista ? (
+            <Tag
+              color='green'
+              className='!m-0 flex items-center justify-center !text-sm !px-3 !h-10 w-full sm:!min-w-[190px] sm:!w-[190px]'
+            >
+              Transporte público
+            </Tag>
+          ) : (
+            <ConfigurableElement
+              componentId='crear-guia.modalidad'
+              label='Campo Modalidad'
+            >
+              <SelectBase
+                propsForm={{
+                  name: 'modalidad_transporte',
+                  rules: [
+                    {
+                      required: true,
+                      message: 'Selecciona la modalidad',
+                    },
+                  ],
+                  className: '!mb-0',
+                }}
+                placeholder='Modalidad...'
+                size='large'
+                className='w-full sm:!min-w-[190px] sm:!w-[190px] font-normal!'
+                options={[
+                  { label: 'Transporte privado', value: 'PRIVADO' },
+                  { label: 'Transporte público', value: 'PUBLICO' },
+                ]}
+              />
+            </ConfigurableElement>
+          )}
         </div>
       }
     >
