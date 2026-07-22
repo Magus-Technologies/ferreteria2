@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useDebounce } from 'use-debounce'
 import { DatePicker, Select, Tag } from 'antd'
@@ -90,6 +90,7 @@ export default function KardexInventarioView() {
   const [productoSeleccionado, setProductoSeleccionado] = useState<Producto>()
   const [proveedorSeleccionado, setProveedorSeleccionado] = useState<Proveedor>()
   const [tipo, setTipo] = useState<TipoMovimientoInventario | ''>('')
+  const [estado, setEstado] = useState<'' | 'activos' | 'anulados'>('')
   const [fechas, setFechas] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>([dayjs(), dayjs()])
   const [searchText, setSearchText] = useState('')
   const [debouncedSearchText] = useDebounce(searchText, 300)
@@ -116,6 +117,21 @@ export default function KardexInventarioView() {
     },
     staleTime: 0,
   })
+
+  // Un movimiento se considera ANULADO por su tipo o por su etiqueta de movimiento
+  const esAnulado = (m: MovimientoKardex) => {
+    const mov = String((m as any).movimiento || '').toUpperCase()
+    const t = String((m as any).tipo || '').toLowerCase()
+    return t.includes('anulad') || mov.includes('ANULA')
+  }
+
+  // Filtro client-side por Estado (Activos / Anulados)
+  const movimientosFiltrados = useMemo(() => {
+    const rows = data?.data || []
+    if (!estado) return rows
+    return rows.filter((m) => (estado === 'anulados' ? esAnulado(m) : !esAnulado(m)))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, estado])
 
   const columns: ColDef<MovimientoKardex>[] = [
     {
@@ -392,6 +408,20 @@ export default function KardexInventarioView() {
             />
           </div>
           <div>
+            <label className='text-xs font-semibold text-gray-600 mb-1 block'>Estado</label>
+            <Select
+              className='!min-w-[130px] !w-[130px]'
+              value={estado}
+              onChange={(v) => setEstado(v as '' | 'activos' | 'anulados')}
+              options={[
+                { value: '', label: 'Todos' },
+                { value: 'activos', label: 'Activos' },
+                { value: 'anulados', label: 'Anulados' },
+              ]}
+              size='middle'
+            />
+          </div>
+          <div>
             <label className='text-xs font-semibold text-gray-600 mb-1 block'>Rango de Fechas</label>
             <RangePicker
               value={fechas}
@@ -463,7 +493,7 @@ export default function KardexInventarioView() {
           selectionColor={greenColors[10]}
           loading={isFetching || isSearching}
           columnDefs={columns}
-          rowData={data?.data || []}
+          rowData={movimientosFiltrados}
           pagination={false}
           persistColumnState={false}
           quickFilterText={debouncedSearchText}

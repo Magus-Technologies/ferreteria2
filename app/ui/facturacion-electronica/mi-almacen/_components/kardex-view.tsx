@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useDebounce } from 'use-debounce'
-import { DatePicker, Tag } from 'antd'
+import { DatePicker, Select, Tag } from 'antd'
 import { FaClipboardList, FaBoxOpen, FaSearch } from 'react-icons/fa'
 import { ColDef } from 'ag-grid-community'
 import dayjs from 'dayjs'
@@ -98,6 +98,8 @@ export default function KardexView() {
   const [productoSeleccionado, setProductoSeleccionado] = useState<Producto>()
   const [clienteSeleccionado, setClienteSeleccionado] = useState<Cliente>()
   const [fechas, setFechas] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>([dayjs(), dayjs()])
+  const [tiposFiltro, setTiposFiltro] = useState<string[]>([])
+  const [estadosFiltro, setEstadosFiltro] = useState<string[]>([])
   const [searchText, setSearchText] = useState('')
   const [debouncedSearchText] = useDebounce(searchText, 300)
   const isSearching = searchText !== debouncedSearchText
@@ -123,6 +125,33 @@ export default function KardexView() {
     enabled: true,
     staleTime: 0,
   })
+
+  // Opciones de Tipo/Estado derivadas de los movimientos cargados (siempre
+  // reflejan los valores reales que hay en la tabla)
+  const { tipoOptions, estadoOptions } = useMemo(() => {
+    const tipos = new Set<string>()
+    const estados = new Set<string>()
+    for (const m of data?.data || []) {
+      const { tipo, estado } = parseMovimiento(m.movimiento || '')
+      if (tipo) tipos.add(tipo)
+      if (estado) estados.add(estado)
+    }
+    const toOptions = (set: Set<string>) =>
+      Array.from(set).sort().map((v) => ({ value: v, label: v }))
+    return { tipoOptions: toOptions(tipos), estadoOptions: toOptions(estados) }
+  }, [data])
+
+  // Filtro client-side por Tipo y Estado (los datos ya están cargados)
+  const movimientosFiltrados = useMemo(() => {
+    const rows = data?.data || []
+    if (tiposFiltro.length === 0 && estadosFiltro.length === 0) return rows
+    return rows.filter((m) => {
+      const { tipo, estado } = parseMovimiento(m.movimiento || '')
+      const okTipo = tiposFiltro.length === 0 || tiposFiltro.includes(tipo)
+      const okEstado = estadosFiltro.length === 0 || estadosFiltro.includes(estado)
+      return okTipo && okEstado
+    })
+  }, [data, tiposFiltro, estadosFiltro])
 
   const columns: ColDef<MovimientoKardex>[] = [
     {
@@ -421,6 +450,32 @@ export default function KardexView() {
             />
           </div>
           <div>
+            <label className='text-xs font-semibold text-gray-600 mb-1 block'>Tipo</label>
+            <Select
+              mode='multiple'
+              allowClear
+              placeholder='Todos'
+              className='!min-w-[180px] !w-[180px]'
+              maxTagCount='responsive'
+              value={tiposFiltro}
+              onChange={(vals) => setTiposFiltro(vals)}
+              options={tipoOptions}
+            />
+          </div>
+          <div>
+            <label className='text-xs font-semibold text-gray-600 mb-1 block'>Estado</label>
+            <Select
+              mode='multiple'
+              allowClear
+              placeholder='Todos'
+              className='!min-w-[180px] !w-[180px]'
+              maxTagCount='responsive'
+              value={estadosFiltro}
+              onChange={(vals) => setEstadosFiltro(vals)}
+              options={estadoOptions}
+            />
+          </div>
+          <div>
             <label className='text-xs font-semibold text-gray-600 mb-1 block'>Rango de Fechas</label>
             <RangePicker
               value={fechas}
@@ -492,7 +547,7 @@ export default function KardexView() {
           selectionColor={orangeColors[10]}
           loading={isFetching || isSearching}
           columnDefs={columns}
-          rowData={data?.data || []}
+          rowData={movimientosFiltrados}
           pagination={false}
           persistColumnState={false}
           quickFilterText={debouncedSearchText}
