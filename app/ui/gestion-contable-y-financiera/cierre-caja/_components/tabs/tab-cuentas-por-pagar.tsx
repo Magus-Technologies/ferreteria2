@@ -27,10 +27,10 @@ const columnas: ColDef[] = [
     width: 140,
   },
   {
-    headerName: 'Fecha',
+    headerName: 'Fecha y Hora',
     field: 'fecha',
-    width: 120,
-    valueFormatter: (params) => dayjs(params.value).format('DD/MM/YYYY'),
+    width: 150,
+    valueFormatter: (params) => dayjs(params.value).format('DD/MM/YYYY hh:mm A'),
   },
   {
     headerName: 'Vencimiento',
