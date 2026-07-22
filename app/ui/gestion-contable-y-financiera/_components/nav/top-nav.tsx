@@ -15,6 +15,7 @@ import ModalMoverDineroSubCajas from '~/app/ui/facturacion-electronica/gestion-c
 import ModalSolicitarEfectivo from '~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-solicitar-efectivo'
 import ModalTrasladoBoveda from '~/app/ui/facturacion-electronica/mis-aperturas-cierres/_components/modals/modal-traslado-boveda'
 import ModalAperturarCaja from '../../gestion-cajas/_components/modal-aperturar-caja'
+import ModalEfectivoApertura from '~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-efectivo-apertura'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { fetchCajaActivaOrNull } from '~/lib/api/caja'
 
@@ -27,6 +28,7 @@ export default function TopNav({ className }: { className?: string }) {
   const [openPedirPrestamo, setOpenPedirPrestamo] = useState(false)
   const [openTrasladoBoveda, setOpenTrasladoBoveda] = useState(false)
   const [openAperturarCaja, setOpenAperturarCaja] = useState(false)
+  const [openEfectivoApertura, setOpenEfectivoApertura] = useState(false)
   const [openCerrarCaja, setOpenCerrarCaja] = useState(false)
 
   // Obtener caja activa (necesaria para Pedir Préstamo y Traslado a Bóveda)
@@ -62,6 +64,13 @@ const itemsCaja: MenuProps['items'] = [
     disabled: !!cajaActiva,
     onClick: () => {
       setOpenAperturarCaja(true)
+    }
+  },
+  {
+    key: 'efectivo-apertura',
+    label: 'Efectivo de Apertura',
+    onClick: () => {
+      setOpenEfectivoApertura(true)
     }
   },
   {
@@ -178,6 +187,11 @@ const itemsCaja: MenuProps['items'] = [
         open={openAperturarCaja}
         setOpen={setOpenAperturarCaja}
         onSuccess={() => setOpenAperturarCaja(false)}
+      />
+
+      <ModalEfectivoApertura
+        open={openEfectivoApertura}
+        setOpen={setOpenEfectivoApertura}
       />
     </>
   )

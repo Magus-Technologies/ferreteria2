@@ -66,33 +66,6 @@
         "permission": "facturacion-electronica.crear-vale.index"
       },
       {
-        "id": "finanzas-dropdown",
-        "type": "dropdown",
-        "label": "Finanzas",
-        "icon": "FaMoneyBillTrendUp",
-        "permission": null,
-        "items": [
-          {
-            "key": "aperturar-caja",
-            "label": "Aperturar Caja",
-            "action": "openAperturaCaja",
-            "permission": "caja.create"
-          },
-          {
-            "key": "efectivo-apertura",
-            "label": "Efectivo de Apertura",
-            "action": "openEfectivoApertura",
-            "permission": "caja.create"
-          },
-          {
-            "key": "cerrar-caja",
-            "label": "Cerrar Caja",
-            "route": "/ui/facturacion-electronica/cierre-caja",
-            "permission": "caja.update"
-          }
-        ]
-      },
-      {
         "id": "kardex",
         "type": "button",
         "label": "Kardex",

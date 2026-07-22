@@ -15,7 +15,6 @@ import ModalAperturarCaja from "../modals/modal-aperturar-caja";
 import ModalMoverDineroSubCajas from "../../gestion-cajas/_components/modal-mover-dinero-subcajas";
 import ModalSolicitarEfectivo from "../../gestion-cajas/_components/modal-solicitar-efectivo";
 import ModalTrasladoBoveda from "../../mis-aperturas-cierres/_components/modals/modal-traslado-boveda";
-import ModalEfectivoApertura from "../../gestion-cajas/_components/modal-efectivo-apertura";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 import { useRouter } from "next/navigation";
 import { fetchCajaActivaOrNull } from "~/lib/api/caja";
@@ -37,7 +36,6 @@ export default function TopNav({ className }: { className?: string }) {
   const [openMoverDinero, setOpenMoverDinero] = useState(false);
   const [openPedirPrestamo, setOpenPedirPrestamo] = useState(false);
   const [openTrasladoBoveda, setOpenTrasladoBoveda] = useState(false);
-  const [openEfectivoApertura, setOpenEfectivoApertura] = useState(false);
 
   // Obtener caja activa
   const { data: cajaActiva } = useQuery({
@@ -60,7 +58,6 @@ export default function TopNav({ className }: { className?: string }) {
     openMoverDinero: () => setOpenMoverDinero(true),
     openPedirPrestamo: () => setOpenPedirPrestamo(true),
     openTrasladoBoveda: () => setOpenTrasladoBoveda(true),
-    openEfectivoApertura: () => setOpenEfectivoApertura(true),
   };
 
   // Hooks personalizados para items de dropdowns (ya no se usan, ahora viene del JSON)
@@ -133,11 +130,6 @@ export default function TopNav({ className }: { className?: string }) {
       <ModalSolicitarEfectivo
         open={openPedirPrestamo}
         setOpen={setOpenPedirPrestamo}
-        aperturaId={cajaActiva?.id || ''}
-      />
-      <ModalEfectivoApertura
-        open={openEfectivoApertura}
-        setOpen={setOpenEfectivoApertura}
         aperturaId={cajaActiva?.id || ''}
       />
       <ModalTrasladoBoveda

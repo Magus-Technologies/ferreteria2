@@ -50,6 +50,13 @@
             "permission": null
           },
           {
+            "key": "efectivo-apertura",
+            "label": "Efectivo de Apertura",
+            "route": null,
+            "action": "openEfectivoApertura",
+            "permission": null
+          },
+          {
             "key": "cierre-caja",
             "label": "Cierre de Caja",
             "route": "/ui/gestion-contable-y-financiera/cierre-caja",

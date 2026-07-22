@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRealtime } from '~/hooks/use-realtime'
 import { subscribeModelChanged } from '~/lib/realtime-bus'
-import { Card, Button, Input, Checkbox, Tabs, Spin, Empty, message, Modal } from 'antd'
+import { Card, Button, Input, InputNumber, Checkbox, Tabs, Spin, Empty, message, Modal } from 'antd'
 import { FaCheckCircle, FaSearch } from 'react-icons/fa'
 import ConteoDinero from '../../gestion-cajas/_components/conteo-dinero'
 import ResumenDetalleCierre from './resumen-detalle-cierre'
@@ -69,6 +69,7 @@ export default function CierreCajaView() {
   const [ticketCaja, setTicketCaja] = useState(true)
   const [verCamposCiegoCierre, setVerCamposCiegoCierre] = useState(true)
   const [arqueoFinalizado, setArqueoFinalizado] = useState(false)
+  const [montoDejarApertura, setMontoDejarApertura] = useState<number>(0)
 
   // Nuevos campos para reporte y supervisión
   const [emailReporte, setEmailReporte] = useState('')
@@ -123,6 +124,10 @@ export default function CierreCajaView() {
       // Cargar whatsapp
       if (cajaActiva.whatsapp_reporte) {
         setWhatsappReporte(cajaActiva.whatsapp_reporte)
+      }
+      // Cargar monto a dejar para apertura
+      if (cajaActiva.monto_dejar_apertura) {
+        setMontoDejarApertura(Number(cajaActiva.monto_dejar_apertura))
       }
       // Cargar conteo de billetes y monedas
       if (cajaActiva.conteo_billetes_monedas) {
@@ -315,6 +320,7 @@ export default function CierreCajaView() {
       conteo_billetes_monedas: conteoDenominaciones || undefined,
       email_reporte: emailReporte || undefined,
       whatsapp_reporte: whatsappReporte || undefined,
+      monto_dejar_apertura: montoDejarApertura > 0 ? montoDejarApertura : undefined,
     }
 
     // CORREGIDO: Solo incluir supervisor si tenemos el password
@@ -727,6 +733,25 @@ export default function CierreCajaView() {
                         setTotalEfectivo(total)
                         setConteoDenominaciones(conteo)
                       }} />
+
+                    <div className='mt-4 pt-3 border-t border-dashed border-slate-300'>
+                      <div className='text-sm font-semibold text-slate-700 mb-2'>Dejar efectivo para próxima apertura</div>
+                      <div className='flex items-center gap-2'>
+                        <span className='text-sm text-slate-500'>S/</span>
+                        <InputNumber
+                          value={montoDejarApertura}
+                          onChange={(val) => setMontoDejarApertura(val ?? 0)}
+                          min={0}
+                          max={totalEfectivo}
+                          size='small'
+                          className='w-full'
+                          disabled={isFormDisabled}
+                        />
+                      </div>
+                      <div className='text-xs text-slate-400 mt-1'>
+                        Monto máximo: S/ {totalEfectivo.toFixed(2)}
+                      </div>
+                    </div>
 
                     <div className='mt-3 space-y-2.5'>
                       <Checkbox
