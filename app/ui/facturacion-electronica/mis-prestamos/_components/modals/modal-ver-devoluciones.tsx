@@ -261,7 +261,6 @@ export default function ModalVerDevoluciones({
         const userId = params.data?.user_id
         return userName || (userId ? `ID: ${userId}` : '-')
       },
-      cellStyle: { fontWeight: 'bold' },
     },
     {
       headerName: 'Estado',
