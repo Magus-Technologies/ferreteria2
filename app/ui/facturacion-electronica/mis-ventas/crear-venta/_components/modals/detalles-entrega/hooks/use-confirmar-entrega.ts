@@ -127,8 +127,12 @@ export function useConfirmarEntrega({
         total: p.total,
         entregado: p.entregado,
         pendiente: p.pendiente,
+        // Excluido (❌): NO se entrega ahora (entregar=0), pero su stock SÍ va al
+        // resto/domicilio — para eso se excluyó. Antes se ponía entregar_programado
+        // en 0 y el producto desaparecía de la 2da entrega, así que el despacho a
+        // domicilio no se guardaba aunque el modal mostrara la config del resto.
         entregar: p.excluido ? 0 : p.entregar,
-        entregar_programado: p.excluido ? 0 : p.entregar_programado,
+        entregar_programado: p.entregar_programado,
       }))
       ventaValues.quien_entrega = quienEntregaParcial
 
