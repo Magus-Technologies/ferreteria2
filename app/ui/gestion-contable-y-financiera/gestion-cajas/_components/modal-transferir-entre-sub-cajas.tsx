@@ -1,11 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { Modal, Form, InputNumber, Select, Input, message } from 'antd'
-import { useQuery } from '@tanstack/react-query'
+import { Modal, Form, InputNumber, Select, Input, Button, message } from 'antd'
+import { PlusOutlined } from '@ant-design/icons'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { SubCaja } from '~/lib/api/caja-principal'
-import { despliegueDePagoApi } from '~/lib/api/despliegue-de-pago'
-import { QueryKeys } from '~/app/_lib/queryKeys'
+import { transaccionesCajaApi } from '~/lib/api/transacciones-caja'
 import { useCrearMovimientoInterno } from '~/app/ui/facturacion-electronica/gestion-cajas/_hooks/use-crear-movimiento-interno'
 
 interface Props {
@@ -24,17 +24,62 @@ export default function ModalTransferirEntreSubCajas({
   onSuccess,
 }: Props) {
   const [form] = Form.useForm()
+  const queryClient = useQueryClient()
   const { mutate: crearMovimiento, isPending } = useCrearMovimientoInterno()
   const [subCajaOrigenId, setSubCajaOrigenId] = useState<number | null>(null)
+  const [openCrearConcepto, setOpenCrearConcepto] = useState(false)
+  const [nuevoConcepto, setNuevoConcepto] = useState('')
+  const [creandoConcepto, setCreandoConcepto] = useState(false)
 
-  // Obtener métodos de pago
-  const { data: metodosPago } = useQuery({
-    queryKey: [QueryKeys.DESPLIEGUE_DE_PAGO],
+  // Catálogo de CONCEPTOS de movimiento (etiquetas de solo nombre,
+  // ej. "EFECTIVO A YAPE") — concepto propio, no son métodos de pago
+  const { data: conceptos } = useQuery({
+    queryKey: ['conceptos-movimiento'],
     queryFn: async () => {
-      const response = await despliegueDePagoApi.getAll()
+      const response = await transaccionesCajaApi.getConceptosMovimiento()
       return response.data?.data || []
     },
   })
+
+  // Saldos DISPONIBLES para mover: solo dinero de sesiones CERRADAS (lo
+  // generado durante la apertura activa recién se puede mover al cerrar caja)
+  const { data: saldosDisponibles } = useQuery({
+    queryKey: ['saldos-disponibles-movimiento'],
+    queryFn: async () => {
+      const response = await transaccionesCajaApi.getSaldosDisponiblesMovimiento()
+      return response.data?.data || []
+    },
+    enabled: open,
+  })
+
+  const saldoDisponibleDe = (subCaja: SubCaja): number => {
+    const s = saldosDisponibles?.find((x) => x.sub_caja_id === subCaja.id)
+    return s ? s.saldo_disponible : parseFloat(subCaja.saldo_actual)
+  }
+
+  const handleCrearConcepto = async () => {
+    const nombre = nuevoConcepto.trim()
+    if (!nombre) {
+      message.error('Ingresa el nombre del concepto')
+      return
+    }
+    setCreandoConcepto(true)
+    try {
+      const res = await transaccionesCajaApi.crearConceptoMovimiento(nombre)
+      if (res.error) {
+        message.error(res.error.message || 'Error al crear el concepto')
+        return
+      }
+      message.success('Concepto creado')
+      queryClient.invalidateQueries({ queryKey: ['conceptos-movimiento'] })
+      // Dejarlo seleccionado de inmediato en el formulario
+      form.setFieldValue('concepto', res.data?.data?.nombre ?? nombre.toUpperCase())
+      setNuevoConcepto('')
+      setOpenCrearConcepto(false)
+    } finally {
+      setCreandoConcepto(false)
+    }
+  }
 
   const handleSubmit = async () => {
     try {
@@ -47,7 +92,7 @@ export default function ModalTransferirEntreSubCajas({
           monto: values.monto,
           justificacion: values.justificacion,
           comprobante: values.comprobante,
-          despliegue_de_pago_id: values.despliegue_de_pago_id,
+          concepto: values.concepto,
         },
         {
           onSuccess: () => {
@@ -101,7 +146,7 @@ export default function ModalTransferirEntreSubCajas({
           >
             {subCajas.map((subCaja) => (
               <Select.Option key={subCaja.id} value={subCaja.id}>
-                {subCaja.nombre} - S/ {subCaja.saldo_actual}
+                {subCaja.nombre} - S/ {saldoDisponibleDe(subCaja).toFixed(2)}
               </Select.Option>
             ))}
           </Select>
@@ -110,7 +155,11 @@ export default function ModalTransferirEntreSubCajas({
         {subCajaOrigen && (
           <div className="mb-4 p-3 bg-blue-50 rounded">
             <p className="text-sm text-gray-600">
-              Saldo disponible: <span className="font-semibold">S/ {subCajaOrigen.saldo_actual}</span>
+              Disponible para mover (caja cerrada):{' '}
+              <span className="font-semibold">S/ {saldoDisponibleDe(subCajaOrigen).toFixed(2)}</span>
+              <span className="text-xs text-gray-400 ml-2">
+                (saldo total: S/ {subCajaOrigen.saldo_actual} — lo de la sesión abierta se mueve al cerrar caja)
+              </span>
             </p>
           </div>
         )}
@@ -128,7 +177,7 @@ export default function ModalTransferirEntreSubCajas({
           >
             {subCajasDestino.map((subCaja) => (
               <Select.Option key={subCaja.id} value={subCaja.id}>
-                {subCaja.nombre} - S/ {subCaja.saldo_actual}
+                {subCaja.nombre} - S/ {saldoDisponibleDe(subCaja).toFixed(2)}
               </Select.Option>
             ))}
           </Select>
@@ -142,9 +191,10 @@ export default function ModalTransferirEntreSubCajas({
             {
               validator: (_, value) => {
                 if (!subCajaOrigen) return Promise.resolve()
-                const saldoDisponible = parseFloat(subCajaOrigen.saldo_actual)
+                // Solo se puede mover dinero de sesiones CERRADAS
+                const saldoDisponible = saldoDisponibleDe(subCajaOrigen)
                 if (value > saldoDisponible) {
-                  return Promise.reject('El monto excede el saldo disponible')
+                  return Promise.reject(`El monto excede el disponible de caja cerrada (S/ ${saldoDisponible.toFixed(2)})`)
                 }
                 return Promise.resolve()
               },
@@ -162,22 +212,31 @@ export default function ModalTransferirEntreSubCajas({
         </Form.Item>
 
         <Form.Item
-          label="Método de Pago (Opcional)"
-          name="despliegue_de_pago_id"
-          tooltip="Especifica el método de pago utilizado para el movimiento"
+          label="Concepto del Movimiento (Opcional)"
+          tooltip='Etiqueta que describe el movimiento, ej. "EFECTIVO A YAPE"'
         >
-          <Select
-            placeholder="Seleccione método de pago"
-            allowClear
-            showSearch
-            optionFilterProp="children"
-          >
-            {metodosPago?.map((metodo: any) => (
-              <Select.Option key={metodo.id} value={metodo.id}>
-                {metodo.name}
-              </Select.Option>
-            ))}
-          </Select>
+          <div className="flex gap-2">
+            <Form.Item name="concepto" noStyle>
+              <Select
+                placeholder="Seleccione un concepto"
+                allowClear
+                showSearch
+                optionFilterProp="children"
+                className="flex-1"
+              >
+                {conceptos?.map((concepto) => (
+                  <Select.Option key={concepto.id} value={concepto.nombre}>
+                    {concepto.nombre}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+            <Button
+              icon={<PlusOutlined />}
+              title="Agregar concepto"
+              onClick={() => setOpenCrearConcepto(true)}
+            />
+          </div>
         </Form.Item>
 
         <Form.Item
@@ -203,6 +262,35 @@ export default function ModalTransferirEntreSubCajas({
           />
         </Form.Item>
       </Form>
+
+      {/* Mini-CRUD del catálogo de conceptos: crear sin salir del flujo */}
+      <Modal
+        title="Agregar Concepto"
+        open={openCrearConcepto}
+        onOk={handleCrearConcepto}
+        onCancel={() => {
+          setNuevoConcepto('')
+          setOpenCrearConcepto(false)
+        }}
+        confirmLoading={creandoConcepto}
+        okText="Guardar"
+        cancelText="Cancelar"
+        width={420}
+        destroyOnHidden
+      >
+        <Input
+          placeholder='Ej: EFECTIVO A YAPE'
+          value={nuevoConcepto}
+          onChange={(e) => setNuevoConcepto(e.target.value.toUpperCase())}
+          onPressEnter={handleCrearConcepto}
+          maxLength={255}
+          autoFocus
+          className="mt-2"
+        />
+        <p className="text-xs text-slate-400 mt-2">
+          Solo el nombre: es una etiqueta para identificar el movimiento.
+        </p>
+      </Modal>
     </Modal>
   )
 }
