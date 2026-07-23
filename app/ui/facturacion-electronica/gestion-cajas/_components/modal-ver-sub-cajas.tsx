@@ -111,8 +111,14 @@ export default function ModalVerSubCajas({
         enabled: open,
     })
 
+    // NO CERRADO viene del backend (sesión abierta + monto de apertura);
+    // CERRADO es el disponible de sesiones cerradas.
     const saldosNoCerrados = useMemo(() => Object.fromEntries(
-        saldosMovimiento.map((s) => [s.sub_caja_id, Math.max(s.saldo_actual - s.saldo_disponible, 0)])
+        saldosMovimiento.map((s) => [s.sub_caja_id, s.saldo_no_cerrado ?? Math.max(s.saldo_actual - s.saldo_disponible, 0)])
+    ), [saldosMovimiento])
+
+    const saldosCerrados = useMemo(() => Object.fromEntries(
+        saldosMovimiento.map((s) => [s.sub_caja_id, s.saldo_disponible])
     ), [saldosMovimiento])
 
     // MEMOIZAR las columnas: si el array cambia de identidad en cada render,
@@ -125,9 +131,10 @@ export default function ModalVerSubCajas({
             onEliminar: handleEliminarSubCaja,
             onVerHistorialTraslados: handleVerHistorialTraslados,
             saldosNoCerrados,
+            saldosCerrados,
         }),
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [saldosNoCerrados]
+        [saldosNoCerrados, saldosCerrados]
     )
 
     // Encontrar la Caja Chica
