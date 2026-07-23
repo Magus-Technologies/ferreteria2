@@ -308,6 +308,20 @@ export default function CierreCajaView() {
   const faltante = diferencia < 0 ? Math.abs(diferencia) : 0
   const sobrante = diferencia > 0 ? diferencia : 0
 
+  // Otros ingresos de la sesión (incluye TRASLADOS DE EFECTIVO recibidos) y
+  // gastos (pagos de compra, etc., sin los traslados a bóveda que tienen su
+  // propia línea). El backend no envía total_otros_ingresos/total_gastos, por
+  // eso se calculan desde los detalles.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const detalleIngresosList = Object.values(resumen?.detalle_ingresos || {}) as any[]
+  const totalOtrosIngresos = detalleIngresosList.reduce((s, i) => s + Number(i?.monto || 0), 0)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const detalleEgresosList = Object.values(resumen?.detalle_egresos || {}) as any[]
+  const egresosSinBoveda = detalleEgresosList.filter(
+    (e) => !String(e?.concepto || '').toUpperCase().startsWith('TRASLADO A B')
+  )
+  const totalGastosSesion = egresosSinBoveda.reduce((s, e) => s + Number(e?.monto || 0), 0)
+
   const handleFinalizarCaja = async () => {
     if (totalEfectivo === 0 || (cajaYaFinalizada && !isReCierre)) {
       return
@@ -506,20 +520,23 @@ export default function CierreCajaView() {
 
                         <div className='border-t border-slate-300 my-1'></div>
 
-                        {/* Otros Ingresos (Genéricos) */}
-                        {(resumen?.total_otros_ingresos || 0) > 0 && (
-                          <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100 hover:bg-amber-50'>
-                            <span className='text-base text-slate-700'>Otros Ingresos</span>
+                        {/* Otros Ingresos (incluye traslados de efectivo recibidos) */}
+                        {totalOtrosIngresos > 0 && (
+                          <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100 hover:bg-emerald-50'>
+                            <div className='flex items-center gap-2'>
+                              <span className='text-base text-emerald-700'>Otros Ingresos / Traslados Recibidos</span>
+                              <span className='text-xs text-emerald-600'>({detalleIngresosList.length})</span>
+                            </div>
                             <div className='flex items-center gap-2.5'>
-                              <span className='text-base font-semibold text-slate-700 min-w-[100px] text-right'>
-                                {(resumen.total_otros_ingresos || 0).toFixed(2)}
+                              <span className='text-base font-semibold text-emerald-700 min-w-[100px] text-right'>
+                                {totalOtrosIngresos.toFixed(2)}
                               </span>
                               <button
                                 type='button'
-                                className='h-7 w-7 p-0 flex items-center justify-center hover:bg-slate-200 rounded'
+                                className='h-7 w-7 p-0 flex items-center justify-center hover:bg-emerald-100 rounded'
                                 onClick={() => handleOpenDetalle('otros_ingresos')}
                               >
-                                <FaSearch className='text-sm text-amber-600' />
+                                <FaSearch className='text-sm text-emerald-600' />
                               </button>
                             </div>
                           </div>
@@ -566,17 +583,20 @@ export default function CierreCajaView() {
                           </div>
                         )}
 
-                        {/* Gastos (Genéricos) */}
-                        {(resumen?.total_gastos || 0) > 0 && (
+                        {/* Gastos / Pagos de la sesión (sin traslados a bóveda, que tienen su línea) */}
+                        {totalGastosSesion > 0 && (
                           <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100 hover:bg-red-50'>
-                            <span className='text-base text-slate-700'>Gastos</span>
+                            <div className='flex items-center gap-2'>
+                              <span className='text-base text-red-700'>Gastos / Pagos</span>
+                              <span className='text-xs text-red-500'>({egresosSinBoveda.length})</span>
+                            </div>
                             <div className='flex items-center gap-2.5'>
-                              <span className='text-base font-semibold text-slate-700 min-w-[100px] text-right'>
-                                {(resumen.total_gastos || 0).toFixed(2)}
+                              <span className='text-base font-semibold text-red-700 min-w-[100px] text-right'>
+                                {totalGastosSesion.toFixed(2)}
                               </span>
                               <button
                                 type='button'
-                                className='h-7 w-7 p-0 flex items-center justify-center hover:bg-slate-200 rounded'
+                                className='h-7 w-7 p-0 flex items-center justify-center hover:bg-red-100 rounded'
                                 onClick={() => handleOpenDetalle('gastos')}
                               >
                                 <FaSearch className='text-sm text-red-600' />
@@ -626,13 +646,36 @@ export default function CierreCajaView() {
                           </div>
                         )}
 
-                        {/* Traslados a Bóveda (Informativo) */}
+                        <div className='border-t border-slate-300 my-1'></div>
+                        {/* Resumen Ventas */}
+                        <div className='flex justify-between items-center py-2.5 px-4 bg-amber-50 border border-amber-300 rounded mt-1'>
+                          <span className='text-base font-bold text-amber-800'>Resumen Ventas</span>
+                          <span className='text-lg font-bold text-amber-800'>
+                            {(resumen?.total_ventas || 0).toFixed(2)}
+                          </span>
+                        </div>
+
+                        {/* Resumen Ingresos/Egresos */}
+                        <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100'>
+                          <span className='text-base text-slate-700'>Resumen Ingresos</span>
+                          <span className='text-base font-semibold text-slate-800'>
+                            {(resumen?.total_ingresos || 0).toFixed(2)}
+                          </span>
+                        </div>
+                        <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100'>
+                          <span className='text-base text-slate-700'>Resumen Egresos</span>
+                          <span className='text-base font-semibold text-slate-800'>
+                            {(resumen?.total_egresos || 0).toFixed(2)}
+                          </span>
+                        </div>
+
+                        {/* Traslados a Bóveda (resta del total: el efectivo sale físicamente) */}
                         {(resumen?.total_traslados_boveda || 0) > 0 && (
                           <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100 bg-blue-50'>
                             <div className='flex items-center gap-2'>
                               <span className='text-sm font-semibold text-blue-700'>Traslados a Bóveda</span>
                               <span className='text-xs text-blue-500'>({resumen?.traslados_boveda?.length || 0})</span>
-                              <span className='text-xs text-blue-600 italic'>(no afecta total)</span>
+                              <span className='text-xs text-blue-600 italic'>(resta del total)</span>
                             </div>
                             <div className='flex items-center gap-2.5'>
                               <span className='text-base font-bold text-blue-700 min-w-[100px] text-right'>
@@ -671,29 +714,6 @@ export default function CierreCajaView() {
                             </div>
                           </div>
                         )}
-
-                        <div className='border-t border-slate-300 my-1'></div>
-                        {/* Resumen Ventas */}
-                        <div className='flex justify-between items-center py-2.5 px-4 bg-amber-50 border border-amber-300 rounded mt-1'>
-                          <span className='text-base font-bold text-amber-800'>Resumen Ventas</span>
-                          <span className='text-lg font-bold text-amber-800'>
-                            {(resumen?.total_ventas || 0).toFixed(2)}
-                          </span>
-                        </div>
-
-                        {/* Resumen Ingresos/Egresos */}
-                        <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100'>
-                          <span className='text-base text-slate-700'>Resumen Ingresos</span>
-                          <span className='text-base font-semibold text-slate-800'>
-                            {(resumen?.total_ingresos || 0).toFixed(2)}
-                          </span>
-                        </div>
-                        <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100'>
-                          <span className='text-base text-slate-700'>Resumen Egresos</span>
-                          <span className='text-base font-semibold text-slate-800'>
-                            {(resumen?.total_egresos || 0).toFixed(2)}
-                          </span>
-                        </div>
 
                         {/* Total en Caja */}
                         <div className='flex justify-between items-center py-3 px-4 bg-slate-100 border border-slate-400 rounded mt-1'>
