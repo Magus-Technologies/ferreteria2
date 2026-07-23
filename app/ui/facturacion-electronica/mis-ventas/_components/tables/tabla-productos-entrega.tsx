@@ -113,13 +113,24 @@ export default function TablaProductosEntrega({
     onProductoChangeRef.current(updated)
   }, [autoProgramarResto])
 
+  // Excluir de "a entregar ahora": el producto NO se despacha en esta entrega,
+  // pero su stock pendiente pasa a la 2da tabla (a programar/resto) — salvo que
+  // el flujo no auto-programe (solo-entregar). Antes ponía entregar_programado:0
+  // y el stock desaparecía de ambas tablas.
   const handleDelete = useCallback((id: number) => {
     onProductoChangeRef.current(
       productosRef.current.map(p =>
-        p.id === id ? { ...p, excluido: true, entregar: 0, entregar_programado: 0 } : p
+        p.id === id
+          ? {
+              ...p,
+              excluido: true,
+              entregar: 0,
+              entregar_programado: autoProgramarResto ? p.pendiente : 0,
+            }
+          : p
       )
     )
-  }, [])
+  }, [autoProgramarResto])
 
   const handleRestore = useCallback((id: number) => {
     onProductoChangeRef.current(
