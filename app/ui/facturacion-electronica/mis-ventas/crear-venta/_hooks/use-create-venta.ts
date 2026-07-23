@@ -632,23 +632,28 @@ export default function useCreateVenta({
             const productosVenta = ventaCreada.productos_por_almacen || []
             const unidadesDerivadas: any[] = []
 
-            // Index-based: cantidades_parciales always includes ALL products
-            // (excluded ones have entregar:0) so the positional mapping holds.
-            let parcialIdx = 0
-            productosVenta.forEach((productoAlmacen: any) => {
-              if (productoAlmacen.unidades_derivadas) {
-                productoAlmacen.unidades_derivadas.forEach((unidad: any) => {
-                  const parcial = cantidades_parciales[parcialIdx]
-                  parcialIdx++
-                  if (parcial && parcial.entregar > 0) {
-                    unidadesDerivadas.push({
-                      unidad_derivada_venta_id: unidad.id,
-                      cantidad_entregada: parcial.entregar,
-                      ubicacion: undefined,
-                    })
-                  }
-                })
+            // Cruce por unidad_derivada_id (id ESTABLE), no por posición. El backend
+            // puede devolver productos_por_almacen en distinto orden que el frontend
+            // (paquetes/agrupaciones); el mapeo posicional asignaba cantidades a la
+            // unidad equivocada → el backend rechazaba y la entrega FALLABA (y con
+            // ella la 2da, por estar anidada). `cantidades_parciales` ya trae ese id.
+            const parcialPorUnidad = new Map<string, any>()
+            cantidades_parciales.forEach((cp: any) => {
+              if (cp?.unidad_derivada_id != null) {
+                parcialPorUnidad.set(String(cp.unidad_derivada_id), cp)
               }
+            })
+            productosVenta.forEach((productoAlmacen: any) => {
+              productoAlmacen.unidades_derivadas?.forEach((unidad: any) => {
+                const parcial = parcialPorUnidad.get(String(unidad.id))
+                if (parcial && parcial.entregar > 0) {
+                  unidadesDerivadas.push({
+                    unidad_derivada_venta_id: unidad.id,
+                    cantidad_entregada: parcial.entregar,
+                    ubicacion: undefined,
+                  })
+                }
+              })
             })
 
             if (unidadesDerivadas.length > 0) {
@@ -695,22 +700,19 @@ export default function useCreateVenta({
                 if (parcial_resto_programado && (parcial_resto_programado.despachador_id || parcial_resto_programado.cargo_destino)) {
                   const unidadesDerivadas2: any[] = []
 
-                  let parcialIdx2 = 0
+                  // Mismo cruce por id estable (reusa el map de arriba).
                   productosVenta.forEach((productoAlmacen: any) => {
-                    if (productoAlmacen.unidades_derivadas) {
-                      productoAlmacen.unidades_derivadas.forEach((unidad: any) => {
-                        const parcial = cantidades_parciales[parcialIdx2]
-                        parcialIdx2++
-                        const programar = parcial?.entregar_programado ?? 0
-                        if (parcial && programar > 0) {
-                          unidadesDerivadas2.push({
-                            unidad_derivada_venta_id: unidad.id,
-                            cantidad_entregada: programar,
-                            ubicacion: undefined,
-                          })
-                        }
-                      })
-                    }
+                    productoAlmacen.unidades_derivadas?.forEach((unidad: any) => {
+                      const parcial = parcialPorUnidad.get(String(unidad.id))
+                      const programar = parcial?.entregar_programado ?? 0
+                      if (parcial && programar > 0) {
+                        unidadesDerivadas2.push({
+                          unidad_derivada_venta_id: unidad.id,
+                          cantidad_entregada: programar,
+                          ubicacion: undefined,
+                        })
+                      }
+                    })
                   })
 
                   if (unidadesDerivadas2.length > 0) {
