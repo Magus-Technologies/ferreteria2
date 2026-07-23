@@ -11,6 +11,20 @@ import {
   isEntregaParcialAgrupada,
 } from '../../_lib/entregas-parciales'
 
+/**
+ * Formatea una hora "HH:mm[:ss]" (columna SQL `time`) a 12 horas con AM/PM.
+ * Ej: "20:30:00" -> "8:30 PM", "08:05" -> "8:05 AM".
+ */
+function formatHora12(hora?: string | null): string | null {
+  if (!hora) return null
+  const [h, m] = hora.split(':')
+  const hour = Number(h)
+  if (Number.isNaN(hour)) return null
+  const sufijo = hour < 12 ? 'AM' : 'PM'
+  const hora12 = hour % 12 || 12
+  return `${hora12}:${m ?? '00'} ${sufijo}`
+}
+
 export function useColumnsMisEntregas(onRefetch?: () => void) {
   const columnDefs: ColDef<any>[] = [
     {
@@ -171,12 +185,12 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
       field: 'hora_inicio',
       width: 120,
       valueGetter: (params) => {
-        const horaInicio = params.data?.hora_inicio
-        const horaFin = params.data?.hora_fin
+        const horaInicio = formatHora12(params.data?.hora_inicio)
+        const horaFin = formatHora12(params.data?.hora_fin)
         if (horaInicio && horaFin) {
           return `${horaInicio} - ${horaFin}`
         }
-        return '-'
+        return horaInicio || horaFin || '-'
       },
     },
     {

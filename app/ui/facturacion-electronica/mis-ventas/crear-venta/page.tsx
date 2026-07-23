@@ -102,10 +102,18 @@ export default function CrearVenta() {
         })),
       )
 
-      // Agrupar por producto_id (+paquete) y sumar cantidades de la misma unidad derivada
+      // Agrupar por producto_id (+paquete) y sumar cantidades de la misma unidad derivada.
+      // El producto_id NO está en el nivel de productoalmacenventa: vive en
+      // `producto_almacen.producto_id`. Antes se leía `ppa.producto_id` (undefined),
+      // por lo que TODOS los productos colapsaban en la misma key ("undefined_") y
+      // notas de productos distintos se fusionaban en uno solo.
       const productosMap = new Map<string, any>()
       for (const ppa of productosFlat) {
-        const key = `${ppa.producto_id}_${ppa.paquete_id ?? ''}`
+        const productoId =
+          ppa.producto_almacen?.producto_id ??
+          ppa.producto_almacen?.producto?.id ??
+          ppa.producto_almacen_id
+        const key = `${productoId}_${ppa.paquete_id ?? ''}`
         if (!productosMap.has(key)) {
           productosMap.set(key, {
             ...ppa,
