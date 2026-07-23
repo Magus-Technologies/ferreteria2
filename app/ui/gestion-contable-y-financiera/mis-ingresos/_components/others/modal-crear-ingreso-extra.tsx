@@ -9,7 +9,6 @@ import ModalForm from '~/components/modals/modal-form'
 import SelectDespliegueDePago from '~/app/_components/form/selects/select-despliegue-de-pago'
 import LabelBase from '~/components/form/label-base'
 import TitleForm from '~/components/form/title-form'
-import { type CrearIngresoExtraData } from '~/lib/api/ingreso-extra'
 
 interface ModalCrearIngresoExtraProps {
     open: boolean

@@ -150,7 +150,7 @@ export default function BotonesAccionesCompra() {
             size='sm'
             type='button'
             onClick={handleRegistrarPagos}
-            disabled={!compraSeleccionada || compraSeleccionada.esta_pagado}
+            disabled={!compraSeleccionada || !!compraSeleccionada.esta_pagado}
             className='flex items-center gap-2'
           >
             <FaMoneyBillWave />

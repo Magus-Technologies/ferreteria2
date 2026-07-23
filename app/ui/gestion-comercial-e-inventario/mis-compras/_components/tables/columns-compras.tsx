@@ -51,11 +51,11 @@ export function useColumnsCompras({
   const [modalPdfOpen, setModalPdfOpen] = useState(false)
   const [compraPdfSeleccionada, setCompraPdfSeleccionada] = useState<Compra | undefined>()
   const [modalIngresoExtraOpen, setModalIngresoExtraOpen] = useState(false)
-  const [ingresoExtraData, setIngresoExtraData] = useState<{
+  const [ingresoExtraData, setIngresoExtraData] = useState<Partial<{
     monto: number
     concepto: string
     despliegue_pago_id?: string
-  }>({})
+  }>>({})
 
   const crearIngresoExtraMutation = useMutation({
     mutationFn: crearIngresoExtra,
@@ -500,8 +500,8 @@ export function useColumnsCompras({
                  'No se puede anular: la compra ya tiene productos recepcionados en almacén',
                action: async ({ id }: { id: string }) => {
                  const data = params.data
-                 const { data: cajaActivaResponse } = await fetchCajaActivaOrNull()
-                 const cajaActiva = cajaActivaResponse
+                 if (!data) return {}
+                 const cajaActiva = await fetchCajaActivaOrNull()
 
                  const isSameTurnover = cajaActiva && (
                    dayjs(data.created_at).isSame(dayjs(cajaActiva.fecha_apertura), 'minute') ||
