@@ -360,6 +360,22 @@ export const transaccionesCajaApi = {
     return apiRequest('/cajas/movimientos-internos/saldos-disponibles')
   },
 
+  getUsuariosConSaldo(): Promise<ApiResponse<{
+    success: boolean
+    data: Array<{
+      user_id: string
+      user_name: string
+      sub_caja_id: number
+      sub_caja_nombre: string
+      despliegue_pago_id: string
+      value: string
+      label: string
+      monto_disponible: number
+    }>
+  }>> {
+    return apiRequest('/cajas/movimientos-internos/usuarios-con-saldo')
+  },
+
   /**
    * Catálogo de conceptos de movimiento interno (solo nombre)
    */

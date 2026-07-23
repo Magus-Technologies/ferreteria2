@@ -18,26 +18,37 @@ interface MetodoParaVenta {
   tipo: string
 }
 
+interface SaldoSubCaja {
+  sub_caja_id: number
+  nombre: string
+  caja_principal_id: number
+  saldo_actual: number
+  saldo_disponible: number
+}
+
+interface UsuarioConSaldo {
+  user_id: string
+  user_name: string
+  sub_caja_id: number
+  sub_caja_nombre: string
+  despliegue_pago_id: string
+  value: string
+  label: string
+  monto_disponible: number
+}
+
 interface Props {
   open: boolean
   setOpen: (open: boolean) => void
   onSuccess?: () => void
 }
 
-/**
- * Traslado de Efectivo: mueve efectivo físico entre sub-cajas apuntando al
- * "tipo de pago" destino (ej. CAJA CHICA/EFECTIVO → EFECTIVO NEGRO), para que
- * ese destino tenga saldo y se pueda pagar sin caer en negativo. Permite mover
- * el TOTAL del saldo actual (no aplica la regla de caja cerrada: es dinero
- * físicamente presente).
- */
 export default function ModalTrasladoEfectivo({ open, setOpen, onSuccess }: Props) {
   const [form] = Form.useForm()
   const queryClient = useQueryClient()
   const { mutate: crearMovimiento, isPending } = useCrearMovimientoInterno()
   const [origenValue, setOrigenValue] = useState<string | null>(null)
 
-  // Combos "SUBCAJA/BANCO/MÉTODO" — solo los de tipo EFECTIVO
   const { data: metodosEfectivo = [] } = useQuery({
     queryKey: ['metodos-para-ventas-efectivo'],
     queryFn: async () => {
@@ -49,7 +60,6 @@ export default function ModalTrasladoEfectivo({ open, setOpen, onSuccess }: Prop
     enabled: open,
   })
 
-  // Saldos por sub-caja (para mostrar el saldo actual y el botón "Usar total")
   const { data: saldos = [] } = useQuery({
     queryKey: ['saldos-disponibles-movimiento'],
     queryFn: async () => {
@@ -59,20 +69,24 @@ export default function ModalTrasladoEfectivo({ open, setOpen, onSuccess }: Prop
     enabled: open,
   })
 
+  const { data: usuariosConSaldo = [] } = useQuery({
+    queryKey: ['usuarios-con-saldo-efectivo'],
+    queryFn: async () => {
+      const res = await transaccionesCajaApi.getUsuariosConSaldo()
+      return (res.data?.data || []).filter((u) => u.monto_disponible > 0)
+    },
+    enabled: open,
+  })
+
   const origen = metodosEfectivo.find((m) => m.value === origenValue)
   const saldoOrigen = origen
     ? saldos.find((s) => s.sub_caja_id === origen.sub_caja_id)?.saldo_actual ?? 0
     : 0
 
-  // El destino debe ser otra SUB-CAJA (el backend exige origen ≠ destino)
-  const destinosDisponibles = metodosEfectivo.filter(
-    (m) => m.sub_caja_id !== origen?.sub_caja_id
-  )
-
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields()
-      const destino = metodosEfectivo.find((m) => m.value === values.destino)
+      const destino = usuariosConSaldo.find((u) => u.value === values.destino)
       if (!origen || !destino) return
 
       crearMovimiento(
@@ -90,6 +104,7 @@ export default function ModalTrasladoEfectivo({ open, setOpen, onSuccess }: Prop
             message.success('Efectivo trasladado correctamente')
             form.resetFields()
             setOrigenValue(null)
+            queryClient.invalidateQueries({ queryKey: ['usuarios-con-saldo-efectivo'] })
             onSuccess?.()
             setOpen(false)
           },
@@ -121,8 +136,8 @@ export default function ModalTrasladoEfectivo({ open, setOpen, onSuccess }: Prop
       width={600}
     >
       <p className="text-xs text-slate-500 mb-4">
-        Mueve efectivo físico entre sub-cajas para poder pagar desde el destino.
-        Permite usar el <strong>total</strong> del saldo actual.
+        Mueve efectivo entre sub-cajas. El <strong>Origen</strong> es una sub-caja con
+        efectivo. El <strong>Destino</strong> asigna el dinero a un usuario.
       </p>
       <Form form={form} layout="vertical">
         <Form.Item
@@ -160,11 +175,14 @@ export default function ModalTrasladoEfectivo({ open, setOpen, onSuccess }: Prop
           rules={[{ required: true, message: 'Seleccione el destino' }]}
         >
           <Select
-            placeholder="Seleccione destino (donde quieres poner el efectivo)"
+            placeholder="Seleccione usuario destino"
             disabled={!origen}
             showSearch
             optionFilterProp="label"
-            options={destinosDisponibles.map((m) => ({ value: m.value, label: m.label }))}
+            options={usuariosConSaldo.map((u) => ({
+              value: u.value,
+              label: `${u.user_name} — ${u.sub_caja_nombre} — S/ ${u.monto_disponible.toFixed(2)}`,
+            }))}
           />
         </Form.Item>
 
