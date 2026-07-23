@@ -86,9 +86,18 @@ export interface CrearMovimientoInternoRequest {
   sub_caja_origen_id: number
   sub_caja_destino_id: number
   monto: number
-  despliegue_de_pago_id?: string
+  /** Etiqueta descriptiva del movimiento (catálogo de conceptos), ej. "EFECTIVO A YAPE" */
+  concepto?: string
+  despliegue_de_pago_origen_id?: string
+  despliegue_de_pago_destino_id?: string
   justificacion: string
   comprobante?: string
+}
+
+/** Concepto de movimiento interno: etiqueta de solo nombre */
+export interface ConceptoMovimiento {
+  id: number
+  nombre: string
 }
 
 export interface RegistrarTransaccionRequest {
@@ -331,6 +340,49 @@ export const transaccionesCajaApi = {
       method: 'POST',
       body: JSON.stringify(data),
     })
+  },
+
+  /**
+   * Saldos disponibles para movimiento interno por sub-caja.
+   * saldo_disponible = solo dinero de sesiones CERRADAS (excluye lo generado
+   * durante la apertura activa).
+   */
+  getSaldosDisponiblesMovimiento(): Promise<ApiResponse<{
+    success: boolean
+    data: Array<{
+      sub_caja_id: number
+      nombre: string
+      caja_principal_id: number
+      saldo_actual: number
+      saldo_disponible: number
+    }>
+  }>> {
+    return apiRequest('/cajas/movimientos-internos/saldos-disponibles')
+  },
+
+  /**
+   * Catálogo de conceptos de movimiento interno (solo nombre)
+   */
+  getConceptosMovimiento(): Promise<ApiResponse<{ success: boolean; data: ConceptoMovimiento[] }>> {
+    return apiRequest<{ success: boolean; data: ConceptoMovimiento[] }>('/cajas/conceptos-movimiento')
+  },
+
+  crearConceptoMovimiento(
+    nombre: string
+  ): Promise<ApiResponse<{ success: boolean; message: string; data: ConceptoMovimiento }>> {
+    return apiRequest<{ success: boolean; message: string; data: ConceptoMovimiento }>(
+      '/cajas/conceptos-movimiento',
+      { method: 'POST', body: JSON.stringify({ nombre }) }
+    )
+  },
+
+  eliminarConceptoMovimiento(
+    id: number
+  ): Promise<ApiResponse<{ success: boolean; message: string }>> {
+    return apiRequest<{ success: boolean; message: string }>(
+      `/cajas/conceptos-movimiento/${id}`,
+      { method: 'DELETE' }
+    )
   },
 
   /**

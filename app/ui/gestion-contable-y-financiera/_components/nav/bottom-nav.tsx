@@ -2,6 +2,7 @@ import BaseNav from '~/app/_components/nav/base-nav'
 import ButtonNav from '~/app/_components/nav/button-nav'
 import { GiMoneyStack, GiPayMoney, GiReceiveMoney, GiTakeMyMoney } from 'react-icons/gi'
 import { FaFileInvoiceDollar, FaHandHoldingDollar } from 'react-icons/fa6'
+import { FaExchangeAlt, FaBalanceScale, FaHistory } from 'react-icons/fa'
 
 export default function BottomNav({ className }: { className?: string }) {
   return (
@@ -51,6 +52,27 @@ export default function BottomNav({ className }: { className?: string }) {
       >
         <GiTakeMyMoney />
         Comisiones
+      </ButtonNav>
+      <ButtonNav
+        path='/ui/gestion-contable-y-financiera/movimientos-caja'
+        colorActive='text-rose-700'
+      >
+        <FaExchangeAlt />
+        Movimientos de Caja
+      </ButtonNav>
+      <ButtonNav
+        path='/ui/gestion-contable-y-financiera/arqueos-diarios'
+        colorActive='text-rose-700'
+      >
+        <FaBalanceScale />
+        Arqueos Diarios
+      </ButtonNav>
+      <ButtonNav
+        path='/ui/gestion-contable-y-financiera/mis-aperturas-cierres'
+        colorActive='text-rose-700'
+      >
+        <FaHistory />
+        Mis Aperturas y Cierres
       </ButtonNav>
     </BaseNav>
   )

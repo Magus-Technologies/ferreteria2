@@ -12,9 +12,11 @@ import { useRouter } from 'next/navigation'
 import ModalCrearIngresoExtra from '../../mis-ingresos/_components/others/modal-crear-ingreso-extra'
 import ModalCrearGastoExtra from '../../mis-gastos/_components/others/modal-crear-gasto-extra'
 import ModalMoverDineroSubCajas from '~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-mover-dinero-subcajas'
+import ModalTrasladoEfectivo from '~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-traslado-efectivo'
 import ModalSolicitarEfectivo from '~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-solicitar-efectivo'
 import ModalTrasladoBoveda from '~/app/ui/facturacion-electronica/mis-aperturas-cierres/_components/modals/modal-traslado-boveda'
 import ModalAperturarCaja from '../../gestion-cajas/_components/modal-aperturar-caja'
+import ModalEfectivoApertura from '~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-efectivo-apertura'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { fetchCajaActivaOrNull } from '~/lib/api/caja'
 
@@ -24,9 +26,11 @@ export default function TopNav({ className }: { className?: string }) {
   const [openIngresoExtra, setOpenIngresoExtra] = useState(false)
   const [openGastoExtra, setOpenGastoExtra] = useState(false)
   const [openMoverDinero, setOpenMoverDinero] = useState(false)
+  const [openTrasladoEfectivo, setOpenTrasladoEfectivo] = useState(false)
   const [openPedirPrestamo, setOpenPedirPrestamo] = useState(false)
   const [openTrasladoBoveda, setOpenTrasladoBoveda] = useState(false)
   const [openAperturarCaja, setOpenAperturarCaja] = useState(false)
+  const [openEfectivoApertura, setOpenEfectivoApertura] = useState(false)
   const [openCerrarCaja, setOpenCerrarCaja] = useState(false)
 
   // Obtener caja activa (necesaria para Pedir Préstamo y Traslado a Bóveda)
@@ -65,6 +69,13 @@ const itemsCaja: MenuProps['items'] = [
     }
   },
   {
+    key: 'efectivo-apertura',
+    label: 'Efectivo de Apertura',
+    onClick: () => {
+      setOpenEfectivoApertura(true)
+    }
+  },
+  {
     key: 'cierre-caja',
     label: 'Cierre de Caja',
     onClick: () => {
@@ -79,6 +90,13 @@ const itemsCaja: MenuProps['items'] = [
     label: 'Mover Dinero entre Sub-Cajas',
     onClick: () => {
       setOpenMoverDinero(true)
+    }
+  },
+  {
+    key: 'traslado-efectivo',
+    label: 'Traslado de Efectivo',
+    onClick: () => {
+      setOpenTrasladoEfectivo(true)
     }
   },
   {
@@ -161,6 +179,10 @@ const itemsCaja: MenuProps['items'] = [
         open={openMoverDinero}
         setOpen={setOpenMoverDinero}
       />
+      <ModalTrasladoEfectivo
+        open={openTrasladoEfectivo}
+        setOpen={setOpenTrasladoEfectivo}
+      />
       <ModalSolicitarEfectivo
         open={openPedirPrestamo}
         setOpen={setOpenPedirPrestamo}
@@ -178,6 +200,11 @@ const itemsCaja: MenuProps['items'] = [
         open={openAperturarCaja}
         setOpen={setOpenAperturarCaja}
         onSuccess={() => setOpenAperturarCaja(false)}
+      />
+
+      <ModalEfectivoApertura
+        open={openEfectivoApertura}
+        setOpen={setOpenEfectivoApertura}
       />
     </>
   )

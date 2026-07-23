@@ -216,3 +216,41 @@
     min-width: 0 !important;
   }
 }
+
+/* ============================================================
+   Tema Finanzas: re-colorea los acentos ámbar (facturación) al
+   rosa del módulo cuando las vistas compartidas (movimientos de
+   caja, arqueos diarios, aperturas y cierres) se renderizan bajo
+   /ui/gestion-contable-y-financiera. Los headers de tablas NO
+   necesitan esto: TableBase ya detecta el módulo por la ruta.
+   Nota: el contenido de modales (portales de antd) no hereda esta
+   clase; sus tablas igual se tematizan por ruta.
+   ============================================================ */
+.theme-finanzas .text-amber-400,
+.theme-finanzas .text-amber-500,
+.theme-finanzas .text-amber-600,
+.theme-finanzas .text-amber-700,
+.theme-finanzas .text-amber-800,
+.theme-finanzas .text-cyan-600 {
+  color: var(--color-rose-600) !important;
+}
+
+.theme-finanzas .hover\:text-amber-700:hover,
+.theme-finanzas .hover\:text-amber-800:hover {
+  color: var(--color-rose-700) !important;
+}
+
+.theme-finanzas .bg-amber-50,
+.theme-finanzas .bg-amber-50\/50,
+.theme-finanzas .hover\:bg-amber-100:hover {
+  background-color: var(--color-rose-50) !important;
+}
+
+.theme-finanzas .bg-amber-500 {
+  background-color: var(--color-rose-500) !important;
+}
+
+.theme-finanzas .border-amber-100,
+.theme-finanzas .border-amber-200 {
+  border-color: var(--color-rose-200) !important;
+}

@@ -1,7 +1,7 @@
 'use client'
 
-import { Modal, Table, Button, App, Empty, Spin } from 'antd'
-import { DollarOutlined, WalletOutlined, UserOutlined, CheckCircleOutlined } from '@ant-design/icons'
+import { Modal, Table, Button, App, Empty, Tag, Popconfirm } from 'antd'
+import { DollarOutlined, WalletOutlined, UserOutlined, CheckCircleOutlined, CloseCircleOutlined, EditOutlined } from '@ant-design/icons'
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiRequest } from '~/lib/api'
@@ -13,6 +13,11 @@ interface EfectivoDisponible {
     fecha_cierre: string
     fecha_apertura: string
     usuario: {
+        id: string
+        name: string
+    } | null
+    /** Usuario al que ya se asignó este efectivo (null = disponible) */
+    asignado_a?: {
         id: string
         name: string
     } | null
@@ -36,6 +41,7 @@ export default function ModalEfectivoApertura({
     const [selectedId, setSelectedId] = useState<string | null>(null)
     const [vendedorId, setVendedorId] = useState<string | undefined>(undefined)
     const [asignando, setAsignando] = useState(false)
+    const [anulando, setAnulando] = useState(false)
 
     const { data: efectivos = [], isLoading } = useQuery({
         queryKey: ['efectivo-disponible-apertura'],
@@ -50,32 +56,64 @@ export default function ModalEfectivoApertura({
 
     const selected = efectivos.find((e) => e.id === selectedId)
 
-    const totalDisponible = efectivos.reduce(
-        (sum, e) => sum + (e.monto_efectivo || 0), 0
-    )
+    // Solo cuenta como disponible lo que aún no está asignado a nadie
+    const totalDisponible = efectivos
+        .filter((e) => !e.asignado_a)
+        .reduce((sum, e) => sum + (e.monto_efectivo || 0), 0)
+
+    const refrescar = () => {
+        queryClient.invalidateQueries({ queryKey: ['efectivo-disponible-apertura'] })
+        onSuccess?.()
+    }
 
     const handleAsignar = async () => {
         if (!selectedId || !vendedorId) return
+        const esReasignacion = !!selected?.asignado_a
 
         setAsignando(true)
         try {
             const res = await apiRequest<{ success: boolean; message: string }>(
                 `/cajas/cierre/${selectedId}/asignar-efectivo-apertura`,
-                { method: 'POST', data: { user_id: vendedorId } }
+                { method: 'POST', data: { user_id: vendedorId, reasignar: esReasignacion } }
             )
 
             if (res.data?.success) {
-                message.success('Efectivo asignado correctamente')
+                message.success(esReasignacion ? 'Efectivo reasignado correctamente' : 'Efectivo asignado correctamente')
                 setSelectedId(null)
                 setVendedorId(undefined)
-                queryClient.invalidateQueries({ queryKey: ['efectivo-disponible-apertura'] })
+                refrescar()
             } else {
-                message.error(res.data?.message || 'Error al asignar')
+                message.error(res.data?.message || res.error?.message || 'Error al asignar')
             }
         } catch (error: any) {
             message.error(error?.response?.data?.message || 'Error al asignar efectivo')
         } finally {
             setAsignando(false)
+        }
+    }
+
+    const handleAnularAsignacion = async () => {
+        if (!selectedId) return
+
+        setAnulando(true)
+        try {
+            const res = await apiRequest<{ success: boolean; message: string }>(
+                `/cajas/cierre/${selectedId}/anular-asignacion-efectivo`,
+                { method: 'POST' }
+            )
+
+            if (res.data?.success) {
+                message.success('Asignación anulada: el efectivo vuelve a estar disponible')
+                setSelectedId(null)
+                setVendedorId(undefined)
+                refrescar()
+            } else {
+                message.error(res.data?.message || res.error?.message || 'Error al anular la asignación')
+            }
+        } catch (error: any) {
+            message.error(error?.response?.data?.message || 'Error al anular la asignación')
+        } finally {
+            setAnulando(false)
         }
     }
 
@@ -97,7 +135,7 @@ export default function ModalEfectivoApertura({
                 resetSelection()
                 setOpen(false)
             }}
-            width={700}
+            width={780}
             footer={null}
             centered
         >
@@ -113,7 +151,8 @@ export default function ModalEfectivoApertura({
                         </span>
                     </div>
                     <p className='text-xs text-slate-500 mt-1'>
-                        Efectivo dejado por usuarios al cerrar su caja, disponible para prximas aperturas.
+                        Efectivo dejado por usuarios al cerrar su caja, disponible para próximas aperturas.
+                        Las asignaciones se pueden corregir mientras el vendedor no haya aperturado con ese efectivo.
                     </p>
                 </div>
 
@@ -174,22 +213,65 @@ export default function ModalEfectivoApertura({
                                     </span>
                                 ),
                             },
+                            {
+                                title: 'Estado',
+                                key: 'estado',
+                                render: (_, record) => record.asignado_a ? (
+                                    <Tag color='blue' className='m-0'>
+                                        Asignado a {record.asignado_a.name}
+                                    </Tag>
+                                ) : (
+                                    <Tag color='green' className='m-0'>Disponible</Tag>
+                                ),
+                            },
                         ]}
                     />
                 </div>
 
                 {selected && (
                     <div className='p-4 bg-slate-50 rounded-lg border border-slate-200 space-y-3'>
-                        <h4 className='font-semibold text-slate-700 text-sm'>
-                            Asignar efectivo de <strong>{selected.usuario?.name}</strong>
-                            {' '}(S/ {selected.monto_efectivo.toFixed(2)})
-                        </h4>
+                        <div className='flex items-center justify-between'>
+                            <h4 className='font-semibold text-slate-700 text-sm m-0'>
+                                {selected.asignado_a ? (
+                                    <>
+                                        <EditOutlined className='mr-1 text-blue-500' />
+                                        Efectivo de <strong>{selected.usuario?.name}</strong>
+                                        {' '}(S/ {selected.monto_efectivo.toFixed(2)}) — asignado a{' '}
+                                        <strong className='text-blue-600'>{selected.asignado_a.name}</strong>
+                                    </>
+                                ) : (
+                                    <>
+                                        Asignar efectivo de <strong>{selected.usuario?.name}</strong>
+                                        {' '}(S/ {selected.monto_efectivo.toFixed(2)})
+                                    </>
+                                )}
+                            </h4>
+                            {selected.asignado_a && (
+                                <Popconfirm
+                                    title='¿Quitar esta asignación?'
+                                    description='El efectivo volverá a estar disponible para cualquier usuario.'
+                                    okText='Sí, quitar'
+                                    cancelText='Cancelar'
+                                    okButtonProps={{ danger: true }}
+                                    onConfirm={handleAnularAsignacion}
+                                >
+                                    <Button
+                                        danger
+                                        size='small'
+                                        loading={anulando}
+                                        icon={<CloseCircleOutlined />}
+                                    >
+                                        Quitar asignación
+                                    </Button>
+                                </Popconfirm>
+                            )}
+                        </div>
                         <div className='flex items-center gap-2'>
                             <div className='flex-1'>
                                 <SelectVendedor
                                     value={vendedorId}
                                     onChange={(val) => setVendedorId(val)}
-                                    placeholder='Seleccionar usuario'
+                                    placeholder={selected.asignado_a ? 'Seleccionar nuevo usuario' : 'Seleccionar usuario'}
                                     soloVendedores={false}
                                     size='small'
                                 />
@@ -203,11 +285,13 @@ export default function ModalEfectivoApertura({
                                 onClick={handleAsignar}
                                 icon={<CheckCircleOutlined />}
                             >
-                                Asignar
+                                {selected.asignado_a ? 'Reasignar' : 'Asignar'}
                             </Button>
                         </div>
                         <p className='text-xs text-slate-400'>
-                            Al asignar, este efectivo aparecer como disponible en la apertura de caja del vendedor seleccionado.
+                            {selected.asignado_a
+                                ? 'Puedes reasignar a otro usuario o quitar la asignación mientras no se haya usado en una apertura.'
+                                : 'Al asignar, este efectivo aparecerá como disponible en la apertura de caja del vendedor seleccionado.'}
                         </p>
                     </div>
                 )}

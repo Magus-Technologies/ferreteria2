@@ -107,7 +107,6 @@ export default function TabCobrosCreditos({ fecha, fecha_fin, user_id }: TabCobr
           columnDefs={columnas}
           rowSelection={false}
           withNumberColumn={true}
-          headerColor='var(--color-amber-600)'
         />
       </div>
       <div className='mt-3 p-3 bg-blue-50 rounded flex justify-between items-center'>

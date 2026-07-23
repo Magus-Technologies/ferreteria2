@@ -43,7 +43,6 @@ export default function TabMovimientos({ data }: TabMovimientosProps) {
           columnDefs={columnasMovimientos}
           rowSelection={false}
           withNumberColumn={true}
-          headerColor='var(--color-amber-600)'
         />
       </div>
     </div>

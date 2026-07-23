@@ -27,10 +27,10 @@ const columnas: ColDef[] = [
     width: 140,
   },
   {
-    headerName: 'Fecha',
+    headerName: 'Fecha y Hora',
     field: 'fecha',
-    width: 120,
-    valueFormatter: (params) => dayjs(params.value).format('DD/MM/YYYY'),
+    width: 150,
+    valueFormatter: (params) => dayjs(params.value).format('DD/MM/YYYY hh:mm A'),
   },
   {
     headerName: 'Vencimiento',
@@ -96,7 +96,6 @@ export default function TabCuentasPorPagar() {
           columnDefs={columnas}
           rowSelection={false}
           withNumberColumn={true}
-          headerColor='var(--color-amber-600)'
         />
       </div>
       <div className='mt-3 p-3 bg-red-50 rounded flex justify-between items-center'>

@@ -69,7 +69,6 @@ export default function TabGastosOperativos({ fecha, fecha_fin, user_id }: TabGa
           columnDefs={columnas}
           rowSelection={false}
           withNumberColumn={true}
-          headerColor='var(--color-amber-600)'
         />
       </div>
       <div className='mt-3 p-3 bg-red-50 rounded flex justify-between items-center'>

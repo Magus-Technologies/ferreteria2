@@ -40,7 +40,6 @@ export default function TabMetodosPago({ data, totalVentas }: TabMetodosPagoProp
         columnDefs={columnasMetodosPago}
         rowSelection={false}
         withNumberColumn={true}
-        headerColor='var(--color-amber-600)'
       />
     </div>
   )

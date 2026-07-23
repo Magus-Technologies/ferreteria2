@@ -66,33 +66,6 @@
         "permission": "facturacion-electronica.crear-vale.index"
       },
       {
-        "id": "finanzas-dropdown",
-        "type": "dropdown",
-        "label": "Finanzas",
-        "icon": "FaMoneyBillTrendUp",
-        "permission": null,
-        "items": [
-          {
-            "key": "aperturar-caja",
-            "label": "Aperturar Caja",
-            "action": "openAperturaCaja",
-            "permission": "caja.create"
-          },
-          {
-            "key": "efectivo-apertura",
-            "label": "Efectivo de Apertura",
-            "action": "openEfectivoApertura",
-            "permission": "caja.create"
-          },
-          {
-            "key": "cerrar-caja",
-            "label": "Cerrar Caja",
-            "route": "/ui/facturacion-electronica/cierre-caja",
-            "permission": "caja.update"
-          }
-        ]
-      },
-      {
         "id": "kardex",
         "type": "button",
         "label": "Kardex",
@@ -175,27 +148,6 @@
         "icon": "IoMdContact",
         "route": "/ui/facturacion-electronica/mis-contactos",
         "permission": "facturacion-electronica.mis-contactos.index"
-      },
-      {
-        "id": "aperturas-cierres",
-        "label": "Mis Aperturas y Cierres de Caja",
-        "icon": "HistoryOutlined",
-        "route": "/ui/facturacion-electronica/mis-aperturas-cierres",
-        "permission": "facturacion-electronica.mis-aperturas-cierres.index"
-      },
-      {
-        "id": "arqueos-diarios",
-        "label": "Arqueos Diarios",
-        "icon": "FaBalanceScale",
-        "route": "/ui/facturacion-electronica/arqueos-diarios",
-        "permission": "facturacion-electronica.arqueos-diarios.index"
-      },
-      {
-        "id": "movimientos-caja",
-        "label": "Movimientos de Caja",
-        "icon": "SwapOutlined",
-        "route": "/ui/facturacion-electronica/movimientos-caja",
-        "permission": "facturacion-electronica.movimientos-caja.index"
       },
       {
         "id": "mis-vales",
