@@ -70,6 +70,13 @@
             "permission": null
           },
           {
+            "key": "traslado-efectivo",
+            "label": "Traslado de Efectivo",
+            "route": null,
+            "action": "openTrasladoEfectivo",
+            "permission": null
+          },
+          {
             "key": "pedir-prestamo",
             "label": "Pedir Préstamo",
             "route": null,

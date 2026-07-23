@@ -24,6 +24,7 @@ export function useCrearMovimientoInterno() {
       queryClient.invalidateQueries({ queryKey: [QueryKeys.CAJAS_PRINCIPALES] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.SUB_CAJAS] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.MOVIMIENTOS_INTERNOS] })
+      queryClient.invalidateQueries({ queryKey: ['saldos-disponibles-movimiento'] })
     },
   })
 }
