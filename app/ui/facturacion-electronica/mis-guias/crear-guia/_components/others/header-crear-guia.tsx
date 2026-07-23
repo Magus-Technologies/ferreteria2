@@ -1,6 +1,6 @@
 'use client'
 
-import { Form, Modal, Tag, type FormInstance } from 'antd'
+import { Form, Modal, type FormInstance } from 'antd'
 import { useEffect, useRef, useState } from 'react'
 import { TbTruckDelivery } from 'react-icons/tb'
 import { MdOutlineLocalShipping } from 'react-icons/md'
@@ -123,42 +123,34 @@ export default function HeaderCrearGuia({
           />
           {/* La Modalidad solo se elige en GRE-Remitente (privado = vehículo
               propio, público = transportista tercero). En GRE-Transportista
-              SUNAT exige siempre transporte público: se oculta el selector y
-              se muestra solo como referencia (el valor PUBLICO ya quedó
-              forzado en el form vía useEffect). */}
-          {esTransportista ? (
-            <Tag
-              color='green'
-              className='!m-0 flex items-center justify-center !text-sm !px-3 !h-10 w-full sm:!min-w-[190px] sm:!w-[190px]'
-            >
-              Transporte público
-            </Tag>
-          ) : (
-            <ConfigurableElement
-              componentId='crear-guia.modalidad'
-              label='Campo Modalidad'
-            >
-              <SelectBase
-                propsForm={{
-                  name: 'modalidad_transporte',
-                  rules: [
-                    {
-                      required: true,
-                      message: 'Selecciona la modalidad',
-                    },
-                  ],
-                  className: '!mb-0',
-                }}
-                placeholder='Modalidad...'
-                size='large'
-                className='w-full sm:!min-w-[190px] sm:!w-[190px] font-normal!'
-                options={[
-                  { label: 'Transporte privado', value: 'PRIVADO' },
-                  { label: 'Transporte público', value: 'PUBLICO' },
-                ]}
-              />
-            </ConfigurableElement>
-          )}
+              SUNAT exige siempre transporte público (el emisor transporta
+              mercadería DE UN CLIENTE): el selector queda bloqueado en
+              "Transporte público" (valor forzado vía useEffect). */}
+          <ConfigurableElement
+            componentId='crear-guia.modalidad'
+            label='Campo Modalidad'
+          >
+            <SelectBase
+              propsForm={{
+                name: 'modalidad_transporte',
+                rules: [
+                  {
+                    required: true,
+                    message: 'Selecciona la modalidad',
+                  },
+                ],
+                className: '!mb-0',
+              }}
+              placeholder='Modalidad...'
+              size='large'
+              disabled={esTransportista}
+              className='w-full sm:!min-w-[190px] sm:!w-[190px] font-normal!'
+              options={[
+                { label: 'Transporte privado', value: 'PRIVADO' },
+                { label: 'Transporte público', value: 'PUBLICO' },
+              ]}
+            />
+          </ConfigurableElement>
         </div>
       }
     >
