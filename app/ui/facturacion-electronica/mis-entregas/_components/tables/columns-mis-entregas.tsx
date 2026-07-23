@@ -137,9 +137,20 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
     },
     {
       headerName: 'Dirección',
-      field: 'direccion_entrega',
+      colId: 'direccion_entrega',
       width: 250,
-      valueFormatter: (params) => params.value || '-',
+      valueGetter: (params) => {
+        const d = params.data
+        if (d?.direccion_entrega) return d.direccion_entrega
+        // Sin dirección escrita pero con GPS o referencia = domicilio ubicado
+        // por mapa (regla "dirección O GPS"). Mostrar la referencia con pin para
+        // que la columna no quede vacía. Recojo en tienda no tiene ubicación → "—".
+        const tieneGps = d?.latitud != null && d?.longitud != null
+        if (tieneGps || d?.referencia_entrega) {
+          return `📍 ${d?.referencia_entrega || 'Ubicación en mapa'}`
+        }
+        return '—'
+      },
     },
     {
       headerName: 'Referencia',
