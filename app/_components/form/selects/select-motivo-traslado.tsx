@@ -4,6 +4,7 @@ import SelectBase, { RefSelectBaseProps, SelectBaseProps } from './select-base'
 import { useEffect, useRef, useState } from 'react'
 import { FaSearch } from 'react-icons/fa'
 import { FaTruckFast } from 'react-icons/fa6'
+import { Form } from 'antd'
 import iterarChangeValue from '~/app/_utils/iterar-change-value'
 import ModalMotivoTrasladoSearch from '../../modals/modal-motivo-traslado-search'
 import { useStoreMotivoTrasladoSeleccionado } from '~/app/ui/facturacion-electronica/mis-guias/store/store-motivo-traslado-seleccionado'
@@ -81,6 +82,7 @@ export default function SelectMotivoTraslado({
   // pre-cargado (por ejemplo desde una venta), buscar ese motivo en la lista
   // cargada por useGetMotivosTraslado y mostrarlo como opción seleccionada
   // (sino sólo se ve el id raw).
+  const motivoTrasladoFormValue = Form.useWatch(propsForm?.name as string, form)
   useEffect(() => {
     if (!form || !propsForm?.name || motivoTrasladoSeleccionado) return
     const valorInicial = form.getFieldValue(propsForm.name as string)
@@ -92,7 +94,7 @@ export default function SelectMotivoTraslado({
       setMotivoTrasladoSeleccionado(match)
       setText(`${match.codigo} : ${match.descripcion}`)
     }
-  }, [form, propsForm, response, motivoTrasladoSeleccionado])
+  }, [form, propsForm, response, motivoTrasladoSeleccionado, motivoTrasladoFormValue])
 
   useEffect(() => {
     // Autoseleccionar si hay exactamente 1 resultado
