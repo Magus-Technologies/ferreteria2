@@ -53,7 +53,7 @@ export default function ModalHistorialTrasladosBoveda({
 
         try {
             setLoading(true)
-            const response = await trasladoBovedaApi.obtenerTrasladosPorCaja(cajaActiva.id)
+            const response = await trasladoBovedaApi.obtenerTodosLosTrasladosPorCaja(cajaActiva.id)
             setTraslados(Array.isArray(response) ? response : (response as any)?.data || [])
         } catch (error) {
             message.error('Error al cargar traslados')

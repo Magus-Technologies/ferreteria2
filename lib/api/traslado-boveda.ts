@@ -9,6 +9,8 @@ export interface TrasladoBoveda {
   monto: string;
   justificacion: string | null;
   fecha_traslado: string;
+  estado?: string;
+  fecha_anulacion?: string | null;
   created_at: string;
   updated_at: string;
   vendedor?: {
@@ -72,11 +74,21 @@ export const trasladoBovedaApi = {
   },
 
   /**
-   * Obtener traslados de una caja específica
+   * Obtener traslados activos de una caja (excluye anulados)
    */
   obtenerTrasladosPorCaja: async (aperturaCierreId: string) => {
     const response = await apiRequest(
       `/cajas/traslados-boveda/caja/${aperturaCierreId}`
+    );
+    return response.data;
+  },
+
+  /**
+   * Obtener todos los traslados (incluyendo anulados) para historial
+   */
+  obtenerTodosLosTrasladosPorCaja: async (aperturaCierreId: string) => {
+    const response = await apiRequest(
+      `/cajas/traslados-boveda/caja/${aperturaCierreId}/todos`
     );
     return response.data;
   },
@@ -106,8 +118,8 @@ export const trasladoBovedaApi = {
    * Anular un traslado
    */
   anularTraslado: async (trasladoId: string, data: AnularTrasladoData) => {
-    const response = await apiRequest(`/cajas/traslados-boveda/${trasladoId}`, {
-      method: "DELETE",
+    const response = await apiRequest(`/cajas/traslados-boveda/${trasladoId}/anular`, {
+      method: "POST",
       body: JSON.stringify(data),
     });
     return response.data;

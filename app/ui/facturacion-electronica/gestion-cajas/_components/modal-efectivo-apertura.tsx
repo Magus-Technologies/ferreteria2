@@ -1,7 +1,7 @@
 'use client'
 
-import { Modal, Table, Button, App, Empty, Tag, Popconfirm } from 'antd'
-import { DollarOutlined, WalletOutlined, UserOutlined, CheckCircleOutlined, CloseCircleOutlined, EditOutlined } from '@ant-design/icons'
+import { Modal, Table, Button, App, Empty, Tag } from 'antd'
+import { DollarOutlined, WalletOutlined, UserOutlined, CheckCircleOutlined, EditOutlined } from '@ant-design/icons'
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiRequest } from '~/lib/api'
@@ -41,7 +41,7 @@ export default function ModalEfectivoApertura({
     const [selectedId, setSelectedId] = useState<string | null>(null)
     const [vendedorId, setVendedorId] = useState<string | undefined>(undefined)
     const [asignando, setAsignando] = useState(false)
-    const [anulando, setAnulando] = useState(false)
+    const [editMode, setEditMode] = useState(false)
 
     const { data: efectivos = [], isLoading } = useQuery({
         queryKey: ['efectivo-disponible-apertura'],
@@ -81,6 +81,7 @@ export default function ModalEfectivoApertura({
                 message.success(esReasignacion ? 'Efectivo reasignado correctamente' : 'Efectivo asignado correctamente')
                 setSelectedId(null)
                 setVendedorId(undefined)
+                setEditMode(false)
                 refrescar()
             } else {
                 message.error(res.data?.message || res.error?.message || 'Error al asignar')
@@ -89,31 +90,6 @@ export default function ModalEfectivoApertura({
             message.error(error?.response?.data?.message || 'Error al asignar efectivo')
         } finally {
             setAsignando(false)
-        }
-    }
-
-    const handleAnularAsignacion = async () => {
-        if (!selectedId) return
-
-        setAnulando(true)
-        try {
-            const res = await apiRequest<{ success: boolean; message: string }>(
-                `/cajas/cierre/${selectedId}/anular-asignacion-efectivo`,
-                { method: 'POST' }
-            )
-
-            if (res.data?.success) {
-                message.success('Asignación anulada: el efectivo vuelve a estar disponible')
-                setSelectedId(null)
-                setVendedorId(undefined)
-                refrescar()
-            } else {
-                message.error(res.data?.message || res.error?.message || 'Error al anular la asignación')
-            }
-        } catch (error: any) {
-            message.error(error?.response?.data?.message || 'Error al anular la asignación')
-        } finally {
-            setAnulando(false)
         }
     }
 
@@ -168,6 +144,7 @@ export default function ModalEfectivoApertura({
                             onClick: () => {
                                 setSelectedId(record.id)
                                 setVendedorId(undefined)
+                                setEditMode(false)
                             },
                             className: selectedId === record.id
                                 ? 'bg-emerald-50 cursor-pointer'
@@ -246,52 +223,73 @@ export default function ModalEfectivoApertura({
                                     </>
                                 )}
                             </h4>
-                            {selected.asignado_a && (
-                                <Popconfirm
-                                    title='¿Quitar esta asignación?'
-                                    description='El efectivo volverá a estar disponible para cualquier usuario.'
-                                    okText='Sí, quitar'
-                                    cancelText='Cancelar'
-                                    okButtonProps={{ danger: true }}
-                                    onConfirm={handleAnularAsignacion}
+                            {selected.asignado_a && !editMode && (
+                                <Button
+                                    size='small'
+                                    icon={<EditOutlined />}
+                                    onClick={() => {
+                                        setEditMode(true)
+                                        setVendedorId(selected.asignado_a?.id)
+                                    }}
                                 >
-                                    <Button
-                                        danger
-                                        size='small'
-                                        loading={anulando}
-                                        icon={<CloseCircleOutlined />}
-                                    >
-                                        Quitar asignación
-                                    </Button>
-                                </Popconfirm>
+                                    Cambiar asignación
+                                </Button>
                             )}
                         </div>
                         <div className='flex items-center gap-2'>
                             <div className='flex-1'>
                                 <SelectVendedor
-                                    value={vendedorId}
+                                    value={selected.asignado_a && !editMode ? selected.asignado_a.id : vendedorId}
                                     onChange={(val) => setVendedorId(val)}
                                     placeholder={selected.asignado_a ? 'Seleccionar nuevo usuario' : 'Seleccionar usuario'}
                                     soloVendedores={false}
                                     size='small'
+                                    disabled={!!selected.asignado_a && !editMode}
                                 />
                             </div>
-                            <Button
-                                type='primary'
-                                className='bg-emerald-600 hover:bg-emerald-700'
-                                size='small'
-                                loading={asignando}
-                                disabled={!vendedorId}
-                                onClick={handleAsignar}
-                                icon={<CheckCircleOutlined />}
-                            >
-                                {selected.asignado_a ? 'Reasignar' : 'Asignar'}
-                            </Button>
+                            {editMode ? (
+                                <>
+                                    <Button
+                                        size='small'
+                                        onClick={() => {
+                                            setEditMode(false)
+                                            setVendedorId(undefined)
+                                        }}
+                                    >
+                                        Cancelar
+                                    </Button>
+                                    <Button
+                                        type='primary'
+                                        className='bg-emerald-600 hover:bg-emerald-700'
+                                        size='small'
+                                        loading={asignando}
+                                        disabled={!vendedorId}
+                                        onClick={handleAsignar}
+                                        icon={<CheckCircleOutlined />}
+                                    >
+                                        Reasignar
+                                    </Button>
+                                </>
+                            ) : (
+                                <Button
+                                    type='primary'
+                                    className='bg-emerald-600 hover:bg-emerald-700'
+                                    size='small'
+                                    loading={asignando}
+                                    disabled={!vendedorId}
+                                    onClick={handleAsignar}
+                                    icon={<CheckCircleOutlined />}
+                                >
+                                    {selected.asignado_a ? 'Reasignar' : 'Asignar'}
+                                </Button>
+                            )}
                         </div>
                         <p className='text-xs text-slate-400'>
-                            {selected.asignado_a
-                                ? 'Puedes reasignar a otro usuario o quitar la asignación mientras no se haya usado en una apertura.'
-                                : 'Al asignar, este efectivo aparecerá como disponible en la apertura de caja del vendedor seleccionado.'}
+                            {selected.asignado_a && !editMode
+                                ? 'Presiona "Cambiar asignación" para cambiar el usuario asignado.'
+                                : selected.asignado_a && editMode
+                                    ? 'Selecciona un nuevo usuario y presiona "Reasignar" para guardar los cambios.'
+                                    : 'Al asignar, este efectivo aparecerá como disponible en la apertura de caja del vendedor seleccionado.'}
                         </p>
                     </div>
                 )}
