@@ -368,7 +368,10 @@ export const transaccionesCajaApi = {
       nombre: string
       caja_principal_id: number
       saldo_actual: number
+      /** Dinero CERRADO (movible) */
       saldo_disponible: number
+      /** Dinero de la sesión abierta + monto de apertura (se consolida al cerrar) */
+      saldo_no_cerrado: number
     }>
   }>> {
     return apiRequest('/cajas/movimientos-internos/saldos-disponibles')

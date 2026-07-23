@@ -8,12 +8,15 @@ export const useColumnsSubCajas = ({
   onEliminar,
   onVerHistorialTraslados,
   saldosNoCerrados,
+  saldosCerrados,
 }: {
   onEditar: (subCaja: SubCaja) => void
   onEliminar: (subCaja: SubCaja) => void
   onVerHistorialTraslados?: (subCaja: SubCaja) => void
-  /** Dinero de la sesión ABIERTA por sub-caja (sub_caja_id → monto sin cerrar) */
+  /** Dinero de la sesión ABIERTA + apertura por sub-caja (se consolida al cerrar) */
   saldosNoCerrados?: Record<number, number>
+  /** Dinero CERRADO por sub-caja (solo sesiones cerradas) */
+  saldosCerrados?: Record<number, number>
 }): ColDef<SubCaja>[] => {
   return [
     {
@@ -102,14 +105,18 @@ export const useColumnsSubCajas = ({
     },
     {
       colId: 'saldo',
-      headerName: 'Saldo',
+      headerName: 'Saldo Cerrado',
+      headerTooltip: 'Solo el dinero de sesiones cerradas (lo que se puede trasladar)',
       field: 'saldo_actual',
-      width: 130,
-      cellRenderer: (params: any) => (
-        <div className='text-right font-bold text-emerald-600'>
-          S/. {parseFloat(params.value).toFixed(2)}
-        </div>
-      ),
+      width: 140,
+      cellRenderer: (params: any) => {
+        const cerrado = saldosCerrados?.[params.data?.id] ?? parseFloat(params.value)
+        return (
+          <div className='text-right font-bold text-emerald-600'>
+            S/. {Number(cerrado).toFixed(2)}
+          </div>
+        )
+      },
     },
     {
       colId: 'saldo_no_cerrado',
