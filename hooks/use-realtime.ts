@@ -189,6 +189,10 @@ const MODULE_TO_QUERY_KEYS: Record<string, string[]> = {
     // reflejarlo al instante (sin recargar la página), y viceversa.
     'efectivo-asignado-para-mi',
     'efectivo-disponible-apertura',
+    // Saldos cerrado/no-cerrado por sub-caja (columna "Saldo No Cerrado" y
+    // modal de Traslado de Efectivo)
+    'saldos-disponibles-movimiento',
+    'efectivo-todos-usuarios',
   ],
   // Un gasto/ingreso extra también mueve efectivo entre sub-cajas (ManejaFlujoCajaExtra)
   // → invalidar SUB_CAJAS para que el modal de Traslado a Bóveda ("efectivo-por-vendedor")
