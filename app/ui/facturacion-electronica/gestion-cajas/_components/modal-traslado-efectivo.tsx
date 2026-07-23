@@ -71,9 +71,10 @@ export default function ModalTrasladoEfectivo({ open, setOpen, onSuccess }: Prop
   const destinoKey = (d: { vendedor_id: string; sub_caja_id: number; despliegue_pago_id: string }) =>
     `${d.vendedor_id}|${d.sub_caja_id}|${d.despliegue_pago_id}`
 
-  const destinosDisponibles = destinosUsuarios.filter(
-    (d) => d.sub_caja_id !== origen?.sub_caja_id
-  )
+  // Mostrar SIEMPRE todas las filas (para ver el efectivo de cada usuario);
+  // la de la misma sub-caja del origen queda deshabilitada porque el backend
+  // exige que origen y destino sean sub-cajas distintas.
+  const destinosDisponibles = destinosUsuarios
 
   const handleSubmit = async () => {
     try {
@@ -171,10 +172,15 @@ export default function ModalTrasladoEfectivo({ open, setOpen, onSuccess }: Prop
             disabled={!origen}
             showSearch
             optionFilterProp="label"
-            options={destinosDisponibles.map((d) => ({
-              value: destinoKey(d),
-              label: `${d.vendedor_nombre} — ${d.sub_caja_nombre}/${d.metodo_nombre} — S/ ${d.efectivo_disponible}`,
-            }))}
+            options={destinosDisponibles.map((d) => {
+              const mismaSubCaja = d.sub_caja_id === origen?.sub_caja_id
+              return {
+                value: destinoKey(d),
+                disabled: mismaSubCaja,
+                label: `${d.vendedor_nombre} — ${d.sub_caja_nombre}/${d.metodo_nombre} — S/ ${d.efectivo_disponible}`
+                  + (mismaSubCaja ? ' (misma sub-caja del origen)' : ''),
+              }
+            })}
           />
         </Form.Item>
 
