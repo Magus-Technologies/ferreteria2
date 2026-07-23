@@ -160,7 +160,7 @@ export function useColumnsMisCotizaciones(): ColDef<Cotizacion>[] {
     {
       colId: "acciones",
       headerName: "Acciones",
-      width: 250,
+      width: 310,
       pinned: "right",
       cellRenderer: CellAccionesCotizacion,
       cellRendererParams: (params: { data?: Cotizacion }) => ({

@@ -1,7 +1,7 @@
 "use client";
 
 import { ICellRendererParams } from "ag-grid-community";
-import { FaFilePdf, FaFileInvoice, FaPencil, FaCopy, FaTrash } from "react-icons/fa6";
+import { FaFilePdf, FaFileInvoice, FaPencil, FaCopy, FaTrash, FaTruck } from "react-icons/fa6";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { message, Popconfirm } from "antd";
@@ -51,6 +51,19 @@ export default function CellAccionesCotizacion(
     }
   };
 
+  // Verificar si todas las unidades de la cotización ya fueron guiadas
+  // (requiere que el backend exponga cantidad_guiada en UnidadDerivadaInmutableCotizacion)
+  const todoGuiadoCotizacion = (props.data?.productos_por_almacen ?? props.data?.productosPorAlmacen ?? []).length > 0 &&
+    (props.data?.productos_por_almacen ?? props.data?.productosPorAlmacen ?? []).every((pa: any) =>
+      (pa?.unidades_derivadas ?? []).every(
+        (u: any) => Number(u?.cantidad_guiada ?? 0) >= Number(u?.cantidad ?? 0),
+      ),
+    )
+
+  const handleCrearGuia = () => {
+    router.push(`/ui/facturacion-electronica/mis-guias/crear-guia?cotizacion_id=${cotizacionId}&motivo_codigo=03`)
+  };
+
   const handleDuplicar = () => {
     router.push(`/ui/facturacion-electronica/mis-cotizaciones/crear-cotizacion?duplicar=${cotizacionId}`);
   };
@@ -77,6 +90,17 @@ export default function CellAccionesCotizacion(
         disabled={bloqueada}
       >
         <FaFileInvoice />
+      </ButtonBase>
+
+      <ButtonBase
+        color="info"
+        size="md"
+        onClick={handleCrearGuia}
+        className="flex items-center !px-3"
+        title="Crear Guía de Remisión"
+        disabled={estadoCotizacion === 've' || estadoCotizacion === 'ca' || estadoCotizacion === 'el' || todoGuiadoCotizacion}
+      >
+        <FaTruck />
       </ButtonBase>
 
       <ButtonBase

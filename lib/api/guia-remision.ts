@@ -41,10 +41,12 @@ export interface DetalleGuiaRequest {
   cantidad: number;
   peso_total?: number;
   unidad_derivada_venta_id?: number;
+  unidad_derivada_cotizacion_id?: number;
 }
 
 export interface CreateGuiaRemisionRequest {
   venta_id?: string;
+  cotizacion_id?: string;
   /** Entrega de origen — trackea cantidad_guiada por entrega (no solo por venta). */
   entrega_id?: number;
   tipo_guia: TipoGuia;
@@ -193,6 +195,7 @@ export interface DetalleGuia {
   cantidad: number;
   peso_total?: number;
   unidad_derivada_venta_id?: number;
+  unidad_derivada_cotizacion_id?: number;
   producto?: Producto;
   unidadDerivadaInmutable?: {
     id: number;
@@ -203,6 +206,7 @@ export interface DetalleGuia {
 export interface GuiaRemision {
   id: string;
   venta_id?: string;
+  cotizacion_id?: string;
   tipo_guia: TipoGuia;
   serie?: string;
   numero?: number;

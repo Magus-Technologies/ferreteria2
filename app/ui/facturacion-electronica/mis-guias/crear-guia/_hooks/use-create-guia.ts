@@ -15,6 +15,7 @@ export default function useCreateGuia(form: FormInstance<FormCreateGuia>) {
   const entregaIdParam = searchParams.get('entrega_id')
   // venta_id de la URL: el form no lo setea, así la guía quedaba con venta_id=NULL.
   const ventaIdParam = searchParams.get('venta_id')
+  const cotizacionIdParam = searchParams.get('cotizacion_id')
 
   const mutation = useMutation({
     mutationFn: async (data: CreateGuiaRemisionRequest) => {
@@ -40,6 +41,7 @@ export default function useCreateGuia(form: FormInstance<FormCreateGuia>) {
       // También refresca el bloqueo del dropdown "Crear Guía" en mis-entregas.
       queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.COTIZACIONES] })
 
       // Redirigir a Mis Guías
       router.push('/ui/facturacion-electronica/mis-guias')
@@ -62,6 +64,7 @@ export default function useCreateGuia(form: FormInstance<FormCreateGuia>) {
     // Transformar los datos del formulario al formato de la API
     const data: CreateGuiaRemisionRequest = {
       venta_id: values.venta_id ?? ventaIdParam ?? undefined,
+      cotizacion_id: cotizacionIdParam ?? undefined,
       entrega_id: entregaIdParam ? Number(entregaIdParam) : undefined,
       fecha_emision: values.fecha_emision ? fechaSubmit(values.fecha_emision) : '',
       fecha_traslado: values.fecha_traslado?.format('YYYY-MM-DD') || '',
@@ -95,6 +98,7 @@ export default function useCreateGuia(form: FormInstance<FormCreateGuia>) {
         cantidad: p.cantidad,
         peso_total: p.peso_total,
         unidad_derivada_venta_id: p.unidad_derivada_venta_id ?? undefined,
+        unidad_derivada_cotizacion_id: p.unidad_derivada_cotizacion_id ?? undefined,
       })) || [],
     }
 

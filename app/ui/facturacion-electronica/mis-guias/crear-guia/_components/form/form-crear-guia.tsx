@@ -43,11 +43,13 @@ export default function FormCrearGuia({
   form,
   guia,
   venta,
+  cotizacion,
   initialMotivoCodigo,
 }: {
   form: FormInstance
   guia?: any
   venta?: any
+  cotizacion?: any
   initialMotivoCodigo?: string
 }) {
   const [codigoMotivo, setCodigoMotivo] = useState<string>(initialMotivoCodigo || '')
@@ -362,7 +364,7 @@ export default function FormCrearGuia({
               <SelectClientes
                 form={form}
                 showOnlyDocument={true}
-                clienteOptionsDefault={venta?.cliente ? [venta.cliente] : []}
+                clienteOptionsDefault={venta?.cliente ? [venta.cliente] : cotizacion?.cliente ? [cotizacion.cliente] : []}
                 propsForm={{
                   name: 'cliente_id',
                   hasFeedback: false,

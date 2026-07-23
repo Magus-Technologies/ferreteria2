@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { ventaApi, type VentaCompleta } from '~/lib/api/venta'
+import { cotizacionesApi, type Cotizacion } from '~/lib/api/cotizaciones'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useEmpresaPublica } from '~/hooks/use-empresa-publica'
 import { setDireccionesClienteToForm } from '~/lib/utils/cliente-direcciones-form'
@@ -25,6 +26,7 @@ export default function useInitGuia({
 }) {
   const searchParams = useSearchParams()
   const ventaId = searchParams.get('venta_id')
+  const cotizacionId = searchParams.get('cotizacion_id')
   // entrega_id: cuando se crea la guía desde una entrega puntual de mis-entregas,
   // las cantidades deben salir de ESA entrega, no del total de la venta.
   const entregaIdParam = searchParams.get('entrega_id')
@@ -44,8 +46,10 @@ export default function useInitGuia({
   // Guard: solo inicializar una vez aunque el store cambie tras limpiarlo
   const transferenciaInitializedRef = useRef(false)
 
+  // hasCotizacion: se activa cuando viene cotizacion_id sin venta_id ni guía
+  const hasCotizacion = !!cotizacionId && !guia && !ventaId
   // hasTransferencia se basa en el URL param (persiste aunque limpiemos el store)
-  const hasTransferencia = fromTransferencia && !guia && !ventaId
+  const hasTransferencia = fromTransferencia && !guia && !ventaId && !cotizacionId
 
   // Si el store tiene datos de OTRA transferencia (ej. volver atrás con navegación),
   // limpiarlo para que el fetch por ID se active con los datos correctos.
@@ -79,6 +83,18 @@ export default function useInitGuia({
 
   const venta = ventaResponse?.data as VentaCompleta | undefined
 
+  // Obtener datos de la cotización si viene el parámetro
+  const { data: cotizacionResponse, isLoading: isLoadingCotizacion } = useQuery({
+    queryKey: [QueryKeys.COTIZACIONES, cotizacionId],
+    queryFn: async () => {
+      if (!cotizacionId) return null
+      const response = await cotizacionesApi.getById(cotizacionId)
+      return response.data
+    },
+    enabled: hasCotizacion,
+  })
+  const cotizacion = cotizacionResponse?.data as Cotizacion | undefined
+
   // Entregas de la venta — solo cuando se crea la guía desde una entrega puntual.
   // Reusa el mismo query key que useEntregasDeVenta (cache compartido).
   const { data: entregasVentaList, isLoading: isLoadingEntregasVenta } = useQuery({
@@ -96,7 +112,7 @@ export default function useInitGuia({
       const res = await motivoTrasladoApi.getAll({ activo: true })
       return res.data?.data || []
     },
-    enabled: hasTransferencia,
+    enabled: hasTransferencia || hasCotizacion,
   })
 
   // Almacenes — solo cuando viene de transferencia (para obtener las direcciones)
@@ -339,8 +355,60 @@ export default function useInitGuia({
         })),
       })
 
-    } else if (!venta && !guia && !hasTransferencia) {
-      // Valores por defecto para nueva guía sin venta ni transferencia
+    } else if (hasCotizacion && !isLoadingCotizacion && motivosList && cotizacion) {
+      // Inicializar formulario desde una cotización
+      const cliente = cotizacion.cliente
+      const motivo03 = motivosList.find((m: any) => m.codigo === '03')
+      const empresaSlots = buildSlotsDireccionEmpresa(empresa?.direcciones)
+      const primerSlot = empresaSlots.find((s) => s.direccion)
+
+      const productos = (cotizacion.productos_por_almacen ?? cotizacion.productosPorAlmacen ?? [])
+        .flatMap((almacen: any) =>
+          (almacen.unidades_derivadas ?? []).map((unidad: any) => ({
+            producto_id: almacen.producto_almacen?.producto_id || 0,
+            producto_almacen_id: almacen.producto_almacen_id || almacen.id,
+            producto_name: almacen.producto_almacen?.producto?.name || '',
+            producto_codigo: almacen.producto_almacen?.producto?.cod_producto || '',
+            marca_name: almacen.producto_almacen?.producto?.marca?.name || '',
+            unidad_derivada_id: unidad.unidad_derivada_inmutable_id,
+            unidad_derivada_name: unidad.unidad_derivada_inmutable?.name || '',
+            unidad_derivada_factor: Number(unidad.factor) || 1,
+            cantidad: Number(unidad.cantidad) || 0,
+            costo: Number(unidad.precio) || 0,
+            precio_venta: Number(unidad.precio) || 0,
+            unidad_derivada_cotizacion_id: unidad.id,
+          })),
+        )
+        .filter((p: any) => p.cantidad > 0)
+
+      form.setFieldsValue({
+        fecha_emision: dayjs(),
+        fecha_traslado: dayjs(),
+        afecta_stock: 'true',
+        validar_modalidad: true,
+        validar_costo: true,
+        tipo_guia: 'ELECTRONICA_REMITENTE',
+        modalidad_transporte: 'PRIVADO',
+        ...(motivo03 ? { motivo_traslado: motivo03.id } : {}),
+        cliente_id: cliente?.id,
+        cliente_nombre: cliente?.razon_social || `${cliente?.nombres || ''} ${cliente?.apellidos || ''}`.trim(),
+        punto_partida: primerSlot?.direccion?.direccion || '',
+        empresa_direccion_seleccionada: primerSlot?.tipo || 'D1',
+        punto_llegada: cliente?.direccion || '',
+        direccion_seleccionada: 'D1',
+        referencia: `Cotización ${cotizacion.numero}`,
+        productos,
+      })
+      // La cotización no expone direcciones múltiples del cliente (solo una
+      // direccion plana), así que no llamamos setDireccionesClienteToForm.
+      setTimeout(() => {
+        if (cliente?.numero_documento) {
+          form.setFieldValue('cliente_id', cliente.id)
+        }
+      }, 100)
+
+    } else if (!venta && !guia && !hasTransferencia && !hasCotizacion) {
+      // Valores por defecto para nueva guía sin venta ni transferencia ni cotización
       const empresaSlots = buildSlotsDireccionEmpresa(empresa?.direcciones)
       const primerSlot = empresaSlots.find((s) => s.direccion)
       form.setFieldsValue({
@@ -369,6 +437,9 @@ export default function useInitGuia({
     userChoferIdParam,
     userChoferNombreParam,
     hasTransferencia,
+    hasCotizacion,
+    cotizacion,
+    isLoadingCotizacion,
     transferenciaStore,
     transferenciaApiData,
     isLoadingTransferenciaApi,
@@ -378,5 +449,5 @@ export default function useInitGuia({
     almacenesData,
   ])
 
-  return { venta, isLoading }
+  return { venta, isLoading, cotizacion, isLoadingCotizacion }
 }

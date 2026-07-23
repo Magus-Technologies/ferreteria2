@@ -34,6 +34,7 @@ export type FormCreateGuia = {
     peso_unitario?: number
     peso_total?: number
     unidad_derivada_venta_id?: number
+    unidad_derivada_cotizacion_id?: number
   }>
   venta_id?: string
   fecha_emision: Dayjs
@@ -100,7 +101,7 @@ export default function BodyCrearGuia({
 
   const guia = guiaProp ?? guiaFetched
 
-  const { venta } = useInitGuia({ guia, form })
+  const { venta, cotizacion } = useInitGuia({ guia, form })
 
   const { handleSubmit, isCreating } = useCreateGuia(form)
 
@@ -119,7 +120,7 @@ export default function BodyCrearGuia({
           <div className='flex-1 min-h-0'>
             <FormTableGuia form={form} guia={guia} />
           </div>
-          <FormCrearGuia form={form} guia={guia} venta={venta} initialMotivoCodigo={motivoCodigo} />
+          <FormCrearGuia form={form} guia={guia} venta={venta} cotizacion={cotizacion} initialMotivoCodigo={motivoCodigo} />
         </div>
         <div className='w-full xl:w-auto'>
           <CardsInfoGuia form={form} guia={guia} isCreating={isCreating} />
