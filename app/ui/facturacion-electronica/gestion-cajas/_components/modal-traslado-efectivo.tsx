@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Modal, Form, InputNumber, Select, Input, Button, message } from 'antd'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { apiRequest } from '~/lib/api'
 import { transaccionesCajaApi } from '~/lib/api/transacciones-caja'
 import { useCrearMovimientoInterno } from '~/app/ui/facturacion-electronica/gestion-cajas/_hooks/use-crear-movimiento-interno'
@@ -18,25 +18,6 @@ interface MetodoParaVenta {
   tipo: string
 }
 
-interface SaldoSubCaja {
-  sub_caja_id: number
-  nombre: string
-  caja_principal_id: number
-  saldo_actual: number
-  saldo_disponible: number
-}
-
-interface UsuarioConSaldo {
-  user_id: string
-  user_name: string
-  sub_caja_id: number
-  sub_caja_nombre: string
-  despliegue_pago_id: string
-  value: string
-  label: string
-  monto_disponible: number
-}
-
 interface Props {
   open: boolean
   setOpen: (open: boolean) => void
@@ -45,7 +26,6 @@ interface Props {
 
 export default function ModalTrasladoEfectivo({ open, setOpen, onSuccess }: Props) {
   const [form] = Form.useForm()
-  const queryClient = useQueryClient()
   const { mutate: crearMovimiento, isPending } = useCrearMovimientoInterno()
   const [origenValue, setOrigenValue] = useState<string | null>(null)
 
@@ -69,11 +49,14 @@ export default function ModalTrasladoEfectivo({ open, setOpen, onSuccess }: Prop
     enabled: open,
   })
 
-  const { data: usuariosConSaldo = [] } = useQuery({
-    queryKey: ['usuarios-con-saldo-efectivo'],
+  // DESTINOS: el efectivo de TODOS los usuarios de las aperturas abiertas
+  // (cada usuario × sub-caja × despliegue de efectivo, con su saldo desde que
+  // se aperturó). El traslado ACREDITA el dinero al usuario elegido.
+  const { data: destinosUsuarios = [] } = useQuery({
+    queryKey: ['efectivo-todos-usuarios'],
     queryFn: async () => {
-      const res = await transaccionesCajaApi.getUsuariosConSaldo()
-      return (res.data?.data || []).filter((u) => u.monto_disponible > 0)
+      const response = await transaccionesCajaApi.getEfectivoTodosUsuarios()
+      return response.data?.data || []
     },
     enabled: open,
   })
@@ -83,10 +66,19 @@ export default function ModalTrasladoEfectivo({ open, setOpen, onSuccess }: Prop
     ? saldos.find((s) => s.sub_caja_id === origen.sub_caja_id)?.saldo_actual ?? 0
     : 0
 
+  // Valor compuesto por fila: usuario|sub-caja|despliegue (el backend exige
+  // que la sub-caja destino sea distinta a la de origen)
+  const destinoKey = (d: { vendedor_id: string; sub_caja_id: number; despliegue_pago_id: string }) =>
+    `${d.vendedor_id}|${d.sub_caja_id}|${d.despliegue_pago_id}`
+
+  const destinosDisponibles = destinosUsuarios.filter(
+    (d) => d.sub_caja_id !== origen?.sub_caja_id
+  )
+
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields()
-      const destino = usuariosConSaldo.find((u) => u.value === values.destino)
+      const destino = destinosUsuarios.find((d) => destinoKey(d) === values.destino)
       if (!origen || !destino) return
 
       crearMovimiento(
@@ -95,6 +87,7 @@ export default function ModalTrasladoEfectivo({ open, setOpen, onSuccess }: Prop
           sub_caja_destino_id: destino.sub_caja_id,
           despliegue_de_pago_origen_id: origen.despliegue_pago_id,
           despliegue_de_pago_destino_id: destino.despliegue_pago_id,
+          destino_user_id: destino.vendedor_id,
           monto: values.monto,
           concepto: 'TRASLADO DE EFECTIVO',
           justificacion: values.justificacion,
@@ -104,7 +97,6 @@ export default function ModalTrasladoEfectivo({ open, setOpen, onSuccess }: Prop
             message.success('Efectivo trasladado correctamente')
             form.resetFields()
             setOrigenValue(null)
-            queryClient.invalidateQueries({ queryKey: ['usuarios-con-saldo-efectivo'] })
             onSuccess?.()
             setOpen(false)
           },
@@ -136,8 +128,8 @@ export default function ModalTrasladoEfectivo({ open, setOpen, onSuccess }: Prop
       width={600}
     >
       <p className="text-xs text-slate-500 mb-4">
-        Mueve efectivo entre sub-cajas. El <strong>Origen</strong> es una sub-caja con
-        efectivo. El <strong>Destino</strong> asigna el dinero a un usuario.
+        Mueve efectivo físico entre sub-cajas para poder pagar desde el destino.
+        Permite usar el <strong>total</strong> del saldo actual.
       </p>
       <Form form={form} layout="vertical">
         <Form.Item
@@ -175,13 +167,13 @@ export default function ModalTrasladoEfectivo({ open, setOpen, onSuccess }: Prop
           rules={[{ required: true, message: 'Seleccione el destino' }]}
         >
           <Select
-            placeholder="Seleccione usuario destino"
+            placeholder="Seleccione destino (a qué usuario/efectivo va el dinero)"
             disabled={!origen}
             showSearch
             optionFilterProp="label"
-            options={usuariosConSaldo.map((u) => ({
-              value: u.value,
-              label: `${u.user_name} — ${u.sub_caja_nombre} — S/ ${u.monto_disponible.toFixed(2)}`,
+            options={destinosDisponibles.map((d) => ({
+              value: destinoKey(d),
+              label: `${d.vendedor_nombre} — ${d.sub_caja_nombre}/${d.metodo_nombre} — S/ ${d.efectivo_disponible}`,
             }))}
           />
         </Form.Item>
