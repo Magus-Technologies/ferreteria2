@@ -82,8 +82,15 @@ export function mapToEntregaDB(e: EntregaNueva): any {
       : undefined,
     almacenSalida:  (e as any).almacen_salida_name ? { name: (e as any).almacen_salida_name } : undefined,
     fecha_ejecutada: e.fecha_ejecutada ?? undefined,
-    vehiculo: e.vehiculo_placa
-      ? { placa: e.vehiculo_placa, name: (e as any).vehiculo_name }
+    // El objeto vehiculo se arma si hay id O nombre — NO solo si hay placa.
+    // Un vehículo sin placa (p. ej. una moto) igual está asignado y debe verse;
+    // antes, con `? e.vehiculo_placo :`, esos quedaban en undefined y no salían.
+    vehiculo: ((e as any).vehiculo_id || (e as any).vehiculo_name)
+      ? {
+          id: (e as any).vehiculo_id ?? undefined,
+          placa: e.vehiculo_placa ?? undefined,
+          name: (e as any).vehiculo_name ?? undefined,
+        }
       : undefined,
 
     // Detalles → mapped to old productos_entregados shape for TableDetalleEntrega
