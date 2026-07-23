@@ -61,19 +61,20 @@ export default function ModalTrasladoEfectivo({ open, setOpen, onSuccess }: Prop
     enabled: open,
   })
 
+  // Disponible del ORIGEN: solo el dinero CERRADO (saldo_disponible). Lo de la
+  // sesión abierta —incluida la apertura— no se puede mover hasta cerrar caja.
   const origen = metodosEfectivo.find((m) => m.value === origenValue)
-  const saldoOrigen = origen
-    ? saldos.find((s) => s.sub_caja_id === origen.sub_caja_id)?.saldo_actual ?? 0
-    : 0
+  const saldoRowOrigen = origen ? saldos.find((s) => s.sub_caja_id === origen.sub_caja_id) : undefined
+  const saldoOrigen = saldoRowOrigen?.saldo_disponible ?? 0
+  const saldoTotalOrigen = saldoRowOrigen?.saldo_actual ?? 0
 
   // Valor compuesto por fila: usuario|sub-caja|despliegue (el backend exige
   // que la sub-caja destino sea distinta a la de origen)
   const destinoKey = (d: { vendedor_id: string; sub_caja_id: number; despliegue_pago_id: string }) =>
     `${d.vendedor_id}|${d.sub_caja_id}|${d.despliegue_pago_id}`
 
-  // Mostrar SIEMPRE todas las filas (para ver el efectivo de cada usuario);
-  // la de la misma sub-caja del origen queda deshabilitada porque el backend
-  // exige que origen y destino sean sub-cajas distintas.
+  // Todas las filas son destinos válidos, incluida la misma sub-caja del
+  // origen (traslado de dinero cerrado al efectivo de sesión del usuario).
   const destinosDisponibles = destinosUsuarios
 
   const handleSubmit = async () => {
@@ -129,8 +130,8 @@ export default function ModalTrasladoEfectivo({ open, setOpen, onSuccess }: Prop
       width={600}
     >
       <p className="text-xs text-slate-500 mb-4">
-        Mueve efectivo físico entre sub-cajas para poder pagar desde el destino.
-        Permite usar el <strong>total</strong> del saldo actual.
+        Mueve el efectivo <strong>cerrado</strong> (acumulado de sesiones cerradas) hacia el
+        efectivo de un usuario. Lo de la sesión abierta no se puede mover hasta cerrar caja.
       </p>
       <Form form={form} layout="vertical">
         <Form.Item
@@ -148,7 +149,8 @@ export default function ModalTrasladoEfectivo({ open, setOpen, onSuccess }: Prop
             }}
             options={metodosEfectivo.map((m) => ({
               value: m.value,
-              label: `${m.label} — S/ ${(saldos.find((s) => s.sub_caja_id === m.sub_caja_id)?.saldo_actual ?? 0).toFixed(2)}`,
+              // Muestra el disponible CERRADO (lo realmente movible)
+              label: `${m.label} — S/ ${(saldos.find((s) => s.sub_caja_id === m.sub_caja_id)?.saldo_disponible ?? 0).toFixed(2)}`,
             }))}
           />
         </Form.Item>
@@ -156,8 +158,11 @@ export default function ModalTrasladoEfectivo({ open, setOpen, onSuccess }: Prop
         {origen && (
           <div className="mb-4 p-3 bg-emerald-50 rounded border border-emerald-200">
             <p className="text-sm text-gray-600 m-0">
-              Saldo actual en <strong>{origen.sub_caja_nombre}</strong>:{' '}
+              Disponible para trasladar (caja cerrada) en <strong>{origen.sub_caja_nombre}</strong>:{' '}
               <span className="font-semibold text-emerald-700">S/ {Number(saldoOrigen).toFixed(2)}</span>
+              <span className="text-xs text-gray-400 ml-2">
+                (saldo total: S/ {Number(saldoTotalOrigen).toFixed(2)} — lo de la sesión abierta no se mueve)
+              </span>
             </p>
           </div>
         )}
@@ -172,15 +177,10 @@ export default function ModalTrasladoEfectivo({ open, setOpen, onSuccess }: Prop
             disabled={!origen}
             showSearch
             optionFilterProp="label"
-            options={destinosDisponibles.map((d) => {
-              const mismaSubCaja = d.sub_caja_id === origen?.sub_caja_id
-              return {
-                value: destinoKey(d),
-                disabled: mismaSubCaja,
-                label: `${d.vendedor_nombre} — ${d.sub_caja_nombre}/${d.metodo_nombre} — S/ ${d.efectivo_disponible}`
-                  + (mismaSubCaja ? ' (misma sub-caja del origen)' : ''),
-              }
-            })}
+            options={destinosDisponibles.map((d) => ({
+              value: destinoKey(d),
+              label: `${d.vendedor_nombre} — ${d.sub_caja_nombre}/${d.metodo_nombre} — S/ ${d.efectivo_disponible}`,
+            }))}
           />
         </Form.Item>
 
@@ -198,7 +198,7 @@ export default function ModalTrasladoEfectivo({ open, setOpen, onSuccess }: Prop
                   validator: (_, value) => {
                     if (!origen) return Promise.resolve()
                     if (value > Number(saldoOrigen)) {
-                      return Promise.reject(`El monto excede el saldo actual (S/ ${Number(saldoOrigen).toFixed(2)})`)
+                      return Promise.reject(`El monto excede el disponible de caja cerrada (S/ ${Number(saldoOrigen).toFixed(2)})`)
                     }
                     return Promise.resolve()
                   },
