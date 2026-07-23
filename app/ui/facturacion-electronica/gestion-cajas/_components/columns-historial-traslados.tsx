@@ -20,7 +20,7 @@ export const useColumnsHistorialTraslados = ({
       suppressMovable: true,
       cellRenderer: (params: any) => {
         if (!params.value) return '-'
-        return format(new Date(params.value), 'dd/MM/yyyy HH:mm', { locale: es })
+        return format(new Date(params.value), 'dd/MM/yyyy hh:mm a', { locale: es })
       },
     },
     {
@@ -128,6 +128,21 @@ export const useColumnsHistorialTraslados = ({
       },
     },
     {
+      colId: 'estado',
+      headerName: 'Estado',
+      field: 'estado',
+      width: 100,
+      lockPosition: true,
+      suppressMovable: true,
+      cellRenderer: (params: any) => {
+        const estado = params.value
+        if (estado === 'anulado') {
+          return <Tag color='red' className='m-0'>Anulado</Tag>
+        }
+        return <Tag color='green' className='m-0'>Activo</Tag>
+      },
+    },
+    {
       colId: 'acciones',
       headerName: 'Acciones',
       field: 'id',
@@ -136,17 +151,22 @@ export const useColumnsHistorialTraslados = ({
       suppressMovable: true,
       cellRenderer: (params: any) => {
         const record = params.data
+        const esAnulado = record.estado === 'anulado'
         return (
           <div className='flex justify-center'>
-            <Tooltip title='Anular traslado'>
-              <Button
-                type='default'
-                danger
-                icon={<FaTrash />}
-                size='small'
-                onClick={() => onAnular(record)}
-              />
-            </Tooltip>
+            {esAnulado ? (
+              <span className='text-slate-400 text-xs'>-</span>
+            ) : (
+              <Tooltip title='Anular traslado'>
+                <Button
+                  type='default'
+                  danger
+                  icon={<FaTrash />}
+                  size='small'
+                  onClick={() => onAnular(record)}
+                />
+              </Tooltip>
+            )}
           </div>
         )
       },

@@ -208,6 +208,7 @@ const MODULE_TO_QUERY_KEYS: Record<string, string[]> = {
   usuarios: [QueryKeys.USUARIOS, QueryKeys.VENDEDORES_DISPONIBLES, 'cumpleanos-proximos'],
   empresas: [QueryKeys.EMPRESAS],
   'guias-remision': [QueryKeys.GUIAS_REMISION, QueryKeys.MOTIVOS_TRASLADO],
+  'traslados-boveda': ['traslados-boveda'],
   'despliegues-de-pago': [QueryKeys.DESPLIEGUE_DE_PAGO, QueryKeys.METODO_DE_PAGO],
   'series-documentos': [],
   choferes: [QueryKeys.CHOFERES],

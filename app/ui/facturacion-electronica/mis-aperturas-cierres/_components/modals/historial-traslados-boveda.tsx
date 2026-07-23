@@ -32,7 +32,7 @@ export default function HistorialTrasladosBoveda({
   const cargarTraslados = async () => {
     try {
       setLoading(true);
-      const response = await trasladoBovedaApi.obtenerTrasladosPorCaja(aperturaCierreId);
+      const response = await trasladoBovedaApi.obtenerTodosLosTrasladosPorCaja(aperturaCierreId);
       setTraslados(Array.isArray(response) ? response : (response as any)?.data || []);
     } catch (error) {
       message.error("Error al cargar traslados");
