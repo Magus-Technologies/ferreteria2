@@ -18,9 +18,11 @@ export default function CardsInfoComprasPorPagar() {
       for (const u of item.unidades_derivadas ?? []) {
         const costo = Number(item.costo ?? 0)
         const cantidad = Number(u.cantidad ?? 0)
+        const factor = Number(u.factor ?? 1)
         const flete = Number(u.flete ?? 0)
         const bonificacion = Boolean(u.bonificacion)
-        const montoLinea = bonificacion ? 0 : (costo * cantidad) + flete
+        // Multiplicar por el FACTOR de la unidad derivada (igual que el backend)
+        const montoLinea = bonificacion ? 0 : (costo * cantidad * factor) + flete
         acc += montoLinea
       }
       return acc
