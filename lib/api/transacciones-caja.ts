@@ -4,7 +4,7 @@
 import { apiRequest, type ApiResponse } from '../api'
 import type { Usuario, SubCaja } from './caja-principal'
 
-// ============= INTERFACES =============
+// ============= INTERFACES ===============
 
 export interface Transaccion {
   id: string
