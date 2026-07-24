@@ -88,16 +88,18 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
     }
   }, [open, compra, form, tcDelDia])
 
-  // Calcular total de la compra
+  // Calcular total de la compra (con el FACTOR de la unidad derivada, igual que
+  // el backend; sin él una compra por MILLAR/CIENTO salía 100× más barata).
   const totalCompra = useMemo(() => {
     if (!localCompra) return 0
     return (localCompra.productos_por_almacen || []).reduce((acc, item: any) => {
       for (const u of item.unidades_derivadas ?? []) {
         const costo = Number(item.costo ?? 0)
         const cantidad = Number(u.cantidad ?? 0)
+        const factor = Number(u.factor ?? 1)
         const flete = Number(u.flete ?? 0)
         const bonificacion = Boolean(u.bonificacion)
-        const montoLinea = bonificacion ? 0 : (costo * cantidad) + flete
+        const montoLinea = bonificacion ? 0 : (costo * cantidad * factor) + flete
         acc += montoLinea
       }
       return acc

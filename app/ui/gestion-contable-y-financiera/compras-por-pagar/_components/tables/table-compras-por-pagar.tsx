@@ -175,15 +175,19 @@ const TableComprasPorPagar = memo(function TableComprasPorPagar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [esTicketFormato])
 
-  // Función para calcular el total de una compra
+  // Función para calcular el total de una compra.
+  // IMPORTANTE: multiplicar por el FACTOR de la unidad derivada (igual que el
+  // backend getTotalCompra). Sin el factor, una compra por MILLAR/CIENTO salía
+  // 100× más barata (ej. 1,627.50 aparecía como 47.80).
   const calcularTotalCompra = useCallback((compra: Compra) => {
     return (compra.productos_por_almacen || []).reduce((acc, item: any) => {
       for (const u of item.unidades_derivadas ?? []) {
         const costo = Number(item.costo ?? 0)
         const cantidad = Number(u.cantidad ?? 0)
+        const factor = Number(u.factor ?? 1)
         const flete = Number(u.flete ?? 0)
         const bonificacion = Boolean(u.bonificacion)
-        const montoLinea = bonificacion ? 0 : (costo * cantidad) + flete
+        const montoLinea = bonificacion ? 0 : (costo * cantidad * factor) + flete
         acc += montoLinea
       }
       return acc
