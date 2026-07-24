@@ -27,8 +27,9 @@ export default function TableDetalleCompra() {
       return productoAlmacen.unidades_derivadas.map((unidad: any) => {
         const cantidad = Number(unidad.cantidad || 0)
         const costo = Number(productoAlmacen.costo || 0)
+        const factor = Number(unidad.factor ?? 1)
         const flete = Number(unidad.flete || 0)
-        
+
         return {
           producto: productoAlmacen.producto_almacen.producto.name || 'Sin nombre',
           marca: productoAlmacen.producto_almacen.producto.marca?.name || 'Sin marca',
@@ -36,7 +37,8 @@ export default function TableDetalleCompra() {
           cantidad,
           costo,
           flete,
-          subtotal: (cantidad * costo) + flete,
+          // Subtotal con el FACTOR de la unidad derivada (igual que el backend)
+          subtotal: (cantidad * costo * factor) + flete,
         }
       })
     }) || []
