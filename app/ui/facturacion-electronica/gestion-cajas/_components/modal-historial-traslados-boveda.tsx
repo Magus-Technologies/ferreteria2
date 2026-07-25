@@ -191,7 +191,6 @@ export default function ModalHistorialTrasladosBoveda({
                         columnDefs={columns}
                         rowSelection={false}
                         withNumberColumn={true}
-                        headerColor='var(--color-amber-600)'
                         loading={loading}
                         suppressDragLeaveHidesColumns={true}
                         suppressMovableColumns={true}

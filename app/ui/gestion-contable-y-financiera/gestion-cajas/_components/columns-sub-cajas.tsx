@@ -7,10 +7,16 @@ export const useColumnsSubCajas = ({
   onEditar,
   onEliminar,
   onVerHistorialTraslados,
+  saldosNoCerrados,
+  saldosCerrados,
 }: {
   onEditar: (subCaja: SubCaja) => void
   onEliminar: (subCaja: SubCaja) => void
   onVerHistorialTraslados?: (subCaja: SubCaja) => void
+  /** Dinero de la sesión ABIERTA + apertura por sub-caja (se consolida al cerrar) */
+  saldosNoCerrados?: Record<number, number>
+  /** Dinero CERRADO por sub-caja (solo sesiones cerradas) */
+  saldosCerrados?: Record<number, number>
 }): ColDef<SubCaja>[] => {
   return [
     {
@@ -18,8 +24,6 @@ export const useColumnsSubCajas = ({
       headerName: 'Código',
       field: 'codigo',
       width: 130,
-      lockPosition: true,
-      suppressMovable: true,
       cellRenderer: (params: any) => (
         <Tag color='purple' className='font-mono font-bold'>
           {params.value}
@@ -32,8 +36,6 @@ export const useColumnsSubCajas = ({
       field: 'nombre',
       flex: 1,
       minWidth: 180,
-      lockPosition: true,
-      suppressMovable: true,
       cellRenderer: (params: any) => {
         const record = params.data
         return (
@@ -54,8 +56,6 @@ export const useColumnsSubCajas = ({
       field: 'despliegues_pago',
       width: 250,
       minWidth: 200,
-      lockPosition: true,
-      suppressMovable: true,
       cellRenderer: (params: any) => {
         const record = params.data
         if (record.acepta_todos_metodos) {
@@ -87,8 +87,6 @@ export const useColumnsSubCajas = ({
       field: 'tipos_comprobante_labels',
       width: 220,
       minWidth: 180,
-      lockPosition: true,
-      suppressMovable: true,
       cellRenderer: (params: any) => {
         const labels = params.value
         if (!labels || labels.length === 0) {
@@ -107,24 +105,41 @@ export const useColumnsSubCajas = ({
     },
     {
       colId: 'saldo',
-      headerName: 'Saldo',
+      headerName: 'Saldo Cerrado',
+      headerTooltip: 'Solo el dinero de sesiones cerradas (lo que se puede trasladar)',
       field: 'saldo_actual',
-      width: 130,
-      lockPosition: true,
-      suppressMovable: true,
-      cellRenderer: (params: any) => (
-        <div className='text-right font-bold text-emerald-600'>
-          S/. {parseFloat(params.value).toFixed(2)}
-        </div>
-      ),
+      width: 140,
+      cellRenderer: (params: any) => {
+        const cerrado = saldosCerrados?.[params.data?.id] ?? parseFloat(params.value)
+        return (
+          <div className='text-right font-bold text-emerald-600'>
+            S/. {Number(cerrado).toFixed(2)}
+          </div>
+        )
+      },
+    },
+    {
+      colId: 'saldo_no_cerrado',
+      headerName: 'Saldo No Cerrado',
+      headerTooltip: 'Dinero de la sesión abierta (aún sin cerrar caja); no se puede trasladar hasta cerrar',
+      width: 150,
+      cellRenderer: (params: any) => {
+        const noCerrado = saldosNoCerrados?.[params.data?.id] ?? 0
+        if (noCerrado <= 0) {
+          return <div className='text-right text-slate-400'>S/. 0.00</div>
+        }
+        return (
+          <div className='text-right font-bold text-blue-600'>
+            S/. {noCerrado.toFixed(2)}
+          </div>
+        )
+      },
     },
     {
       colId: 'estado',
       headerName: 'Estado',
       field: 'estado',
       width: 100,
-      lockPosition: true,
-      suppressMovable: true,
       cellRenderer: (params: any) => (
         <div className='flex justify-center'>
           <Tag color={params.value ? 'success' : 'error'}>
@@ -138,8 +153,6 @@ export const useColumnsSubCajas = ({
       headerName: 'Acciones',
       field: 'id',
       width: 160,
-      lockPosition: true,
-      suppressMovable: true,
       cellRenderer: (params: any) => {
         const record = params.data
         return (

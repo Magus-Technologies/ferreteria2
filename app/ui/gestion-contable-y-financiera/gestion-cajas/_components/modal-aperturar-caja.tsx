@@ -28,7 +28,8 @@ interface VendedorAsignacion {
   id: string
   user_id?: string
   caja_principal_id?: number
-  monto: number
+  monto: number // Monto contado manualmente (denominaciones)
+  monto_asignado?: number // Efectivo asignado de otro cierre (se suma al manual)
   conteo_billetes_monedas?: any
 }
 
@@ -84,6 +85,7 @@ export default function ModalAperturarCaja({
   })
 
   const efectivoAsignadoTotal = efectivoAsignadoData?.total_asignado || 0
+  const [efectivoAsignadoUsado, setEfectivoAsignadoUsado] = useState(false)
 
   // Auto-completar con el usuario actual cuando se abre el modal (solo si NO es admin)
   useEffect(() => {
@@ -123,7 +125,16 @@ export default function ModalAperturarCaja({
   }, [open, cajasPrincipales, form])
 
   const { crearAperturarCaja, loading } = useAperturarCaja({
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
+      // Si se usó el efectivo asignado, marcarlo como consumido para que no reaparezca.
+      if (efectivoAsignadoUsado) {
+        try {
+          await apiRequest('/cajas/cierre/consumir-efectivo-asignado', { method: 'POST' })
+        } catch {
+          // No bloquear la apertura si falla el marcado
+        }
+        setEfectivoAsignadoUsado(false)
+      }
       // Primero llamar a onSuccess para marcar el éxito
       onSuccess?.()
       // Luego cerrar el modal
@@ -142,21 +153,25 @@ export default function ModalAperturarCaja({
     const nuevoId = Date.now().toString()
     setVendedores([{ id: nuevoId, user_id: undefined, caja_principal_id: undefined, monto: 0 }])
     setVendedorSeleccionadoId(nuevoId)
+    setEfectivoAsignadoUsado(false)
   }
 
   const vendedorSeleccionado = vendedores.find(v => v.id === vendedorSeleccionadoId)
 
   const cajaOrigenId = Form.useWatch('caja_origen_id', form)
 
+  // Total efectivo de un vendedor = lo contado manualmente + lo asignado de otro cierre
+  const montoEfectivoVendedor = (v: VendedorAsignacion) => (v.monto || 0) + (v.monto_asignado || 0)
+
   const totalAsignado = useMemo(() =>
-    vendedores.reduce((sum, v) => sum + (v.monto || 0), 0),
+    vendedores.reduce((sum, v) => sum + montoEfectivoVendedor(v), 0),
     [vendedores]
   )
 
   const esValido = useMemo(() => {
     const tieneOrigen = !!cajaOrigenId
     const tieneMonto = totalAsignado > 0
-    const vendedoresValidos = vendedores.every(v => v.user_id && v.monto > 0)
+    const vendedoresValidos = vendedores.every(v => v.user_id && montoEfectivoVendedor(v) > 0)
 
     return tieneOrigen && tieneMonto && vendedoresValidos
   }, [cajaOrigenId, totalAsignado, vendedores])
@@ -236,13 +251,29 @@ export default function ModalAperturarCaja({
     ))
   }
 
+  // Aplicar el efectivo de apertura asignado al vendedor seleccionado (ya viene contado
+  // del cierre anterior, así que se carga directo como su monto de distribución).
+  const usarEfectivoAsignado = () => {
+    if (efectivoAsignadoTotal <= 0) return
+    if (!vendedorSeleccionadoId) {
+      message.warning('Selecciona primero un vendedor en la lista')
+      return
+    }
+    // Se guarda APARTE del conteo manual: el total del vendedor será manual + asignado.
+    setVendedores(prev => prev.map(v =>
+      v.id === vendedorSeleccionadoId ? { ...v, monto_asignado: efectivoAsignadoTotal } : v
+    ))
+    setEfectivoAsignadoUsado(true)
+    message.success(`S/ ${efectivoAsignadoTotal.toFixed(2)} se sumará a lo que cuentes del vendedor`)
+  }
+
   const handleSubmit = (values: AperturarCajaFormValues) => {
     if (!cajaOrigenId) {
       message.error('Debes seleccionar la caja de origen')
       return
     }
 
-    const vendedorSinMonto = vendedores.find(v => !v.monto || v.monto <= 0)
+    const vendedorSinMonto = vendedores.find(v => montoEfectivoVendedor(v) <= 0)
     if (vendedorSinMonto || totalAsignado <= 0) {
       message.error('El monto de cada vendedor debe ser mayor a S/. 0.00')
       return
@@ -262,7 +293,10 @@ export default function ModalAperturarCaja({
       return
     }
 
-    const vendedoresValidos = vendedores.filter(v => v.user_id && v.monto > 0)
+    // El monto que se envía por vendedor es el TOTAL (manual contado + asignado de otro cierre).
+    const vendedoresValidos = vendedores
+      .filter(v => v.user_id && montoEfectivoVendedor(v) > 0)
+      .map(v => ({ ...v, monto: montoEfectivoVendedor(v) }))
 
     crearAperturarCaja(
       {
@@ -319,17 +353,27 @@ export default function ModalAperturarCaja({
 
         {/* Efectivo de Apertura asignado */}
         {efectivoAsignadoTotal > 0 && (
-          <div className='p-3 bg-emerald-50 rounded-lg border border-emerald-200 flex items-center gap-3'>
-            <FaWallet className='text-emerald-600 text-lg' />
-            <div>
-              <p className='text-sm text-slate-700'>
-                Tienes <strong className='text-emerald-700'>S/ {efectivoAsignadoTotal.toFixed(2)}</strong> asignado como efectivo de apertura
-              </p>
-              <p className='text-xs text-slate-500'>
-                Este monto fue dejado por otro usuario al cerrar su caja y asignado a ti.
-                Inclúyelo en la distribucin de cada vendedor segn corresponda.
-              </p>
+          <div className='p-3 bg-emerald-50 rounded-lg border border-emerald-200 flex items-center justify-between gap-3'>
+            <div className='flex items-center gap-3'>
+              <FaWallet className='text-emerald-600 text-lg' />
+              <div>
+                <p className='text-sm text-slate-700'>
+                  Tienes <strong className='text-emerald-700'>S/ {efectivoAsignadoTotal.toFixed(2)}</strong> asignado como efectivo de apertura
+                </p>
+                <p className='text-xs text-slate-500'>
+                  Este monto fue dejado al cerrar caja y asignado a ti. Aplícalo al vendedor seleccionado.
+                </p>
+              </div>
             </div>
+            <Button
+              type='primary'
+              size='small'
+              onClick={usarEfectivoAsignado}
+              disabled={efectivoAsignadoUsado}
+              className='!bg-emerald-600 hover:!bg-emerald-700'
+            >
+              {efectivoAsignadoUsado ? 'Aplicado ✓' : `Usar S/ ${efectivoAsignadoTotal.toFixed(2)}`}
+            </Button>
           </div>
         )}
 
@@ -429,10 +473,15 @@ export default function ModalAperturarCaja({
                     />
                   </div>
                   <div className='w-24 text-right'>
-                    <span className={`font-bold ${vendedor.monto <= 0 ? 'text-red-500' : 'text-orange-600'}`}>
-                      S/. {vendedor.monto.toFixed(2)}
+                    <span className={`font-bold ${montoEfectivoVendedor(vendedor) <= 0 ? 'text-red-500' : 'text-orange-600'}`}>
+                      S/. {montoEfectivoVendedor(vendedor).toFixed(2)}
                     </span>
-                    {vendedor.monto <= 0 && (
+                    {(vendedor.monto_asignado || 0) > 0 && (
+                      <div className='text-emerald-600 text-[10px] leading-none'>
+                        incl. S/. {(vendedor.monto_asignado || 0).toFixed(2)} asignado
+                      </div>
+                    )}
+                    {montoEfectivoVendedor(vendedor) <= 0 && (
                       <div className='text-red-500 text-xs'>Requerido &gt; 0</div>
                     )}
                   </div>

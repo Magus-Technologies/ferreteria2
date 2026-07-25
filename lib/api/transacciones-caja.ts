@@ -4,7 +4,7 @@
 import { apiRequest, type ApiResponse } from '../api'
 import type { Usuario, SubCaja } from './caja-principal'
 
-// ============= INTERFACES =============
+// ============= INTERFACES ===============
 
 export interface Transaccion {
   id: string
@@ -90,8 +90,22 @@ export interface CrearMovimientoInternoRequest {
   concepto?: string
   despliegue_de_pago_origen_id?: string
   despliegue_de_pago_destino_id?: string
+  /** Usuario al que se le acredita el dinero en el destino (Traslado de Efectivo) */
+  destino_user_id?: string
   justificacion: string
   comprobante?: string
+}
+
+/** Fila de efectivo por usuario (destinos del Traslado de Efectivo) */
+export interface EfectivoUsuarioRow {
+  vendedor_id: string
+  vendedor_nombre: string
+  apertura_id: string
+  sub_caja_id: number
+  sub_caja_nombre: string
+  despliegue_pago_id: string
+  metodo_nombre: string
+  efectivo_disponible: string
 }
 
 /** Concepto de movimiento interno: etiqueta de solo nombre */
@@ -354,10 +368,38 @@ export const transaccionesCajaApi = {
       nombre: string
       caja_principal_id: number
       saldo_actual: number
+      /** Dinero CERRADO (movible) */
       saldo_disponible: number
+      /** Dinero de la sesión abierta + monto de apertura (se consolida al cerrar) */
+      saldo_no_cerrado: number
     }>
   }>> {
     return apiRequest('/cajas/movimientos-internos/saldos-disponibles')
+  },
+
+  getUsuariosConSaldo(): Promise<ApiResponse<{
+    success: boolean
+    data: Array<{
+      user_id: string
+      user_name: string
+      sub_caja_id: number
+      sub_caja_nombre: string
+      despliegue_pago_id: string
+      value: string
+      label: string
+      monto_disponible: number
+    }>
+  }>> {
+    return apiRequest('/cajas/movimientos-internos/usuarios-con-saldo')
+  },
+
+  /**
+   * Efectivo por usuario de las aperturas abiertas (despliegues de EFECTIVO de
+   * todos los usuarios con su saldo desde que se aperturó) — destinos del
+   * Traslado de Efectivo.
+   */
+  getEfectivoTodosUsuarios(): Promise<ApiResponse<{ success: boolean; data: EfectivoUsuarioRow[] }>> {
+    return apiRequest('/cajas/sub-cajas/efectivo-todos-usuarios')
   },
 
   /**

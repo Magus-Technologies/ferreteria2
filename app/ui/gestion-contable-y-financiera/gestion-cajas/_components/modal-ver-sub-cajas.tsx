@@ -9,6 +9,7 @@ import { ExclamationCircleOutlined } from '@ant-design/icons'
 import type { CajaPrincipal, SubCaja } from '~/lib/api/caja-principal'
 import { cajaPrincipalApi } from '~/lib/api/caja-principal'
 import { fetchCajaActivaOrNull } from '~/lib/api/caja'
+import { transaccionesCajaApi } from '~/lib/api/transacciones-caja'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import ModalCrearSubCaja from '~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-crear-sub-caja'
 import ModalEditarSubCaja from '~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-editar-sub-caja'
@@ -99,11 +100,42 @@ export default function ModalVerSubCajas({
         setActiveTab('historial-traslados')
     }
 
-    const columns = useColumnsSubCajas({
-        onEditar: handleEditarSubCaja,
-        onEliminar: handleEliminarSubCaja,
-        onVerHistorialTraslados: handleVerHistorialTraslados,
+    // Saldo NO CERRADO por sub-caja = saldo actual − disponible cerrado
+    // (dinero de la sesión abierta, aún sin cerrar caja)
+    const { data: saldosMovimiento = [] } = useQuery({
+        queryKey: ['saldos-disponibles-movimiento'],
+        queryFn: async () => {
+            const response = await transaccionesCajaApi.getSaldosDisponiblesMovimiento()
+            return response.data?.data || []
+        },
+        enabled: open,
     })
+
+    // NO CERRADO viene del backend (sesión abierta + monto de apertura);
+    // CERRADO es el disponible de sesiones cerradas.
+    const saldosNoCerrados = useMemo(() => Object.fromEntries(
+        saldosMovimiento.map((s) => [s.sub_caja_id, s.saldo_no_cerrado ?? Math.max(s.saldo_actual - s.saldo_disponible, 0)])
+    ), [saldosMovimiento])
+
+    const saldosCerrados = useMemo(() => Object.fromEntries(
+        saldosMovimiento.map((s) => [s.sub_caja_id, s.saldo_disponible])
+    ), [saldosMovimiento])
+
+    // MEMOIZAR las columnas: si el array cambia de identidad en cada render,
+    // AG Grid recibe columnDefs nuevas constantemente y resetea el orden en
+    // pleno arrastre (por eso "no dejaba" mover las columnas).
+    const columns = useMemo(
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        () => useColumnsSubCajas({
+            onEditar: handleEditarSubCaja,
+            onEliminar: handleEliminarSubCaja,
+            onVerHistorialTraslados: handleVerHistorialTraslados,
+            saldosNoCerrados,
+            saldosCerrados,
+        }),
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [saldosNoCerrados, saldosCerrados]
+    )
 
     // Encontrar la Caja Chica
     const cajaChica = cajaData.sub_cajas.find((sc: SubCaja) => sc.es_caja_chica)
@@ -180,10 +212,8 @@ export default function ModalVerSubCajas({
                                     columnDefs={columns}
                                     rowSelection={false}
                                     withNumberColumn={true}
-                                    headerColor='#e11d48'
                                     selectionColor='#fecdd3'
                                     suppressDragLeaveHidesColumns={true}
-                                    suppressMovableColumns={true}
                                 />
                             </div>
                         )}
