@@ -36,6 +36,24 @@ export function formatCantidadFraccion(value: number, factor: number): string {
   return `${enteras}F${fraccionFormateada}`
 }
 
+/**
+ * Formatea una cantidad para MOSTRARLA en el input de venta: decimal plano,
+ * sin ceros de relleno y sin notación "XFY".
+ *   2.5     → "2.5"
+ *   2       → "2"
+ *   14.0375 → "14.038"
+ *
+ * El input escribía lo tipeado con `formatCantidadFraccion`, así que una media
+ * medida como 2.5 se transformaba sola en "2F0.5" y confundía al vendedor.
+ * La notación F sigue aceptándose al ESCRIBIR (ver `parseCantidadFraccion`);
+ * lo que cambia es cómo se muestra. Se redondea a 3 decimales porque esa es la
+ * precisión que guarda la DB (`unidadderivadainmutableventa.cantidad` decimal(9,3)).
+ */
+export function formatCantidadPlana(value: number): string {
+  if (!Number.isFinite(value)) return ''
+  return String(Math.round(value * 1000) / 1000)
+}
+
 export function getStock({
   stock_entero = 0,
   stock_fraccion,

@@ -22,11 +22,17 @@ const CantCell = memo(function CantCell({ rowKey, init, max, onCommit, onChangeR
     return <div className="flex items-center h-full px-2"><span className="text-slate-300">—</span></div>
   }
 
-  const clamp = (v: number | null) => Math.max(0, Math.min(Math.round(Number(v) || 0), max))
+  // Acotar a [0, max] SIN redondear a entero: antes `Math.round` convertía 2.5
+  // en 3, así que no se podía programar una media medida para entrega. Se
+  // redondea a 3 decimales, que es la precisión que guarda la DB.
+  const clamp = (v: number | null) => {
+    const acotado = Math.max(0, Math.min(Number(v) || 0, max))
+    return Math.round(acotado * 1000) / 1000
+  }
   const commit = () => onCommit(rowKey, clamp(val))
   return (
     <div className="flex items-center h-full">
-      <InputNumber size="small" value={val} min={0} max={max} precision={0}
+      <InputNumber size="small" value={val} min={0} max={max} precision={2}
         onChange={(v) => { setVal(v); onChangeRef?.(rowKey, clamp(v)) }}
         onBlur={commit} onPressEnter={commit} style={{ width: '100%' }} />
     </div>
