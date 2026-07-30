@@ -15,6 +15,10 @@ import type { VentaConUnidadDerivadaNormal } from './_components/others/header-c
 import { useEffect } from 'react'
 import { useStoreProductoAgregadoVenta } from './_store/store-producto-agregado-venta'
 
+// DNI del cliente genérico "CLIENTE VARIOS" (mostrador). No es un cliente real:
+// al convertir notas se ignora y el comprobante sale a nombre del cliente real.
+const DOC_CLIENTE_VARIOS = '99999999'
+
 // Componente de loading optimizado
 const ComponentLoading = () => (
   <div className="flex items-center justify-center h-40">
@@ -82,10 +86,15 @@ export default function CrearVenta() {
 
       if (ventas.length === 0) return null
 
-      // Validación: todas las notas deben tener el mismo cliente
-      const clienteIds = new Set(ventas.map((v) => v.cliente_id ?? null))
-      if (clienteIds.size > 1) {
-        throw new Error('Las notas seleccionadas tienen clientes distintos')
+      // Validación: CLIENTE VARIOS (DNI 99999999) es genérico, se ignora.
+      // Solo se bloquea si hay 2+ clientes REALES distintos.
+      const realClientIds = new Set(
+        ventas
+          .filter((v) => (v as any).cliente?.numero_documento !== DOC_CLIENTE_VARIOS)
+          .map((v) => v.cliente_id ?? null),
+      )
+      if (realClientIds.size > 1) {
+        throw new Error('Las notas seleccionadas tienen clientes reales distintos')
       }
 
       // Concatenar productos de todas las notas y mapear
@@ -136,10 +145,14 @@ export default function CrearVenta() {
       }
       const productosMerged = Array.from(productosMap.values())
 
-      // Tomamos la 1ra venta como base (cliente, almacen, moneda) pero limpiamos
-      // id/serie/numero para que se cree una venta nueva. Tipo doc → Boleta por
-      // default; el usuario puede cambiar a Factura antes de guardar.
-      const base = ventas[0]
+      // Base (cliente, almacen, moneda): preferimos una nota de cliente REAL
+      // para que el comprobante salga a su nombre; las notas de CLIENTE VARIOS
+      // solo aportan productos. Si todas son genéricas, usamos la 1ra.
+      // Limpiamos id/serie/numero para crear una venta nueva. Tipo doc → Boleta
+      // por default; el usuario puede cambiar a Factura antes de guardar.
+      const base =
+        ventas.find((v) => (v as any).cliente?.numero_documento !== DOC_CLIENTE_VARIOS) ??
+        ventas[0]
       return {
         ...base,
         id: undefined as any,

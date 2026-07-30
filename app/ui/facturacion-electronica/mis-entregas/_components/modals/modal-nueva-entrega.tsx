@@ -5,6 +5,7 @@ import { Modal, Button, Select, DatePicker, Input, Spin } from 'antd'
 import { FaTruck } from 'react-icons/fa'
 import dayjs from 'dayjs'
 import { useAuth } from '~/lib/auth-context'
+import { formatCantidadPlana } from '~/app/_utils/get-stock'
 import { ventaApi } from '~/lib/api/venta'
 import { choferApi } from '~/lib/api/chofer'
 import { vehiculosApi } from '~/lib/api/catalogos'
@@ -272,7 +273,7 @@ export default function ModalNuevaEntrega({ open, onClose, onCrear, venta, loadi
                         <td className="px-3 py-2 text-slate-700">{p.nombre}</td>
                         <td className="px-3 py-2 text-slate-500 whitespace-nowrap">{p.unidad}</td>
                         <td className="px-3 py-2 text-right font-semibold text-emerald-700 whitespace-nowrap">
-                          {Number(p.cantidad).toFixed(0)}
+                          {formatCantidadPlana(Number(p.cantidad))}
                         </td>
                       </tr>
                     ))}

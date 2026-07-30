@@ -24,7 +24,7 @@ import { DescuentoTipo, TipoMoneda } from '~/lib/api/venta'
 import SelectPrecios from '~/app/_components/form/selects/select-precios'
 import InfoActivadoresPrecios from '../others/info-activadores-precios'
 import { calcularSubtotalVenta } from '../tables/calcular-subtotal-venta'
-import { parseCantidadFraccion, formatCantidadFraccion, GetStock } from '~/app/_utils/get-stock'
+import { parseCantidadFraccion, formatCantidadPlana, GetStock } from '~/app/_utils/get-stock'
 
 function InputCantidadFraccion({
   value,
@@ -40,11 +40,20 @@ function InputCantidadFraccion({
   inputRef?: React.RefObject<InputRef | null>
 }) {
   const [disp, setDisp] = useState(() =>
-    value != null ? formatCantidadFraccion(value, factor) : ''
+    value != null ? formatCantidadPlana(value) : ''
   )
 
+  // Mientras el vendedor está escribiendo NO se pisa su texto. Antes este efecto
+  // reescribía lo tipeado en cuanto cambiaba `value` o `factor`: al escribir una
+  // media medida (2.5) saltaba sola a "2F0.5", y al elegir la unidad derivada
+  // cambiaba el `factor` y el texto se "corregía" solo. Ahora la sincronización
+  // ocurre únicamente cuando el valor llega de afuera (carga inicial, cambio de
+  // producto, reset del form).
+  const editando = useRef(false)
+
   useEffect(() => {
-    setDisp(value != null ? formatCantidadFraccion(value, factor) : '')
+    if (editando.current) return
+    setDisp(value != null ? formatCantidadPlana(value) : '')
   }, [value, factor])
 
   const commit = (raw: string) => {
@@ -52,8 +61,11 @@ function InputCantidadFraccion({
     const parsed = parseCantidadFraccion(raw, factor)
     if (parsed !== null && parsed > 0) {
       onChange(parsed)
+      // Normalizar recién al confirmar: "2.5" queda "2.5" y "14F0.15" (factor 4)
+      // queda "14.038". Se sigue aceptando la notación F al escribir.
+      setDisp(formatCantidadPlana(parsed))
     } else {
-      setDisp(value != null ? formatCantidadFraccion(value, factor) : '')
+      setDisp(value != null ? formatCantidadPlana(value) : '')
     }
   }
 
@@ -63,6 +75,7 @@ function InputCantidadFraccion({
       placeholder="Cantidad"
       prefix={<FaBoxes size={15} className="text-rose-700 mx-1" />}
       value={disp}
+      onFocus={() => { editando.current = true }}
       onChange={(e) => {
         setDisp(e.target.value)
         const parsed = parseCantidadFraccion(e.target.value, factor)
@@ -70,7 +83,10 @@ function InputCantidadFraccion({
           onChange(parsed)
         }
       }}
-      onBlur={() => commit(disp)}
+      onBlur={() => {
+        editando.current = false
+        commit(disp)
+      }}
       onKeyUp={(e) => {
         if (e.key === 'Enter') commit(disp)
         onKeyUp?.(e)

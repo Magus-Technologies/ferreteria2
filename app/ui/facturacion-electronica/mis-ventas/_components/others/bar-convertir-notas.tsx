@@ -10,6 +10,9 @@ import { useStoreMultiSeleccionNotas } from '../../_store/store-multi-seleccion-
 import useGetVentas from '../../_hooks/use-get-ventas'
 import { useStoreFiltrosMisVentas } from '../../_store/store-filtros-mis-ventas'
 
+// DNI del cliente genérico "CLIENTE VARIOS" (mostrador). No es un cliente real.
+const DOC_CLIENTE_VARIOS = '99999999'
+
 /**
  * Barra que aparece cuando hay ≥1 Nota de Venta seleccionada en la tabla.
  * Permite convertirlas a Factura/Boleta — navega a /crear-venta con los IDs
@@ -38,14 +41,18 @@ export default function BarConvertirNotas() {
   const handleConvertir = () => {
     if (seleccionadas.length === 0) return
 
-    // Validar que todas las notas tengan el mismo cliente.
-    // Si no, no podemos convertir: una factura/boleta es de un solo cliente.
-    const clienteIds = new Set(
-      seleccionadas.map((v) => v.cliente_id ?? null),
+    // CLIENTE VARIOS (DNI 99999999) es un genérico de mostrador, NO un cliente
+    // real. Se ignora al validar "mismo cliente": sus notas se absorben en el
+    // cliente real y el comprobante sale a nombre de ese cliente real. Solo se
+    // bloquea si hay 2+ clientes REALES distintos (esos sí no se pueden juntar).
+    const realClientIds = new Set(
+      seleccionadas
+        .filter((v) => (v as any).cliente?.numero_documento !== DOC_CLIENTE_VARIOS)
+        .map((v) => v.cliente_id ?? null),
     )
-    if (clienteIds.size > 1) {
+    if (realClientIds.size > 1) {
       message.error(
-        'Todas las notas seleccionadas deben pertenecer al mismo cliente.',
+        'Las notas son de clientes reales distintos. Una factura/boleta va a un solo cliente.',
       )
       return
     }
