@@ -210,7 +210,6 @@ export default function ModalAnalisisPerdidasVentas({ open, onClose, filtros: fi
                 { label: 'Todas las Categorías', value: 'todas' },
                 { label: 'Ventas Bajo Costo', value: 'ventas_bajo_costo' },
                 { label: 'Descuentos Aplicados', value: 'descuentos' },
-                { label: 'Comisiones de Vendedor', value: 'comisiones' },
                 { label: 'Salidas de Almacén', value: 'salidas' },
               ]}
             />
@@ -241,7 +240,7 @@ export default function ModalAnalisisPerdidasVentas({ open, onClose, filtros: fi
         </div>
 
         {/* Cards Informativos */}
-        <div className="grid grid-cols-5 gap-3">
+        <div className="grid grid-cols-4 gap-3">
           <div className="bg-white border border-orange-100 rounded-lg p-3 flex flex-col gap-2 shadow-sm">
             <div className="flex items-center gap-2">
               <div className="bg-orange-100 p-2 rounded-full text-orange-600">
@@ -260,16 +259,6 @@ export default function ModalAnalisisPerdidasVentas({ open, onClose, filtros: fi
               <div className="text-[9px] uppercase text-blue-600 font-bold">Descuentos</div>
             </div>
             <div className="text-lg font-bold text-blue-700">S/ {resumen.descuentos_aplicados.toFixed(2)}</div>
-          </div>
-
-          <div className="bg-white border border-green-100 rounded-lg p-3 flex flex-col gap-2 shadow-sm">
-            <div className="flex items-center gap-2">
-              <div className="bg-green-100 p-2 rounded-full text-green-600">
-                <FaHandHoldingUsd size={14} />
-              </div>
-              <div className="text-[9px] uppercase text-green-600 font-bold">Comisiones</div>
-            </div>
-            <div className="text-lg font-bold text-green-700">S/ {resumen.comisiones_vendedor.toFixed(2)}</div>
           </div>
 
           <div className="bg-white border border-rose-100 rounded-lg p-3 flex flex-col gap-2 shadow-sm">
