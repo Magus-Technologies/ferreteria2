@@ -380,7 +380,13 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
         return
       }
       message.success(result.data?.message || 'Cobro registrado correctamente')
-      
+
+      // Mostrar automáticamente el ticket del cobro recién registrado.
+      const nuevoCobroId = result.data?.data?.id
+      if (nuevoCobroId) {
+        handleVerTicket(String(nuevoCobroId))
+      }
+
       // Refrescar datos - esto actualizará localVenta automáticamente
       queryClient.invalidateQueries({ queryKey: [QueryKeys.COBROS_VENTA, localVenta?.id] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.COBROS_VENTA, 'all-cobros'] })
