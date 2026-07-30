@@ -62,7 +62,7 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
   }, [localVenta])
 
   // Obtener cobros previos
-  const { data: cobrosData } = useQuery({
+  const { data: cobrosData, isFetched: cobrosFetched } = useQuery({
     queryKey: [QueryKeys.COBROS_VENTA, localVenta?.id],
     queryFn: async () => {
       if (!localVenta?.id) return { data: [] }
@@ -83,13 +83,15 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
   )
   const saldoPendiente = totalVenta - totalPagado
 
-  // Autofill monto con el saldo pendiente cada vez que cambia (al abrir o tras registrar un cobro)
+  // Autofill monto con el saldo pendiente. Se espera a que los cobros previos hayan cargado
+  // (cobrosFetched); si no, se rellenaría con el TOTAL de la venta en vez del SALDO PENDIENTE
+  // (los abonos aún no estaban restados).
   useEffect(() => {
-    if (open && saldoPendiente > 0 && !autofilledMonto.current) {
+    if (open && cobrosFetched && saldoPendiente > 0 && !autofilledMonto.current) {
       form.setFieldValue('monto', Number(saldoPendiente.toFixed(2)))
       autofilledMonto.current = true
     }
-  }, [open, saldoPendiente, form])
+  }, [open, cobrosFetched, saldoPendiente, form])
 
   // Query para obtener despliegues de pago y setear Efectivo por defecto
   const { data: desplieguesData } = useQuery({

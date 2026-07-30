@@ -107,7 +107,7 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
   }, [localCompra])
 
   // Obtener pagos previos
-  const { data: pagosData } = useQuery({
+  const { data: pagosData, isFetched: pagosFetched } = useQuery({
     queryKey: [QueryKeys.PAGOS_COMPRA, localCompra?.id],
     queryFn: async () => {
       if (!localCompra?.id) return { data: [] }
@@ -159,13 +159,15 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
   // Compra ya cancelada: sin saldo por pagar (con tolerancia por redondeo)
   const yaPagada         = saldoTC <= 0.01
 
-  // Autofill monto con el saldo visible (saldoTC para compras en dólares, saldoPendiente para soles)
+  // Autofill monto con el saldo visible (saldoTC para compras en dólares, saldoPendiente para soles).
+  // Se espera a que los pagos previos hayan cargado (pagosFetched); si no, se rellenaría con el
+  // TOTAL NETO en vez del SALDO PENDIENTE (los abonos aún no estaban restados).
   useEffect(() => {
-    if (open && saldoTC > 0 && !autofilledMonto.current) {
+    if (open && pagosFetched && saldoTC > 0 && !autofilledMonto.current) {
       form.setFieldValue('monto', Number(saldoTC.toFixed(2)))
       autofilledMonto.current = true
     }
-  }, [open, saldoTC, form])
+  }, [open, pagosFetched, saldoTC, form])
 
   // Al CAMBIAR el tipo de cambio, recalcular el monto al saldo en soles del nuevo TC
   // (antes solo se autocompletaba una vez, así que cambiar el TC no movía el monto).
