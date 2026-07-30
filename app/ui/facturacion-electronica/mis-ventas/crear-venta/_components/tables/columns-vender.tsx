@@ -764,7 +764,10 @@ export function useColumnsVender({
                 name: [value, 'cantidad'],
                 rules: [{ required: true, message: '' }],
               }}
-              precision={2}
+              // 3 decimales = precisión real de la DB
+              // (unidadderivadainmutableventa.cantidad decimal(9,3)). Con 2 se
+              // recortaba en silencio: 14.0375 quedaba 14.04 al editar acá.
+              precision={3}
               min={0}
               formWithMessage={false}
               onChange={() => {

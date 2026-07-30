@@ -1,6 +1,7 @@
   'use client'
 
 import { Modal, message, Input } from 'antd'
+import { formatCantidadPlana } from '~/app/_utils/get-stock'
 import { FaClockRotateLeft, FaBan, FaFilePdf } from 'react-icons/fa6'
 import { Prestamo, prestamoApi, PagoPrestamo } from '~/lib/api/prestamo'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -144,7 +145,7 @@ export default function ModalVerDevoluciones({
       valueGetter: (p) => p.data ? `${p.data.producto} (${p.data.codigo})` : '' },
     { headerName: 'Unidad', colId: 'unidad', field: 'unidad', width: 130 },
     { headerName: 'Cantidad', colId: 'cantidad', field: 'cantidad', width: 120,
-      valueFormatter: (p) => Number(p.value || 0).toFixed(0),
+      valueFormatter: (p) => formatCantidadPlana(Number(p.value || 0)),
       cellStyle: { fontWeight: 'bold', color: '#059669' } },
   ]
 
@@ -249,7 +250,7 @@ export default function ModalVerDevoluciones({
       width: 100,
       valueFormatter: (params) => {
         const value = Number(params.value)
-        return isNaN(value) ? '0' : value.toFixed(0)
+        return isNaN(value) ? '0' : formatCantidadPlana(value)
       },
       cellStyle: { fontWeight: 'bold', color: '#059669' },
     },
@@ -379,15 +380,15 @@ export default function ModalVerDevoluciones({
               </span>
             </div>
             <div>
-              <span className='font-semibold'>Cantidad Total:</span> {Number(prestamo.monto_total).toFixed(0)}
+              <span className='font-semibold'>Cantidad Total:</span> {formatCantidadPlana(Number(prestamo.monto_total))}
             </div>
             <div>
               <span className='font-semibold'>Devuelto:</span>{' '}
-              <span className='text-green-600 font-bold'>{Number(prestamo.monto_pagado).toFixed(0)}</span>
+              <span className='text-green-600 font-bold'>{formatCantidadPlana(Number(prestamo.monto_pagado))}</span>
             </div>
             <div>
               <span className='font-semibold'>Pendiente:</span>{' '}
-              <span className='text-red-600 font-bold'>{Number(prestamo.monto_pendiente).toFixed(0)}</span>
+              <span className='text-red-600 font-bold'>{formatCantidadPlana(Number(prestamo.monto_pendiente))}</span>
             </div>
           </div>
         </div>

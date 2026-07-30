@@ -6,6 +6,7 @@ import { FaCheck, FaBoxOpen, FaUser, FaMapMarkerAlt, FaFileInvoice, FaFilePdf, F
 import type { ColDef } from 'ag-grid-community'
 import { useQuery } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
+import { formatCantidadPlana } from '~/app/_utils/get-stock'
 import { ventaApi } from '~/lib/api/venta'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { useStoreModalPdfEntrega } from '../../_store/store-modal-pdf-entrega'
@@ -117,7 +118,7 @@ export default function ModalConfirmarEntrega({
       headerName: 'Cant.',
       field: 'cantidad',
       width: 90,
-      valueFormatter: ({ value }) => Number(value).toFixed(0),
+      valueFormatter: ({ value }) => formatCantidadPlana(Number(value || 0)),
       cellStyle: { textAlign: 'center', fontWeight: 600, color: '#047857' },
     },
   ], [])

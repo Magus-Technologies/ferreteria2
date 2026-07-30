@@ -10,7 +10,7 @@ import SelectBase, { SelectBaseProps } from './select-base'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { transportistaApi, type Transportista } from '~/lib/api/transportista'
 import { useServerMutation } from '~/hooks/use-server-mutation'
-import { consultaReniec } from '~/app/_actions/consulta-reniec'
+import { consultaRuc } from '~/app/_actions/consulta-reniec'
 import type { ConsultaRuc } from '~/app/_types/consulta-ruc'
 import ModalTransportistaSearch from '../../modals/modal-transportista-search'
 import { useStoreTransportistaSeleccionado } from '../../modals/store-transportista-seleccionado'
@@ -98,7 +98,7 @@ export default function SelectTransportistas({
   // Consulta SUNAT para RUCs de 11 dígitos que no están en el catálogo.
   const ultimaConsultaRef = useRef('')
   const { execute: consultarRuc, loading: consultando } = useServerMutation({
-    action: consultaReniec,
+    action: consultaRuc,
     onSuccess: res => {
       const data = res.data as ConsultaRuc | undefined
       if (data?.ruc) {

@@ -1,6 +1,7 @@
 "use client";
 
 import { ColDef } from "ag-grid-community";
+import { formatCantidadPlana } from "~/app/_utils/get-stock";
 import dayjs from "dayjs";
 import { FaFilePdf } from "react-icons/fa6";
 import { MdEditSquare, MdBlock } from "react-icons/md";
@@ -119,7 +120,7 @@ export function useColumnsMisPrestamos(
       width: 110,
       valueFormatter: (params) => {
         const value = Number(params.value);
-        return isNaN(value) ? "0" : value.toFixed(0);
+        return isNaN(value) ? "0" : formatCantidadPlana(value);
       },
       cellStyle: { fontWeight: "bold", color: "#1e40af" },
     },
@@ -130,7 +131,7 @@ export function useColumnsMisPrestamos(
       width: 100,
       valueFormatter: (params) => {
         const value = Number(params.value);
-        return isNaN(value) ? "0" : value.toFixed(0);
+        return isNaN(value) ? "0" : formatCantidadPlana(value);
       },
       cellStyle: { fontWeight: "bold", color: "#059669" },
     },
@@ -141,7 +142,7 @@ export function useColumnsMisPrestamos(
       width: 100,
       valueFormatter: (params) => {
         const value = Number(params.value);
-        return isNaN(value) ? "0" : value.toFixed(0);
+        return isNaN(value) ? "0" : formatCantidadPlana(value);
       },
       cellStyle: { fontWeight: "bold", color: "#dc2626" },
     },

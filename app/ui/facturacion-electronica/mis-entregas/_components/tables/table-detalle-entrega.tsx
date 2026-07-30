@@ -5,6 +5,7 @@ import { ColDef } from 'ag-grid-community'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { useStoreEntregaSeleccionada } from './table-mis-entregas'
 import { orangeColors } from '~/lib/colors'
+import { formatCantidadPlana } from '~/app/_utils/get-stock'
 import {
   getResumenProductosParcialAgrupado,
   isEntregaParcialAgrupada,
@@ -322,7 +323,7 @@ export default function TableDetalleEntrega() {
         headerName: 'Total',
         field: 'total',
         width: 90,
-        valueFormatter: (params) => Number(params.value).toFixed(0),
+        valueFormatter: (params) => formatCantidadPlana(Number(params.value || 0)),
       },
     ]
 
@@ -330,7 +331,7 @@ export default function TableDetalleEntrega() {
       headerName: 'Recibido',
       field: 'recibido',
       width: 110,
-      valueFormatter: (params) => Number(params.value).toFixed(0),
+      valueFormatter: (params) => formatCantidadPlana(Number(params.value || 0)),
       cellStyle: (params) =>
         Number(params.value) > 0
           ? { color: '#b45309', fontWeight: 'bold' }
@@ -341,7 +342,7 @@ export default function TableDetalleEntrega() {
       headerName: 'Entregado',
       field: 'entregado',
       width: 115,
-      valueFormatter: (params) => Number(params.value).toFixed(0),
+      valueFormatter: (params) => formatCantidadPlana(Number(params.value || 0)),
       cellStyle: { color: '#16a34a', fontWeight: 'bold' },
       headerTooltip: 'Cantidad confirmada en esta entrega',
     })
@@ -351,7 +352,7 @@ export default function TableDetalleEntrega() {
         headerName: 'Programado',
         field: 'programado',
         width: 110,
-        valueFormatter: (params) => Number(params.value || 0).toFixed(0),
+        valueFormatter: (params) => formatCantidadPlana(Number(params.value || 0)),
         cellStyle: (params) =>
           Number(params.value) > 0
             ? { color: '#2563eb', fontWeight: 'bold' }
@@ -364,7 +365,7 @@ export default function TableDetalleEntrega() {
       headerName: 'Pendiente',
       field: 'pendiente',
       width: 110,
-      valueFormatter: (params) => Number(params.value).toFixed(0),
+      valueFormatter: (params) => formatCantidadPlana(Number(params.value || 0)),
       cellStyle: (params) =>
         Number(params.value) > 0
           ? { color: '#d97706', fontWeight: 'bold' }
