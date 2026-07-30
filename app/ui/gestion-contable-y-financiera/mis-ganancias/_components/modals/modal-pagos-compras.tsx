@@ -30,7 +30,7 @@ export default function ModalPagosCompras({ open, onClose, filtros: filtrosGloba
     desde: filtrosGlobales.desde || dayjs().format('YYYY-MM-DD'),
     hasta: filtrosGlobales.hasta || dayjs().format('YYYY-MM-DD'),
     search: '',
-    tipo_gasto: 'gasto_operativo',
+    tipo_gasto: 'todos',
   })
   const [debouncedSearch] = useDebounce(localFiltros.search, 500)
 
@@ -57,7 +57,7 @@ export default function ModalPagosCompras({ open, onClose, filtros: filtrosGloba
         desde: filtrosGlobales.desde || dayjs().format('YYYY-MM-DD'),
         hasta: filtrosGlobales.hasta || dayjs().format('YYYY-MM-DD'),
         search: '',
-        tipo_gasto: 'gasto_operativo',
+        tipo_gasto: 'todos',
       }
       setLocalFiltros(nuevosFiltros)
     }

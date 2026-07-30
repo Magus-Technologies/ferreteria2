@@ -98,6 +98,13 @@ export default function CardsInfoGanancias() {
     return (Number(resumen.ganancia) || 0) - gastosTotal - perdidasNoEnGanancia
   }, [resumen.ganancia, gastosTotal, perdidasData])
 
+  // Total de pérdidas para la tarjeta "Perdida": el MISMO total del modal que abre
+  // (Análisis de Pérdidas en Ventas = bajo costo + descuentos + comisiones + salidas + NC).
+  const totalPerdidas = useMemo(
+    () => Number(perdidasData?.data?.data?.resumen?.total_perdidas) || 0,
+    [perdidasData]
+  )
+
   const handleEnviarCorreo = async () => {
     if (!email.trim()) {
       message.error('Por favor ingrese un correo electrónico')
@@ -194,17 +201,6 @@ export default function CardsInfoGanancias() {
         filtros={filtros}
       />
 
-      {/* Neto */}
-      <div className='bg-white border border-slate-200 rounded-lg p-2'>
-        <div className='flex items-center justify-center gap-1 mb-0.5'>
-          <FaMoneyBills className='text-cyan-600' size={12} />
-          <div className='text-[11px] text-slate-600 font-medium'>Ganancia Neta</div>
-        </div>
-        <div className='text-base font-bold text-cyan-600 text-center'>
-          {isLoading ? '...' : gananciaNeta.toFixed(2)}
-        </div>
-      </div>
-
       {/* Perdida — abre el Análisis de Pérdidas en Ventas (modal completo) */}
       <div
         className='bg-white border border-slate-200 rounded-lg p-2 cursor-pointer hover:border-red-300 transition-colors relative group'
@@ -218,7 +214,7 @@ export default function CardsInfoGanancias() {
           <div className='text-[11px] text-slate-600 font-medium'>Perdida</div>
         </div>
         <div className='text-base font-bold text-red-600 text-center'>
-          {isLoading ? '...' : resumen.perdida.toFixed(2)}
+          {isLoading ? '...' : totalPerdidas.toFixed(2)}
         </div>
       </div>
 
@@ -227,6 +223,17 @@ export default function CardsInfoGanancias() {
         onClose={() => setModalAnalisisPerdidasOpen(false)}
         filtros={filtros}
       />
+
+      {/* Ganancia Neta */}
+      <div className='bg-white border border-slate-200 rounded-lg p-2'>
+        <div className='flex items-center justify-center gap-1 mb-0.5'>
+          <FaMoneyBills className='text-cyan-600' size={12} />
+          <div className='text-[11px] text-slate-600 font-medium'>Ganancia Neta</div>
+        </div>
+        <div className='text-base font-bold text-cyan-600 text-center'>
+          {isLoading ? '...' : gananciaNeta.toFixed(2)}
+        </div>
+      </div>
 
       {/* Análisis PEPS - Diferencia de Cambio */}
       <div
