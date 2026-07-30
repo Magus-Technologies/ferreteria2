@@ -75,7 +75,8 @@ export default function CardsInfoGanancias() {
   const gastosTotal = useMemo(() => {
     const gastosExtras = gastosExtrasData?.data || []
     const totalExtras = gastosExtras.reduce((sum: number, g: any) => sum + (Number(g.monto) || 0), 0)
-    const totalComisiones = comisionesData?.data?.resumen?.total_generado || 0
+    // Solo comisiones PAGADAS: una comisión generada pero no pagada aún no es un gasto real.
+    const totalComisiones = comisionesData?.data?.resumen?.total_pagado || 0
     return totalExtras + totalComisiones
   }, [gastosExtrasData, comisionesData])
 
