@@ -433,11 +433,10 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
         }
       }
 
-      // Si saldo_pendiente es 0, cerrar el modal
+      // Al pagar el 100% NO se cierra el modal automáticamente; el usuario lo cierra manualmente.
       const nuevoSaldo = saldoPendiente - (result.data?.data?.monto || 0)
       if (nuevoSaldo <= 0.01) {
         message.success('Compra pagada al 100%')
-        setOpen(false)
       }
     },
     onError: (error: any) => {
