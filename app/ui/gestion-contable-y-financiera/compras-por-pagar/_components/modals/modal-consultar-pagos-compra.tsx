@@ -120,7 +120,9 @@ export default function ModalConsultarPagosCompra({ open, setOpen }: ModalConsul
       })
     }
 
-    return filtered
+    // Ordenar por registro descendente (lo último registrado primero). El id es un
+    // ULID que codifica el timestamp de creación, así que ordena por fecha y hora real.
+    return [...filtered].sort((a, b) => (b.id ?? '').localeCompare(a.id ?? ''))
   }, [allPagos, searchText, estadoMetodoPago, fechaDesde, fechaHasta])
 
   // Total importe (solo pagos activos)
