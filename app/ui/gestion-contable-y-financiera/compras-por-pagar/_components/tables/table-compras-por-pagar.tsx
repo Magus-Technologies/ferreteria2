@@ -5,7 +5,7 @@ import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useRef, memo, useCallback, useMemo, useEffect, useState } from 'react'
 import { redColors } from '~/lib/colors'
 import { AgGridReact } from 'ag-grid-react'
-import { ColDef, SelectionChangedEvent, RowDoubleClickedEvent, RowClickedEvent, ModelUpdatedEvent } from 'ag-grid-community'
+import { ColDef, SelectionChangedEvent, RowDoubleClickedEvent, RowClickedEvent, ModelUpdatedEvent, IRowNode } from 'ag-grid-community'
 import { compraApi, type Compra } from '~/lib/api/compra'
 import { useQuery } from '@tanstack/react-query'
 import { useStoreFiltrosComprasPorPagar } from '../../_store/store-filtros-compras-por-pagar'
@@ -57,6 +57,9 @@ function aplicarFiltroMora(compras: Compra[], rango: MoraRango): Compra[] {
 
 const TableComprasPorPagar = memo(function TableComprasPorPagar() {
   const tableRef = useRef<AgGridReact>(null)
+  // Última fila elegida por el usuario (id). Persiste aunque la grilla pierda la
+  // selección al refrescar, para poder restaurarla tras el refetch.
+  const selectedIdRef = useRef<string | undefined>(undefined)
 
   // Estados para el modal de PDF
   const [pdfModalOpen, setPdfModalOpen] = useState(false)
@@ -365,7 +368,11 @@ const TableComprasPorPagar = memo(function TableComprasPorPagar() {
   const handleSelectionChanged = useCallback(
     (event: SelectionChangedEvent<Compra>) => {
       const selectedNodes = event.api?.getSelectedNodes() || []
-      const selectedCompra = selectedNodes?.[0]?.data as Compra
+      const selectedCompra = selectedNodes?.[0]?.data as Compra | undefined
+      // Ignorar selección vacía (la grilla la pierde al refrescar): conservamos la última
+      // fila elegida para restaurarla tras el refetch, en vez de borrar el store.
+      if (!selectedCompra) return
+      selectedIdRef.current = selectedCompra.id
       useStoreCompraSeleccionada.getState().setCompra(selectedCompra)
     },
     []
@@ -410,16 +417,30 @@ const TableComprasPorPagar = memo(function TableComprasPorPagar() {
     []
   )
 
-  // Seleccionar automáticamente la primera fila
+  // Al cargar/refrescar datos: conservar la fila que el usuario tenía seleccionada
+  // (buscándola por id, porque al refrescar la grilla pierde la selección). Solo cae a
+  // la primera fila en la carga inicial o si esa compra ya no está en la lista. Antes se
+  // seleccionaba SIEMPRE la primera fila, así que un refetch (p.ej. tras registrar un
+  // pago) saltaba la selección a la fila 1.
   useEffect(() => {
-    if (rowData && rowData.length > 0 && tableRef.current) {
-      setTimeout(() => {
-        const firstNode = tableRef.current?.api?.getDisplayedRowAtIndex(0);
-        if (firstNode) {
-          firstNode.setSelected(true);
-        }
-      }, 100);
-    }
+    if (!rowData || rowData.length === 0 || !tableRef.current) return
+    setTimeout(() => {
+      const api = tableRef.current?.api
+      if (!api) return
+      const seleccionadaId = selectedIdRef.current
+      let nodoObjetivo: IRowNode<Compra> | null = null
+      if (seleccionadaId) {
+        api.forEachNode((node) => {
+          if (node.data?.id === seleccionadaId) nodoObjetivo = node
+        })
+      }
+      if (!nodoObjetivo) {
+        nodoObjetivo = api.getDisplayedRowAtIndex(0) ?? null
+      }
+      if (nodoObjetivo && !nodoObjetivo.isSelected()) {
+        nodoObjetivo.setSelected(true)
+      }
+    }, 100);
   }, [rowData]);
 
   // Publicar al store las filas REALMENTE visibles (después del filtro rápido del
