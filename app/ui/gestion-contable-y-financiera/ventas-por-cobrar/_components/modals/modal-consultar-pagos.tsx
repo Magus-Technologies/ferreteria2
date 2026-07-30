@@ -6,6 +6,7 @@ import { ventaApi, type VentaCompleta, type CobroVenta } from '~/lib/api/venta'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useStoreFiltrosVentasPorCobrar } from '../../_store/store-filtros-ventas-por-cobrar'
 import dayjs, { Dayjs } from 'dayjs'
+import { formatFechaPeru, ulidToDate } from '~/utils/fechas'
 import { useMemo, useState } from 'react'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { ColDef } from 'ag-grid-community'
@@ -161,9 +162,13 @@ export default function ModalConsultarPagos({ open, setOpen }: ModalConsultarPag
       headerName: 'Fecha y Hora Pago',
       field: 'created_at',
       width: 160,
+      // La hora real de registro NO está en `fecha` (columna DATE → 12:00 AM); se
+      // decodifica del id ULID y se muestra en hora de Perú.
       valueGetter: (p) => {
+        const fechaUlid = ulidToDate(p.data?.id)
+        if (fechaUlid) return formatFechaPeru(fechaUlid, 'DD/MM/YYYY hh:mm:ss A')
         const val = p.data?.created_at || p.data?.fecha
-        return val ? dayjs(val).format('DD/MM/YYYY hh:mm:ss A') : ''
+        return val ? formatFechaPeru(val, 'DD/MM/YYYY hh:mm:ss A') : ''
       },
     },
     {

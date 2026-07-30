@@ -81,6 +81,26 @@ export function formatFechaPeru(
 }
 
 /**
+ * Decodifica el timestamp de creación embebido en un ULID (primeros 10 chars,
+ * Crockford base32 = milisegundos Unix UTC). Sirve cuando la columna `fecha` de
+ * un registro es solo DATE (sin hora) y el id ULID es la única fuente de la hora
+ * REAL de registro (p. ej. cobroventa/pagodecompra guardan `fecha` como date).
+ * Combinar con formatFechaPeru() para mostrarlo en hora de Perú.
+ */
+export function ulidToDate(ulid?: string | null): Date | null {
+  if (!ulid || ulid.length < 10) return null
+  const ENCODING = '0123456789ABCDEFGHJKMNPQRSTVWXYZ'
+  const timeStr = ulid.substring(0, 10).toUpperCase()
+  let ms = 0
+  for (let i = 0; i < timeStr.length; i++) {
+    const idx = ENCODING.indexOf(timeStr[i])
+    if (idx === -1) return null
+    ms = ms * 32 + idx
+  }
+  return new Date(ms)
+}
+
+/**
  * Combina el día elegido por el usuario con la hora/minuto/segundo
  * del momento actual (submit). Resuelve el bug de que la hora
  * guardada era la de apertura del formulario, no la de finalización.

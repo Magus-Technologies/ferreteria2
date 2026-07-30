@@ -7,6 +7,7 @@ import { apiRequest } from '~/lib/api'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useAuth } from '~/lib/auth-context'
 import dayjs from 'dayjs'
+import { formatFechaPeru, ulidToDate } from '~/utils/fechas'
 import { useMemo, useCallback, useState, useEffect, useRef } from 'react'
 import SelectDespliegueDePago from '~/app/_components/form/selects/select-despliegue-de-pago'
 import { extractDesplieguePagoId } from '~/lib/utils/despliegue-pago-utils'
@@ -315,9 +316,13 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
     {
       headerName: 'Fecha y Hora Pago',
       width: 150,
+      // La hora real de registro NO está en `fecha` (columna DATE → 12:00 AM); se
+      // decodifica del id ULID y se muestra en hora de Perú.
       valueGetter: (p) => {
+        const fechaUlid = ulidToDate(p.data?.id)
+        if (fechaUlid) return formatFechaPeru(fechaUlid, 'DD/MM/YYYY hh:mm:ss A')
         const val = p.data?.created_at || p.data?.fecha
-        return val ? dayjs(val).format('DD/MM/YYYY hh:mm:ss A') : ''
+        return val ? formatFechaPeru(val, 'DD/MM/YYYY hh:mm:ss A') : ''
       },
     },
     {
