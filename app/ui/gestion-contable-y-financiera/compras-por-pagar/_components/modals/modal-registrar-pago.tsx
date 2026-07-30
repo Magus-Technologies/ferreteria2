@@ -402,7 +402,13 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
         return
       }
       message.success(result.data?.message || 'Pago registrado correctamente')
-      
+
+      // Mostrar automáticamente el ticket del pago recién registrado.
+      const nuevoPagoId = result.data?.data?.id
+      if (nuevoPagoId) {
+        handleVerTicket(String(nuevoPagoId))
+      }
+
       // Refrescar datos
       queryClient.invalidateQueries({ queryKey: [QueryKeys.PAGOS_COMPRA, localCompra?.id] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.COMPRAS_POR_PAGAR] })
