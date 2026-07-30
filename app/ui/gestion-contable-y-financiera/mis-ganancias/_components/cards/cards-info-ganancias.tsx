@@ -14,7 +14,6 @@ import { GiPayMoney, GiReceiveMoney } from 'react-icons/gi'
 import { MdAnalytics } from 'react-icons/md'
 import { useQuery } from '@tanstack/react-query'
 import ModalPagosCompras from '../modals/modal-pagos-compras'
-import ModalPerdidas from '../modals/modal-perdidas'
 import ModalAnalisisPerdidasVentas from '../modals/modal-analisis-perdidas-ventas'
 import ModalAnalisisPepsCompras from '../modals/modal-analisis-peps-compras'
 
@@ -24,7 +23,6 @@ export default function CardsInfoGanancias() {
   const [loadingEmail, setLoadingEmail] = useState(false)
   const [loadingPrint, setLoadingPrint] = useState(false)
   const [modalPagosOpen, setModalPagosOpen] = useState(false)
-  const [modalPerdidasOpen, setModalPerdidasOpen] = useState(false)
   const [modalAnalisisPerdidasOpen, setModalAnalisisPerdidasOpen] = useState(false)
   const [modalPepsOpen, setModalPepsOpen] = useState(false)
   
@@ -59,6 +57,21 @@ export default function CardsInfoGanancias() {
     staleTime: 1000 * 60 * 5,
   })
 
+  // Pérdidas por categoría (para la Ganancia Neta). Se usan solo las pérdidas que
+  // la "ganancia" NO tiene ya descontadas: descuentos, salidas de almacén y notas de
+  // crédito. NO se restan las ventas bajo costo (ya vienen como margen negativo en la
+  // ganancia) ni las comisiones (ya están dentro de "Gastos U").
+  const { data: perdidasData } = useQuery({
+    queryKey: ['card-analisis-perdidas', filtros.desde, filtros.hasta, filtros.almacen_id],
+    queryFn: () => gananciasApi.getAnalisisPerdidas({
+      desde: filtros.desde,
+      hasta: filtros.hasta,
+      almacen_id: filtros.almacen_id,
+    }),
+    enabled: !!filtros?.almacen_id,
+    staleTime: 1000 * 60 * 5,
+  })
+
   const gastosTotal = useMemo(() => {
     const gastosExtras = gastosExtrasData?.data || []
     const totalExtras = gastosExtras.reduce((sum: number, g: any) => sum + (Number(g.monto) || 0), 0)
@@ -74,6 +87,16 @@ export default function CardsInfoGanancias() {
     neto: 0,
     perdida: 0
   }
+
+  // Ganancia Neta = ganancia − gastos operativos − pérdidas que la ganancia no descuenta.
+  const gananciaNeta = useMemo(() => {
+    const p = perdidasData?.data?.data?.resumen
+    const perdidasNoEnGanancia =
+      (Number(p?.descuentos_aplicados) || 0) +
+      (Number(p?.salidas_almacen) || 0) +
+      (Number(p?.notas_credito) || 0)
+    return (Number(resumen.ganancia) || 0) - gastosTotal - perdidasNoEnGanancia
+  }, [resumen.ganancia, gastosTotal, perdidasData])
 
   const handleEnviarCorreo = async () => {
     if (!email.trim()) {
@@ -175,17 +198,17 @@ export default function CardsInfoGanancias() {
       <div className='bg-white border border-slate-200 rounded-lg p-2'>
         <div className='flex items-center justify-center gap-1 mb-0.5'>
           <FaMoneyBills className='text-cyan-600' size={12} />
-          <div className='text-[11px] text-slate-600 font-medium'>Neto</div>
+          <div className='text-[11px] text-slate-600 font-medium'>Ganancia Neta</div>
         </div>
         <div className='text-base font-bold text-cyan-600 text-center'>
-          {isLoading ? '...' : resumen.neto.toFixed(2)}
+          {isLoading ? '...' : gananciaNeta.toFixed(2)}
         </div>
       </div>
 
-      {/* Perdida */}
-      <div 
+      {/* Perdida — abre el Análisis de Pérdidas en Ventas (modal completo) */}
+      <div
         className='bg-white border border-slate-200 rounded-lg p-2 cursor-pointer hover:border-red-300 transition-colors relative group'
-        onClick={() => setModalPerdidasOpen(true)}
+        onClick={() => setModalAnalisisPerdidasOpen(true)}
       >
         <div className='absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity text-[8px] text-red-400 font-medium'>
           Ver detalles
@@ -196,29 +219,6 @@ export default function CardsInfoGanancias() {
         </div>
         <div className='text-base font-bold text-red-600 text-center'>
           {isLoading ? '...' : resumen.perdida.toFixed(2)}
-        </div>
-      </div>
-
-      <ModalPerdidas 
-        open={modalPerdidasOpen} 
-        onClose={() => setModalPerdidasOpen(false)} 
-        filtros={filtros}
-      />
-
-      {/* Análisis de Pérdidas en Ventas */}
-      <div 
-        className='bg-gradient-to-br from-red-50 to-orange-50 border-2 border-red-200 rounded-lg p-2 cursor-pointer hover:border-red-400 transition-all relative group shadow-sm'
-        onClick={() => setModalAnalisisPerdidasOpen(true)}
-      >
-        <div className='absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity text-[8px] text-red-500 font-bold'>
-          ANALIZAR
-        </div>
-        <div className='flex items-center justify-center gap-1 mb-0.5'>
-          <MdAnalytics className='text-red-600' size={12} />
-          <div className='text-[10px] text-red-700 font-bold text-center'>Análisis Pérdidas</div>
-        </div>
-        <div className='text-[8px] text-red-600 text-center font-medium'>
-          Click para ver detalles
         </div>
       </div>
 
