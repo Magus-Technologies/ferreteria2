@@ -19,10 +19,13 @@ export interface GananciaDetalle {
   cant: number;
   unidad?: string;
   p_unit: number;
+  // subtot y ganancia ya vienen NETOS de descuento (precio*cant − descuento_monto).
   subtot: number;
   costo: number;
   costo_total: number;
   ganancia: number;
+  // Descuento (soles) aplicado a la línea; ya restado de subtot y ganancia.
+  descuento_monto?: number;
   cc: string;
   // Cobranza (reporte de ventas al crédito). 'por_cobrar' se deriva en el front:
   // total del comprobante (suma de sus líneas) − total_pagado.
