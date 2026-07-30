@@ -39,6 +39,9 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
     if (open && venta) {
       setLocalVenta(venta)
       autofilledMonto.current = false
+      // Limpiar el Monto al abrir para no mostrar por un instante el de la venta anterior
+      // mientras cargan sus cobros (el autofill lo pondrá al saldo real).
+      form.setFieldValue('monto', undefined)
     }
     if (!open) {
       setLocalVenta(undefined)

@@ -64,11 +64,18 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
   })
 
   const autofilledMonto = useRef(false)
+  const lastCompraIdRef = useRef<string | undefined>(undefined)
 
   useEffect(() => {
     if (open && compra) {
       setLocalCompra(compra)
-      autofilledMonto.current = false
+      // Al cambiar de compra: limpiar el Monto para no mostrar por un instante el de la
+      // compra anterior mientras cargan sus pagos (el autofill lo pondrá al saldo real).
+      if (lastCompraIdRef.current !== compra.id) {
+        lastCompraIdRef.current = compra.id
+        autofilledMonto.current = false
+        form.setFieldValue('monto', undefined)
+      }
       if (compra.tipo_moneda?.toLowerCase() === 'd') {
         form.setFieldValue(
           'tipo_de_cambio',
@@ -85,6 +92,7 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
     if (!open) {
       setLocalCompra(undefined)
       autofilledMonto.current = false
+      lastCompraIdRef.current = undefined
     }
   }, [open, compra, form, tcDelDia])
 
