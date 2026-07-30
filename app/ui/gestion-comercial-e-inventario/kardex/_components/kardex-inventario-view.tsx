@@ -139,7 +139,18 @@ export default function KardexInventarioView() {
       field: 'fecha',
       width: 200,
       minWidth: 180,
-      valueFormatter: (params) => formatFechaPeru(params.value, 'DD/MM/YYYY hh:mm:ss A') || '-',
+      // Algunos movimientos (ingresos) guardan `fecha` sin hora (00:00); en ese caso la
+      // hora real está en `created_at`. Se muestra la hora efectiva para que coincida con
+      // el orden y no aparezca "12:00 AM" en registros que sí tuvieron hora.
+      valueFormatter: (params) => {
+        const f = params.data?.fecha ? String(params.data.fecha) : ''
+        const createdAt = (params.data as any)?.created_at
+        const esMedianoche = f
+          ? (dayjs(f).hour() === 0 && dayjs(f).minute() === 0 && dayjs(f).second() === 0)
+          : false
+        const valor = (!f || esMedianoche) ? (createdAt || f) : f
+        return formatFechaPeru(valor, 'DD/MM/YYYY hh:mm:ss A') || '-'
+      },
     },
     // Mostrar columnas de producto solo cuando no hay producto seleccionado
     ...(!productoId ? [
