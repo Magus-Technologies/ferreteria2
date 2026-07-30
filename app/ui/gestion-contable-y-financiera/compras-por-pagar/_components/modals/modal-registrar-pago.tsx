@@ -64,37 +64,42 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
   })
 
   const autofilledMonto = useRef(false)
-  const lastCompraIdRef = useRef<string | undefined>(undefined)
 
+  // Congelar la compra al ABRIR (deps solo [open]): se captura la fila seleccionada una
+  // vez y NO cambia aunque la tabla se refresque en segundo plano. Antes tenía `compra`
+  // en las dependencias, así que un refetch de la tabla cambiaba la fila mostrada (p.ej.
+  // saltaba a la fila 1 estando a mitad de un pago).
   useEffect(() => {
     if (open && compra) {
       setLocalCompra(compra)
-      // Al cambiar de compra: limpiar el Monto para no mostrar por un instante el de la
-      // compra anterior mientras cargan sus pagos (el autofill lo pondrá al saldo real).
-      if (lastCompraIdRef.current !== compra.id) {
-        lastCompraIdRef.current = compra.id
-        autofilledMonto.current = false
-        form.setFieldValue('monto', undefined)
-      }
-      if (compra.tipo_moneda?.toLowerCase() === 'd') {
-        form.setFieldValue(
-          'tipo_de_cambio',
-          tcDelDia && tcDelDia > 0
-            ? tcDelDia
-            : compra.tipo_de_cambio
-              ? Number(compra.tipo_de_cambio)
-              : undefined,
-        )
-      } else {
-        form.setFieldValue('tipo_de_cambio', undefined)
-      }
+      autofilledMonto.current = false
+      // Limpiar el Monto al abrir para no mostrar por un instante el de la compra anterior
+      // mientras cargan sus pagos (el autofill lo pondrá al saldo real).
+      form.setFieldValue('monto', undefined)
     }
     if (!open) {
       setLocalCompra(undefined)
       autofilledMonto.current = false
-      lastCompraIdRef.current = undefined
     }
-  }, [open, compra, form, tcDelDia])
+  }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // TC por defecto para compras en dólares. Va en un efecto aparte (sobre localCompra +
+  // tcDelDia) para no reintroducir `compra` en el efecto de arriba.
+  useEffect(() => {
+    if (!open || !localCompra) return
+    if (localCompra.tipo_moneda?.toLowerCase() === 'd') {
+      form.setFieldValue(
+        'tipo_de_cambio',
+        tcDelDia && tcDelDia > 0
+          ? tcDelDia
+          : localCompra.tipo_de_cambio
+            ? Number(localCompra.tipo_de_cambio)
+            : undefined,
+      )
+    } else {
+      form.setFieldValue('tipo_de_cambio', undefined)
+    }
+  }, [open, localCompra, tcDelDia, form])
 
   // Calcular total de la compra (con el FACTOR de la unidad derivada, igual que
   // el backend; sin él una compra por MILLAR/CIENTO salía 100× más barata).
