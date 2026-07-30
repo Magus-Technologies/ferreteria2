@@ -23,6 +23,13 @@ export function parseCantidadFraccion(input: string, factor: number): number | n
  * Formatea unidades derivadas a "XFY" si hay fracción, o número plano si no.
  * 14.0375 con factor=4 → "14F0.15"
  * 10 con factor=4 → "10"
+ *
+ * @deprecated NO usar para mostrar cantidades: usar `formatCantidadPlana`.
+ * Convertía las medias medidas a notación F y confundía al vendedor —
+ * 2.5 salía "2F0.5" con factor 1 y "2F0.05" con factor 0.1, o sea el texto
+ * cambiaba según el producto. Además el `toFixed(2)` de abajo rompe el
+ * round-trip con factores < 1 (2.5 con factor 0.01 → "2F0.01" → reparsea a 3).
+ * Para MOSTRAR STOCK usar `getStock`/`GetStock`, que son independientes.
  */
 export function formatCantidadFraccion(value: number, factor: number): string {
   if (!factor || factor <= 0) return String(value)

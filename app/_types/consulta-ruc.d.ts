@@ -14,8 +14,8 @@ export interface ConsultaRuc {
   nombreComercial: string | null
   telefonos: string[]
   tipo: null
-  estado: 'ACTIVO'
-  condicion: 'HABIDO'
+  estado: string
+  condicion: string
   direccion: string | null
   departamento: string | null
   provincia: string | null

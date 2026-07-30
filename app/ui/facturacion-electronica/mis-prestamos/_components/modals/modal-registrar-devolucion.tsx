@@ -1,6 +1,7 @@
 'use client'
 
 import { Modal, Form, message } from 'antd'
+import { formatCantidadPlana } from '~/app/_utils/get-stock'
 import { useState, useEffect, memo, useCallback } from 'react'
 import FormBase from '~/components/form/form-base'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
@@ -430,15 +431,15 @@ export default function ModalRegistrarDevolucion({
             </div>
             <div className='flex items-center gap-2'>
               <span className='text-gray-500 font-medium'>Cantidad Total:</span>
-              <span className='font-semibold text-gray-800'>{Number(prestamoActual.monto_total).toFixed(0)} u.</span>
+              <span className='font-semibold text-gray-800'>{formatCantidadPlana(Number(prestamoActual.monto_total))} u.</span>
             </div>
             <div className='flex items-center gap-2'>
               <span className='text-gray-500 font-medium'>Devuelto:</span>
-              <span className='text-emerald-600 font-bold bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded'>{Number(prestamoActual.monto_pagado).toFixed(0)} u.</span>
+              <span className='text-emerald-600 font-bold bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded'>{formatCantidadPlana(Number(prestamoActual.monto_pagado))} u.</span>
             </div>
             <div className='flex items-center gap-2'>
               <span className='text-gray-500 font-medium'>Pendiente:</span>
-              <span className='text-rose-600 font-bold bg-rose-50 border border-rose-100 px-2 py-0.5 rounded'>{Number(prestamoActual.monto_pendiente).toFixed(0)} u.</span>
+              <span className='text-rose-600 font-bold bg-rose-50 border border-rose-100 px-2 py-0.5 rounded'>{formatCantidadPlana(Number(prestamoActual.monto_pendiente))} u.</span>
             </div>
           </div>
         </div>
@@ -471,7 +472,7 @@ export default function ModalRegistrarDevolucion({
 
       <div className='flex justify-between items-center bg-orange-50/50 border border-orange-100/60 rounded-xl px-4 py-2.5 mb-6'>
         <span className='text-orange-850 text-sm font-semibold'>Total Seleccionado:</span>
-        <span className='font-bold text-lg text-orange-950'>{totalSelected.toFixed(0)} <span className='text-xs font-normal text-orange-800'>unidades</span></span>
+        <span className='font-bold text-lg text-orange-950'>{formatCantidadPlana(totalSelected)} <span className='text-xs font-normal text-orange-800'>unidades</span></span>
       </div>
 
       <FormBase
