@@ -1,7 +1,7 @@
 "use client";
 
 import { Form, Drawer, Badge, Select } from "antd";
-import { FaSearch, FaFilter, FaCalendar } from "react-icons/fa";
+import { FaSearch, FaFilter, FaCalendar, FaBoxOpen } from "react-icons/fa";
 import { GiMoneyStack } from "react-icons/gi";
 import { useState, useMemo, useEffect } from "react";
 import LabelBase from "~/components/form/label-base";
@@ -238,9 +238,12 @@ export default function FiltersMisGanancias() {
                   hasFeedback: false,
                   className: "!w-full",
                 }}
+                form={form}
+                withSearch
                 formWithMessage={false}
                 allowClear
                 placeholder="Producto..."
+                prefix={<FaBoxOpen size={15} className="text-cyan-600 mx-1" />}
               />
             </ConfigurableElement>
           </div>
@@ -255,6 +258,7 @@ export default function FiltersMisGanancias() {
                   hasFeedback: false,
                   className: "!w-full",
                 }}
+                form={form}
                 formWithMessage={false}
                 allowClear
                 placeholder="Buscar cliente..."
@@ -500,9 +504,12 @@ export default function FiltersMisGanancias() {
             </label>
             <SelectProductos
               propsForm={{ name: "producto_id", hasFeedback: false }}
+              form={form}
+              withSearch
               formWithMessage={false}
               allowClear
               placeholder="Producto..."
+              prefix={<FaBoxOpen size={15} className="text-cyan-600 mx-1" />}
             />
           </div>
           <div>
@@ -511,6 +518,7 @@ export default function FiltersMisGanancias() {
             </label>
             <SelectClientes
               propsForm={{ name: "cliente_id", hasFeedback: false }}
+              form={form}
               formWithMessage={false}
               allowClear
               placeholder="Buscar cliente..."
