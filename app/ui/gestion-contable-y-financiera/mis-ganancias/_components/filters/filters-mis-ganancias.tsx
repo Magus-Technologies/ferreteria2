@@ -242,6 +242,7 @@ export default function FiltersMisGanancias() {
                 }}
                 form={form}
                 withSearch
+                open={false}
                 formWithMessage={false}
                 allowClear
                 placeholder="Producto..."
@@ -261,6 +262,7 @@ export default function FiltersMisGanancias() {
                   className: "!w-full",
                 }}
                 form={form}
+                open={false}
                 formWithMessage={false}
                 allowClear
                 placeholder="Buscar cliente..."
@@ -502,6 +504,7 @@ export default function FiltersMisGanancias() {
               propsForm={{ name: "producto_id", hasFeedback: false }}
               form={form}
               withSearch
+              open={false}
               formWithMessage={false}
               allowClear
               placeholder="Producto..."
@@ -515,6 +518,7 @@ export default function FiltersMisGanancias() {
             <SelectClientes
               propsForm={{ name: "cliente_id", hasFeedback: false }}
               form={form}
+              open={false}
               formWithMessage={false}
               allowClear
               placeholder="Buscar cliente..."
