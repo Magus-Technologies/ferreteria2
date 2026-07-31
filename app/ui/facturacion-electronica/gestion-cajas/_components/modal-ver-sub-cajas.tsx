@@ -19,6 +19,7 @@ import TableWithTitle from '~/components/tables/table-with-title'
 import { AgGridReact } from 'ag-grid-react'
 import { useColumnsSubCajas } from '~/app/ui/facturacion-electronica/gestion-cajas/_components/columns-sub-cajas'
 import HistorialTrasladosBoveda from '~/app/ui/facturacion-electronica/mis-aperturas-cierres/_components/modals/historial-traslados-boveda'
+import HistorialMovimientosInternos from '~/app/ui/facturacion-electronica/movimientos-caja/_components/historial-movimientos-internos'
 
 interface ModalVerSubCajasProps {
     open: boolean
@@ -247,6 +248,20 @@ export default function ModalVerSubCajas({
                         <FaWarehouse size={48} className='mb-4' />
                         <p className='text-lg font-semibold'>No hay Caja Chica disponible</p>
                         <p className='text-sm'>La Caja Chica se crea automáticamente con la caja principal</p>
+                    </div>
+                ),
+            },
+            {
+                key: 'traslado-efectivo',
+                label: (
+                    <span className='flex items-center gap-2 px-2'>
+                        <FaExchangeAlt className='text-sm' />
+                        Traslado de Efectivo
+                    </span>
+                ),
+                children: (
+                    <div className='pt-2 animate-in slide-in-from-right-4 duration-500'>
+                        <HistorialMovimientosInternos />
                     </div>
                 ),
             },
