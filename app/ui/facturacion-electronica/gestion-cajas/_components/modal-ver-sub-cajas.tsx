@@ -19,7 +19,7 @@ import TableWithTitle from '~/components/tables/table-with-title'
 import { AgGridReact } from 'ag-grid-react'
 import { useColumnsSubCajas } from '~/app/ui/facturacion-electronica/gestion-cajas/_components/columns-sub-cajas'
 import HistorialTrasladosBoveda from '~/app/ui/facturacion-electronica/mis-aperturas-cierres/_components/modals/historial-traslados-boveda'
-import HistorialMovimientosInternos from '~/app/ui/facturacion-electronica/movimientos-caja/_components/historial-movimientos-internos'
+import HistorialTrasladoEfectivoCaja from '~/app/ui/facturacion-electronica/gestion-cajas/_components/historial-traslado-efectivo-caja'
 
 interface ModalVerSubCajasProps {
     open: boolean
@@ -261,7 +261,7 @@ export default function ModalVerSubCajas({
                 ),
                 children: (
                     <div className='pt-2 animate-in slide-in-from-right-4 duration-500'>
-                        <HistorialMovimientosInternos />
+                        <HistorialTrasladoEfectivoCaja cajaPrincipalId={cajaPrincipal.id} />
                     </div>
                 ),
             },
