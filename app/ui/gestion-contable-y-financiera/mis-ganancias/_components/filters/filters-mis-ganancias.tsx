@@ -334,8 +334,8 @@ export default function FiltersMisGanancias() {
                   placeholder="Todas"
                   className="w-full"
                   options={[
-                    { value: 'co', label: 'Cont.' },
-                    { value: 'cr', label: 'Créd.' },
+                    { value: 'co', label: 'Contado' },
+                    { value: 'cr', label: 'Crédito' },
                   ]}
                 />
               </Form.Item>
@@ -352,9 +352,9 @@ export default function FiltersMisGanancias() {
                   placeholder="Todos"
                   className="w-full"
                   options={[
-                    { value: 'nv', label: 'N.V.' },
-                    { value: '03', label: 'Bol.' },
-                    { value: '01', label: 'Fact.' },
+                    { value: 'nv', label: 'Nota de Venta' },
+                    { value: '03', label: 'Boleta' },
+                    { value: '01', label: 'Factura' },
                   ]}
                 />
               </Form.Item>
