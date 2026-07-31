@@ -12,19 +12,19 @@ import ButtonBase from "~/components/buttons/button-base";
 import FormBase from "~/components/form/form-base";
 import DatePickerBase from "~/app/_components/form/fechas/date-picker-base";
 import SelectUsuarios from "~/app/_components/form/selects/select-usuarios";
+import SelectProductos from "~/app/_components/form/selects/select-productos";
+import SelectClientes from "~/app/_components/form/selects/select-clientes";
 import InputBase from "~/app/_components/form/inputs/input-base";
 import { Dayjs } from "dayjs";
 import { useStoreFiltrosMisGanancias } from "~/app/ui/gestion-contable-y-financiera/mis-ganancias/_store/store-filtros-mis-ganancias";
 import { useStoreAlmacen } from "~/store/store-almacen";
 import dayjs from "dayjs";
-import { useQuery } from "@tanstack/react-query";
-import { clienteApi } from "~/lib/api/cliente";
 import SelectDespliegueDePago from "~/app/_components/form/selects/select-despliegue-de-pago";
-import { useDebounce } from "use-debounce";
 
 interface ValuesFiltersMisGanancias {
   desde?: Dayjs;
   hasta?: Dayjs;
+  producto_id?: number;
   cliente_id?: number;
   cliente_search_text?: string;
   user_id?: string;
@@ -43,20 +43,9 @@ interface ValuesFiltersMisGanancias {
 export default function FiltersMisGanancias() {
   const [form] = Form.useForm<ValuesFiltersMisGanancias>();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  // Texto de búsqueda de cliente (para el fallback `search` cuando se escribe sin
+  // seleccionar un cliente concreto). El listado de clientes lo maneja SelectClientes.
   const [clienteSearchText, setClienteSearchText] = useState<string>("");
-  const [debouncedClienteSearch] = useDebounce(clienteSearchText, 300);
-
-  // Query para obtener clientes
-  const { data: clientesData, isLoading: clientesLoading } = useQuery({
-    queryKey: ['clientes', debouncedClienteSearch],
-    queryFn: () => clienteApi.getAll({ 
-      search: debouncedClienteSearch || undefined,
-      per_page: 20 
-    }),
-    enabled: true, // Siempre habilitado para mostrar algunos clientes por defecto
-  });
-
-
 
   const almacen_id = useStoreAlmacen((state) => state.almacen_id);
   const setFiltros = useStoreFiltrosMisGanancias((state) => state.setFiltros);
@@ -78,6 +67,7 @@ export default function FiltersMisGanancias() {
   const activeFiltersCount = useMemo(() => {
     const values = form.getFieldsValue();
     let count = 0;
+    if (values.producto_id) count++;
     if (values.cliente_id) count++;
     if (values.user_id) count++;
     if (values.serie_numero) count++;
@@ -242,14 +232,15 @@ export default function FiltersMisGanancias() {
               Producto:
             </label>
             <ConfigurableElement componentId="field-producto-servicio" label="Campo Producto/Servicio">
-              <InputBase
+              <SelectProductos
                 propsForm={{
-                  name: "producto_servicio",
+                  name: "producto_id",
                   hasFeedback: false,
                   className: "!w-full",
                 }}
-                placeholder="Nombre..."
                 formWithMessage={false}
+                allowClear
+                placeholder="Producto..."
               />
             </ConfigurableElement>
           </div>
@@ -258,33 +249,17 @@ export default function FiltersMisGanancias() {
               Cliente:
             </label>
             <ConfigurableElement componentId="field-cliente" label="Campo Cliente">
-              <Form.Item name="cliente_id" noStyle>
-                <Select
-                  allowClear
-                  showSearch
-                  placeholder="Buscar..."
-                  className="w-full"
-                  loading={clientesLoading}
-                  filterOption={false}
-                  onSearch={(value: string) => setClienteSearchText(value)}
-                  onChange={(value: number | undefined) => {
-                    if (!value) {
-                      form.setFieldValue("cliente_id", undefined);
-                      setClienteSearchText("");
-                    }
-                  }}
-                  options={
-                    clientesData?.data?.data
-                      ? clientesData.data.data.map((cliente) => ({
-                          value: cliente.id,
-                          label: cliente.razon_social
-                            ? `${cliente.numero_documento} - ${cliente.razon_social}`
-                            : `${cliente.numero_documento} - ${cliente.nombres} ${cliente.apellidos}`,
-                        }))
-                      : []
-                  }
-                />
-              </Form.Item>
+              <SelectClientes
+                propsForm={{
+                  name: "cliente_id",
+                  hasFeedback: false,
+                  className: "!w-full",
+                }}
+                formWithMessage={false}
+                allowClear
+                placeholder="Buscar cliente..."
+                onSearchChange={(text: string) => setClienteSearchText(text)}
+              />
             </ConfigurableElement>
           </div>
           <div className="col-span-2 flex flex-col gap-0.5">
@@ -521,45 +496,26 @@ export default function FiltersMisGanancias() {
           </div>
           <div>
             <label className="text-sm font-semibold text-gray-700 block mb-2">
-              Producto/Servicio:
+              Producto:
             </label>
-            <InputBase
-              propsForm={{ name: "producto_servicio", hasFeedback: false }}
-              placeholder="Digite producto o servicio"
+            <SelectProductos
+              propsForm={{ name: "producto_id", hasFeedback: false }}
               formWithMessage={false}
+              allowClear
+              placeholder="Producto..."
             />
           </div>
           <div>
             <label className="text-sm font-semibold text-gray-700 block mb-2">
               Cliente:
             </label>
-            <Form.Item name="cliente_id" noStyle>
-              <Select
-                allowClear
-                showSearch
-                placeholder="Buscar cliente..."
-                className="w-full"
-                loading={clientesLoading}
-                filterOption={false}
-                onSearch={(value: string) => setClienteSearchText(value)}
-                onChange={(value: number | undefined) => {
-                  if (!value) {
-                    form.setFieldValue("cliente_id", undefined);
-                    setClienteSearchText("");
-                  }
-                }}
-                options={
-                  clientesData?.data?.data
-                    ? clientesData.data.data.map((cliente) => ({
-                        value: cliente.id,
-                        label: cliente.razon_social
-                          ? `${cliente.numero_documento} - ${cliente.razon_social}`
-                          : `${cliente.numero_documento} - ${cliente.nombres} ${cliente.apellidos}`,
-                      }))
-                    : []
-                }
-              />
-            </Form.Item>
+            <SelectClientes
+              propsForm={{ name: "cliente_id", hasFeedback: false }}
+              formWithMessage={false}
+              allowClear
+              placeholder="Buscar cliente..."
+              onSearchChange={(text: string) => setClienteSearchText(text)}
+            />
           </div>
           <div>
             <label className="text-sm font-semibold text-gray-700 block mb-2">

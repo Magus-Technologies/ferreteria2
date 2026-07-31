@@ -65,6 +65,7 @@ export interface FiltrosGanancias {
   cliente_id?: number;
   search?: string; // Búsqueda de cliente por texto
   user_id?: string;
+  producto_id?: number;
   producto_servicio?: string;
   marca?: string;
   forma_pago?: string;
