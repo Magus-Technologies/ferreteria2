@@ -98,10 +98,19 @@ export default function FiltersMisGanancias() {
     let serie: string | undefined;
     let numero: number | undefined;
     if (serie_numero) {
-      const parts = serie_numero.split("-");
-      if (parts.length === 2) {
-        serie = parts[0].trim();
-        numero = parseInt(parts[1].trim());
+      const raw = String(serie_numero).trim();
+      if (raw.includes("-")) {
+        // Formato "SERIE-NUMERO": la serie es todo lo anterior al último guion.
+        const idx = raw.lastIndexOf("-");
+        const s = raw.slice(0, idx).trim();
+        const n = parseInt(raw.slice(idx + 1).trim());
+        if (s) serie = s;
+        if (!isNaN(n)) numero = n;
+      } else {
+        // Solo texto/número: si es número, buscar por número; si no, por serie.
+        const n = parseInt(raw);
+        if (!isNaN(n) && /^\d+$/.test(raw)) numero = n;
+        else serie = raw;
       }
     }
 
