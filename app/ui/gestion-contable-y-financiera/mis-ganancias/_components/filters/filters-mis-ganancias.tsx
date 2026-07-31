@@ -46,6 +46,9 @@ export default function FiltersMisGanancias() {
   // Texto de búsqueda de cliente (para el fallback `search` cuando se escribe sin
   // seleccionar un cliente concreto). El listado de clientes lo maneja SelectClientes.
   const [clienteSearchText, setClienteSearchText] = useState<string>("");
+  // Ídem para producto: fallback `producto_servicio` (LIKE) cuando se escribe sin
+  // llegar a elegir un producto exacto del modal.
+  const [productoSearchText, setProductoSearchText] = useState<string>("");
 
   const almacen_id = useStoreAlmacen((state) => state.almacen_id);
   const setFiltros = useStoreFiltrosMisGanancias((state) => state.setFiltros);
@@ -81,7 +84,7 @@ export default function FiltersMisGanancias() {
   }, [form]);
 
   const handleFinish = (values: ValuesFiltersMisGanancias) => {
-    const { desde, hasta, serie_numero, cliente_id, mostrar_hora, ...rest } = values;
+    const { desde, hasta, serie_numero, cliente_id, producto_id, mostrar_hora, ...rest } = values;
     
     let serie: string | undefined;
     let numero: number | undefined;
@@ -107,6 +110,11 @@ export default function FiltersMisGanancias() {
       ...rest,
       ...(cliente_id ? { cliente_id } : {}),
       ...(!cliente_id && clienteSearchText ? { search: clienteSearchText } : {}),
+      ...(producto_id ? { producto_id } : {}),
+      // Si el usuario escribió texto pero no llegó a elegir un producto exacto del
+      // modal (Enter → doble clic), se busca por texto (LIKE, trae todos los que
+      // contengan ese texto) en vez de exigir una selección puntual.
+      ...(!producto_id && productoSearchText ? { producto_servicio: productoSearchText } : {}),
       ...(desde ? { desde: desde.format("YYYY-MM-DD") } : {}),
       ...(hasta ? { hasta: hasta.format("YYYY-MM-DD") } : {}),
       ...(serie ? { serie } : {}),
@@ -238,6 +246,8 @@ export default function FiltersMisGanancias() {
                 }}
                 form={form}
                 withSearch
+                searchOnEnterOnly
+                onSearch={(val: string) => setProductoSearchText(val)}
                 open={false}
                 formWithMessage={false}
                 allowClear
@@ -461,6 +471,8 @@ export default function FiltersMisGanancias() {
               propsForm={{ name: "producto_id", hasFeedback: false }}
               form={form}
               withSearch
+              searchOnEnterOnly
+              onSearch={(val: string) => setProductoSearchText(val)}
               open={false}
               formWithMessage={false}
               allowClear
