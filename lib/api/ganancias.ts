@@ -68,6 +68,7 @@ export interface FiltrosGanancias {
   producto_id?: number;
   producto_servicio?: string;
   marca?: string;
+  marca_id?: number;
   forma_pago?: string;
   tipo_doc?: string;
   serie?: string;

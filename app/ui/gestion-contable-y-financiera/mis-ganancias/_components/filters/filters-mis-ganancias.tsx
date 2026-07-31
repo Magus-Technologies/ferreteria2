@@ -14,6 +14,7 @@ import DatePickerBase from "~/app/_components/form/fechas/date-picker-base";
 import SelectUsuarios from "~/app/_components/form/selects/select-usuarios";
 import SelectProductos from "~/app/_components/form/selects/select-productos";
 import SelectClientes from "~/app/_components/form/selects/select-clientes";
+import SelectMarcas from "~/app/_components/form/selects/select-marcas";
 import InputBase from "~/app/_components/form/inputs/input-base";
 import { Dayjs } from "dayjs";
 import { useStoreFiltrosMisGanancias } from "~/app/ui/gestion-contable-y-financiera/mis-ganancias/_store/store-filtros-mis-ganancias";
@@ -31,6 +32,7 @@ interface ValuesFiltersMisGanancias {
   serie_numero?: string;
   incluir?: string;
   marca?: string;
+  marca_id?: number;
   vendedor?: string;
   forma_pago?: string;
   confirmar_caja?: string;
@@ -72,7 +74,7 @@ export default function FiltersMisGanancias() {
     if (values.user_id) count++;
     if (values.serie_numero) count++;
     if (values.incluir) count++;
-    if (values.marca) count++;
+    if (values.marca_id) count++;
     if (values.vendedor) count++;
     if (values.forma_pago) count++;
     if (values.confirmar_caja) count++;
@@ -309,22 +311,16 @@ export default function FiltersMisGanancias() {
               Marca:
             </label>
             <ConfigurableElement componentId="field-marca" label="Campo Marca">
-              <Form.Item name="marca" noStyle>
-                <Select
-                  allowClear
-                  placeholder="Todas"
-                  className="w-full"
-                  showSearch
-                  options={[
-                    { value: 'PAVCO', label: 'PAVCO' },
-                    { value: 'SIN MARCA', label: 'S. MARCA' },
-                    { value: 'TIGRE', label: 'TIGRE' },
-                    { value: 'NICOLL', label: 'NICOLL' },
-                    { value: 'ETERNIT', label: 'ETERNIT' },
-                    { value: 'OTROS', label: 'OTROS' },
-                  ]}
-                />
-              </Form.Item>
+              <SelectMarcas
+                propsForm={{
+                  name: "marca_id",
+                  hasFeedback: false,
+                  className: "!w-full",
+                }}
+                formWithMessage={false}
+                allowClear
+                placeholder="Marca..."
+              />
             </ConfigurableElement>
           </div>
           <div className="col-span-1 flex flex-col gap-0.5">
