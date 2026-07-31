@@ -30,7 +30,6 @@ interface ValuesFiltersMisGanancias {
   cliente_search_text?: string;
   user_id?: string;
   serie_numero?: string;
-  incluir?: string;
   marca?: string;
   marca_id?: number;
   vendedor?: string;
@@ -38,7 +37,6 @@ interface ValuesFiltersMisGanancias {
   confirmar_caja?: string;
   tipo_doc?: string;
   serie_n?: string;
-  sucursal?: string;
   mostrar_hora?: boolean;
 }
 
@@ -73,14 +71,12 @@ export default function FiltersMisGanancias() {
     if (values.cliente_id) count++;
     if (values.user_id) count++;
     if (values.serie_numero) count++;
-    if (values.incluir) count++;
     if (values.marca_id) count++;
     if (values.vendedor) count++;
     if (values.forma_pago) count++;
     if (values.confirmar_caja) count++;
     if (values.tipo_doc) count++;
     if (values.serie_n) count++;
-    if (values.sucursal) count++;
     return count;
   }, [form]);
 
@@ -290,26 +286,6 @@ export default function FiltersMisGanancias() {
           </div>
           <div className="col-span-1 flex flex-col gap-0.5">
             <label className="text-[10px] font-semibold text-gray-500 uppercase">
-              Incluir:
-            </label>
-            <ConfigurableElement componentId="field-incluir" label="Campo Incluir">
-              <Form.Item name="incluir" noStyle>
-                <Select
-                  allowClear
-                  placeholder="Todos"
-                  className="w-full"
-                  options={[
-                    { value: 'todos', label: 'Todos' },
-                    { value: 'con_ganancia', label: 'Ganancia' },
-                    { value: 'con_perdida', label: 'Pérdida' },
-                    { value: 'sin_costo', label: 'S. Costo' },
-                  ]}
-                />
-              </Form.Item>
-            </ConfigurableElement>
-          </div>
-          <div className="col-span-1 flex flex-col gap-0.5">
-            <label className="text-[10px] font-semibold text-gray-500 uppercase">
               Marca:
             </label>
             <ConfigurableElement componentId="field-marca" label="Campo Marca">
@@ -393,25 +369,6 @@ export default function FiltersMisGanancias() {
                 placeholder="000-000"
                 formWithMessage={false}
               />
-            </ConfigurableElement>
-          </div>
-          <div className="col-span-2 flex flex-col gap-0.5">
-            <label className="text-[10px] font-semibold text-gray-500 uppercase">
-              Sucursal:
-            </label>
-            <ConfigurableElement componentId="field-sucursal" label="Campo Sucursal">
-              <Form.Item name="sucursal" noStyle>
-                <Select
-                  allowClear
-                  placeholder="Todas"
-                  className="w-full"
-                  options={[
-                    { value: 'principal', label: 'PRINCIPAL' },
-                    { value: 'almacen_2', label: 'ALMACÉN 2' },
-                    { value: 'almacen_3', label: 'ALMACÉN 3' },
-                  ]}
-                />
-              </Form.Item>
             </ConfigurableElement>
           </div>
           <div className="col-span-2 flex items-end">
