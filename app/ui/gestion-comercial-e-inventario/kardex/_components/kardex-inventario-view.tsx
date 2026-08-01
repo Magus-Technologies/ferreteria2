@@ -405,7 +405,6 @@ export default function KardexInventarioView() {
               onChange={(_id, proveedor) => {
                 setProveedorSeleccionado(proveedor ?? undefined)
               }}
-              onSearch={(val) => setSearchText(val)}
             />
           </div>
           <div>
