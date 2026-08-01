@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import dayjs from 'dayjs'
+import { getPeriodoComisiones } from '~/app/_lib/periodo-comisiones'
 
 export interface FiltrosComisiones {
   desde: string
@@ -14,10 +14,9 @@ interface Store {
   reset: () => void
 }
 
-const getDefault = (): FiltrosComisiones => ({
-  desde: dayjs().format('YYYY-MM-DD'),
-  hasta: dayjs().format('YYYY-MM-DD'),
-})
+// Antes arrancaba en hoy..hoy, así que la pantalla salía casi siempre vacía:
+// las comisiones se liquidan por mes, no por día.
+const getDefault = (): FiltrosComisiones => getPeriodoComisiones()
 
 export const useStoreFiltrosComisiones = create<Store>((set) => ({
   filtros: getDefault(),

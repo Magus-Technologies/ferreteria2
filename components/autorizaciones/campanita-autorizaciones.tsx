@@ -14,6 +14,8 @@ import { compraApi } from '~/lib/api/compra'
 import { prestamoVendedorApi, type SolicitudEfectivo } from '~/lib/api/prestamo-vendedor'
 import { facturacionElectronicaApi, type ComprobanteElectronico } from '~/lib/api/facturacion-electronica'
 import { requerimientoInternoApi, type RequerimientoInterno } from '~/lib/api/requerimiento-interno'
+import { comisionApi, type ComisionVendedor } from '~/lib/api/comision'
+import { getPeriodoComisiones } from '~/app/_lib/periodo-comisiones'
 import { useStoreAutorizaciones } from '~/store/store-autorizaciones'
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -287,6 +289,29 @@ export default function CampanitaAutorizaciones() {
   )
   const requerimientosCount = requerimientos.length
 
+  // === COMISIONES POR PAGAR ===
+  // Mismo período que la pantalla de comisiones (helper compartido) para que los
+  // montos coincidan; si cada uno calculara su rango, mostrarían números distintos.
+  const { data: comisionesData } = useQuery({
+    queryKey: ['comisiones-pendientes-header'],
+    queryFn: async () => await comisionApi.porVendedor(getPeriodoComisiones()),
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const comisionesPendientes = useMemo(() => {
+    const filas = (comisionesData?.data?.data ?? []) as ComisionVendedor[]
+    // Solo interesa a quién hay que pagarle; se ordena por monto descendente.
+    return filas
+      .filter((v) => Number(v.comision_pendiente) > 0.009)
+      .sort((a, b) => Number(b.comision_pendiente) - Number(a.comision_pendiente))
+  }, [comisionesData])
+
+  const comisionesCount = comisionesPendientes.length
+  const comisionesMonto = comisionesPendientes.reduce(
+    (acc, v) => acc + Number(v.comision_pendiente || 0),
+    0,
+  )
+
   // === TOTAL ===
   const totalCount =
     autorizacionesCount +
@@ -294,7 +319,8 @@ export default function CampanitaAutorizaciones() {
     vencimientosCount +
     prestamosCount +
     sunatCount +
-    requerimientosCount
+    requerimientosCount +
+    comisionesCount
 
   // === HANDLERS PRÉSTAMOS ===
   const handleAprobarPrestamo = (solicitud: SolicitudEfectivo) => {
@@ -449,6 +475,55 @@ export default function CampanitaAutorizaciones() {
             </div>
           </div>
         ))
+      )}
+    </div>
+  )
+
+  const tabComisiones = (
+    <div className="max-h-[280px] overflow-y-auto p-2 space-y-2">
+      <div className="bg-violet-50 border border-violet-200 p-2 rounded text-xs text-violet-800">
+        Comisiones pendientes del período {dayjs(getPeriodoComisiones().desde).format('DD/MM')} al{' '}
+        {dayjs(getPeriodoComisiones().hasta).format('DD/MM')}.
+      </div>
+      {comisionesPendientes.length === 0 ? (
+        <div className="py-6">
+          <Empty description="Sin comisiones por pagar" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        </div>
+      ) : (
+        <>
+          {comisionesPendientes.map((v) => (
+            <div
+              key={v.user_id}
+              className="border border-violet-100 rounded-lg p-3 hover:bg-violet-50 transition-colors cursor-pointer"
+              onClick={() => {
+                setDropdownOpen(false)
+                router.push('/ui/gestion-contable-y-financiera/comisiones')
+              }}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="space-y-0.5 min-w-0">
+                  <p className="text-sm font-semibold text-slate-800 line-clamp-1">
+                    {v.vendedor || 'Sin nombre'}
+                  </p>
+                  <p className="text-[10px] text-slate-500 font-medium">
+                    {v.total_ventas} venta{v.total_ventas === 1 ? '' : 's'} · generado S/{' '}
+                    {Number(v.comision_generada).toFixed(2)}
+                  </p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-[9px] uppercase tracking-tighter text-slate-400">Pendiente</p>
+                  <p className="text-sm font-bold text-violet-700">
+                    S/ {Number(v.comision_pendiente).toFixed(2)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
+          <div className="flex items-center justify-between border-t pt-2 px-1">
+            <span className="text-[11px] font-semibold text-slate-500 uppercase">Total a pagar</span>
+            <span className="text-sm font-bold text-violet-700">S/ {comisionesMonto.toFixed(2)}</span>
+          </div>
+        </>
       )}
     </div>
   )
@@ -702,6 +777,19 @@ export default function CampanitaAutorizaciones() {
               </span>
             ),
             children: tabPrestamos,
+          },
+          {
+            key: 'comisiones',
+            label: (
+              <span className="flex items-center gap-1.5 text-xs">
+                <DollarOutlined className="text-sm" />
+                Comisiones
+                {comisionesCount > 0 && (
+                  <Badge count={comisionesCount} size="small" className="ml-1" style={{ backgroundColor: '#7c3aed' }} />
+                )}
+              </span>
+            ),
+            children: tabComisiones,
           },
           {
             key: 'requerimientos',
