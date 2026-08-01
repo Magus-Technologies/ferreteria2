@@ -444,6 +444,8 @@ export default function KardexView() {
             <SelectClientes
               className='!min-w-[250px] !w-[250px] !max-w-[250px]'
               allowClear
+              open={false}
+              searchOnEnterOnly
               onChange={(_id, cliente) => {
                 setClienteSeleccionado(cliente ?? undefined)
               }}

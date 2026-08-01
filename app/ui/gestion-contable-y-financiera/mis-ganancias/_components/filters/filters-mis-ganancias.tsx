@@ -1,7 +1,7 @@
 "use client";
 
 import { Form, Drawer, Badge, Select } from "antd";
-import { FaSearch, FaFilter, FaCalendar } from "react-icons/fa";
+import { FaSearch, FaFilter, FaCalendar, FaBoxOpen } from "react-icons/fa";
 import { GiMoneyStack } from "react-icons/gi";
 import { useState, useMemo, useEffect } from "react";
 import LabelBase from "~/components/form/label-base";
@@ -12,51 +12,43 @@ import ButtonBase from "~/components/buttons/button-base";
 import FormBase from "~/components/form/form-base";
 import DatePickerBase from "~/app/_components/form/fechas/date-picker-base";
 import SelectUsuarios from "~/app/_components/form/selects/select-usuarios";
+import SelectProductos from "~/app/_components/form/selects/select-productos";
+import SelectClientes from "~/app/_components/form/selects/select-clientes";
+import SelectMarcas from "~/app/_components/form/selects/select-marcas";
 import InputBase from "~/app/_components/form/inputs/input-base";
 import { Dayjs } from "dayjs";
 import { useStoreFiltrosMisGanancias } from "~/app/ui/gestion-contable-y-financiera/mis-ganancias/_store/store-filtros-mis-ganancias";
 import { useStoreAlmacen } from "~/store/store-almacen";
 import dayjs from "dayjs";
-import { useQuery } from "@tanstack/react-query";
-import { clienteApi } from "~/lib/api/cliente";
 import SelectDespliegueDePago from "~/app/_components/form/selects/select-despliegue-de-pago";
-import { useDebounce } from "use-debounce";
 
 interface ValuesFiltersMisGanancias {
   desde?: Dayjs;
   hasta?: Dayjs;
+  producto_id?: number;
   cliente_id?: number;
   cliente_search_text?: string;
   user_id?: string;
   serie_numero?: string;
-  incluir?: string;
   marca?: string;
+  marca_id?: number;
   vendedor?: string;
   forma_pago?: string;
   confirmar_caja?: string;
   tipo_doc?: string;
   serie_n?: string;
-  sucursal?: string;
   mostrar_hora?: boolean;
 }
 
 export default function FiltersMisGanancias() {
   const [form] = Form.useForm<ValuesFiltersMisGanancias>();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  // Texto de búsqueda de cliente (para el fallback `search` cuando se escribe sin
+  // seleccionar un cliente concreto). El listado de clientes lo maneja SelectClientes.
   const [clienteSearchText, setClienteSearchText] = useState<string>("");
-  const [debouncedClienteSearch] = useDebounce(clienteSearchText, 300);
-
-  // Query para obtener clientes
-  const { data: clientesData, isLoading: clientesLoading } = useQuery({
-    queryKey: ['clientes', debouncedClienteSearch],
-    queryFn: () => clienteApi.getAll({ 
-      search: debouncedClienteSearch || undefined,
-      per_page: 20 
-    }),
-    enabled: true, // Siempre habilitado para mostrar algunos clientes por defecto
-  });
-
-
+  // Ídem para producto: fallback `producto_servicio` (LIKE) cuando se escribe sin
+  // llegar a elegir un producto exacto del modal.
+  const [productoSearchText, setProductoSearchText] = useState<string>("");
 
   const almacen_id = useStoreAlmacen((state) => state.almacen_id);
   const setFiltros = useStoreFiltrosMisGanancias((state) => state.setFiltros);
@@ -78,30 +70,38 @@ export default function FiltersMisGanancias() {
   const activeFiltersCount = useMemo(() => {
     const values = form.getFieldsValue();
     let count = 0;
+    if (values.producto_id) count++;
     if (values.cliente_id) count++;
     if (values.user_id) count++;
     if (values.serie_numero) count++;
-    if (values.incluir) count++;
-    if (values.marca) count++;
+    if (values.marca_id) count++;
     if (values.vendedor) count++;
     if (values.forma_pago) count++;
     if (values.confirmar_caja) count++;
     if (values.tipo_doc) count++;
     if (values.serie_n) count++;
-    if (values.sucursal) count++;
     return count;
   }, [form]);
 
   const handleFinish = (values: ValuesFiltersMisGanancias) => {
-    const { desde, hasta, serie_numero, cliente_id, mostrar_hora, ...rest } = values;
+    const { desde, hasta, serie_numero, cliente_id, producto_id, mostrar_hora, ...rest } = values;
     
     let serie: string | undefined;
     let numero: number | undefined;
     if (serie_numero) {
-      const parts = serie_numero.split("-");
-      if (parts.length === 2) {
-        serie = parts[0].trim();
-        numero = parseInt(parts[1].trim());
+      const raw = String(serie_numero).trim();
+      if (raw.includes("-")) {
+        // Formato "SERIE-NUMERO": la serie es todo lo anterior al último guion.
+        const idx = raw.lastIndexOf("-");
+        const s = raw.slice(0, idx).trim();
+        const n = parseInt(raw.slice(idx + 1).trim());
+        if (s) serie = s;
+        if (!isNaN(n)) numero = n;
+      } else {
+        // Solo texto/número: si es número, buscar por número; si no, por serie.
+        const n = parseInt(raw);
+        if (!isNaN(n) && /^\d+$/.test(raw)) numero = n;
+        else serie = raw;
       }
     }
 
@@ -110,6 +110,11 @@ export default function FiltersMisGanancias() {
       ...rest,
       ...(cliente_id ? { cliente_id } : {}),
       ...(!cliente_id && clienteSearchText ? { search: clienteSearchText } : {}),
+      ...(producto_id ? { producto_id } : {}),
+      // Si el usuario escribió texto pero no llegó a elegir un producto exacto del
+      // modal (Enter → doble clic), se busca por texto (LIKE, trae todos los que
+      // contengan ese texto) en vez de exigir una selección puntual.
+      ...(!producto_id && productoSearchText ? { producto_servicio: productoSearchText } : {}),
       ...(desde ? { desde: desde.format("YYYY-MM-DD") } : {}),
       ...(hasta ? { hasta: hasta.format("YYYY-MM-DD") } : {}),
       ...(serie ? { serie } : {}),
@@ -233,14 +238,21 @@ export default function FiltersMisGanancias() {
               Producto:
             </label>
             <ConfigurableElement componentId="field-producto-servicio" label="Campo Producto/Servicio">
-              <InputBase
+              <SelectProductos
                 propsForm={{
-                  name: "producto_servicio",
+                  name: "producto_id",
                   hasFeedback: false,
                   className: "!w-full",
                 }}
-                placeholder="Nombre..."
+                form={form}
+                withSearch
+                searchOnEnterOnly
+                onSearch={(val: string) => setProductoSearchText(val)}
+                open={false}
                 formWithMessage={false}
+                allowClear
+                placeholder="Producto..."
+                prefix={<FaBoxOpen size={15} className="text-cyan-600 mx-1" />}
               />
             </ConfigurableElement>
           </div>
@@ -249,33 +261,20 @@ export default function FiltersMisGanancias() {
               Cliente:
             </label>
             <ConfigurableElement componentId="field-cliente" label="Campo Cliente">
-              <Form.Item name="cliente_id" noStyle>
-                <Select
-                  allowClear
-                  showSearch
-                  placeholder="Buscar..."
-                  className="w-full"
-                  loading={clientesLoading}
-                  filterOption={false}
-                  onSearch={(value: string) => setClienteSearchText(value)}
-                  onChange={(value: number | undefined) => {
-                    if (!value) {
-                      form.setFieldValue("cliente_id", undefined);
-                      setClienteSearchText("");
-                    }
-                  }}
-                  options={
-                    clientesData?.data?.data
-                      ? clientesData.data.data.map((cliente) => ({
-                          value: cliente.id,
-                          label: cliente.razon_social
-                            ? `${cliente.numero_documento} - ${cliente.razon_social}`
-                            : `${cliente.numero_documento} - ${cliente.nombres} ${cliente.apellidos}`,
-                        }))
-                      : []
-                  }
-                />
-              </Form.Item>
+              <SelectClientes
+                propsForm={{
+                  name: "cliente_id",
+                  hasFeedback: false,
+                  className: "!w-full",
+                }}
+                form={form}
+                open={false}
+                searchOnEnterOnly
+                formWithMessage={false}
+                allowClear
+                placeholder="Buscar cliente..."
+                onSearchChange={(text: string) => setClienteSearchText(text)}
+              />
             </ConfigurableElement>
           </div>
           <div className="col-span-2 flex flex-col gap-0.5">
@@ -298,45 +297,19 @@ export default function FiltersMisGanancias() {
           </div>
           <div className="col-span-1 flex flex-col gap-0.5">
             <label className="text-[10px] font-semibold text-gray-500 uppercase">
-              Incluir:
-            </label>
-            <ConfigurableElement componentId="field-incluir" label="Campo Incluir">
-              <Form.Item name="incluir" noStyle>
-                <Select
-                  allowClear
-                  placeholder="Todos"
-                  className="w-full"
-                  options={[
-                    { value: 'todos', label: 'Todos' },
-                    { value: 'con_ganancia', label: 'Ganancia' },
-                    { value: 'con_perdida', label: 'Pérdida' },
-                    { value: 'sin_costo', label: 'S. Costo' },
-                  ]}
-                />
-              </Form.Item>
-            </ConfigurableElement>
-          </div>
-          <div className="col-span-1 flex flex-col gap-0.5">
-            <label className="text-[10px] font-semibold text-gray-500 uppercase">
               Marca:
             </label>
             <ConfigurableElement componentId="field-marca" label="Campo Marca">
-              <Form.Item name="marca" noStyle>
-                <Select
-                  allowClear
-                  placeholder="Todas"
-                  className="w-full"
-                  showSearch
-                  options={[
-                    { value: 'PAVCO', label: 'PAVCO' },
-                    { value: 'SIN MARCA', label: 'S. MARCA' },
-                    { value: 'TIGRE', label: 'TIGRE' },
-                    { value: 'NICOLL', label: 'NICOLL' },
-                    { value: 'ETERNIT', label: 'ETERNIT' },
-                    { value: 'OTROS', label: 'OTROS' },
-                  ]}
-                />
-              </Form.Item>
+              <SelectMarcas
+                propsForm={{
+                  name: "marca_id",
+                  hasFeedback: false,
+                  className: "!w-full",
+                }}
+                formWithMessage={false}
+                allowClear
+                placeholder="Marca..."
+              />
             </ConfigurableElement>
           </div>
           <div className="col-span-1 flex flex-col gap-0.5">
@@ -350,8 +323,8 @@ export default function FiltersMisGanancias() {
                   placeholder="Todas"
                   className="w-full"
                   options={[
-                    { value: 'co', label: 'Cont.' },
-                    { value: 'cr', label: 'Créd.' },
+                    { value: 'co', label: 'Contado' },
+                    { value: 'cr', label: 'Crédito' },
                   ]}
                 />
               </Form.Item>
@@ -368,9 +341,9 @@ export default function FiltersMisGanancias() {
                   placeholder="Todos"
                   className="w-full"
                   options={[
-                    { value: 'nv', label: 'N.V.' },
-                    { value: '03', label: 'Bol.' },
-                    { value: '01', label: 'Fact.' },
+                    { value: 'nv', label: 'Nota de Venta' },
+                    { value: '03', label: 'Boleta' },
+                    { value: '01', label: 'Factura' },
                   ]}
                 />
               </Form.Item>
@@ -407,25 +380,6 @@ export default function FiltersMisGanancias() {
                 placeholder="000-000"
                 formWithMessage={false}
               />
-            </ConfigurableElement>
-          </div>
-          <div className="col-span-2 flex flex-col gap-0.5">
-            <label className="text-[10px] font-semibold text-gray-500 uppercase">
-              Sucursal:
-            </label>
-            <ConfigurableElement componentId="field-sucursal" label="Campo Sucursal">
-              <Form.Item name="sucursal" noStyle>
-                <Select
-                  allowClear
-                  placeholder="Todas"
-                  className="w-full"
-                  options={[
-                    { value: 'principal', label: 'PRINCIPAL' },
-                    { value: 'almacen_2', label: 'ALMACÉN 2' },
-                    { value: 'almacen_3', label: 'ALMACÉN 3' },
-                  ]}
-                />
-              </Form.Item>
             </ConfigurableElement>
           </div>
           <div className="col-span-2 flex items-end">
@@ -512,45 +466,35 @@ export default function FiltersMisGanancias() {
           </div>
           <div>
             <label className="text-sm font-semibold text-gray-700 block mb-2">
-              Producto/Servicio:
+              Producto:
             </label>
-            <InputBase
-              propsForm={{ name: "producto_servicio", hasFeedback: false }}
-              placeholder="Digite producto o servicio"
+            <SelectProductos
+              propsForm={{ name: "producto_id", hasFeedback: false }}
+              form={form}
+              withSearch
+              searchOnEnterOnly
+              onSearch={(val: string) => setProductoSearchText(val)}
+              open={false}
               formWithMessage={false}
+              allowClear
+              placeholder="Producto..."
+              prefix={<FaBoxOpen size={15} className="text-cyan-600 mx-1" />}
             />
           </div>
           <div>
             <label className="text-sm font-semibold text-gray-700 block mb-2">
               Cliente:
             </label>
-            <Form.Item name="cliente_id" noStyle>
-              <Select
-                allowClear
-                showSearch
-                placeholder="Buscar cliente..."
-                className="w-full"
-                loading={clientesLoading}
-                filterOption={false}
-                onSearch={(value: string) => setClienteSearchText(value)}
-                onChange={(value: number | undefined) => {
-                  if (!value) {
-                    form.setFieldValue("cliente_id", undefined);
-                    setClienteSearchText("");
-                  }
-                }}
-                options={
-                  clientesData?.data?.data
-                    ? clientesData.data.data.map((cliente) => ({
-                        value: cliente.id,
-                        label: cliente.razon_social
-                          ? `${cliente.numero_documento} - ${cliente.razon_social}`
-                          : `${cliente.numero_documento} - ${cliente.nombres} ${cliente.apellidos}`,
-                      }))
-                    : []
-                }
-              />
-            </Form.Item>
+            <SelectClientes
+              propsForm={{ name: "cliente_id", hasFeedback: false }}
+              form={form}
+              open={false}
+              searchOnEnterOnly
+              formWithMessage={false}
+              allowClear
+              placeholder="Buscar cliente..."
+              onSearchChange={(text: string) => setClienteSearchText(text)}
+            />
           </div>
           <div>
             <label className="text-sm font-semibold text-gray-700 block mb-2">

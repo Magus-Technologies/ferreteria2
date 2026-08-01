@@ -73,9 +73,13 @@ export default function ModalTrasladoEfectivo({ open, setOpen, onSuccess }: Prop
   const destinoKey = (d: { vendedor_id: string; sub_caja_id: number; despliegue_pago_id: string }) =>
     `${d.vendedor_id}|${d.sub_caja_id}|${d.despliegue_pago_id}`
 
-  // Todas las filas son destinos válidos, incluida la misma sub-caja del
-  // origen (traslado de dinero cerrado al efectivo de sesión del usuario).
-  const destinosDisponibles = destinosUsuarios
+  // El destino debe ser del MISMO método que el origen (ej. origen "efectivo negro"
+  // → destino también "efectivo negro"). No se puede mezclar tipos de efectivo al
+  // trasladar. Incluye la misma sub-caja del origen (traslado de dinero cerrado al
+  // efectivo de sesión del usuario), mientras el método coincida.
+  const destinosDisponibles = origen
+    ? destinosUsuarios.filter((d) => d.metodo_nombre === origen.metodo)
+    : destinosUsuarios
 
   const handleSubmit = async () => {
     try {

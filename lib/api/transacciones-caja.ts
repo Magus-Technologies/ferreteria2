@@ -184,6 +184,33 @@ export interface MovimientoInternoResponse {
   data: MovimientoInterno
 }
 
+// Fila tal como la devuelve MovimientoInternoService::listarMovimientos /
+// listarMovimientosPorCajaPrincipal — plana (sub_caja_origen es el NOMBRE, no un
+// objeto anidado). Distinta del tipo `MovimientoInterno` de arriba (que no coincide
+// con lo que el backend realmente envía en estos endpoints).
+export interface MovimientoInternoFila {
+  id: string
+  sub_caja_origen: string
+  sub_caja_destino: string
+  metodo_origen: string
+  banco_origen: string
+  metodo_destino: string
+  banco_destino: string
+  concepto: string | null
+  monto: string
+  justificacion: string
+  fecha: string
+  // Quién REALIZÓ el traslado.
+  vendedor: string
+  // A quién se le acreditó el dinero (usuario destino).
+  usuario_destino: string
+}
+
+export interface MovimientosInternosPorCajaPrincipalResponse {
+  success: boolean
+  data: MovimientoInternoFila[]
+}
+
 export interface TransaccionResponse {
   success: boolean
   message?: string
@@ -342,6 +369,19 @@ export const transaccionesCajaApi = {
       : '/cajas/movimientos-internos'
 
     return apiRequest<MovimientosInternosListResponse>(url)
+  },
+
+  /**
+   * Listar movimientos internos (Traslado de Efectivo) de TODAS las sub-cajas de una
+   * caja principal, sin importar qué usuario los hizo. Usado por el tab "Traslado de
+   * Efectivo" del modal de sub-cajas.
+   */
+  getMovimientosInternosPorCajaPrincipal(
+    cajaPrincipalId: number
+  ): Promise<ApiResponse<MovimientosInternosPorCajaPrincipalResponse>> {
+    return apiRequest<MovimientosInternosPorCajaPrincipalResponse>(
+      `/cajas/movimientos-internos/por-caja-principal/${cajaPrincipalId}`
+    )
   },
 
   /**
