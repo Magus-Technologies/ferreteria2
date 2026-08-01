@@ -61,8 +61,10 @@ export default function HistorialTrasladoEfectivoCaja({ cajaPrincipalId }: Histo
           (fecha.isBefore(end, 'day') || fecha.isSame(end, 'day'))
         if (!dentroRango) return false
       }
+      // Busca tanto en quien REALIZÓ el traslado como en el usuario DESTINO.
       const nombreVendedor = (m.vendedor ?? '').toLowerCase()
-      if (texto && !nombreVendedor.includes(texto)) {
+      const nombreDestino = (m.usuario_destino ?? '').toLowerCase()
+      if (texto && !nombreVendedor.includes(texto) && !nombreDestino.includes(texto)) {
         return false
       }
       return true
@@ -86,9 +88,16 @@ export default function HistorialTrasladoEfectivoCaja({ cajaPrincipalId }: Histo
       cellStyle: { fontWeight: 'bold', color: '#2563eb' },
     },
     {
-      headerName: 'Usuario',
+      headerName: 'Realizado Por',
       field: 'vendedor',
       width: 200,
+      cellStyle: { color: '#7c3aed' },
+    },
+    {
+      headerName: 'Usuario Destino',
+      field: 'usuario_destino',
+      width: 200,
+      cellStyle: { color: '#059669', fontWeight: 'bold' },
     },
     {
       headerName: 'Sub-Caja Origen',

@@ -200,7 +200,10 @@ export interface MovimientoInternoFila {
   monto: string
   justificacion: string
   fecha: string
+  // Quién REALIZÓ el traslado.
   vendedor: string
+  // A quién se le acreditó el dinero (usuario destino).
+  usuario_destino: string
 }
 
 export interface MovimientosInternosPorCajaPrincipalResponse {
