@@ -38,6 +38,12 @@ interface ModalEntradaStockProps {
   /** URL pública del PDF para incluir en el mensaje de WhatsApp */
   pdfPublicUrl?: string
   /**
+   * URL http pública del formato que se está previsualizando (ticket o A4).
+   * Solo se usa en móvil, donde el PDF no se puede mostrar embebido y hay que
+   * abrirlo en el visor del teléfono. Si no se pasa, cae a `pdfPublicUrl`.
+   */
+  pdfVistaPublicUrl?: string
+  /**
    * Configuración para personalización del mensaje de WhatsApp.
    * Permite elegir columnas/campos a incluir y adjuntar URL pública del PDF.
    */
@@ -108,6 +114,7 @@ export default function ModalShowDoc({
   clienteTelefonos,
   whatsappMensajeAuto,
   pdfPublicUrl,
+  pdfVistaPublicUrl,
   whatsappConfig,
   emailConfig,
   descargaConfig,
@@ -128,6 +135,20 @@ export default function ModalShowDoc({
   // Ref para mantener el children actual sin causar re-renders
   const childrenRef = useRef<React.ReactNode>(children)
   childrenRef.current = children
+
+  // Los navegadores móviles NO renderizan PDFs dentro de un <iframe> (ni Chrome
+  // Android ni Safari iOS): queda un recuadro vacío con un botón "Abrir" que pone
+  // el propio navegador, y ese botón intenta navegar a la URL `blob:`, cosa que
+  // el móvil bloquea — por eso "no abría nada". En móvil se ofrece el PDF por su
+  // URL http real, que el visor nativo del teléfono sí sabe abrir.
+  const [esMovil, setEsMovil] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)')
+    const sync = () => setEsMovil(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
 
   // Persistencia de columnas seleccionadas (por tipo de documento + acción)
   const persistBase = `colsel:${tipoDocumento ?? 'doc'}`
@@ -447,7 +468,7 @@ export default function ModalShowDoc({
     <>
       <Modal
         centered
-        width={esTicket ? 520 : 750}
+        width={esMovil ? '95vw' : (esTicket ? 520 : 750)}
         open={open}
         classNames={{ content: 'min-w-fit' }}
         title={
@@ -534,13 +555,51 @@ export default function ModalShowDoc({
       >
         <div
           className='border rounded-xl overflow-hidden mx-auto bg-gray-100'
-          style={{ height: 650 }}
+          style={{ height: esMovil ? '55vh' : 650 }}
         >
           {(loading || backendPdfLoading) ? (
             <div className='flex items-center justify-center h-full'>
               <Spin size='large' />
               <span className='ml-3 text-gray-500'>Generando vista previa...</span>
             </div>
+          ) : (esMovil && (pdfVistaPublicUrl || pdfPublicUrl || backendPdfUrl || pdfUrl)) ? (
+            (() => {
+              // Preferir la URL http pública: el `blob:` no se puede abrir en una
+              // pestaña nueva desde el móvil. Si el documento no expone una URL
+              // pública, al menos queda la descarga (que sí funciona con blob).
+              const urlPublica = pdfVistaPublicUrl || pdfPublicUrl
+              const urlBlob = backendPdfUrl || pdfUrl || ''
+              return (
+                <div className='flex h-full flex-col items-center justify-center gap-5 px-6 text-center'>
+                  <MdDescription className='text-gray-300' size={72} />
+                  <div>
+                    <p className='font-semibold text-gray-700'>Vista previa no disponible en el celular</p>
+                    <p className='mt-1 text-sm text-gray-500'>
+                      Los navegadores del teléfono no muestran PDF dentro de la aplicación.
+                    </p>
+                  </div>
+                  <div className='flex w-full max-w-xs flex-col gap-2'>
+                    {urlPublica && (
+                      <a
+                        href={urlPublica}
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        className='rounded-lg bg-orange-500 px-4 py-3 font-semibold text-white shadow-sm active:bg-orange-600'
+                      >
+                        Ver PDF
+                      </a>
+                    )}
+                    <a
+                      href={urlPublica || urlBlob}
+                      download={`${nro_doc || 'documento'}.pdf`}
+                      className='rounded-lg border border-gray-300 bg-white px-4 py-3 font-semibold text-gray-700 active:bg-gray-50'
+                    >
+                      Descargar PDF
+                    </a>
+                  </div>
+                </div>
+              )
+            })()
           ) : (backendPdfUrl || pdfUrl) ? (
             <iframe
               src={`${backendPdfUrl || pdfUrl}#toolbar=1&navpanes=0`}

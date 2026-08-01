@@ -89,12 +89,21 @@ export default function ModalDocVenta({
     return msg
   }, [ventaInfo, empresa])
 
-  // URL pública del PDF para WhatsApp
+  // URL pública del PDF para WhatsApp (siempre A4: es el formato legible para
+  // el cliente que recibe el link).
   const pdfPublicUrl = useMemo(() => {
     if (!ventaId) return undefined
     const API_URL = process.env.NEXT_PUBLIC_API_URL
     return `${API_URL}/pdf/venta/${ventaId}?formato=a4`
   }, [ventaId])
+
+  // URL del formato que se está previsualizando. En móvil el PDF no se puede
+  // embeber, así que se abre por esta URL http en el visor del teléfono.
+  const pdfVistaPublicUrl = useMemo(() => {
+    if (!ventaId) return undefined
+    const API_URL = process.env.NEXT_PUBLIC_API_URL
+    return `${API_URL}/pdf/venta/${ventaId}?formato=${esTicket ? 'ticket' : 'a4'}`
+  }, [ventaId, esTicket])
 
   // Email del cliente
   const clienteEmail = ventaInfo?.cliente?.email || undefined
@@ -227,6 +236,7 @@ export default function ModalDocVenta({
       clienteTelefonos={clienteTelefonos}
       whatsappMensajeAuto={whatsappMensajeAuto}
       pdfPublicUrl={pdfPublicUrl}
+      pdfVistaPublicUrl={pdfVistaPublicUrl}
       emailConfig={{
         emailDefault: clienteEmail,
         onSend: async (email, _columnas, mensaje) => {
