@@ -37,6 +37,12 @@ interface SelectClientesProps extends Omit<SelectBaseProps, 'onChange'> {
   showOnlyDocument?: boolean
   autoFocus?: boolean
   open?: boolean // Permitir controlar si se abre el dropdown
+  /**
+   * Si es true, NO se dispara la búsqueda al escribir (nada de peticiones por
+   * cada tecleo). La búsqueda solo ocurre al presionar Enter (abre el modal de
+   * búsqueda) o vía el botón externo de "Buscar" del formulario que lo contiene.
+   */
+  searchOnEnterOnly?: boolean
   initialCliente?: PartialCliente // Cliente pre-cargado (para pre-llenar sin búsqueda)
   /**
    * Autocompletar ruc_dni/telefono/direccion del form al seleccionar.
@@ -62,6 +68,7 @@ export default function SelectClientes({
   showOnlyDocument = false,
   autoFocus = false,
   open, // Nueva prop para controlar el dropdown
+  searchOnEnterOnly = false,
   initialCliente, // Cliente pre-cargado (para pre-llenar sin búsqueda)
   autocompleteFormFields = true,
   ...props
@@ -266,7 +273,9 @@ setClienteSeleccionadoStore(undefined)
     }
   }
 
-  const [value] = useDebounce(text, 300) // Reducir de 1000ms a 300ms
+  // Si searchOnEnterOnly está activo, el debounce NO dispara la query automática:
+  // se le pasa siempre '' (misma técnica que SelectProductos).
+  const [value] = useDebounce(searchOnEnterOnly ? '' : text, 300) // Reducir de 1000ms a 300ms
 
   const { response, loading } = useSearchClientes({ value })
 

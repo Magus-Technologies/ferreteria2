@@ -269,6 +269,7 @@ export default function FiltersMisGanancias() {
                 }}
                 form={form}
                 open={false}
+                searchOnEnterOnly
                 formWithMessage={false}
                 allowClear
                 placeholder="Buscar cliente..."
@@ -488,6 +489,7 @@ export default function FiltersMisGanancias() {
               propsForm={{ name: "cliente_id", hasFeedback: false }}
               form={form}
               open={false}
+              searchOnEnterOnly
               formWithMessage={false}
               allowClear
               placeholder="Buscar cliente..."
