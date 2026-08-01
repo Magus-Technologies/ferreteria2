@@ -231,7 +231,10 @@ export default function ModalDocVenta({
       esTicket={esTicket}
       tipoDocumento='venta'
       backendPdfUrl={currentPdfUrl}
-      backendPdfLoading={currentLoading && !currentPdfUrl}
+      // Mientras no llegue el PDF del backend hay que reportar "cargando": si no,
+      // ModalShowDoc intenta generar uno con react-pdf a partir de los children
+      // (que acá van vacíos a propósito) y tira "Cannot read properties of null".
+      backendPdfLoading={!currentPdfUrl}
       onCustomPrint={esTicket && tieneVales ? handleCustomPrint : undefined}
       clienteTelefonos={clienteTelefonos}
       whatsappMensajeAuto={whatsappMensajeAuto}

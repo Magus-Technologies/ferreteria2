@@ -12,6 +12,7 @@ import { cajaApi } from '~/lib/api/caja'
 import { cierreCajaApi } from '~/lib/api/cierre-caja'
 import { useQzPrint } from '~/hooks/use-qz-print'
 import ModalSeleccionImpresora from './modal-seleccion-impresora'
+import VisorPdfMovil from '~/app/_components/others/visor-pdf-movil'
 import type { TipoFormato } from '~/store/store-impresora'
 const loadPdf = () => import('@react-pdf/renderer').then(m => m.pdf)
 
@@ -149,6 +150,12 @@ export default function ModalShowDoc({
     mq.addEventListener('change', sync)
     return () => mq.removeEventListener('change', sync)
   }, [])
+
+  // Si el visor canvas no logra dibujar el PDF (worker que no carga, archivo
+  // corrupto), se cae a los botones de abrir/descargar en vez de dejar el modal
+  // vacío. Se resetea al cambiar de documento para reintentar con el nuevo.
+  const [visorMovilFallo, setVisorMovilFallo] = useState(false)
+  useEffect(() => { setVisorMovilFallo(false) }, [backendPdfUrl, pdfUrl])
 
   // Persistencia de columnas seleccionadas (por tipo de documento + acción)
   const persistBase = `colsel:${tipoDocumento ?? 'doc'}`
@@ -383,6 +390,44 @@ export default function ModalShowDoc({
   }
 
   // Imprimir con QZ Tray
+  /**
+   * Acción de "imprimir" en el celular.
+   *
+   * QZ Tray es una aplicación de ESCRITORIO: en Android/iOS no se puede instalar,
+   * así que intentar conectarse solo devolvía "verifica que esté ejecutándose en la
+   * bandeja del sistema" — un mensaje sin sentido en un teléfono y sin salida.
+   *
+   * Acá se abre el menú nativo del sistema, desde donde el teléfono ofrece Imprimir
+   * (AirPrint en iOS, servicio de impresión en Android), WhatsApp, guardar, o la app
+   * de una ticketera Bluetooth.
+   */
+  const compartirEnMovil = async () => {
+    const urlBlob = backendPdfUrl || pdfUrl
+    const urlPublica = pdfVistaPublicUrl || pdfPublicUrl
+    const nombreArchivo = `${nro_doc || 'documento'}.pdf`
+
+    try {
+      if (urlBlob && typeof navigator !== 'undefined' && navigator.canShare) {
+        const blob = await fetch(urlBlob).then((r) => r.blob())
+        const archivo = new File([blob], nombreArchivo, { type: 'application/pdf' })
+        if (navigator.canShare({ files: [archivo] })) {
+          await navigator.share({ files: [archivo], title: nro_doc || 'Documento' })
+          return
+        }
+      }
+    } catch (err) {
+      // AbortError = el usuario cerró el menú a propósito, no es un fallo.
+      if ((err as Error)?.name === 'AbortError') return
+      console.error('No se pudo compartir el documento:', err)
+    }
+
+    // Sin Web Share (o si falló): abrir el PDF para que el visor del teléfono
+    // ofrezca su propio Imprimir / Compartir.
+    const destino = urlPublica || urlBlob
+    if (destino) window.open(destino, '_blank', 'noopener')
+    else antdMessage.error('No se pudo preparar el documento para compartir.')
+  }
+
   const handlePrint = async () => {
     if (onCustomPrint) {
       await onCustomPrint()
@@ -537,12 +582,18 @@ export default function ModalShowDoc({
           </div>
         }
         okText={
-          qz.impresoraDefault
-            ? `Imprimir (${qz.impresoraDefault.length > 20 ? qz.impresoraDefault.slice(0, 20) + '...' : qz.impresoraDefault})`
-            : 'Imprimir'
+          esMovil
+            ? 'Compartir / Imprimir'
+            : qz.impresoraDefault
+              ? `Imprimir (${qz.impresoraDefault.length > 20 ? qz.impresoraDefault.slice(0, 20) + '...' : qz.impresoraDefault})`
+              : 'Imprimir'
         }
-        onOk={() => descargaConfig ? handleOpenDescarga('print') : handlePrint()}
-        confirmLoading={qz.imprimiendo}
+        onOk={() => {
+          // En celular no hay QZ Tray; se delega al menú del sistema operativo.
+          if (esMovil) return compartirEnMovil()
+          return descargaConfig ? handleOpenDescarga('print') : handlePrint()
+        }}
+        confirmLoading={!esMovil && qz.imprimiendo}
         cancelText='Cerrar'
         cancelButtonProps={{ className: 'rounded-xl' }}
         okButtonProps={{
@@ -561,6 +612,25 @@ export default function ModalShowDoc({
             <div className='flex items-center justify-center h-full'>
               <Spin size='large' />
               <span className='ml-3 text-gray-500'>Generando vista previa...</span>
+            </div>
+          ) : (esMovil && !visorMovilFallo && (backendPdfUrl || pdfUrl)) ? (
+            <div className='flex h-full flex-col'>
+              <div className='min-h-0 flex-1'>
+                <VisorPdfMovil
+                  url={(backendPdfUrl || pdfUrl) as string}
+                  onError={() => setVisorMovilFallo(true)}
+                />
+              </div>
+              {(pdfVistaPublicUrl || pdfPublicUrl) && (
+                <a
+                  href={pdfVistaPublicUrl || pdfPublicUrl}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='shrink-0 border-t bg-white py-2 text-center text-sm font-medium text-orange-600'
+                >
+                  Abrir en el visor del teléfono
+                </a>
+              )}
             </div>
           ) : (esMovil && (pdfVistaPublicUrl || pdfPublicUrl || backendPdfUrl || pdfUrl)) ? (
             (() => {
