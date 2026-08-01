@@ -22,21 +22,23 @@ interface ModalAnalisisPerdidasVentasProps {
 type TipoPerdida = 'todas' | 'ventas_bajo_costo' | 'descuentos' | 'comisiones' | 'salidas' | 'notas_credito'
 
 export default function ModalAnalisisPerdidasVentas({ open, onClose, filtros: filtrosGlobales }: ModalAnalisisPerdidasVentasProps) {
-  // Filtros locales para el modal
+  // Filtros locales para el modal. Las fechas se toman TAL CUAL vienen del filtro
+  // principal (pueden venir vacías si el usuario quitó la fecha); no se fuerza "hoy"
+  // para que el modal refleje exactamente lo que se ve en la vista de ganancias.
   const [localFiltros, setLocalFiltros] = useState({
-    desde: filtrosGlobales.desde || dayjs().format('YYYY-MM-DD'),
-    hasta: filtrosGlobales.hasta || dayjs().format('YYYY-MM-DD'),
+    desde: filtrosGlobales.desde || '',
+    hasta: filtrosGlobales.hasta || '',
     search: '',
     tipo_perdida: '' as TipoPerdida | '',
   })
   const [debouncedSearch] = useDebounce(localFiltros.search, 500)
 
-  // Sincronizar al abrir el modal
+  // Sincronizar al abrir el modal con la fecha ACTUAL del filtro principal
   useEffect(() => {
     if (open) {
       setLocalFiltros({
-        desde: filtrosGlobales.desde || dayjs().format('YYYY-MM-DD'),
-        hasta: filtrosGlobales.hasta || dayjs().format('YYYY-MM-DD'),
+        desde: filtrosGlobales.desde || '',
+        hasta: filtrosGlobales.hasta || '',
         search: '',
         tipo_perdida: '',
       })

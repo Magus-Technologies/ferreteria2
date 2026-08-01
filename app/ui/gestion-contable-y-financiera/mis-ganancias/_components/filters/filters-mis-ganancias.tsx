@@ -52,6 +52,20 @@ export default function FiltersMisGanancias() {
 
   const almacen_id = useStoreAlmacen((state) => state.almacen_id);
   const setFiltros = useStoreFiltrosMisGanancias((state) => state.setFiltros);
+  const setFechasUI = useStoreFiltrosMisGanancias((state) => state.setFechasUI);
+
+  // Reflejar SIEMPRE las fechas actuales del formulario (los inputs Desde/Hasta,
+  // en cualquiera de las dos instancias: escritorio o drawer) en el store, aunque
+  // aún no se haya presionado "Buscar". El modal de Análisis de Pérdidas lee estas
+  // fechas para abrir con exactamente lo que se ve en el filtro principal.
+  const desdeWatch = Form.useWatch("desde", form);
+  const hastaWatch = Form.useWatch("hasta", form);
+  useEffect(() => {
+    setFechasUI({
+      desde: desdeWatch ? desdeWatch.format("YYYY-MM-DD") : undefined,
+      hasta: hastaWatch ? hastaWatch.format("YYYY-MM-DD") : undefined,
+    });
+  }, [desdeWatch, hastaWatch, setFechasUI]);
 
   // Inicializar filtros con almacén y fechas por defecto
   useEffect(() => {

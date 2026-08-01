@@ -25,6 +25,10 @@ export default function CardsInfoGanancias() {
   const [modalPepsOpen, setModalPepsOpen] = useState(false)
   
   const filtros = useStoreFiltrosMisGanancias((state) => state.filtros)
+  // Fechas EN VIVO del filtro principal (lo que muestran los inputs Desde/Hasta,
+  // aunque no se haya dado "Buscar"). El modal de Análisis de Pérdidas debe abrir
+  // con estas mismas fechas.
+  const fechasUI = useStoreFiltrosMisGanancias((state) => state.fechasUI)
   const { data, isLoading } = useGetResumenGanancias(filtros)
 
   // La card "Gastos U" usa EXACTAMENTE la misma fuente que el modal de Gastos
@@ -206,7 +210,10 @@ export default function CardsInfoGanancias() {
       <ModalAnalisisPerdidasVentas
         open={modalAnalisisPerdidasOpen}
         onClose={() => setModalAnalisisPerdidasOpen(false)}
-        filtros={filtros}
+        // Se pasan las fechas EN VIVO del filtro principal (fechasUI) en lugar de
+        // las ya aplicadas (filtros.desde/hasta), para que el modal abra con la
+        // misma fecha que se ve en pantalla aunque no se haya presionado Buscar.
+        filtros={{ ...filtros, desde: fechasUI.desde, hasta: fechasUI.hasta }}
       />
 
       {/* Ganancia Neta */}

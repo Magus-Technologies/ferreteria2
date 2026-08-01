@@ -162,14 +162,22 @@ export default function SelectProveedores({
     // PERO NO si el modal de búsqueda está abierto
     if (response && response.length === 1 && value && !openModalProveedorSearch) {
       const proveedor = response[0]
-      // Autoseleccionar SOLO si el valor debounced coincide exactamente con el RUC
-      if (proveedor.ruc === value.trim()) {
+      if (showOnlyDocument) {
+        // En modo "solo documento" (ej. tipeo dígito a dígito de un RUC) NO
+        // autoseleccionar hasta que el texto coincida exactamente con el RUC,
+        // para no autoseleccionar de forma prematura mientras se sigue tipeando.
+        if (proveedor.ruc === value.trim()) {
+          handleSelect({ data: proveedor })
+        }
+      } else {
+        // Búsqueda por nombre/razón social: si ya hay un único resultado,
+        // autoseleccionarlo (igual que SelectProductos).
         handleSelect({ data: proveedor })
       }
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [response, value])
+  }, [response, value, showOnlyDocument])
 
   const getLabel = (proveedor: Pick<Proveedor, 'ruc' | 'razon_social'>) => {
     if (showOnlyDocument) {

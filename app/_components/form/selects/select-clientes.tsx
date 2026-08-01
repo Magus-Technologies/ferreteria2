@@ -308,10 +308,28 @@ setClienteSeleccionadoStore(undefined)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [response, text, lastSelectedDocument, openModalClienteSearch])
 
-  function handleSearch() {
+  async function handleSearch() {
     // Sincronizar textDefault con el texto actual antes de abrir el modal
     setTextDefault(text)
-    // Siempre abrir el modal, sin importar si hay resultados o no
+
+    const textoLimpio = text.trim()
+    if (textoLimpio.length >= 2) {
+      try {
+        const { clienteApi } = await import('~/lib/api/cliente')
+        const response = await clienteApi.getAll({ search: textoLimpio, per_page: 2 })
+        const results = response.data?.data || []
+        if (results.length === 1) {
+          // Único resultado: autoseleccionar directo, sin pasar por el modal
+          // (mismo comportamiento que SelectProductos).
+          handleSelect({ data: results[0] })
+          return
+        }
+      } catch (error) {
+        console.error('Error en búsqueda manual de cliente:', error)
+      }
+    }
+
+    // Sin match único: abrir el modal para que el usuario elija.
     setOpenModalClienteSearch(true)
   }
 
