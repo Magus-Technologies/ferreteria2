@@ -92,7 +92,14 @@ export default function useInitVenta({
         // Si es venta editada con stock no aplicado, no descontar de nuevo.
         descontar_stock: (venta as any).stock_aplicado === false ? 'no' : 'si',
         // Si la cotización origen ya reservó stock, no descontar pero sí marcar como aplicado.
+        // Se manda como fallback: el backend prioriza `cotizacion_id` (abajo) y verifica
+        // reservar_stock directo en la BD, así que este flag ya no es el único freno.
         stock_ya_aplicado: (venta as any).reservar_stock === true ? true : undefined,
+        // Cuando `venta` es en realidad una cotización cargada (tiene estado_cotizacion,
+        // las ventas no lo tienen), su `id` es el ID de la cotización. El backend usa esto
+        // para verificar reservar_stock directo en la BD en vez de confiar en el flag de
+        // arriba (que puede perderse si algo falla en la cadena del frontend).
+        cotizacion_id: (venta as any).estado_cotizacion !== undefined ? (venta as any).id : undefined,
         productos: [
           // Productos normales
           ...venta.productos_por_almacen.flatMap((ppa) =>

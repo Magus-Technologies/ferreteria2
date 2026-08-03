@@ -147,7 +147,13 @@ export type FormCreateVenta = ClienteDireccionFormFields & {
   // Toggle manual del usuario: si "no", fuerza no descontar stock (equivalente a omitir).
   descontar_stock?: 'si' | 'no'
   // La cotización origen ya descontó stock (reservar_stock=true): no descontar de nuevo.
+  // Se manda como fallback; el backend verifica el estado real en la BD vía
+  // `cotizacion_id` cuando está presente (ver comentario en cotizacion_id).
   stock_ya_aplicado?: boolean
+  // ID de la cotización origen cuando la venta se crea desde "cargar cotización".
+  // El backend usa esto para leer reservar_stock DIRECTO de la BD (server-side)
+  // en vez de confiar en stock_ya_aplicado (que puede perderse en el camino).
+  cotizacion_id?: string
 }
 
 // Componente interno que se recrea completamente cuando cambia la key
