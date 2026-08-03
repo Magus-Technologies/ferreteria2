@@ -655,7 +655,7 @@ export default function CierreCajaView() {
                           </span>
                         </div>
 
-                        {/* Resumen Ingresos/Egresos */}
+                        {/* Resumen Ingresos/Egresos (TODOS los métodos: efectivo + digital) */}
                         <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100'>
                           <span className='text-base text-slate-700'>Resumen Ingresos</span>
                           <span className='text-base font-semibold text-slate-800'>
@@ -666,6 +666,19 @@ export default function CierreCajaView() {
                           <span className='text-base text-slate-700'>Resumen Egresos</span>
                           <span className='text-base font-semibold text-slate-800'>
                             {(resumen?.total_egresos || 0).toFixed(2)}
+                          </span>
+                        </div>
+                        {/* SOLO EFECTIVO, redondeado a 0.10 (para cuadrar el efectivo físico) */}
+                        <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100'>
+                          <span className='text-base font-medium text-emerald-700'>Resumen Ingreso Total Efectivo</span>
+                          <span className='text-base font-semibold text-emerald-700'>
+                            {(resumen?.resumen_ingresos_efectivo ?? resumen?.total_ingresos ?? 0).toFixed(2)}
+                          </span>
+                        </div>
+                        <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100'>
+                          <span className='text-base font-medium text-emerald-700'>Resumen Egreso Total Efectivo</span>
+                          <span className='text-base font-semibold text-emerald-700'>
+                            {(resumen?.resumen_egresos_efectivo ?? resumen?.total_egresos ?? 0).toFixed(2)}
                           </span>
                         </div>
 
