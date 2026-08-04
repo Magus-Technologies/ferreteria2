@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useRef } from 'react'
 import { Form, InputNumber, Select } from 'antd'
 import TitleForm from '~/components/form/title-form'
 import ModalForm from '~/components/modals/modal-form'
@@ -7,6 +8,7 @@ import InputBase from '~/app/_components/form/inputs/input-base'
 import LabelBase from '~/components/form/label-base'
 import useSolicitarEfectivo from '../_hooks/use-solicitar-efectivo'
 import { useQuery } from '@tanstack/react-query'
+import { subscribeModelChanged } from '~/lib/realtime-bus'
 
 interface ModalSolicitarEfectivoProps {
     open: boolean
@@ -21,6 +23,10 @@ interface FormValues {
     motivo?: string
 }
 
+// Módulos cuyos movimientos cambian el efectivo disponible de un vendedor —
+// mismo criterio que usa el resumen de Cierre de Caja (ver cierre-caja-view.tsx).
+const MODULOS_EFECTIVO_VENDEDORES = ['ventas', 'gastos', 'ingresos', 'prestamos', 'prestamos-vendedores', 'cajas']
+
 export default function ModalSolicitarEfectivo({
     open,
     setOpen,
@@ -34,8 +40,16 @@ export default function ModalSolicitarEfectivo({
         onSuccess?.()
     })
 
+    // Tiempo real: el canal WebSocket ya está conectado globalmente
+    // (RealtimeProvider, ver providers-auth.tsx) — acá solo nos suscribimos al
+    // bus interno para refrescar la lista de vendedores cuando ocurra un
+    // movimiento que afecte el efectivo disponible de alguno, sin tener que
+    // cerrar y reabrir el modal (mismo criterio que usa Cierre de Caja).
+    // No se vuelve a llamar useRealtime() acá: abriría un segundo listener
+    // sobre el mismo canal "model-changes" (ver lib/realtime-bus.ts).
+
     // Obtener vendedores con efectivo disponible
-    const { data: vendedoresData, isLoading: loadingVendedores } = useQuery({
+    const { data: vendedoresData, isLoading: loadingVendedores, refetch: refetchVendedores } = useQuery({
         queryKey: ['vendedores-con-efectivo-real-time'],
         queryFn: async () => {
             // Usar el nuevo endpoint que calcula en tiempo real
@@ -49,6 +63,18 @@ export default function ModalSolicitarEfectivo({
         },
         enabled: open,
     })
+
+    const refetchVendedoresRef = useRef(refetchVendedores)
+    refetchVendedoresRef.current = refetchVendedores
+    useEffect(() => {
+        if (!open) return
+        const unsub = subscribeModelChanged((ev) => {
+            if (MODULOS_EFECTIVO_VENDEDORES.includes(ev.module)) {
+                refetchVendedoresRef.current()
+            }
+        })
+        return unsub
+    }, [open])
 
     const vendedores = Array.isArray(vendedoresData?.data) ? vendedoresData.data : []
 
@@ -129,16 +155,17 @@ export default function ModalSolicitarEfectivo({
                 </p>
             </div>
 
-            <LabelBase label='Vendedor con Efectivo' orientation='column'>
+            <LabelBase label='Vendedor con Efectivo' orientation='column' className='w-full'>
                 <Form.Item
                     name='vendedor_prestamista_id'
                     rules={[{ required: true, message: 'Selecciona un vendedor' }]}
+                    className='w-full'
                 >
                     <Select
                         placeholder='Selecciona el vendedor'
                         size='large'
                         className='w-full'
-                        style={{ width: '100%', height: 48 }}
+                        style={{ width: '100%', height: 40 }}
                         loading={loadingVendedores}
                         showSearch
                         filterOption={(input, option) =>
@@ -158,9 +185,9 @@ export default function ModalSolicitarEfectivo({
                         )}
                         optionRender={(option) => (
                             <div className='flex items-center justify-between gap-4 px-2'>
-                                <span className='text-sm font-semibold'>{option.data.label.split(' — ')[0]}</span>
+                                <span className='text-sm font-semibold'>{String(option.data.label ?? '').split(' — ')[0]}</span>
                                 <span className='text-sm font-bold text-green-600 whitespace-nowrap'>
-                                    {option.data.label.split(' — ')[1]}
+                                    {String(option.data.label ?? '').split(' — ')[1]}
                                 </span>
                             </div>
                         )}
