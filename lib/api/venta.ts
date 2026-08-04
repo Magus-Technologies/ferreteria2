@@ -185,6 +185,21 @@ export interface CreateVentaRequest {
   // IDs de vales auto-aplicables que el vendedor descartó manualmente desde la UI.
   // El backend los excluirá al aplicar vales automáticamente.
   vales_excluidos?: number[];
+  /**
+   * Cobro/devolución de la diferencia al editar una venta ya cobrada
+   * (modelo cobro diferencial). Se resuelve DENTRO de la misma transacción
+   * que la edición — si el monto no coincide con la diferencia real, el
+   * backend revierte TODO el update (atómico). Solo aplica en `update()`.
+   */
+  diferencia_pago?: {
+    tipo: 'diferencia' | 'devolucion';
+    despliegue_de_pago_ventas: Array<{
+      despliegue_de_pago_id: string;
+      monto: number;
+      referencia?: string | null;
+      recibe_efectivo?: number | null;
+    }>;
+  };
 }
 
 export interface UpdateVentaRequest extends Partial<CreateVentaRequest> {}

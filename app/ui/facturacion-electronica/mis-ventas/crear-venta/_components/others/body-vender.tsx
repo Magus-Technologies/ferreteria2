@@ -104,6 +104,17 @@ export type FormCreateVenta = ClienteDireccionFormFields & {
       monto: number
     }
   }>
+  // Cobro/devolución de la diferencia al editar una venta ya cobrada
+  // (modelo cobro diferencial) — ver modal-metodos-pago-venta / use-create-venta.
+  diferencia_pago?: {
+    tipo: 'diferencia' | 'devolucion'
+    despliegue_de_pago_ventas: Array<{
+      despliegue_de_pago_id: string
+      monto: number
+      referencia?: string
+      recibe_efectivo?: number
+    }>
+  }
   // ✅ Campos de entrega
   tipo_despacho?: 'EnTienda' | 'Domicilio' | 'Parcial' | 'Omitir' | 'OmitirConStock'
   despachador_id?: string

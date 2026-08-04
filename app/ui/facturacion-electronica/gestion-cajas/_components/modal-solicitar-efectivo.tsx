@@ -136,6 +136,9 @@ export default function ModalSolicitarEfectivo({
                 >
                     <Select
                         placeholder='Selecciona el vendedor'
+                        size='large'
+                        className='w-full'
+                        style={{ width: '100%', height: 48 }}
                         loading={loadingVendedores}
                         showSearch
                         filterOption={(input, option) =>
@@ -143,8 +146,24 @@ export default function ModalSolicitarEfectivo({
                         }
                         options={vendedores.map((v: any) => ({
                             value: v.vendedor_id,
-                            label: v.vendedor_nombre,
+                            label: `${v.vendedor_nombre} — S/. ${v.efectivo_disponible}`,
                         }))}
+                        labelRender={(option) => (
+                            <div className='flex items-center justify-between gap-4'>
+                                <span className='text-sm font-semibold'>{String(option?.label ?? '').split(' — ')[0]}</span>
+                                <span className='text-sm font-bold text-green-600 whitespace-nowrap'>
+                                    {String(option?.label ?? '').split(' — ')[1] ?? ''}
+                                </span>
+                            </div>
+                        )}
+                        optionRender={(option) => (
+                            <div className='flex items-center justify-between gap-4 px-2'>
+                                <span className='text-sm font-semibold'>{option.data.label.split(' — ')[0]}</span>
+                                <span className='text-sm font-bold text-green-600 whitespace-nowrap'>
+                                    {option.data.label.split(' — ')[1]}
+                                </span>
+                            </div>
+                        )}
                         notFoundContent={
                             loadingVendedores 
                                 ? 'Cargando...' 

@@ -45,8 +45,6 @@ export default function ModalMetodosPagoVenta({
   onContinuar,
   modo = 'total',
   metodosPermitidos,
-  onConfirmarDiferencia,
-  confirmandoDiferencia = false,
 }: {
   open: boolean
   onCancel: () => void
@@ -63,14 +61,14 @@ export default function ModalMetodosPagoVenta({
    * 'total' (default): flujo normal, pide el total completo (crear venta o
    * primer cobro). 'diferencia'/'devolucion': al editar una venta ya
    * cobrada — `baseAmount` ya viene calculado como la diferencia a
-   * cobrar/devolver, no el total de la venta.
+   * cobrar/devolver, no el total de la venta. El pago se adjunta al MISMO
+   * guardado de la edición (campo `diferencia_pago` del form) en vez de
+   * llamar un endpoint aparte — así la edición y el cobro/devolución de la
+   * diferencia son atómicos: si se cancela este modal, no se guarda nada.
    */
   modo?: 'total' | 'diferencia' | 'devolucion'
   /** En modo 'devolucion': solo se puede devolver por estos despliegue_de_pago_id (ya usados en la venta). */
   metodosPermitidos?: string[]
-  /** En modo != 'total': se llama en vez de setear el form y disparar onContinuar. */
-  onConfirmarDiferencia?: (metodos: Array<{ despliegue_de_pago_id: string; monto: number; referencia?: string; recibe_efectivo?: number }>) => void | Promise<void>
-  confirmandoDiferencia?: boolean
 }) {
   const [modalForm] = Form.useForm()
   const [metodosPago, setMetodosPago] = useState<MetodoPago[]>([])
@@ -337,18 +335,25 @@ export default function ModalMetodosPagoVenta({
     }
 
     if (modo !== 'total') {
-      // Cobro/devolución de diferencia: NO se toca el form de la venta —
-      // se llama directo al endpoint dedicado (cobrar-diferencia /
-      // devolver-diferencia), la edición de la venta ya se guardó antes.
+      // Cobro/devolución de diferencia: se adjunta al MISMO guardado de la
+      // venta (campo `diferencia_pago`), no se llama ningún endpoint acá —
+      // use-create-venta.ts lo manda junto con el resto de la edición en
+      // una sola petición atómica.
       const metodosDiferencia = metodosPago.map(m => ({
         despliegue_de_pago_id: m.despliegue_de_pago_id,
         monto: m.monto,
         referencia: m.referencia || undefined,
         recibe_efectivo: m.recibe_efectivo || undefined,
       }))
-      await onConfirmarDiferencia?.(metodosDiferencia)
+
+      ventaForm.setFieldValue('diferencia_pago', { tipo: modo, despliegue_de_pago_ventas: metodosDiferencia })
+      ventaForm.setFieldValue('metodos_de_pago', undefined)
+
+      onCancel()
       modalForm.resetFields()
       setMetodosPago([])
+
+      onContinuar?.()
       return
     }
 
@@ -411,8 +416,8 @@ export default function ModalMetodosPagoVenta({
         {modo !== 'total' && (
           <div className='mb-4 p-3 bg-slate-50 border-2 border-slate-300 rounded-lg text-sm text-slate-700'>
             {modo === 'diferencia'
-              ? 'Esta venta ya tenía un cobro registrado. Se guardaron los cambios y ahora solo se cobra la diferencia — no el total de la venta.'
-              : 'Esta venta ya tenía un cobro registrado. El nuevo total es menor: se devuelve la diferencia por el mismo método con el que se cobró.'}
+              ? 'Esta venta ya tenía un cobro registrado. Solo se cobra la diferencia — no el total de la venta. Los cambios se guardan recién al confirmar; si cancelas, no se guarda nada.'
+              : 'Esta venta ya tenía un cobro registrado. El nuevo total es menor: se devuelve la diferencia por el mismo método con el que se cobró. Los cambios se guardan recién al confirmar; si cancelas, no se guarda nada.'}
           </div>
         )}
 
@@ -689,12 +694,11 @@ export default function ModalMetodosPagoVenta({
             onClick={handleGuardar}
             color='success'
             size='lg'
-            disabled={metodosPago.length === 0 || saldoPendiente > 0 || confirmandoDiferencia}
-            loading={confirmandoDiferencia}
+            disabled={metodosPago.length === 0 || saldoPendiente > 0}
             className='flex items-center gap-2'
           >
             <FaSave size={16} />
-            {modo === 'diferencia' ? 'Confirmar Cobro' : modo === 'devolucion' ? 'Confirmar Devolución' : 'Continuar'}
+            {modo === 'diferencia' ? 'Guardar y Cobrar' : modo === 'devolucion' ? 'Guardar y Devolver' : 'Continuar'}
           </ButtonBase>
         </div>
       </div>

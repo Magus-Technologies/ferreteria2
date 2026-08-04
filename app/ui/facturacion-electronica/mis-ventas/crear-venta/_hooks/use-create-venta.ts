@@ -161,6 +161,7 @@ export default function useCreateVenta({
       cliente_id,
       recomendado_por_id,
       metodos_de_pago,
+      diferencia_pago,
       direccion,
       direccion_seleccionada,
       ruc_dni,
@@ -410,6 +411,22 @@ export default function useCreateVenta({
       codigo_vale: codigo_vale || undefined,
       // Vales excluidos por el vendedor
       vales_excluidos: valesExcluidos.length > 0 ? valesExcluidos : undefined,
+      // Cobro/devolución de la diferencia (modelo cobro diferencial): se
+      // adjunta a la MISMA edición para que el backend lo aplique dentro de
+      // la misma transacción — si el modal de diferencia se canceló, este
+      // campo nunca se seteó y no se manda nada.
+      diferencia_pago: diferencia_pago
+        ? {
+            tipo: diferencia_pago.tipo,
+            despliegue_de_pago_ventas: (diferencia_pago.despliegue_de_pago_ventas || [])
+              .map((dp: any) => {
+                const id = extractDesplieguePagoId(dp.despliegue_de_pago_id)
+                if (id === null) return null
+                return { ...dp, despliegue_de_pago_id: String(id) }
+              })
+              .filter((dp: any) => dp !== null),
+          }
+        : undefined,
     }
 
     try {
@@ -470,12 +487,6 @@ export default function useCreateVenta({
         message.success('Venta actualizada exitosamente')
         queryClient.invalidateQueries({ queryKey: ['venta', ventaId] })
         queryClient.invalidateQueries({ queryKey: ['ventas'] })
-
-        // "en espera" no cuenta como edición confirmada (la venta no está
-        // concretada) — no debe disparar el modal de cobro de diferencia.
-        if (estadoVenta !== EstadoDeVenta.EN_ESPERA) {
-          ventaEvents.emitEditada()
-        }
       }
 
       // Si es venta en espera: mensaje específico, limpiar formulario y NO abrir modal de documento
@@ -493,13 +504,11 @@ export default function useCreateVenta({
 
       // Emitir evento de venta creada/actualizada — abre el modal de
       // ticket/PDF y, al cerrarlo, navega fuera de la página en modo
-      // edición (ver body-vender.tsx). Si esta edición dejó una diferencia
-      // pendiente de cobrar/devolver, NO emitir todavía: el ticket
-      // mostraría el total nuevo como si ya estuviera pagado, y cerrar el
-      // modal sacaría al usuario de la página antes de cobrar la
-      // diferencia. CardsInfoVenta emite este mismo evento una vez que la
-      // diferencia se resuelve (o de inmediato si no quedó ninguna).
-      if (response.data?.data && !(isEditing && yaTeniaCobroPrevio)) {
+      // edición (ver body-vender.tsx). El cobro/devolución de la diferencia
+      // (si había) ya se resolvió DENTRO de este mismo guardado (atómico —
+      // ver diferencia_pago arriba), así que para cuando llegamos acá la
+      // venta ya quedó completamente al día.
+      if (response.data?.data) {
         ventaEvents.emit(response.data.data)
       }
 
