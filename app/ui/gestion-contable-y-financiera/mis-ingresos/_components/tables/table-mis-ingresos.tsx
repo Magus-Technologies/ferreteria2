@@ -44,7 +44,7 @@ const TableMisIngresos = memo(function TableMisIngresos() {
       fechaDesde: filtros.fechaDesde,
       fechaHasta: filtros.fechaHasta,
       motivoIngreso: filtros.motivoIngreso,
-      cajeroRegistra: filtros.cajeroRegistra,
+      user_id: filtros.user_id,
       sucursal: filtros.sucursal,
       busqueda: filtros.busqueda,
       ...(filtros.estado ? { estado: filtros.estado } : {}),
