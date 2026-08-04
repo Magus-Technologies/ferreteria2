@@ -263,11 +263,20 @@ export default function useCreateVenta({
     // Si no hay estado_de_venta, usar 'cr' (Creado) por defecto
     const estadoVenta = estado_de_venta || EstadoDeVenta.CREADO
 
-    // Validar métodos de pago para ventas al contado
+    // Validar métodos de pago para ventas al contado.
+    // EXCEPCIÓN: al editar una venta que ya tenía un cobro registrado
+    // (modelo cobro diferencial), CardsInfoVenta guarda la edición sin
+    // métodos de pago a propósito — la diferencia se cobra/devuelve aparte
+    // vía cobrar-diferencia/devolver-diferencia. El backend ya rechaza
+    // reenviar el total completo en ese caso, así que acá no hay que volver
+    // a exigirlo.
     const formaDePagoValue = restValues.forma_de_pago as unknown as string
     const estadoVentaValue = estadoVenta as unknown as string
+    const ventaOriginalCache = isEditing ? queryClient.getQueryData<any>(['venta', ventaId]) : undefined
+    const totalPagadoPrevioOriginal = Number(ventaOriginalCache?.total_pagado ?? 0)
+    const yaTeniaCobroPrevio = isEditing && totalPagadoPrevioOriginal > 0.01
 
-    if (formaDePagoValue === 'co' && estadoVentaValue === 'cr') {
+    if (formaDePagoValue === 'co' && estadoVentaValue === 'cr' && !yaTeniaCobroPrevio) {
       if (!metodos_de_pago || metodos_de_pago.length === 0) {
         return notification.error({
           message: 'Métodos de pago requeridos',
@@ -452,6 +461,12 @@ export default function useCreateVenta({
         message.success('Venta actualizada exitosamente')
         queryClient.invalidateQueries({ queryKey: ['venta', ventaId] })
         queryClient.invalidateQueries({ queryKey: ['ventas'] })
+
+        // "en espera" no cuenta como edición confirmada (la venta no está
+        // concretada) — no debe disparar el modal de cobro de diferencia.
+        if (estadoVenta !== EstadoDeVenta.EN_ESPERA) {
+          ventaEvents.emitEditada()
+        }
       }
 
       // Si es venta en espera: mensaje específico, limpiar formulario y NO abrir modal de documento
@@ -467,8 +482,15 @@ export default function useCreateVenta({
         message.success('Venta creada exitosamente')
       }
 
-      // Emitir evento de venta creada (solo en modo creación normal)
-      if (response.data?.data) {
+      // Emitir evento de venta creada/actualizada — abre el modal de
+      // ticket/PDF y, al cerrarlo, navega fuera de la página en modo
+      // edición (ver body-vender.tsx). Si esta edición dejó una diferencia
+      // pendiente de cobrar/devolver, NO emitir todavía: el ticket
+      // mostraría el total nuevo como si ya estuviera pagado, y cerrar el
+      // modal sacaría al usuario de la página antes de cobrar la
+      // diferencia. CardsInfoVenta emite este mismo evento una vez que la
+      // diferencia se resuelve (o de inmediato si no quedó ninguna).
+      if (response.data?.data && !(isEditing && yaTeniaCobroPrevio)) {
         ventaEvents.emit(response.data.data)
       }
 

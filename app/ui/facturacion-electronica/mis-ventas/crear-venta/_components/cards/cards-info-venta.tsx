@@ -1,9 +1,11 @@
 "use client";
 
-import { DescuentoTipo, EstadoDeVenta } from "~/lib/api/venta";
+import { DescuentoTipo, EstadoDeVenta, ventaApi } from "~/lib/api/venta";
 import { Form, FormInstance } from "antd";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { ventaEvents } from "../../_hooks/venta-events";
+import { extractDesplieguePagoId } from "~/lib/utils/despliegue-pago-utils";
 import { clienteApi } from "~/lib/api/cliente";
 import useApp from "antd/es/app/useApp";
 import ButtonBase from "~/components/buttons/button-base";
@@ -25,6 +27,7 @@ import {
   getDireccionFromForm,
 } from "~/lib/utils/cliente-direcciones-form";
 import { useCheckAperturaDiaria } from "../../_hooks/use-check-apertura-diaria";
+import { useAuth } from "~/lib/auth-context";
 import type { TipoDespachoUI } from "../modals/detalles-entrega/types";
 import { BankOutlined } from "@ant-design/icons";
 import { QueryKeys } from "~/app/_lib/queryKeys";
@@ -78,6 +81,33 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
     useState(false);
   const [modalEditarClienteOpen, setModalEditarClienteOpen] = useState(false);
   const [surchargeTotal, setSurchargeTotal] = useState(0);
+  // 'total' = flujo normal (crear venta / primer cobro). 'diferencia' /
+  // 'devolucion' = al editar una venta ya cobrada, solo se cobra/devuelve
+  // la diferencia contra lo ya cobrado (modelo cobro diferencial).
+  const [modoModal, setModoModal] = useState<"total" | "diferencia" | "devolucion">("total");
+  const [confirmandoDiferencia, setConfirmandoDiferencia] = useState(false);
+
+  // Datos de la venta ya persistidos (solo en edición) — de acá sale lo YA
+  // cobrado. Mismo queryKey que editar-venta/[id]/page.tsx, así reusa la
+  // caché sin refetch extra.
+  const { data: ventaOriginal } = useQuery({
+    queryKey: ["venta", ventaId],
+    queryFn: async () => {
+      const result = await ventaApi.getById(ventaId!);
+      if (result.error) throw new Error(result.error.message);
+      return result.data!.data;
+    },
+    enabled: !!ventaId,
+  });
+
+  const totalPagadoPrevio = Number(ventaOriginal?.total_pagado ?? 0);
+  const metodosYaUsados: string[] = useMemo(() => {
+    const filas = ventaOriginal?.despliegue_de_pago_ventas ?? [];
+    const ids = filas
+      .filter((f: any) => Number(f.monto) > 0)
+      .map((f: any) => String(f.despliegue_de_pago_id));
+    return Array.from(new Set(ids));
+  }, [ventaOriginal]);
 
   // Cargar el cliente completo desde la API cuando se va a editar.
   // Se re-fetchea cada vez que se abre el modal (staleTime: 0) para
@@ -93,6 +123,7 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
   });
 
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const { cajaActiva } = useCheckAperturaDiaria();
   const [modalTrasladoBovedaOpen, setModalTrasladoBovedaOpen] = useState(false);
@@ -100,13 +131,8 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
 
   const requiereCliente = tipo_despacho === "Domicilio" || tipo_despacho === "Parcial";
 
-  const handleCobrarClick = () => {
-    if (requiereCliente && !clienteId) {
-      message.warning("Por favor seleccione un cliente para despacho a domicilio");
-      return;
-    }
-    setModalOpen(true);
-  };
+  // handleCobrarClick se define más abajo (línea ~340), después de calcular
+  // `diferencia` — necesita saber si esta edición ya tenía cobro previo.
 
   const handleCreditoClick = () => {
     if (requiereCliente && !clienteId) {
@@ -302,6 +328,112 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
     [subTotal, totalDescuento, descuentoVale, surchargeTotal],
   );
 
+  // Diferencia entre el nuevo total (con los cambios actuales del form) y lo
+  // YA cobrado en esta venta. Solo aplica editando una venta con cobro
+  // previo — en creación / venta sin cobro previo, totalPagadoPrevio es 0.
+  const diferencia = useMemo(
+    () => Math.round((totalCobrado - totalPagadoPrevio) * 100) / 100,
+    [totalCobrado, totalPagadoPrevio],
+  );
+  const tieneCobroPrevio = !!ventaId && totalPagadoPrevio > 0.01;
+
+  const handleCobrarClick = () => {
+    if (requiereCliente && !clienteId) {
+      message.warning("Por favor seleccione un cliente para despacho a domicilio");
+      return;
+    }
+
+    if (tieneCobroPrevio) {
+      // Venta ya cobrada: nunca se vuelve a pedir el total completo. Se
+      // guarda la edición sin métodos de pago; si queda una diferencia el
+      // modal de Cobrar/Devolver Diferencia se abre DESPUÉS de guardar
+      // (listener de ventaEvents.onEditada abajo) porque la diferencia se
+      // valida server-side contra el total ya persistido.
+      form.setFieldValue("metodos_de_pago", undefined);
+      form.setFieldValue("estado_de_venta", EstadoDeVenta.CREADO);
+      form.submit();
+      return;
+    }
+
+    setModoModal("total");
+    setModalOpen(true);
+  };
+
+  // Se lee vía ref (no en el closure del listener) para poder suscribirse UNA
+  // sola vez por venta — resuscribirse en cada cambio de `diferencia` (que
+  // cambia con cada tecla que edita un producto) es innecesario y abre la
+  // puerta a una ventana, por mínima que sea, donde el evento se emite justo
+  // entre un unsubscribe y el siguiente subscribe.
+  const diferenciaRef = useRef(diferencia);
+  diferenciaRef.current = diferencia;
+
+  useEffect(() => {
+    if (!tieneCobroPrevio || !ventaId) return;
+    return ventaEvents.onEditada(() => {
+      const d = diferenciaRef.current;
+      if (d > 0.01) {
+        setModoModal("diferencia");
+        setModalOpen(true);
+      } else if (d < -0.01) {
+        setModoModal("devolucion");
+        setModalOpen(true);
+      } else {
+        // Sin diferencia que cobrar/devolver: la edición ya quedó
+        // completa, ahora sí corresponde mostrar el ticket (use-create-venta
+        // no lo emitió porque esta venta ya tenía cobro previo).
+        ventaEvents.emit({ id: ventaId });
+      }
+    });
+  }, [tieneCobroPrevio, ventaId]);
+
+  const handleConfirmarDiferencia = async (
+    metodos: Array<{
+      despliegue_de_pago_id: string;
+      monto: number;
+      referencia?: string;
+      recibe_efectivo?: number;
+    }>,
+  ) => {
+    if (!ventaId || !user?.id) return;
+    setConfirmandoDiferencia(true);
+    try {
+      // El <Select> del modal codifica el valor como "subCajaId-despliegueId"
+      // (igual que en use-create-venta.ts) — hay que extraer el ID real
+      // antes de mandarlo al backend, si no `exists:desplieguedepago,id` falla.
+      const metodosNormalizados = metodos
+        .map((m) => {
+          const id = extractDesplieguePagoId(m.despliegue_de_pago_id);
+          if (id === null) return null;
+          return { ...m, despliegue_de_pago_id: String(id) };
+        })
+        .filter((m): m is NonNullable<typeof m> => m !== null);
+      const payload = { despliegue_de_pago_ventas: metodosNormalizados, user_id: user.id };
+      const result =
+        modoModal === "devolucion"
+          ? await ventaApi.devolverDiferencia(ventaId, payload)
+          : await ventaApi.cobrarDiferencia(ventaId, payload);
+
+      if (result.error) {
+        message.error(result.error.message || "Error al registrar el movimiento");
+        return;
+      }
+
+      message.success(
+        modoModal === "devolucion" ? "Devolución registrada correctamente" : "Diferencia cobrada correctamente",
+      );
+      queryClient.invalidateQueries({ queryKey: ["venta", ventaId] });
+      setModalOpen(false);
+      setModoModal("total");
+      // Recién ahora la venta quedó totalmente cobrada — corresponde
+      // mostrar el ticket (ver comentario en use-create-venta.ts).
+      ventaEvents.emit({ id: ventaId });
+    } catch (error: any) {
+      message.error(error?.message || "Error al registrar el movimiento");
+    } finally {
+      setConfirmandoDiferencia(false);
+    }
+  };
+
   // Total Comisión
   const totalComision = useMemo(
     () =>
@@ -413,6 +545,20 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
           </ConfigurableElement>
         )}
 
+        {tieneCobroPrevio && (
+          <ConfigurableElement
+            componentId="crear-venta.card-ya-cobrado"
+            label="Card Ya Cobrado"
+          >
+            <CardInfoVenta
+              title="Ya Cobrado"
+              value={totalPagadoPrevio}
+              moneda={tipo_moneda}
+              className="border-slate-400 border-2"
+            />
+          </ConfigurableElement>
+        )}
+
         <ConfigurableElement
           componentId="crear-venta.card-total-cobrado"
           label="Card Total Cobrado"
@@ -448,7 +594,13 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
             className="flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance"
           >
             <FaMoneyBillWave className="min-w-fit" size={30} />
-            Cobrar
+            {tieneCobroPrevio
+              ? diferencia > 0.01
+                ? `Cobrar Diferencia (S/ ${diferencia.toFixed(2)})`
+                : diferencia < -0.01
+                  ? `Devolver Diferencia (S/ ${Math.abs(diferencia).toFixed(2)})`
+                  : "Guardar Cambios"
+              : "Cobrar"}
           </ButtonBase>
         </ConfigurableElement>
 
@@ -550,21 +702,34 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
 
       <ModalMetodosPagoVenta
         open={modalOpen}
-        onCancel={() => setModalOpen(false)}
+        onCancel={() => {
+          setModalOpen(false);
+          setModoModal("total");
+        }}
         form={form}
         totalCobrado={totalCobrado}
         tipo_moneda={tipo_moneda}
         tipo_documento={tipo_documento}
-        baseAmount={subTotal - totalDescuento}
-        descuentoVale={descuentoVale}
-        valesInfo={valesConDescuento
-          .filter(x => x.monto > 0)
-          .map(x => ({
-            nombre: x.vale.nombre,
-            tipo: x.tipo,
-            valor: x.valor,
-          }))}
+        baseAmount={
+          modoModal === "total" ? subTotal - totalDescuento : Math.abs(diferencia)
+        }
+        descuentoVale={modoModal === "total" ? descuentoVale : 0}
+        valesInfo={
+          modoModal === "total"
+            ? valesConDescuento
+                .filter(x => x.monto > 0)
+                .map(x => ({
+                  nombre: x.vale.nombre,
+                  tipo: x.tipo,
+                  valor: x.valor,
+                }))
+            : []
+        }
         onSurchargeChange={setSurchargeTotal}
+        modo={modoModal}
+        metodosPermitidos={modoModal === "devolucion" ? metodosYaUsados : undefined}
+        confirmandoDiferencia={confirmandoDiferencia}
+        onConfirmarDiferencia={handleConfirmarDiferencia}
         onContinuar={() => {
           setModalOpen(false);
           // Misma lógica que handleCreditoClick: si EnTienda + descontar_stock=no,

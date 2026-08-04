@@ -11,6 +11,7 @@ import InputBase from '~/app/_components/form/inputs/input-base'
 import { useQuery } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { apiRequest } from '~/lib/api'
+import { extractDesplieguePagoId } from '~/lib/utils/despliegue-pago-utils'
 
 interface MetodoPago {
   id: string
@@ -42,6 +43,10 @@ export default function ModalMetodosPagoVenta({
   valesInfo = [],
   onSurchargeChange,
   onContinuar,
+  modo = 'total',
+  metodosPermitidos,
+  onConfirmarDiferencia,
+  confirmandoDiferencia = false,
 }: {
   open: boolean
   onCancel: () => void
@@ -54,6 +59,18 @@ export default function ModalMetodosPagoVenta({
   valesInfo?: Array<{ nombre: string; tipo: string | null; valor: number }>
   onSurchargeChange: (surcharge: number) => void
   onContinuar?: () => void
+  /**
+   * 'total' (default): flujo normal, pide el total completo (crear venta o
+   * primer cobro). 'diferencia'/'devolucion': al editar una venta ya
+   * cobrada — `baseAmount` ya viene calculado como la diferencia a
+   * cobrar/devolver, no el total de la venta.
+   */
+  modo?: 'total' | 'diferencia' | 'devolucion'
+  /** En modo 'devolucion': solo se puede devolver por estos despliegue_de_pago_id (ya usados en la venta). */
+  metodosPermitidos?: string[]
+  /** En modo != 'total': se llama en vez de setear el form y disparar onContinuar. */
+  onConfirmarDiferencia?: (metodos: Array<{ despliegue_de_pago_id: string; monto: number; referencia?: string; recibe_efectivo?: number }>) => void | Promise<void>
+  confirmandoDiferencia?: boolean
 }) {
   const [modalForm] = Form.useForm()
   const [metodosPago, setMetodosPago] = useState<MetodoPago[]>([])
@@ -149,14 +166,21 @@ export default function ModalMetodosPagoVenta({
     }, 0)
   }, [metodosPago])
 
-  // Filtrar despliegues por tipo de documento
+  // Filtrar despliegues por tipo de documento y, en modo devolución, solo
+  // los métodos ya usados en la venta (no se puede devolver por uno distinto).
   const desplieguesFiltradosPorTipo = useMemo(() => {
     if (!desplieguesPago) return []
-    if (!tipo_documento) return desplieguesPago
-    return desplieguesPago.filter((d: any) =>
-      d.tipos_comprobante?.includes(tipo_documento)
-    )
-  }, [desplieguesPago, tipo_documento])
+    let lista = desplieguesPago
+    if (tipo_documento) {
+      lista = lista.filter((d: any) => d.tipos_comprobante?.includes(tipo_documento))
+    }
+    if (modo === 'devolucion' && metodosPermitidos) {
+      // d.value viene codificado como "subCajaId-despliegueId" — comparar
+      // contra el ID real extraído, no el valor compuesto.
+      lista = lista.filter((d: any) => metodosPermitidos.includes(String(extractDesplieguePagoId(d.value))))
+    }
+    return lista
+  }, [desplieguesPago, tipo_documento, modo, metodosPermitidos])
 
   const despliegueName = metodoPagoSeleccionado?.label || ''
 
@@ -182,6 +206,9 @@ export default function ModalMetodosPagoVenta({
 
   // Resetear formulario SOLO al abrir el modal (transición false → true).
   // No reaccionar a cambios de totalCobrado ni baseAmount para evitar reseteos en cascada.
+  // En modo diferencia/devolución, baseAmount YA es la diferencia a
+  // cobrar/devolver (no el total de la venta) — precargar con eso, no con
+  // totalCobrado (que sigue siendo el total completo de la venta).
   useEffect(() => {
     if (open && !wasOpenRef.current) {
       modalForm.resetFields()
@@ -189,18 +216,25 @@ export default function ModalMetodosPagoVenta({
       setMetodoPagoSeleccionado(null)
       setSelectedDespliegueValue(null)
       setSobrecargoCfg({ tipo: 'ninguno', valor: 0 })
-      modalForm.setFieldValue('monto', roundMoney(totalCobrado))
-      modalForm.setFieldValue('recibe_efectivo', roundMoney(totalCobrado))
+      const montoInicial = modo === 'total' ? totalCobrado : baseAmount
+      modalForm.setFieldValue('monto', roundMoney(montoInicial))
+      modalForm.setFieldValue('recibe_efectivo', roundMoney(montoInicial))
     }
     wasOpenRef.current = open
-  }, [open, modalForm, totalCobrado])
+  }, [open, modalForm, totalCobrado, modo, baseAmount])
 
-  // Setear Efectivo por defecto SOLO si no hay selección activa
+  // Setear método por defecto SOLO si no hay selección activa.
+  // Devolución con un único método permitido: preseleccionarlo directo (es
+  // el mismo con el que se cobró, no tiene sentido pedir que lo elija).
+  // Si no, mismo comportamiento de siempre (preferir Efectivo).
   useEffect(() => {
     if (open && isFetched && desplieguesFiltradosPorTipo.length > 0) {
       const currentValue = selectedDespliegueValue
       if (!currentValue) {
-        const efectivo = desplieguesFiltradosPorTipo.find((d: any) =>
+        const unico = modo === 'devolucion' && desplieguesFiltradosPorTipo.length === 1
+          ? desplieguesFiltradosPorTipo[0]
+          : null
+        const efectivo = unico ?? desplieguesFiltradosPorTipo.find((d: any) =>
           d.tipo === 'efectivo' ||
           d.label?.toUpperCase().includes('EFECTIVO') ||
           d.label?.toUpperCase().includes('CCH')
@@ -302,6 +336,22 @@ export default function ModalMetodosPagoVenta({
       return
     }
 
+    if (modo !== 'total') {
+      // Cobro/devolución de diferencia: NO se toca el form de la venta —
+      // se llama directo al endpoint dedicado (cobrar-diferencia /
+      // devolver-diferencia), la edición de la venta ya se guardó antes.
+      const metodosDiferencia = metodosPago.map(m => ({
+        despliegue_de_pago_id: m.despliegue_de_pago_id,
+        monto: m.monto,
+        referencia: m.referencia || undefined,
+        recibe_efectivo: m.recibe_efectivo || undefined,
+      }))
+      await onConfirmarDiferencia?.(metodosDiferencia)
+      modalForm.resetFields()
+      setMetodosPago([])
+      return
+    }
+
     const metodos = metodosPago.map(m => ({
       despliegue_de_pago_id: m.despliegue_de_pago_id,
       monto: m.monto,
@@ -331,13 +381,25 @@ export default function ModalMetodosPagoVenta({
 
   const monedaSymbol = tipo_moneda === TipoMoneda.SOLES ? 'S/.' : '$.'
 
+  const tituloModal = modo === 'diferencia'
+    ? 'Cobrar Diferencia'
+    : modo === 'devolucion'
+      ? 'Devolver Diferencia'
+      : 'Cobrar - Métodos de Pago'
+
+  const labelTotalCard = modo === 'diferencia'
+    ? 'Diferencia a Cobrar'
+    : modo === 'devolucion'
+      ? 'Monto a Devolver'
+      : 'Total a Cobrar'
+
   // Suppress unused warning — vuelto is used only if we add a vuelto display below the form
   void vuelto
   void totalCobrado
 
   return (
     <Modal
-      title='Cobrar - Métodos de Pago'
+      title={tituloModal}
       open={open}
       onCancel={handleCancelar}
       width={1000}
@@ -346,6 +408,14 @@ export default function ModalMetodosPagoVenta({
       destroyOnHidden
     >
       <div className='mt-4'>
+        {modo !== 'total' && (
+          <div className='mb-4 p-3 bg-slate-50 border-2 border-slate-300 rounded-lg text-sm text-slate-700'>
+            {modo === 'diferencia'
+              ? 'Esta venta ya tenía un cobro registrado. Se guardaron los cambios y ahora solo se cobra la diferencia — no el total de la venta.'
+              : 'Esta venta ya tenía un cobro registrado. El nuevo total es menor: se devuelve la diferencia por el mismo método con el que se cobró.'}
+          </div>
+        )}
+
         {/* Aviso de promoción aplicada */}
         {descuentoVale > 0 && valesInfo.length > 0 && (
           <div className='mb-4 p-3 bg-fuchsia-50 border-2 border-fuchsia-300 rounded-lg'>
@@ -366,7 +436,7 @@ export default function ModalMetodosPagoVenta({
         {/* Cards resumen */}
         <div className={`grid ${descuentoVale > 0 ? 'grid-cols-5' : 'grid-cols-4'} gap-4 mb-6`}>
           <div className='p-4 bg-blue-50 rounded-lg border-2 border-blue-300'>
-            <div className='text-sm font-medium text-slate-600'>Total a Cobrar</div>
+            <div className='text-sm font-medium text-slate-600'>{labelTotalCard}</div>
             <div className='text-2xl font-bold text-blue-600'>
               {monedaSymbol} {baseAmount.toFixed(2)}
             </div>
@@ -482,6 +552,7 @@ export default function ModalMetodosPagoVenta({
                   className='w-full'
                   value={selectedDespliegueValue ?? undefined}
                   placeholder='Método de Pago'
+                  disabled={modo === 'devolucion' && desplieguesFiltradosPorTipo.length <= 1}
                   showSearch
                   optionFilterProp='label'
                   options={desplieguesFiltradosPorTipo.map((item: any) => ({
@@ -618,11 +689,12 @@ export default function ModalMetodosPagoVenta({
             onClick={handleGuardar}
             color='success'
             size='lg'
-            disabled={metodosPago.length === 0 || saldoPendiente > 0}
+            disabled={metodosPago.length === 0 || saldoPendiente > 0 || confirmandoDiferencia}
+            loading={confirmandoDiferencia}
             className='flex items-center gap-2'
           >
             <FaSave size={16} />
-            Continuar
+            {modo === 'diferencia' ? 'Confirmar Cobro' : modo === 'devolucion' ? 'Confirmar Devolución' : 'Continuar'}
           </ButtonBase>
         </div>
       </div>

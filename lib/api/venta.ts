@@ -86,6 +86,37 @@ export interface DespliegueDePagoVentaRequest {
   recibe_efectivo?: number;
 }
 
+/**
+ * Payload de /ventas/{id}/cobrar-diferencia y /ventas/{id}/devolver-diferencia.
+ */
+export interface DiferenciaVentaRequest {
+  despliegue_de_pago_ventas: Array<{
+    despliegue_de_pago_id: string;
+    monto: number;
+    referencia?: string | null;
+    recibe_efectivo?: number | null;
+  }>;
+  user_id: string;
+}
+
+/**
+ * Fila de `desplieguedepagoventa` tal como la devuelve el endpoint de
+ * historial — un movimiento de cobro/devolución de una venta.
+ */
+export interface CobroMovimientoItem {
+  id: number;
+  venta_id: string;
+  despliegue_de_pago_id: string;
+  monto: number | string;
+  tipo: 'inicial' | 'diferencia' | 'devolucion';
+  referencia?: string | null;
+  recibe_efectivo?: number | string | null;
+  fecha?: string | null;
+  user_id?: string | null;
+  user?: { id: string; name: string } | null;
+  despliegue_de_pago?: { id: string; name: string } | null;
+}
+
 export interface CreateVentaRequest {
   id?: string;
   tipo_documento: TipoDocumento;
@@ -351,9 +382,33 @@ export const ventaApi = {
   },
 
   /**
-   * Obtener historial de ediciones de una venta
+   * Cobrar SOLO la diferencia entre el total actual de una venta ya cobrada
+   * y lo que ya se cobró (modelo "cobro diferencial"). Se usa al editar una
+   * venta al contado que sube de total.
    */
-  async getHistorial(id: string): Promise<ApiResponse<{ data: VentaHistorialItem[] }>> {
+  async cobrarDiferencia(ventaId: string, data: DiferenciaVentaRequest): Promise<ApiResponse<{ data: any[]; message: string; diferencia_cobrada: number }>> {
+    return apiRequest(`/ventas/${ventaId}/cobrar-diferencia`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Devolver SOLO la diferencia cuando una edición redujo el total de una
+   * venta ya cobrada. El/los método(s) de pago deben ser los mismos ya
+   * usados en la venta.
+   */
+  async devolverDiferencia(ventaId: string, data: DiferenciaVentaRequest): Promise<ApiResponse<{ data: any[]; message: string; monto_devuelto: number }>> {
+    return apiRequest(`/ventas/${ventaId}/devolver-diferencia`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Obtener historial de ediciones y de cobros de una venta
+   */
+  async getHistorial(id: string): Promise<ApiResponse<{ data: { ediciones: VentaHistorialItem[]; cobros: CobroMovimientoItem[] } }>> {
     return apiRequest(`/ventas/${id}/historial`);
   },
 

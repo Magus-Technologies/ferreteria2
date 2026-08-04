@@ -1,9 +1,9 @@
 'use client'
 
-import { Modal, Spin, Tag, Empty } from 'antd'
+import { Modal, Spin, Tag, Empty, Tabs } from 'antd'
 import { useQuery } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-import { ventaApi, type VentaHistorialItem } from '~/lib/api/venta'
+import { ventaApi, type VentaHistorialItem, type CobroMovimientoItem } from '~/lib/api/venta'
 import dayjs from 'dayjs'
 import { formatFechaPeru } from '~/utils/fechas'
 
@@ -174,6 +174,85 @@ function CambiosDetalle({ item }: { item: VentaHistorialItem }) {
   )
 }
 
+function ListaEdiciones({ data }: { data: VentaHistorialItem[] }) {
+  if (data.length === 0) {
+    return <Empty description='No hay registros de edición' />
+  }
+
+  return (
+    <div className='flex flex-col gap-3 max-h-[60vh] overflow-y-auto'>
+      {data.map((item) => (
+        <div key={item.id} className='border border-slate-200 rounded-lg p-3'>
+          <div className='flex items-center justify-between mb-2'>
+            <div className='flex items-center gap-2'>
+              <Tag color={item.accion === 'edicion' ? 'orange' : item.accion === 'anulacion' ? 'red' : 'blue'}>
+                {item.accion.charAt(0).toUpperCase() + item.accion.slice(1)}
+              </Tag>
+              <span className='text-sm font-medium text-slate-700'>
+                {item.usuario?.name || 'Usuario desconocido'}
+              </span>
+            </div>
+            <span className='text-xs text-slate-400'>
+              {formatFechaPeru(item.fecha)}
+            </span>
+          </div>
+          {item.descripcion && (
+            <p className='text-xs text-slate-500 mb-2'>{item.descripcion}</p>
+          )}
+          <CambiosDetalle item={item} />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+const TIPO_COBRO_CONFIG: Record<string, { label: string; color: string }> = {
+  inicial: { label: 'Cobro inicial', color: 'blue' },
+  diferencia: { label: 'Cobro diferencia', color: 'orange' },
+  devolucion: { label: 'Devolución', color: 'red' },
+}
+
+function TablaCobros({ cobros }: { cobros: CobroMovimientoItem[] }) {
+  if (cobros.length === 0) {
+    return <Empty description='No hay cobros registrados' />
+  }
+
+  return (
+    <div className='max-h-[60vh] overflow-y-auto'>
+      <table className='w-full text-sm'>
+        <thead className='sticky top-0 bg-white'>
+          <tr className='border-b border-slate-200'>
+            <th className='text-left px-2 py-2 font-semibold text-slate-600'>Fecha</th>
+            <th className='text-left px-2 py-2 font-semibold text-slate-600'>Usuario</th>
+            <th className='text-left px-2 py-2 font-semibold text-slate-600'>Tipo</th>
+            <th className='text-left px-2 py-2 font-semibold text-slate-600'>Método</th>
+            <th className='text-right px-2 py-2 font-semibold text-slate-600'>Monto</th>
+            <th className='text-left px-2 py-2 font-semibold text-slate-600'>Referencia</th>
+          </tr>
+        </thead>
+        <tbody>
+          {cobros.map((c) => {
+            const config = TIPO_COBRO_CONFIG[c.tipo] ?? { label: c.tipo, color: 'default' }
+            const monto = Number(c.monto)
+            return (
+              <tr key={c.id} className='border-b border-slate-100'>
+                <td className='px-2 py-2 text-xs text-slate-500'>{c.fecha ? formatFechaPeru(c.fecha) : '-'}</td>
+                <td className='px-2 py-2'>{c.user?.name || '-'}</td>
+                <td className='px-2 py-2'><Tag color={config.color}>{config.label}</Tag></td>
+                <td className='px-2 py-2'>{c.despliegue_de_pago?.name || '-'}</td>
+                <td className={`px-2 py-2 text-right font-semibold ${monto < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                  {monto < 0 ? '-' : '+'}S/ {Math.abs(monto).toFixed(2)}
+                </td>
+                <td className='px-2 py-2 text-xs text-slate-500'>{c.referencia || '-'}</td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
 export default function ModalHistorialVenta({
   open,
   onClose,
@@ -198,8 +277,8 @@ export default function ModalHistorialVenta({
   })
 
   const titulo = ventaSerie && ventaNumero
-    ? `Historial de Edición - ${ventaSerie}-${ventaNumero}`
-    : 'Historial de Edición'
+    ? `Historial - ${ventaSerie}-${ventaNumero}`
+    : 'Historial'
 
   return (
     <Modal
@@ -207,39 +286,28 @@ export default function ModalHistorialVenta({
       onCancel={onClose}
       title={titulo}
       footer={null}
-      width={750}
+      width={800}
       destroyOnHidden
     >
       {isLoading ? (
         <div className='flex justify-center py-8'>
           <Spin size='large' />
         </div>
-      ) : !data || data.length === 0 ? (
-        <Empty description='No hay registros de edición' />
       ) : (
-        <div className='flex flex-col gap-3 max-h-[60vh] overflow-y-auto'>
-          {data.map((item) => (
-            <div key={item.id} className='border border-slate-200 rounded-lg p-3'>
-              <div className='flex items-center justify-between mb-2'>
-                <div className='flex items-center gap-2'>
-                  <Tag color={item.accion === 'edicion' ? 'orange' : item.accion === 'anulacion' ? 'red' : 'blue'}>
-                    {item.accion.charAt(0).toUpperCase() + item.accion.slice(1)}
-                  </Tag>
-                  <span className='text-sm font-medium text-slate-700'>
-                    {item.usuario?.name || 'Usuario desconocido'}
-                  </span>
-                </div>
-                <span className='text-xs text-slate-400'>
-                  {formatFechaPeru(item.fecha)}
-                </span>
-              </div>
-              {item.descripcion && (
-                <p className='text-xs text-slate-500 mb-2'>{item.descripcion}</p>
-              )}
-              <CambiosDetalle item={item} />
-            </div>
-          ))}
-        </div>
+        <Tabs
+          items={[
+            {
+              key: 'ediciones',
+              label: 'Ediciones',
+              children: <ListaEdiciones data={data?.ediciones ?? []} />,
+            },
+            {
+              key: 'cobros',
+              label: 'Cobros',
+              children: <TablaCobros cobros={data?.cobros ?? []} />,
+            },
+          ]}
+        />
       )}
     </Modal>
   )
