@@ -129,6 +129,10 @@ export default function useInitVenta({
               // re-guardar — si no se cargan al editar, se PIERDEN.
               costo: Number((ppa as any).costo ?? 0),
               comision: Number((ud as any).comision ?? 0),
+              // Si la cotización origen reservó stock, esa línea ya fue descontada:
+              // el backend restará esta cantidad y descontará solo el excedente.
+              _cantidad_reservada: (venta as any).reservar_stock === true ? Number(ud.cantidad) : 0,
+              _unidad_reserva_id: (venta as any).reservar_stock === true ? ud.unidad_derivada_normal.id : undefined,
             }))
           ),
           // Servicios de la venta

@@ -64,6 +64,12 @@ export type FormCreateVenta = ClienteDireccionFormFields & {
     servicio_codigo_sunat?: string | null
     servicio_referencia?: string
     costo?: number
+    // Cantidad (en la unidad de la línea) que la cotización origen ya reservó
+    // (reservar_stock=true). El backend descuenta solo el exceso sobre esto.
+    _cantidad_reservada?: number
+    // Unidad en la que la cotización reservó. Si el usuario cambia de unidad,
+    // la reserva ya no aplica a esa línea y se descuenta completa.
+    _unidad_reserva_id?: number
   }>
   fecha: Dayjs
   forma_de_pago: FormaDePago
