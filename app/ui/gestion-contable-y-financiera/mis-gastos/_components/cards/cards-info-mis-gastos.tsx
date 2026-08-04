@@ -20,7 +20,7 @@ export default function CardsInfoMisGastos() {
       fechaDesde: filtros.fechaDesde,
       fechaHasta: filtros.fechaHasta,
       motivoGasto: filtros.motivoGasto,
-      cajeroRegistra: filtros.cajeroRegistra,
+      user_id: filtros.user_id,
       sucursal: filtros.sucursal,
       busqueda: filtros.busqueda,
       ...(filtros.estado ? { estado: filtros.estado } : {}),

@@ -40,6 +40,8 @@ const estadoColors: Record<string, string> = {
   'RECEPCIONADO': 'cyan',
   'ENTREGA ANULADA': 'magenta',
   'ANULADO': 'magenta',
+  'RESERVADO': 'gold',
+  'LIBERADA': 'cyan',
 }
 
 // Función para parsear el movimiento y extraer tipo y estado
@@ -50,6 +52,14 @@ const parseMovimiento = (movimiento: string) => {
   }
   if (movimiento === 'ENTREGA') {
     return { tipo: 'ENTREGA', estado: 'RECEPCIONADO' }
+  }
+
+  // Reservas de stock por cotización
+  if (movimiento === 'RESERVA COTIZACIÓN') {
+    return { tipo: 'COTIZACIÓN', estado: 'RESERVADO' }
+  }
+  if (movimiento === 'RESERVA LIBERADA') {
+    return { tipo: 'COTIZACIÓN', estado: 'LIBERADA' }
   }
 
   // Casos especiales con tipo de venta

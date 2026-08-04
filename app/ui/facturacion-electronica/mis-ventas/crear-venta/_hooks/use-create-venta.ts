@@ -192,6 +192,7 @@ export default function useCreateVenta({
       _omitir_entrega: _omitir_entrega_form,
       descontar_stock,
       stock_ya_aplicado,
+      cotizacion_id,
       codigo_vale,
       tipo_pedido,
       cargo_destino,
@@ -358,7 +359,11 @@ export default function useCreateVenta({
       descontar_stock,
       // `stock_ya_aplicado = true` cuando la cotización origen reservó stock:
       // backend NO descuenta de nuevo pero sí marca stock_aplicado=true.
+      // Se manda como fallback; si viene `cotizacion_id` el backend ignora este
+      // flag y verifica reservar_stock directo en la BD (más confiable).
       stock_ya_aplicado: stock_ya_aplicado || undefined,
+      // ID de la cotización origen (si la venta se creó cargando una cotización).
+      cotizacion_id: cotizacion_id || undefined,
       recomendado_por_id: recomendado_por_id || undefined,
       user_id: user_id,
       almacen_id: almacen_id,

@@ -14,12 +14,27 @@ import dayjs from 'dayjs'
 import { useEffect, useMemo } from 'react'
 import { useStoreFiltrosMisIngresos } from '../../_store/store-filtros-mis-ingresos'
 import TotalMisIngresos from '../others/total-mis-ingresos'
+import SelectUsuarios from '~/app/_components/form/selects/select-usuarios'
+import { useAuth } from '~/lib/auth-context'
+
+/**
+ * Roles que ven TODOS los ingresos: para ellos el filtro "Vendedor" arranca
+ * vacío. Cualquier otro rol arranca filtrado por el usuario logueado (ve solo
+ * lo suyo). Mismo criterio que en Mis Ventas / Mis Entregas.
+ */
+const ROLES_VEN_TODOS_LOS_REGISTROS = [
+  'ADMINISTRADOR',
+  'ADMIN',
+  'ADMIN GLOBAL',
+  'ADMINISTRADOR GLOBAL',
+  'GERENTE',
+]
 
 interface ValuesFiltersMisIngresos {
   fechaDesde?: Dayjs
   fechaHasta?: Dayjs
   motivoIngreso?: string
-  cajeroRegistra?: string
+  user_id?: string
   sucursal?: string
   busqueda?: string
   estado?: string
@@ -30,6 +45,15 @@ export default function FiltersMisIngresos() {
 
   const setFiltros = useStoreFiltrosMisIngresos(state => state.setFiltros)
 
+  const { user } = useAuth()
+  const veTodosLosRegistros = useMemo(() => {
+    const norm = (r?: string | null) => (r ?? '').trim().toUpperCase()
+    return (
+      ROLES_VEN_TODOS_LOS_REGISTROS.includes(norm(user?.role_name)) ||
+      ROLES_VEN_TODOS_LOS_REGISTROS.includes(norm(user?.rol_sistema))
+    )
+  }, [user])
+
   // Contar filtros activos
   const activeFiltersCount = useMemo(() => {
     const values = form.getFieldsValue()
@@ -37,21 +61,29 @@ export default function FiltersMisIngresos() {
     if (values.fechaDesde) count++
     if (values.fechaHasta) count++
     if (values.motivoIngreso) count++
-    if (values.cajeroRegistra) count++
+    if (values.user_id) count++
     if (values.sucursal) count++
     if (values.busqueda) count++
     return count
   }, [form])
 
   useEffect(() => {
+    // Admin / gerente ven todo (Vendedor vacío). El resto arranca viendo
+    // únicamente SUS registros, con el filtro precargado con su usuario.
+    const filtrarPorMi = !veTodosLosRegistros && !!user?.id
+
     const data = {
       fechaDesde: dayjs().startOf('day').format('YYYY-MM-DD'),
       fechaHasta: dayjs().endOf('day').format('YYYY-MM-DD'),
       estado: 'aprobado',
+      ...(filtrarPorMi ? { user_id: user!.id } : {}),
     }
+
+    if (filtrarPorMi) form.setFieldValue('user_id', user!.id)
+
     setFiltros(data)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [veTodosLosRegistros, user?.id])
 
   return (
     <FormBase
@@ -130,20 +162,19 @@ export default function FiltersMisIngresos() {
             </LabelBase>
           </ConfigurableElement>
 
-          <ConfigurableElement componentId='gestion-contable.mis-Ingresos.filtro-cajero' label='Filtro Cajero Registra'>
-            <LabelBase label='Cajero Registra:'>
-              <Form.Item name='cajeroRegistra' className='!mb-0'>
-                <Select
-                  placeholder='EFRAIN'
-                  className='!min-w-[140px] !w-[140px] !max-w-[140px]'
-                  options={[
-                    { label: 'EFRAIN', value: 'EFRAIN' },
-                    { label: 'ADMIN', value: 'ADMIN' },
-                    { label: 'VENDEDOR', value: 'VENDEDOR' },
-                  ]}
-                  allowClear
-                />
-              </Form.Item>
+          <ConfigurableElement componentId='gestion-contable.mis-Ingresos.filtro-vendedor' label='Filtro Vendedor'>
+            <LabelBase label='Vendedor:'>
+              <SelectUsuarios
+                propsForm={{
+                  name: 'user_id',
+                  hasFeedback: false,
+                  className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
+                }}
+                className='!min-w-[150px] !w-[150px] !max-w-[150px]'
+                formWithMessage={false}
+                allowClear
+                placeholder='Todos'
+              />
             </LabelBase>
           </ConfigurableElement>
 

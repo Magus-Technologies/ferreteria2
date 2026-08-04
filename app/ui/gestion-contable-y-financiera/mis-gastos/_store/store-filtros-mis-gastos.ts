@@ -7,7 +7,7 @@ interface FiltrosMisGastos {
   fechaDesde?: string
   fechaHasta?: string
   motivoGasto?: string
-  cajeroRegistra?: string
+  user_id?: string
   sucursal?: string
   busqueda?: string
   estado?: string

@@ -143,6 +143,12 @@ export interface CreateVentaRequest {
    * El backend NO vuelve a descontar pero sí marca stock_aplicado=true en la venta.
    */
   stock_ya_aplicado?: boolean;
+  /**
+   * ID de la cotización origen cuando la venta se crea cargando una cotización.
+   * El backend verifica reservar_stock directo en la BD con esto (más confiable
+   * que `stock_ya_aplicado`, que depende de que el frontend lo propague bien).
+   */
+  cotizacion_id?: string;
   ingreso_dinero_id?: string;
   codigo_vale?: string;
   // IDs de vales auto-aplicables que el vendedor descartó manualmente desde la UI.

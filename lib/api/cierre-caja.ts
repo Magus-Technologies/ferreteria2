@@ -18,6 +18,11 @@ export interface ResumenCajaResponse {
             monto_apertura: number
             total_ingresos: number
             total_egresos: number
+            // Resúmenes SOLO EFECTIVO (redondeados a S/ 0.10). A diferencia de
+            // total_ingresos/total_egresos (todos los métodos), estos son solo efectivo
+            // y se usan en el cierre para que el bloque de efectivo cuadre.
+            resumen_ingresos_efectivo?: number
+            resumen_egresos_efectivo?: number
             total_ventas: number
             monto_esperado: number
             monto_cierre: number | null

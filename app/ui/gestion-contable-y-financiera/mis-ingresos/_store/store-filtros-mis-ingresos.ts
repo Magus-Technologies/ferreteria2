@@ -6,7 +6,7 @@ interface FiltrosMisIngresos {
   fechaDesde?: string
   fechaHasta?: string
   motivoIngreso?: string
-  cajeroRegistra?: string
+  user_id?: string
   sucursal?: string
   busqueda?: string
   estado?: string
