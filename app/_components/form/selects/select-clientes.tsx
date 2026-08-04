@@ -301,6 +301,15 @@ setClienteSeleccionadoStore(undefined)
     if (response.length === 1) {
       const cliente = response[0]
       if (textoLimpio.length >= 8 && cliente.numero_documento.startsWith(textoLimpio)) {
+        // Si el texto es un prefijo del documento ya seleccionado, el usuario
+        // está borrando dígitos (no buscando): NO re-seleccionar el mismo cliente.
+        if (
+          lastSelectedDocument &&
+          lastSelectedDocument.startsWith(textoLimpio) &&
+          lastSelectedDocument !== textoLimpio
+        ) {
+          return
+        }
         handleSelect({ data: cliente })
       }
     }
@@ -320,9 +329,19 @@ setClienteSeleccionadoStore(undefined)
         const results = response.data?.data || []
         if (results.length === 1) {
           // Único resultado: autoseleccionar directo, sin pasar por el modal
-          // (mismo comportamiento que SelectProductos).
-          handleSelect({ data: results[0] })
-          return
+          // (mismo comportamiento que SelectProductos). PERO si ese único
+          // resultado es el cliente ya seleccionado, abrir el modal: si no,
+          // la lupa se "pega" re-seleccionando el mismo y nunca deja buscar otro.
+          const unique = results[0]
+          const yaSeleccionado =
+            clienteSeleccionadoRef.current &&
+            (lastSelectedDocument
+              ? unique.numero_documento === lastSelectedDocument
+              : unique.numero_documento === text.trim())
+          if (!yaSeleccionado) {
+            handleSelect({ data: unique })
+            return
+          }
         }
       } catch (error) {
         console.error('Error en búsqueda manual de cliente:', error)

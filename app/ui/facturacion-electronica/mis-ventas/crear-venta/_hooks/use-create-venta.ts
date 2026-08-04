@@ -83,6 +83,8 @@ export function agruparProductos({
       descuento_tipo: p.descuento_tipo,
       producto_codigo: p.producto_codigo,
       comision: p.comision,
+      _cantidad_reservada: p._cantidad_reservada,
+      _unidad_reserva_id: p._unidad_reserva_id,
     })
   }
   return Array.from(mapa.values())
@@ -298,6 +300,13 @@ export default function useCreateVenta({
         factor: Number(u.unidad_derivada_factor),
         cantidad: Number(u.cantidad),
         cantidad_pendiente: Number(u.cantidad),
+        // Cantidad que la cotización origen ya reservó en esa línea. Solo aplica
+        // si la línea conserva la MISMA unidad de la reserva; si el usuario
+        // cambió de unidad, se descuenta completa.
+        cantidad_ya_aplicada:
+          u._unidad_reserva_id != null && u._unidad_reserva_id === u.unidad_derivada_id && Number(u._cantidad_reservada) > 0
+            ? Number(u._cantidad_reservada)
+            : undefined,
         precio: Number(u.precio_venta),
         recargo: Number(u.recargo || 0),
         descuento_tipo: mapDescuentoTipo(u.descuento_tipo),

@@ -71,6 +71,11 @@ export interface UnidadDerivadaVentaRequest {
   unidad_derivada_inmutable_name?: string;
   factor: number;
   cantidad: number;
+  /**
+   * Cantidad (en la unidad de la línea) que la cotización origen ya reservó:
+   * el backend descuenta solo el exceso sobre `cantidad`. Si se omite, 0.
+   */
+  cantidad_ya_aplicada?: number;
   cantidad_pendiente: number;
   precio: number;
   recargo?: number;
