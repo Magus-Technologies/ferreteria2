@@ -11,6 +11,7 @@ import TableWithTitle from '~/components/tables/table-with-title'
 import { AgGridReact } from 'ag-grid-react'
 import type { ColDef } from 'ag-grid-community'
 import { formatFechaPeru } from '~/utils/fechas'
+import { subscribeModelChanged } from '~/lib/realtime-bus'
 
 interface HistorialTrasladoEfectivoCajaProps {
   cajaPrincipalId: number
@@ -45,6 +46,20 @@ export default function HistorialTrasladoEfectivoCaja({ cajaPrincipalId }: Histo
 
   useEffect(() => {
     fetchMovimientos()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cajaPrincipalId])
+
+  // Tiempo real: esta tabla usa useState/fetch manual (no React Query), así que no
+  // se refresca sola cuando se crea un nuevo Traslado de Efectivo (movimiento
+  // interno) — el canal WebSocket ya está conectado globalmente (RealtimeProvider),
+  // así que acá solo nos suscribimos al bus interno.
+  useEffect(() => {
+    const unsub = subscribeModelChanged((ev) => {
+      if (ev.module === 'cajas') {
+        fetchMovimientos()
+      }
+    })
+    return unsub
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cajaPrincipalId])
 
