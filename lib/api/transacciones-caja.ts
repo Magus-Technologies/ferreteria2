@@ -204,6 +204,8 @@ export interface MovimientoInternoFila {
   vendedor: string
   // A quién se le acreditó el dinero (usuario destino).
   usuario_destino: string
+  user_id: string
+  estado: 'activo' | 'anulado'
 }
 
 export interface MovimientosInternosPorCajaPrincipalResponse {
@@ -393,6 +395,16 @@ export const transaccionesCajaApi = {
     return apiRequest<MovimientoInternoResponse>('/cajas/movimientos-internos', {
       method: 'POST',
       body: JSON.stringify(data),
+    })
+  },
+
+  /**
+   * Anular un movimiento interno (Traslado de Efectivo) ya registrado — revierte
+   * el saldo y lo marca como anulado.
+   */
+  anularMovimientoInterno(id: string): Promise<ApiResponse<{ success: boolean; message: string }>> {
+    return apiRequest(`/cajas/movimientos-internos/${id}/anular`, {
+      method: 'POST',
     })
   },
 

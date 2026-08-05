@@ -1,27 +1,30 @@
 'use client'
 
 import { useState, useEffect, useRef, useMemo } from 'react'
-import { DatePicker, Input } from 'antd'
+import { DatePicker, Select, App } from 'antd'
 const { RangePicker } = DatePicker
 import dayjs from 'dayjs'
-import { DollarOutlined } from '@ant-design/icons'
-import { Spin } from 'antd'
+import { DollarOutlined, DeleteOutlined } from '@ant-design/icons'
+import { Spin, Button, Popconfirm, Tag, Tooltip } from 'antd'
 import { transaccionesCajaApi, type MovimientoInternoFila } from '~/lib/api/transacciones-caja'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { AgGridReact } from 'ag-grid-react'
 import type { ColDef } from 'ag-grid-community'
 import { formatFechaPeru } from '~/utils/fechas'
 import { subscribeModelChanged } from '~/lib/realtime-bus'
+import { useAuth } from '~/lib/auth-context'
 
 interface HistorialTrasladoEfectivoCajaProps {
   cajaPrincipalId: number
 }
 
 export default function HistorialTrasladoEfectivoCaja({ cajaPrincipalId }: HistorialTrasladoEfectivoCajaProps) {
+  const { message } = App.useApp()
+  const { user } = useAuth()
   const [loading, setLoading] = useState(true)
   const [movimientos, setMovimientos] = useState<MovimientoInternoFila[]>([])
   const [rangoFechas, setRangoFechas] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null]>([dayjs(), dayjs()])
-  const [buscarUsuario, setBuscarUsuario] = useState('')
+  const [usuarioFiltro, setUsuarioFiltro] = useState<string | null>(null)
   const gridRef = useRef<AgGridReact<MovimientoInternoFila>>(null)
 
   const fetchMovimientos = async () => {
@@ -63,10 +66,20 @@ export default function HistorialTrasladoEfectivoCaja({ cajaPrincipalId }: Histo
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cajaPrincipalId])
 
+  // Opciones del filtro de usuario: todos los que aparecen como "Realizado Por"
+  // o "Usuario Destino" en los movimientos ya cargados.
+  const opcionesUsuario = useMemo(() => {
+    const nombres = new Set<string>()
+    movimientos.forEach((m) => {
+      if (m.vendedor) nombres.add(m.vendedor)
+      if (m.usuario_destino) nombres.add(m.usuario_destino)
+    })
+    return Array.from(nombres).sort().map((nombre) => ({ label: nombre, value: nombre }))
+  }, [movimientos])
+
   // Mismos filtros que "Historial de Traslados a Bóveda": rango de fechas (por
-  // defecto hoy) y búsqueda de usuario. Filtrado en cliente, igual que allá.
+  // defecto hoy) y usuario. Filtrado en cliente, igual que allá.
   const filteredMovimientos = useMemo(() => {
-    const texto = buscarUsuario.trim().toLowerCase()
     return movimientos.filter((m) => {
       if (rangoFechas && rangoFechas[0] && rangoFechas[1]) {
         const fecha = dayjs(m.fecha)
@@ -76,17 +89,31 @@ export default function HistorialTrasladoEfectivoCaja({ cajaPrincipalId }: Histo
           (fecha.isBefore(end, 'day') || fecha.isSame(end, 'day'))
         if (!dentroRango) return false
       }
-      // Busca tanto en quien REALIZÓ el traslado como en el usuario DESTINO.
-      const nombreVendedor = (m.vendedor ?? '').toLowerCase()
-      const nombreDestino = (m.usuario_destino ?? '').toLowerCase()
-      if (texto && !nombreVendedor.includes(texto) && !nombreDestino.includes(texto)) {
+      // Filtra tanto por quien REALIZÓ el traslado como por el usuario DESTINO.
+      if (usuarioFiltro && m.vendedor !== usuarioFiltro && m.usuario_destino !== usuarioFiltro) {
         return false
       }
       return true
     })
-  }, [movimientos, rangoFechas, buscarUsuario])
+  }, [movimientos, rangoFechas, usuarioFiltro])
 
-  const totalMonto = filteredMovimientos.reduce((sum, m) => sum + parseFloat(m.monto), 0)
+  const totalMonto = filteredMovimientos
+    .filter((m) => m.estado !== 'anulado')
+    .reduce((sum, m) => sum + parseFloat(m.monto), 0)
+
+  const handleAnular = async (id: string) => {
+    try {
+      const response = await transaccionesCajaApi.anularMovimientoInterno(id)
+      if (response.error) {
+        message.error(response.error.message || 'Error al anular el movimiento')
+        return
+      }
+      message.success('Movimiento anulado')
+      fetchMovimientos()
+    } catch (error: any) {
+      message.error(error?.message || 'Error al anular el movimiento')
+    }
+  }
 
   const columns: ColDef<MovimientoInternoFila>[] = [
     {
@@ -130,6 +157,38 @@ export default function HistorialTrasladoEfectivoCaja({ cajaPrincipalId }: Histo
       flex: 1,
       minWidth: 250,
     },
+    {
+      headerName: 'Estado',
+      field: 'estado',
+      width: 120,
+      cellRenderer: (params: any) => (
+        <Tag color={params.value === 'anulado' ? 'red' : 'green'}>
+          {params.value === 'anulado' ? 'ANULADO' : 'ACTIVO'}
+        </Tag>
+      ),
+    },
+    {
+      headerName: 'Acciones',
+      field: 'id',
+      width: 110,
+      cellRenderer: (params: any) => {
+        if (params.data.estado === 'anulado' || params.data.user_id !== user?.id) return null
+        return (
+          <Tooltip title="Anular movimiento">
+            <Popconfirm
+              title="¿Anular este movimiento?"
+              description="El monto se revertirá: volverá a la caja de origen y se descontará del destino."
+              onConfirm={() => handleAnular(params.data.id)}
+              okText="Sí, anular"
+              cancelText="Cancelar"
+              okButtonProps={{ danger: true }}
+            >
+              <Button danger type="text" icon={<DeleteOutlined />} size="small" />
+            </Popconfirm>
+          </Tooltip>
+        )
+      },
+    },
   ]
 
   if (loading) {
@@ -147,12 +206,14 @@ export default function HistorialTrasladoEfectivoCaja({ cajaPrincipalId }: Histo
       <div className="flex justify-between items-end">
         <div className="flex items-end gap-3">
           <div className="flex flex-col gap-1">
-            <span className="text-xs text-slate-500 font-medium">Buscar usuario:</span>
-            <Input.Search
+            <span className="text-xs text-slate-500 font-medium">Usuario:</span>
+            <Select
               className="w-56"
-              placeholder="Nombre del usuario"
-              value={buscarUsuario}
-              onChange={(e) => setBuscarUsuario(e.target.value)}
+              placeholder="Todos los usuarios"
+              value={usuarioFiltro}
+              onChange={(val) => setUsuarioFiltro(val ?? null)}
+              options={opcionesUsuario}
+              showSearch
               allowClear
             />
           </div>
