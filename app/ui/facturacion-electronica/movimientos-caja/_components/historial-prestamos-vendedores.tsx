@@ -5,6 +5,7 @@ import { PlusCircle } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { prestamoVendedorApi } from "~/lib/api/prestamo-vendedor";
 import { cierreCajaApi } from "~/lib/api/cierre-caja";
+import { subscribeModelChanged } from "~/lib/realtime-bus";
 import ModalAprobarSolicitudEfectivo from "~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-aprobar-solicitud-efectivo";
 import ModalSolicitarEfectivo from "~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-solicitar-efectivo";
 import ButtonBase from "~/components/buttons/button-base";
@@ -114,6 +115,21 @@ export default function HistorialPrestamosVendedores() {
     };
 
     fetchAperturaActiva();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Tiempo real: esta tabla usa useState/fetch manual (no React Query), así que no
+  // se refresca sola cuando OTRO usuario/pestaña aprueba, rechaza o anula un
+  // préstamo — hay que refrescarla a mano vía el bus interno de eventos. El canal
+  // WebSocket ya está conectado globalmente (RealtimeProvider), así que acá solo
+  // nos suscribimos al bus (no se vuelve a llamar useRealtime()).
+  useEffect(() => {
+    const unsub = subscribeModelChanged((ev) => {
+      if (ev.module === 'prestamos-vendedores') {
+        cargarSolicitudes();
+      }
+    });
+    return unsub;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

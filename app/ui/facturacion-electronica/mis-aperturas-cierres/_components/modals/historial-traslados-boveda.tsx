@@ -12,6 +12,7 @@ import {
 import TableWithTitle from "~/components/tables/table-with-title";
 import { AgGridReact } from "ag-grid-react";
 import { useColumnsHistorialTraslados } from "~/app/ui/facturacion-electronica/gestion-cajas/_components/columns-historial-traslados";
+import { subscribeModelChanged } from "~/lib/realtime-bus";
 
 interface HistorialTrasladosBovedaProps {
   aperturaCierreId: string;
@@ -45,6 +46,20 @@ export default function HistorialTrasladosBoveda({
     if (aperturaCierreId) {
       cargarTraslados();
     }
+  }, [aperturaCierreId]);
+
+  // Tiempo real: esta tabla usa useState/fetch manual (no React Query), así que no
+  // se refresca sola cuando se anula un traslado — el canal WebSocket ya está
+  // conectado globalmente (RealtimeProvider), así que acá solo nos suscribimos al
+  // bus interno.
+  useEffect(() => {
+    const unsub = subscribeModelChanged((ev) => {
+      if (ev.module === 'traslados-boveda') {
+        cargarTraslados();
+      }
+    });
+    return unsub;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [aperturaCierreId]);
 
   const handleAnular = async (traslado: TrasladoBoveda) => {

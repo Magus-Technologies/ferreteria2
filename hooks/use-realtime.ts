@@ -212,14 +212,26 @@ const MODULE_TO_QUERY_KEYS: Record<string, string[]> = {
   usuarios: [QueryKeys.USUARIOS, QueryKeys.VENDEDORES_DISPONIBLES, 'cumpleanos-proximos'],
   empresas: [QueryKeys.EMPRESAS],
   'guias-remision': [QueryKeys.GUIAS_REMISION, QueryKeys.MOTIVOS_TRASLADO],
-  'traslados-boveda': ['traslados-boveda'],
+  // Registrar/anular un traslado a bóveda mueve dinero real entre sub-cajas —
+  // invalidar también CAJA_ACTIVA (Cierre de Caja) y SUB_CAJAS, no solo la lista
+  // propia del historial de traslados.
+  'traslados-boveda': ['traslados-boveda', QueryKeys.CAJA_ACTIVA, QueryKeys.SUB_CAJAS],
   'despliegues-de-pago': [QueryKeys.DESPLIEGUE_DE_PAGO, QueryKeys.METODO_DE_PAGO],
   'series-documentos': [],
   choferes: [QueryKeys.CHOFERES],
   'facturacion-electronica': [QueryKeys.VENTAS, QueryKeys.CONFIGURACION, 'sunat-alertas-pendientes'],
   autorizaciones: ['autorizaciones'],
   'configuracion-entrega': ['configuracion-entrega'],
-  'prestamos-vendedores': ['solicitudes-efectivo-pendientes'],
+  // Aprobar/anular un préstamo entre vendedores mueve dinero real entre sub-cajas
+  // (TransaccionCaja/saldo_actual) — invalidar también lo que usa Cierre de Caja
+  // (CAJA_ACTIVA) y SUB_CAJAS (Traslado a Bóveda / "efectivo disponible" por
+  // vendedor), no solo la lista de solicitudes pendientes.
+  'prestamos-vendedores': [
+    'solicitudes-efectivo-pendientes',
+    QueryKeys.CAJA_ACTIVA,
+    QueryKeys.SUB_CAJAS,
+    'vendedores-con-efectivo-real-time',
+  ],
   'requerimientos-internos': [
     QueryKeys.ORDENES_DE_SERVICIO,
     QueryKeys.SOLICITUD_ORDEN_COMPRA,

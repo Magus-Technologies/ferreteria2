@@ -14,6 +14,7 @@ import { useQuery } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { fetchCajaActivaOrNull } from '~/lib/api/caja'
 import { useColumnsHistorialTraslados } from '~/app/ui/facturacion-electronica/gestion-cajas/_components/columns-historial-traslados'
+import { subscribeModelChanged } from '~/lib/realtime-bus'
 
 interface ModalHistorialTrasladosBovedaProps {
     open: boolean
@@ -66,6 +67,21 @@ export default function ModalHistorialTrasladosBoveda({
         if (open && cajaActiva?.id) {
             cargarTraslados()
         }
+    }, [open, cajaActiva?.id])
+
+    // Tiempo real: esta tabla usa useState/fetch manual (no React Query), así que no
+    // se refresca sola cuando se anula un traslado (desde este mismo modal en otra
+    // pestaña, u otro usuario) — el canal WebSocket ya está conectado globalmente
+    // (RealtimeProvider), así que acá solo nos suscribimos al bus interno.
+    useEffect(() => {
+        if (!open) return
+        const unsub = subscribeModelChanged((ev) => {
+            if (ev.module === 'traslados-boveda') {
+                cargarTraslados()
+            }
+        })
+        return unsub
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, cajaActiva?.id])
 
     const handleAnular = async (traslado: TrasladoBoveda) => {
