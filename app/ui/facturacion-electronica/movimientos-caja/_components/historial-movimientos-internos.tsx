@@ -1,19 +1,27 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { Spin } from 'antd'
-import { transaccionesCajaApi, type MovimientoInterno } from '~/lib/api/transacciones-caja'
+import { useState, useEffect, useRef, useMemo } from 'react'
+import { Spin, Select, Button, Popconfirm, Tag, Tooltip, App } from 'antd'
+import { DeleteOutlined } from '@ant-design/icons'
+import { transaccionesCajaApi, type MovimientoInternoFila } from '~/lib/api/transacciones-caja'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { AgGridReact } from 'ag-grid-react'
 import type { ColDef } from 'ag-grid-community'
-import dayjs from 'dayjs'
 import { formatFechaPeru } from '~/utils/fechas'
 import { subscribeModelChanged } from '~/lib/realtime-bus'
+import { useAuth } from '~/lib/auth-context'
 
 export default function HistorialMovimientosInternos() {
+  const { message } = App.useApp()
+  const { user } = useAuth()
   const [loading, setLoading] = useState(true)
-  const [movimientos, setMovimientos] = useState<MovimientoInterno[]>([])
-  const gridRef = useRef<AgGridReact<MovimientoInterno>>(null)
+  // El backend (MovimientoInternoService::listarMovimientos) devuelve una forma
+  // PLANA (vendedor, sub_caja_origen/destino como texto) — MovimientoInternoFila,
+  // no el tipo anidado `MovimientoInterno` (user.name, sub_caja_origen.nombre) que
+  // se usaba antes acá y nunca coincidía con la respuesta real.
+  const [movimientos, setMovimientos] = useState<MovimientoInternoFila[]>([])
+  const [usuarioFiltro, setUsuarioFiltro] = useState<string | null>(null)
+  const gridRef = useRef<AgGridReact<MovimientoInternoFila>>(null)
 
   const fetchMovimientos = async () => {
     setLoading(true)
@@ -30,7 +38,7 @@ export default function HistorialMovimientosInternos() {
       }
 
       if (response.data?.data) {
-        setMovimientos(response.data.data.data || [])
+        setMovimientos((response.data.data.data as unknown as MovimientoInternoFila[]) || [])
       }
     } catch (error) {
       console.error('Error al cargar movimientos:', error)
@@ -57,7 +65,34 @@ export default function HistorialMovimientosInternos() {
     return unsub
   }, [])
 
-  const columns: ColDef<MovimientoInterno>[] = [
+  const opcionesUsuario = useMemo(() => {
+    const nombres = new Set<string>()
+    movimientos.forEach((m) => {
+      if (m.vendedor) nombres.add(m.vendedor)
+    })
+    return Array.from(nombres).sort().map((nombre) => ({ label: nombre, value: nombre }))
+  }, [movimientos])
+
+  const movimientosFiltrados = useMemo(() => {
+    if (!usuarioFiltro) return movimientos
+    return movimientos.filter((m) => m.vendedor === usuarioFiltro)
+  }, [movimientos, usuarioFiltro])
+
+  const handleAnular = async (id: string) => {
+    try {
+      const response = await transaccionesCajaApi.anularMovimientoInterno(id)
+      if (response.error) {
+        message.error(response.error.message || 'Error al anular el movimiento')
+        return
+      }
+      message.success('Movimiento anulado')
+      fetchMovimientos()
+    } catch (error: any) {
+      message.error(error?.message || 'Error al anular el movimiento')
+    }
+  }
+
+  const columns: ColDef<MovimientoInternoFila>[] = [
     {
       headerName: 'Fecha',
       field: 'fecha',
@@ -74,17 +109,17 @@ export default function HistorialMovimientosInternos() {
     },
     {
       headerName: 'Usuario',
-      field: 'user.name',
+      field: 'vendedor',
       width: 200,
     },
     {
       headerName: 'Sub-Caja Origen',
-      field: 'sub_caja_origen.nombre',
+      field: 'sub_caja_origen',
       width: 180,
     },
     {
       headerName: 'Sub-Caja Destino',
-      field: 'sub_caja_destino.nombre',
+      field: 'sub_caja_destino',
       width: 180,
     },
     {
@@ -94,10 +129,36 @@ export default function HistorialMovimientosInternos() {
       minWidth: 250,
     },
     {
-      headerName: 'Comprobante',
-      field: 'comprobante',
-      width: 150,
-      valueFormatter: (params) => params.value || '-',
+      headerName: 'Estado',
+      field: 'estado',
+      width: 120,
+      cellRenderer: (params: any) => (
+        <Tag color={params.value === 'anulado' ? 'red' : 'green'}>
+          {params.value === 'anulado' ? 'ANULADO' : 'ACTIVO'}
+        </Tag>
+      ),
+    },
+    {
+      headerName: 'Acciones',
+      field: 'id',
+      width: 110,
+      cellRenderer: (params: any) => {
+        if (params.data.estado === 'anulado' || params.data.user_id !== user?.id) return null
+        return (
+          <Tooltip title="Anular movimiento">
+            <Popconfirm
+              title="¿Anular este movimiento?"
+              description="El monto se revertirá: volverá a la caja de origen y se descontará del destino."
+              onConfirm={() => handleAnular(params.data.id)}
+              okText="Sí, anular"
+              cancelText="Cancelar"
+              okButtonProps={{ danger: true }}
+            >
+              <Button danger type="text" icon={<DeleteOutlined />} size="small" />
+            </Popconfirm>
+          </Tooltip>
+        )
+      },
     },
   ]
 
@@ -112,16 +173,31 @@ export default function HistorialMovimientosInternos() {
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full flex flex-col gap-3">
+      <div className="flex items-end gap-3">
+        <div className="flex flex-col gap-1">
+          <span className="text-xs text-slate-500 font-medium">Usuario:</span>
+          <Select
+            className="w-56"
+            placeholder="Todos los usuarios"
+            value={usuarioFiltro}
+            onChange={(val) => setUsuarioFiltro(val ?? null)}
+            options={opcionesUsuario}
+            showSearch
+            allowClear
+          />
+        </div>
+      </div>
+
       <div className="h-[500px] w-full">
-        <TableWithTitle<MovimientoInterno>
+        <TableWithTitle<MovimientoInternoFila>
           id="historial-movimientos-internos"
           title="Historial de Movimientos Internos"
           extraTitle={
-            <span className="text-sm text-slate-500">Total: {movimientos.length} movimientos</span>
+            <span className="text-sm text-slate-500">Total: {movimientosFiltrados.length} movimientos</span>
           }
           tableRef={gridRef}
-          rowData={movimientos}
+          rowData={movimientosFiltrados}
           columnDefs={columns}
           rowSelection={false}
           withNumberColumn={true}

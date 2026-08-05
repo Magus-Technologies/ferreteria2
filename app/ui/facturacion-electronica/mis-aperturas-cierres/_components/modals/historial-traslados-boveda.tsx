@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
-import { App, DatePicker, Input } from "antd";
+import { App, DatePicker, Select } from "antd";
 const { RangePicker } = DatePicker;
 import dayjs from "dayjs";
 import { DollarOutlined } from "@ant-design/icons";
@@ -27,7 +27,7 @@ export default function HistorialTrasladosBoveda({
   const [traslados, setTraslados] = useState<TrasladoBoveda[]>([]);
   const [loading, setLoading] = useState(false);
   const [rangoFechas, setRangoFechas] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null]>([dayjs(), dayjs()]);
-  const [buscarUsuario, setBuscarUsuario] = useState("")
+  const [usuarioFiltro, setUsuarioFiltro] = useState<string | null>(null)
   const gridRef = useRef<AgGridReact<TrasladoBoveda>>(null);
 
   const cargarTraslados = async () => {
@@ -97,8 +97,16 @@ export default function HistorialTrasladosBoveda({
     onAnular: handleAnular,
   });
 
+  const opcionesUsuario = useMemo(() => {
+    const nombres = new Set<string>()
+    traslados.forEach((t) => {
+      const nombre = t.vendedor?.name ?? t.vendedor_id
+      if (nombre) nombres.add(nombre)
+    })
+    return Array.from(nombres).sort().map((nombre) => ({ label: nombre, value: nombre }))
+  }, [traslados])
+
   const filteredTraslados = useMemo(() => {
-    const texto = buscarUsuario.trim().toLowerCase();
     return traslados.filter(t => {
       if (rangoFechas && rangoFechas[0] && rangoFechas[1]) {
         const fecha = dayjs(t.fecha_traslado);
@@ -108,13 +116,13 @@ export default function HistorialTrasladosBoveda({
           (fecha.isBefore(end, 'day') || fecha.isSame(end, 'day'));
         if (!dentroRango) return false;
       }
-      const nombreVendedor = (t.vendedor?.name ?? t.vendedor_id ?? '').toLowerCase()
-      if (texto && !nombreVendedor.includes(texto)) {
+      const nombreVendedor = t.vendedor?.name ?? t.vendedor_id
+      if (usuarioFiltro && nombreVendedor !== usuarioFiltro) {
         return false;
       }
       return true;
     });
-  }, [traslados, rangoFechas, buscarUsuario]);
+  }, [traslados, rangoFechas, usuarioFiltro]);
 
   const totalTrasladado = filteredTraslados.reduce(
     (sum, t) => sum + parseFloat(t.monto),
@@ -126,12 +134,14 @@ export default function HistorialTrasladosBoveda({
       <div className="flex justify-between items-end">
         <div className="flex items-end gap-3">
           <div className="flex flex-col gap-1">
-            <span className="text-xs text-slate-500 font-medium">Buscar usuario:</span>
-            <Input.Search
+            <span className="text-xs text-slate-500 font-medium">Usuario:</span>
+            <Select
               className="w-56"
-              placeholder="Nombre del vendedor"
-              value={buscarUsuario}
-              onChange={(e) => setBuscarUsuario(e.target.value)}
+              placeholder="Todos los usuarios"
+              value={usuarioFiltro}
+              onChange={(val) => setUsuarioFiltro(val ?? null)}
+              options={opcionesUsuario}
+              showSearch
               allowClear
             />
           </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { Modal, App, DatePicker, Input } from 'antd'
+import { Modal, App, DatePicker, Select } from 'antd'
 const { RangePicker } = DatePicker;
 import { useState, useEffect, useRef, useMemo } from 'react'
 import dayjs from 'dayjs'
@@ -36,7 +36,7 @@ export default function ModalHistorialTrasladosBoveda({
     const [loading, setLoading] = useState(false)
     // Por defecto se filtra al día de hoy (el usuario puede ampliar el rango).
     const [rangoFechas, setRangoFechas] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null]>([dayjs(), dayjs()])
-    const [buscarUsuario, setBuscarUsuario] = useState('')
+    const [usuarioFiltro, setUsuarioFiltro] = useState<string | null>(null)
     const gridRef = useRef<AgGridReact<TrasladoBoveda>>(null)
 
     // Obtener caja activa para sacar su ID
@@ -117,8 +117,16 @@ export default function ModalHistorialTrasladosBoveda({
         onAnular: handleAnular,
     })
 
+    const opcionesUsuario = useMemo(() => {
+        const nombres = new Set<string>()
+        traslados.forEach((t) => {
+            const nombre = t.vendedor?.name ?? t.vendedor_id
+            if (nombre) nombres.add(nombre)
+        })
+        return Array.from(nombres).sort().map((nombre) => ({ label: nombre, value: nombre }))
+    }, [traslados])
+
     const filteredTraslados = useMemo(() => {
-        const texto = buscarUsuario.trim().toLowerCase();
         return traslados.filter(t => {
             // Filtro por rango de fechas (si está seleccionado)
             if (rangoFechas && rangoFechas[0] && rangoFechas[1]) {
@@ -129,13 +137,14 @@ export default function ModalHistorialTrasladosBoveda({
                     (fecha.isBefore(end, 'day') || fecha.isSame(end, 'day'));
                 if (!dentroRango) return false;
             }
-            // Filtro por usuario (nombre del vendedor o ID)
-            if (texto && !(t.vendedor?.name ?? '').toLowerCase().includes(texto) && !(t.vendedor_id ?? '').toLowerCase().includes(texto)) {
+            // Filtro por usuario
+            const nombreVendedor = t.vendedor?.name ?? t.vendedor_id
+            if (usuarioFiltro && nombreVendedor !== usuarioFiltro) {
                 return false;
             }
             return true;
         });
-    }, [traslados, rangoFechas, buscarUsuario]);
+    }, [traslados, rangoFechas, usuarioFiltro]);
 
     const totalTrasladado = filteredTraslados.reduce((sum, t) => sum + parseFloat(t.monto), 0)
 
@@ -160,12 +169,14 @@ export default function ModalHistorialTrasladosBoveda({
                 <div className='flex justify-between items-end'>
                     <div className='flex items-end gap-3'>
                         <div className='flex flex-col gap-1'>
-                            <span className='text-xs text-slate-500 font-medium'>Buscar usuario:</span>
-                            <Input.Search
+                            <span className='text-xs text-slate-500 font-medium'>Usuario:</span>
+                            <Select
                                 className='w-56'
-                                placeholder='Nombre del vendedor'
-                                value={buscarUsuario}
-                                onChange={(e) => setBuscarUsuario(e.target.value)}
+                                placeholder='Todos los usuarios'
+                                value={usuarioFiltro}
+                                onChange={(val) => setUsuarioFiltro(val ?? null)}
+                                options={opcionesUsuario}
+                                showSearch
                                 allowClear
                             />
                         </div>
