@@ -18,7 +18,7 @@ export interface SolicitudEfectivo {
         name: string
     }
     monto_solicitado: number
-    estado: 'pendiente' | 'aprobada' | 'rechazada'
+    estado: 'pendiente' | 'aprobada' | 'rechazada' | 'anulada'
     motivo?: string
     created_at: string
 }
@@ -87,6 +87,13 @@ export const prestamoVendedorApi = {
         return apiRequest(`/cajas/prestamos-vendedores/${solicitudId}/rechazar`, {
             method: 'POST',
             body: JSON.stringify(data),
+        })
+    },
+
+    // Anular un préstamo ya aprobado (revierte la transferencia y los saldos)
+    anularSolicitud: async (solicitudId: string): Promise<ApiResponse<any>> => {
+        return apiRequest(`/cajas/prestamos-vendedores/${solicitudId}/anular`, {
+            method: 'POST',
         })
     },
 

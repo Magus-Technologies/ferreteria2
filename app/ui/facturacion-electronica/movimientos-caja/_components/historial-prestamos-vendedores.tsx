@@ -132,6 +132,20 @@ export default function HistorialPrestamosVendedores() {
     }
   };
 
+  const handleAnular = async (id: string) => {
+    try {
+      const response = await prestamoVendedorApi.anularSolicitud(id);
+      if (response.error) {
+        message.error(response.error.message || "Error al anular el préstamo");
+        return;
+      }
+      message.success("Préstamo anulado");
+      cargarSolicitudes();
+    } catch (error: any) {
+      message.error(error?.message || "Error al anular el préstamo");
+    }
+  };
+
   const handleFilter = (newFilters: any) => {
     setFilters(newFilters);
     cargarSolicitudes(newFilters);
@@ -140,6 +154,7 @@ export default function HistorialPrestamosVendedores() {
   const columns = useColumnsPrestamosVendedores({
     onAprobar: handleAprobar,
     onRechazar: handleRechazar,
+    onAnular: handleAnular,
   });
 
   return (
