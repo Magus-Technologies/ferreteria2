@@ -152,6 +152,9 @@ export default function FormCrearVenta({
       <Form.Item name="stock_ya_aplicado" hidden>
         <input type="hidden" />
       </Form.Item>
+      <Form.Item name="cotizacion_id" hidden>
+        <input type="hidden" />
+      </Form.Item>
       <Form.Item name="direccion_seleccionada" hidden>
         <input type="hidden" />
       </Form.Item>

@@ -198,9 +198,15 @@ function FormVentaInternal({
       onFinish={(values) => handleSubmit({
           ...values,
           // form.getFieldValue reads the FieldStore directly (where setFieldValue writes).
-          // Native <input type="hidden"> children don't relay setFieldValue back through
-          // onFinish reliably, so we inject this field explicitly.
+          // Campos seteados por useInitVenta vía form.setFieldsValue() pero sin ningún
+          // <Form.Item name="..."> que los renderice no llegan de forma confiable en
+          // `values` de onFinish, así que se inyectan acá explícitamente (mismo problema
+          // que direccion_seleccionada). Sin esto, al cargar una cotización con stock
+          // reservado y guardar la venta, el backend nunca se entera de qué cotización la
+          // originó — la reserva nunca se libera y el kardex queda con el stock corrupto.
           direccion_seleccionada: form.getFieldValue('direccion_seleccionada') || undefined,
+          cotizacion_id: form.getFieldValue('cotizacion_id') || undefined,
+          stock_ya_aplicado: form.getFieldValue('stock_ya_aplicado') || undefined,
         })}
     >
       <div className='xl:flex-1 flex flex-col gap-4 xl:gap-6 min-w-0 xl:min-h-0'>
