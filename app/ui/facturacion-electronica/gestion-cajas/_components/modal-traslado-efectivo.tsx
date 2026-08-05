@@ -1,11 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Modal, Form, InputNumber, Select, Input, Button, message } from 'antd'
 import { useQuery } from '@tanstack/react-query'
 import { apiRequest } from '~/lib/api'
 import { transaccionesCajaApi } from '~/lib/api/transacciones-caja'
 import { useCrearMovimientoInterno } from '~/app/ui/facturacion-electronica/gestion-cajas/_hooks/use-crear-movimiento-interno'
+import { subscribeModelChanged } from '~/lib/realtime-bus'
+
+// Módulos cuyos movimientos afectan el efectivo disponible/cerrado mostrado en
+// este modal (origen, destino y saldos) — mismo criterio que el resto de
+// modales de caja (ver modal-solicitar-efectivo.tsx).
+const MODULOS_EFECTIVO = ['ventas', 'gastos', 'ingresos', 'prestamos', 'prestamos-vendedores', 'traslados-boveda', 'cajas']
 
 interface MetodoParaVenta {
   value: string
@@ -29,7 +35,7 @@ export default function ModalTrasladoEfectivo({ open, setOpen, onSuccess }: Prop
   const { mutate: crearMovimiento, isPending } = useCrearMovimientoInterno()
   const [origenValue, setOrigenValue] = useState<string | null>(null)
 
-  const { data: metodosEfectivo = [] } = useQuery({
+  const { data: metodosEfectivo = [], refetch: refetchMetodos } = useQuery({
     queryKey: ['metodos-para-ventas-efectivo'],
     queryFn: async () => {
       const res = await apiRequest<{ success: boolean; data: MetodoParaVenta[] }>(
@@ -40,7 +46,7 @@ export default function ModalTrasladoEfectivo({ open, setOpen, onSuccess }: Prop
     enabled: open,
   })
 
-  const { data: saldos = [] } = useQuery({
+  const { data: saldos = [], refetch: refetchSaldos } = useQuery({
     queryKey: ['saldos-disponibles-movimiento'],
     queryFn: async () => {
       const response = await transaccionesCajaApi.getSaldosDisponiblesMovimiento()
@@ -52,7 +58,7 @@ export default function ModalTrasladoEfectivo({ open, setOpen, onSuccess }: Prop
   // DESTINOS: el efectivo de TODOS los usuarios de las aperturas abiertas
   // (cada usuario × sub-caja × despliegue de efectivo, con su saldo desde que
   // se aperturó). El traslado ACREDITA el dinero al usuario elegido.
-  const { data: destinosUsuarios = [] } = useQuery({
+  const { data: destinosUsuarios = [], refetch: refetchDestinos } = useQuery({
     queryKey: ['efectivo-todos-usuarios'],
     queryFn: async () => {
       const response = await transaccionesCajaApi.getEfectivoTodosUsuarios()
@@ -60,6 +66,23 @@ export default function ModalTrasladoEfectivo({ open, setOpen, onSuccess }: Prop
     },
     enabled: open,
   })
+
+  // Tiempo real: el canal WebSocket ya está conectado globalmente
+  // (RealtimeProvider) — acá solo nos suscribimos al bus interno para refrescar
+  // los saldos/orígenes/destinos apenas ocurra un movimiento relevante, sin
+  // depender de que el usuario cierre y reabra el modal.
+  useEffect(() => {
+    if (!open) return
+    const unsub = subscribeModelChanged((ev) => {
+      if (MODULOS_EFECTIVO.includes(ev.module)) {
+        refetchMetodos()
+        refetchSaldos()
+        refetchDestinos()
+      }
+    })
+    return unsub
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
 
   // Disponible del ORIGEN: solo el dinero CERRADO (saldo_disponible). Lo de la
   // sesión abierta —incluida la apertura— no se puede mover hasta cerrar caja.
