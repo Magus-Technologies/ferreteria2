@@ -14,14 +14,24 @@ import { QueryKeys } from '~/app/_lib/queryKeys'
 import { fetchCajaActivaOrNull } from '~/lib/api/caja'
 import { useColumnsHistorialTraslados } from '~/app/ui/facturacion-electronica/gestion-cajas/_components/columns-historial-traslados'
 import { subscribeModelChanged } from '~/lib/realtime-bus'
+import { useVeTodosLosMovimientos } from '~/hooks/use-ve-todos-los-movimientos'
 
 export default function HistorialTrasladosBovedaTab() {
   const { modal, message } = App.useApp()
+  const { veTodo, userId } = useVeTodosLosMovimientos()
   const [traslados, setTraslados] = useState<TrasladoBoveda[]>([])
   const [loading, setLoading] = useState(false)
   const [rangoFechas, setRangoFechas] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null]>([dayjs(), dayjs()])
+  // Roles administrativos ven todo (arranca en null = "Todos"); cualquier otro
+  // rol arranca viendo solo sus propios traslados (mismo criterio que Mis
+  // Ventas). Se sincroniza en un efecto porque `userId` llega asíncrono.
   const [usuarioFiltro, setUsuarioFiltro] = useState<string | null>(null)
   const gridRef = useRef<AgGridReact<TrasladoBoveda>>(null)
+
+  useEffect(() => {
+    if (veTodo || !userId) return
+    setUsuarioFiltro(userId)
+  }, [veTodo, userId])
 
   const { data: cajaActiva } = useQuery({
     queryKey: [QueryKeys.CAJA_ACTIVA],
@@ -95,12 +105,13 @@ export default function HistorialTrasladosBovedaTab() {
   })
 
   const opcionesUsuario = useMemo(() => {
-    const nombres = new Set<string>()
+    const vistos = new Map<string, string>()
     traslados.forEach((t) => {
-      const nombre = t.vendedor?.name ?? t.vendedor_id
-      if (nombre) nombres.add(nombre)
+      if (t.vendedor_id) vistos.set(t.vendedor_id, t.vendedor?.name ?? t.vendedor_id)
     })
-    return Array.from(nombres).sort().map((nombre) => ({ label: nombre, value: nombre }))
+    return Array.from(vistos.entries())
+      .sort((a, b) => a[1].localeCompare(b[1]))
+      .map(([id, nombre]) => ({ label: nombre, value: id }))
   }, [traslados])
 
   const filteredTraslados = useMemo(() => {
@@ -113,8 +124,7 @@ export default function HistorialTrasladosBovedaTab() {
           (fecha.isBefore(end, 'day') || fecha.isSame(end, 'day'))
         if (!dentroRango) return false
       }
-      const nombreVendedor = t.vendedor?.name ?? t.vendedor_id
-      if (usuarioFiltro && nombreVendedor !== usuarioFiltro) {
+      if (usuarioFiltro && t.vendedor_id !== usuarioFiltro) {
         return false
       }
       return true

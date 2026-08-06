@@ -12,18 +12,28 @@ import { AgGridReact } from 'ag-grid-react'
 import type { ColDef } from 'ag-grid-community'
 import { formatFechaPeru } from '~/utils/fechas'
 import { subscribeModelChanged } from '~/lib/realtime-bus'
+import { useVeTodosLosMovimientos } from '~/hooks/use-ve-todos-los-movimientos'
 
 export default function HistorialMovimientosInternos() {
   const { message } = App.useApp()
+  const { veTodo, userId } = useVeTodosLosMovimientos()
   const [loading, setLoading] = useState(true)
   // El backend (MovimientoInternoService::listarMovimientos) devuelve una forma
   // PLANA (vendedor, sub_caja_origen/destino como texto) — MovimientoInternoFila,
   // no el tipo anidado `MovimientoInterno` (user.name, sub_caja_origen.nombre) que
   // se usaba antes acá y nunca coincidía con la respuesta real.
   const [movimientos, setMovimientos] = useState<MovimientoInternoFila[]>([])
+  // Roles administrativos ven todo (arranca en null = "Todos"); cualquier otro
+  // rol arranca viendo solo sus propios movimientos (mismo criterio que Mis
+  // Ventas). Se sincroniza en un efecto porque `userId` llega asíncrono.
   const [usuarioFiltro, setUsuarioFiltro] = useState<string | null>(null)
   const [rangoFechas, setRangoFechas] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null]>([dayjs(), dayjs()])
   const gridRef = useRef<AgGridReact<MovimientoInternoFila>>(null)
+
+  useEffect(() => {
+    if (veTodo || !userId) return
+    setUsuarioFiltro(userId)
+  }, [veTodo, userId])
 
   const fetchMovimientos = async () => {
     setLoading(true)
@@ -68,11 +78,13 @@ export default function HistorialMovimientosInternos() {
   }, [])
 
   const opcionesUsuario = useMemo(() => {
-    const nombres = new Set<string>()
+    const vistos = new Map<string, string>()
     movimientos.forEach((m) => {
-      if (m.vendedor) nombres.add(m.vendedor)
+      if (m.user_id) vistos.set(m.user_id, m.vendedor || m.user_id)
     })
-    return Array.from(nombres).sort().map((nombre) => ({ label: nombre, value: nombre }))
+    return Array.from(vistos.entries())
+      .sort((a, b) => a[1].localeCompare(b[1]))
+      .map(([id, nombre]) => ({ label: nombre, value: id }))
   }, [movimientos])
 
   const movimientosFiltrados = useMemo(() => {
@@ -85,7 +97,7 @@ export default function HistorialMovimientosInternos() {
           (fecha.isBefore(end, 'day') || fecha.isSame(end, 'day'))
         if (!dentroRango) return false
       }
-      if (usuarioFiltro && m.vendedor !== usuarioFiltro) return false
+      if (usuarioFiltro && m.user_id !== usuarioFiltro) return false
       return true
     })
   }, [movimientos, usuarioFiltro, rangoFechas])

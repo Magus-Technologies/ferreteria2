@@ -71,6 +71,7 @@ export default function HistorialDepositosSeguridad() {
             if (filters.hasta) {
                 if (dayjs(d.fecha).isAfter(dayjs(filters.hasta), 'day')) return false;
             }
+            if (filters.vendedor_id && d.vendedor_id !== filters.vendedor_id) return false;
             return true;
         });
     }, [depositos, filters]);

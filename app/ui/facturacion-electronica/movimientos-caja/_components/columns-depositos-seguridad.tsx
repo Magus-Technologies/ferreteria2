@@ -5,6 +5,7 @@ import { formatFechaPeru } from '~/utils/fechas'
 export interface DepositoSeguridad {
   id: string
   vendedor: string
+  vendedor_id: string
   sub_caja_origen: string
   sub_caja_destino: string
   metodo_destino: string

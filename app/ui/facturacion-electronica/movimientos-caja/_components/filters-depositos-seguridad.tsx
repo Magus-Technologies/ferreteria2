@@ -3,11 +3,13 @@
 import { Form } from "antd";
 import { FaCalendar, FaSearch } from "react-icons/fa";
 import { FilterOutlined } from "@ant-design/icons";
+import { useEffect } from "react";
 import DatePickerBase from "~/app/_components/form/fechas/date-picker-base";
 import SelectVendedor from "~/app/ui/facturacion-electronica/_components/selects/select-vendedor";
 import FormBase from "~/components/form/form-base";
 import ButtonBase from "~/components/buttons/button-base";
 import dayjs, { Dayjs } from "dayjs";
+import { useVeTodosLosMovimientos } from "~/hooks/use-ve-todos-los-movimientos";
 
 interface FiltersDepositosSeguridadProps {
   onFilter: (filters: any) => void;
@@ -21,6 +23,20 @@ interface FilterValues {
 
 export default function FiltersDepositosSeguridad({ onFilter }: FiltersDepositosSeguridadProps) {
   const [form] = Form.useForm<FilterValues>();
+  const { veTodo, userId } = useVeTodosLosMovimientos();
+
+  // Mismo criterio que Mis Ventas: roles administrativos ven todo (arranca
+  // vacío); cualquier otro rol arranca viendo solo sus propios depósitos.
+  useEffect(() => {
+    if (veTodo || !userId) return;
+    form.setFieldValue("vendedor_id", userId);
+    onFilter({
+      desde: dayjs().format("YYYY-MM-DD"),
+      hasta: dayjs().format("YYYY-MM-DD"),
+      vendedor_id: userId,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [veTodo, userId]);
 
   const handleFinish = (values: FilterValues) => {
     const { desde, hasta, ...rest } = values;
