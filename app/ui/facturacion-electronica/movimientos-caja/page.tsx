@@ -38,11 +38,11 @@ export default function MovimientosCajaPage() {
       label: (
         <span className="flex items-center gap-2">
           <BankOutlined />
-          Depósitos de Seguridad
+          Movimiento entre Cajas
         </span>
       ),
       children: (
-        <ConfigurableElement componentId="movimientos-caja.depositos-seguridad" label="Tab Depósitos de Seguridad">
+        <ConfigurableElement componentId="movimientos-caja.depositos-seguridad" label="Tab Movimiento entre Cajas">
           <HistorialDepositosSeguridad />
         </ConfigurableElement>
       ),

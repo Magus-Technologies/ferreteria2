@@ -26,9 +26,16 @@ export default function SelectVendedor({
   mostrarDocumento = true,
   excludeIds = [],
   value,
+  propsForm,
   ...props
 }: SelectVendedorProps) {
-  const [shouldFetch, setShouldFetch] = useState(false)
+  // Cuando se usa dentro de un Form (propsForm), el valor real puede llegar
+  // programáticamente (form.setFieldValue) sin que el usuario abra el
+  // desplegable — Form.Item inyecta value/onChange en SelectBase (un nivel
+  // más abajo), así que el `value` desestructurado arriba nunca lo refleja
+  // y el fetch lazy nunca se disparaba: el Select mostraba el ID crudo en
+  // vez del nombre. Por eso acá se hace fetch eager cuando hay `propsForm`.
+  const [shouldFetch, setShouldFetch] = useState(!!propsForm)
 
   const { data, isLoading } = useQuery({
     queryKey: [QueryKeys.VENDEDORES_DISPONIBLES, soloVendedores, sinCaja],
@@ -58,6 +65,7 @@ export default function SelectVendedor({
       placeholder={placeholder}
       loading={isLoading}
       value={value}
+      propsForm={propsForm}
       options={data
         ?.filter((v: Usuario) => !excludeIds.includes(v.id))
         .map((vendedor: Usuario) => ({

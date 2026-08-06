@@ -26,7 +26,7 @@ export default function HistorialDepositosSeguridad() {
                 const response = await movimientoInternoApi.listarDepositosSeguridad();
                 
                 if (response.error) {
-                    message.error(response.error.message || "Error al cargar depósitos de seguridad");
+                    message.error(response.error.message || "Error al cargar movimientos entre cajas");
                     return [];
                 }
                 
@@ -47,7 +47,7 @@ export default function HistorialDepositosSeguridad() {
                 return [];
             } catch (error) {
                 console.error('Error al cargar depósitos:', error);
-                message.error("Error al cargar depósitos de seguridad");
+                message.error("Error al cargar movimientos entre cajas");
                 return [];
             }
         },
@@ -83,7 +83,7 @@ export default function HistorialDepositosSeguridad() {
             <div className='h-[500px] w-full'>
                 <TableWithTitle<DepositoSeguridad>
                     id='historial-depositos-seguridad'
-                    title='Depósitos de Seguridad'
+                    title='Movimiento entre Cajas'
                     tableRef={gridRef}
                     rowData={depositosFiltrados}
                     columnDefs={columns}

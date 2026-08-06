@@ -8,6 +8,8 @@ export interface DepositoSeguridad {
   vendedor_id: string
   sub_caja_origen: string
   sub_caja_destino: string
+  metodo_origen: string
+  banco_origen: string
   metodo_destino: string
   banco_destino: string
   titular?: string
@@ -50,12 +52,17 @@ export const useColumnsDepositosSeguridad = (): ColDef<DepositoSeguridad>[] => {
       field: 'sub_caja_origen',
       width: 200,
       minWidth: 180,
-      cellRenderer: (params: any) => (
-        <div>
-          <div className='font-medium text-slate-700'>{params.value}</div>
-          <div className='text-xs text-slate-500'>Efectivo</div>
-        </div>
-      ),
+      cellRenderer: (params: any) => {
+        const { sub_caja_origen, metodo_origen, banco_origen } = params.data
+        return (
+          <div>
+            <div className='font-medium text-slate-700'>{sub_caja_origen}</div>
+            <div className='text-xs text-slate-500'>
+              {metodo_origen} {banco_origen && banco_origen !== '-' ? `- ${banco_origen}` : ''}
+            </div>
+          </div>
+        )
+      },
     },
     {
       colId: 'destino',
@@ -105,7 +112,7 @@ export const useColumnsDepositosSeguridad = (): ColDef<DepositoSeguridad>[] => {
       width: 180,
       cellRenderer: () => (
         <div className='flex justify-center'>
-          <Tag color='blue'>DEPÓSITO SEGURIDAD</Tag>
+          <Tag color='blue'>MOVIMIENTO ENTRE CAJAS</Tag>
         </div>
       ),
     },
