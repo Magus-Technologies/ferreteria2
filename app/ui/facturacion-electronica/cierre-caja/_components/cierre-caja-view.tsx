@@ -444,20 +444,19 @@ export default function CierreCajaView() {
         loading={validandoSupervisor}
       />
 
-      {/* Tabs principales */}
+      {/* Tabs principales — antes todo (resumen + conteo + acciones) iba
+          amontonado en una sola pestaña gigante; ahora cada bloque grande
+          tiene su propia pestaña, sin cambiar ningún cálculo ni handler. */}
       <Tabs
-        defaultActiveKey='1'
+        defaultActiveKey='resumen-cierre'
         size='small'
         items={[
           {
-            key: '1',
-            label: 'Cuadre de efectivo y cierre de caja',
+            key: 'resumen-cierre',
+            label: 'Resumen de Cierre',
             children: (
-              <div className='space-y-3'>
-                <div className={`grid ${mostrarResumen ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1 max-w-xl mx-auto'} gap-4 w-full`}>
-                  {/* Columna Izquierda: Resumen de Cierre */}
-                  {mostrarResumen && (
-                    <Card
+              <div className='max-w-xl mx-auto w-full'>
+                <Card
                       title={<span className='text-base font-semibold'>Resumen de Cierre</span>}
                       className='shadow-sm w-full'
                       bodyStyle={{ padding: '16px' }}
@@ -737,9 +736,14 @@ export default function CierreCajaView() {
                         </div>
                       </div>
                     </Card>
-                  )}
-
-                  {/* Columna Derecha: Conteo de Efectivo */}
+              </div>
+            ),
+          },
+          {
+            key: 'cuadre',
+            label: 'Conteo y Cierre',
+            children: (
+              <div className='max-w-xl mx-auto w-full'>
                   <Card
                     title={
                       <div className='flex justify-between items-center w-full'>
@@ -918,12 +922,11 @@ export default function CierreCajaView() {
                       </div>
                     </div>
                   </Card>
-                </div>
               </div>
             ),
           },
           ...(mostrarResumen ? [{
-            key: '2',
+            key: 'resumen-detalle',
             label: 'Resumen detalle',
             children: <ResumenDetalleCierre resumen={resumen} montoEsperado={montoEsperado} aperturaId={cajaActiva.id} />,
           }] : []),

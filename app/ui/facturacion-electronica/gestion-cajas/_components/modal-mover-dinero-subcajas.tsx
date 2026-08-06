@@ -1,7 +1,8 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Form, App, Select, Input } from 'antd'
+import { Form, App, Select, Input, Tabs } from 'antd'
+import { FaArrowUp, FaArrowDown, FaMoneyBillWave } from 'react-icons/fa'
 import { useQuery } from '@tanstack/react-query'
 import TitleForm from '~/components/form/title-form'
 import ModalForm from '~/components/modals/modal-form'
@@ -166,13 +167,20 @@ export default function ModalMoverDineroSubCajas({
         layout: 'vertical',
       }}
     >
-      <div className="space-y-3">
-        {/* Sección: Origen */}
-        <div className="space-y-2.5">
-          <div className="text-xs font-semibold text-slate-700 border-b pb-1">
-            📤 Origen (De dónde sale el dinero)
-          </div>
-
+      <Tabs
+        defaultActiveKey="origen"
+        size="small"
+        items={[
+          {
+            key: 'origen',
+            label: (
+              <span className="flex items-center gap-2">
+                <FaArrowUp className="text-red-500" />
+                Origen
+              </span>
+            ),
+            children: (
+      <div className="space-y-2.5">
           <LabelBase label="Sub-Caja Origen" orientation="column">
             <Form.Item
               name="sub_caja_origen_id"
@@ -241,14 +249,19 @@ export default function ModalMoverDineroSubCajas({
               />
             </Form.Item>
           </LabelBase>
-        </div>
-
-        {/* Sección: Destino */}
-        <div className="space-y-2.5">
-          <div className="text-xs font-semibold text-slate-700 border-b pb-1">
-            Destino (A dónde va el dinero)
-          </div>
-
+      </div>
+            ),
+          },
+          {
+            key: 'destino',
+            label: (
+              <span className="flex items-center gap-2">
+                <FaArrowDown className="text-emerald-500" />
+                Destino
+              </span>
+            ),
+            children: (
+      <div className="space-y-2.5">
           <LabelBase label="Sub-Caja Destino" orientation="column">
             <Form.Item
               name="sub_caja_destino_id"
@@ -323,14 +336,19 @@ export default function ModalMoverDineroSubCajas({
               Puede ser efectivo o cualquier pago digital
             </p>
           </LabelBase>
-        </div>
-
-        {/* Sección: Detalles de la transferencia */}
-        <div className="space-y-2.5">
-          <div className="text-xs font-semibold text-slate-700 border-b pb-1">
-            💰 Detalles de la Transferencia
-          </div>
-
+      </div>
+            ),
+          },
+          {
+            key: 'detalles',
+            label: (
+              <span className="flex items-center gap-2">
+                <FaMoneyBillWave className="text-amber-500" />
+                Detalles
+              </span>
+            ),
+            children: (
+      <div className="space-y-2.5">
           <LabelBase label="Monto a Transferir" orientation="column">
             <InputNumberBase
               placeholder="0.00"
@@ -387,8 +405,11 @@ export default function ModalMoverDineroSubCajas({
               />
             </Form.Item>
           </LabelBase>
-        </div>
       </div>
+            ),
+          },
+        ]}
+      />
     </ModalForm>
   )
 }
