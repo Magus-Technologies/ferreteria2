@@ -106,6 +106,7 @@ const tipoVentaColorsFacturacion: Record<string, string> = {
 
 const estadoColorsFacturacion: Record<string, string> = {
   'VENTA': 'green',
+  'VENTA RESERVADO': 'gold',
   'EDITADA': 'orange',
   'ANULADA': 'volcano',
   'AJUSTE POR EDICIÓN': 'purple',
@@ -117,7 +118,10 @@ const estadoColorsFacturacion: Record<string, string> = {
   'LIBERADA': 'cyan',
 }
 
-const parseMovimientoFacturacion = (movimiento: string) => {
+// `cantidadReservada` distingue una venta común de una que confirma una
+// cotización con stock reservado (estado "VENTA RESERVADO") — igual que en
+// facturacion-electronica/mi-almacen/_components/kardex-view.tsx.
+const parseMovimientoFacturacion = (movimiento: string, cantidadReservada = 0) => {
   if (movimiento === 'ENTREGA ANULADA') return { tipo: 'ENTREGA', estado: 'ANULADO' }
   if (movimiento === 'ENTREGA') return { tipo: 'ENTREGA', estado: 'RECEPCIONADO' }
   if (movimiento === 'RESERVA COTIZACIÓN') return { tipo: 'COTIZACIÓN', estado: 'RESERVADO' }
@@ -135,7 +139,7 @@ const parseMovimientoFacturacion = (movimiento: string) => {
   }
 
   const match = movimiento.match(/^(VENTA CONTADO|VENTA CRÉDITO)\s*(?:\((EDITADA|ANULADA)\))?$/)
-  if (match) return { tipo: match[1], estado: match[2] || 'VENTA' }
+  if (match) return { tipo: match[1], estado: match[2] || (cantidadReservada > 0 ? 'VENTA RESERVADO' : 'VENTA') }
 
   return { tipo: movimiento, estado: '' }
 }
@@ -155,7 +159,7 @@ function getDetalleLabel(m: MovimientoCombinado): { label: string; color: string
     const mov = m.movimiento || ''
     return { label: movimientoLabelsInventario[mov] || mov, color: movimientoColorsInventario[mov] || 'default' }
   }
-  const { estado } = parseMovimientoFacturacion(m.movimiento || '')
+  const { estado } = parseMovimientoFacturacion(m.movimiento || '', Number(m.cantidad_reservada ?? 0))
   return { label: estado, color: estadoColorsFacturacion[estado] || 'default' }
 }
 
@@ -233,7 +237,7 @@ export default function KardexCombinadoView() {
     const tipos = new Set<string>()
     const estados = new Set<string>()
     for (const m of dataFacturacion?.data || []) {
-      const { tipo, estado } = parseMovimientoFacturacion(m.movimiento || '')
+      const { tipo, estado } = parseMovimientoFacturacion(m.movimiento || '', Number(m.cantidad_reservada ?? 0))
       if (tipo) tipos.add(tipo)
       if (estado) estados.add(estado)
     }
@@ -250,7 +254,7 @@ export default function KardexCombinadoView() {
     const rowsFacturacion = (dataFacturacion?.data || [])
       .filter((m) => {
         if (tiposFacturacion.length === 0 && estadosFacturacion.length === 0) return true
-        const { tipo, estado } = parseMovimientoFacturacion(m.movimiento || '')
+        const { tipo, estado } = parseMovimientoFacturacion(m.movimiento || '', Number(m.cantidad_reservada ?? 0))
         const okTipo = tiposFacturacion.length === 0 || tiposFacturacion.includes(tipo)
         const okEstado = estadosFacturacion.length === 0 || estadosFacturacion.includes(estado)
         return okTipo && okEstado

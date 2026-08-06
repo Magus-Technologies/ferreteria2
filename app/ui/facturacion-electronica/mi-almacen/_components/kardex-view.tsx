@@ -33,6 +33,7 @@ const tipoVentaColors: Record<string, string> = {
 
 const estadoColors: Record<string, string> = {
   'VENTA': 'green',
+  'VENTA RESERVADO': 'gold',
   'EDITADA': 'orange',
   'ANULADA': 'volcano',
   'AJUSTE POR EDICIÓN': 'purple',
@@ -44,8 +45,11 @@ const estadoColors: Record<string, string> = {
   'LIBERADA': 'cyan',
 }
 
-// Función para parsear el movimiento y extraer tipo y estado
-const parseMovimiento = (movimiento: string) => {
+// Función para parsear el movimiento y extraer tipo y estado. `cantidadReservada`
+// distingue una venta común de una que confirma una cotización con stock
+// reservado (estado "VENTA RESERVADO") — el string `movimiento` por sí solo no
+// lo indica, solo el par ENTREGA/VENTA de esa venta tiene `cantidad_reservada > 0`.
+const parseMovimiento = (movimiento: string, cantidadReservada = 0) => {
   // Entregas
   if (movimiento === 'ENTREGA ANULADA') {
     return { tipo: 'ENTREGA', estado: 'ANULADO' }
@@ -94,7 +98,9 @@ const parseMovimiento = (movimiento: string) => {
   if (match) {
     return {
       tipo: match[1], // "VENTA CONTADO" o "VENTA CRÉDITO"
-      estado: match[2] || 'VENTA', // "EDITADA", "ANULADA" o "VENTA" si está vacío
+      // "EDITADA"/"ANULADA" ganan siempre. Sin sufijo: "VENTA RESERVADO" si esta
+      // línea confirma una cotización con reserva, si no, "VENTA" simple.
+      estado: match[2] || (cantidadReservada > 0 ? 'VENTA RESERVADO' : 'VENTA'),
     }
   }
 
@@ -142,7 +148,7 @@ export default function KardexView() {
     const tipos = new Set<string>()
     const estados = new Set<string>()
     for (const m of data?.data || []) {
-      const { tipo, estado } = parseMovimiento(m.movimiento || '')
+      const { tipo, estado } = parseMovimiento(m.movimiento || '', Number(m.cantidad_reservada ?? 0))
       if (tipo) tipos.add(tipo)
       if (estado) estados.add(estado)
     }
@@ -156,7 +162,7 @@ export default function KardexView() {
     const rows = data?.data || []
     if (tiposFiltro.length === 0 && estadosFiltro.length === 0) return rows
     return rows.filter((m) => {
-      const { tipo, estado } = parseMovimiento(m.movimiento || '')
+      const { tipo, estado } = parseMovimiento(m.movimiento || '', Number(m.cantidad_reservada ?? 0))
       const okTipo = tiposFiltro.length === 0 || tiposFiltro.includes(tipo)
       const okEstado = estadosFiltro.length === 0 || estadosFiltro.includes(estado)
       return okTipo && okEstado
@@ -222,11 +228,11 @@ export default function KardexView() {
       width: 170,
       minWidth: 150,
       valueGetter: (params: any) => {
-        const { estado } = parseMovimiento(params.data?.movimiento || '')
+        const { estado } = parseMovimiento(params.data?.movimiento || '', Number(params.data?.cantidad_reservada ?? 0))
         return estado
       },
       cellRenderer: (params: any) => {
-        const { estado } = parseMovimiento(params.data?.movimiento || '')
+        const { estado } = parseMovimiento(params.data?.movimiento || '', Number(params.data?.cantidad_reservada ?? 0))
         if (!estado) return null
         return (
           <div className='flex items-center h-full'>
