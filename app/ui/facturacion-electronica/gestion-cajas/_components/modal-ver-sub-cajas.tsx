@@ -5,7 +5,7 @@ import type { TabsProps } from 'antd'
 import { useState, useRef, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { FaPlus, FaExchangeAlt, FaWarehouse, FaBoxes } from 'react-icons/fa'
-import { ExclamationCircleOutlined } from '@ant-design/icons'
+import { ExclamationCircleOutlined, UserOutlined, BankOutlined } from '@ant-design/icons'
 import type { CajaPrincipal, SubCaja } from '~/lib/api/caja-principal'
 import { cajaPrincipalApi } from '~/lib/api/caja-principal'
 import { fetchCajaActivaOrNull } from '~/lib/api/caja'
@@ -20,6 +20,8 @@ import { AgGridReact } from 'ag-grid-react'
 import { useColumnsSubCajas } from '~/app/ui/facturacion-electronica/gestion-cajas/_components/columns-sub-cajas'
 import HistorialTrasladosBoveda from '~/app/ui/facturacion-electronica/mis-aperturas-cierres/_components/modals/historial-traslados-boveda'
 import HistorialTrasladoEfectivoCaja from '~/app/ui/facturacion-electronica/gestion-cajas/_components/historial-traslado-efectivo-caja'
+import HistorialPrestamosVendedores from '~/app/ui/facturacion-electronica/movimientos-caja/_components/historial-prestamos-vendedores'
+import HistorialDepositosSeguridad from '~/app/ui/facturacion-electronica/movimientos-caja/_components/historial-depositos-seguridad'
 
 interface ModalVerSubCajasProps {
     open: boolean
@@ -262,6 +264,34 @@ export default function ModalVerSubCajas({
                 children: (
                     <div className='pt-2 animate-in slide-in-from-right-4 duration-500'>
                         <HistorialTrasladoEfectivoCaja cajaPrincipalId={cajaPrincipal.id} />
+                    </div>
+                ),
+            },
+            {
+                key: 'prestamos-vendedores',
+                label: (
+                    <span className='flex items-center gap-2 px-2'>
+                        <UserOutlined className='text-sm' />
+                        Préstamos entre Vendedores
+                    </span>
+                ),
+                children: (
+                    <div className='pt-2 animate-in slide-in-from-right-4 duration-500'>
+                        <HistorialPrestamosVendedores />
+                    </div>
+                ),
+            },
+            {
+                key: 'depositos-seguridad',
+                label: (
+                    <span className='flex items-center gap-2 px-2'>
+                        <BankOutlined className='text-sm' />
+                        Depósitos de Seguridad
+                    </span>
+                ),
+                children: (
+                    <div className='pt-2 animate-in slide-in-from-right-4 duration-500'>
+                        <HistorialDepositosSeguridad />
                     </div>
                 ),
             },
