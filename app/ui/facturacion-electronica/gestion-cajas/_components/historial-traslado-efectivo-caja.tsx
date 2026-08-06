@@ -12,7 +12,6 @@ import { AgGridReact } from 'ag-grid-react'
 import type { ColDef } from 'ag-grid-community'
 import { formatFechaPeru } from '~/utils/fechas'
 import { subscribeModelChanged } from '~/lib/realtime-bus'
-import { useAuth } from '~/lib/auth-context'
 
 interface HistorialTrasladoEfectivoCajaProps {
   cajaPrincipalId: number
@@ -20,7 +19,6 @@ interface HistorialTrasladoEfectivoCajaProps {
 
 export default function HistorialTrasladoEfectivoCaja({ cajaPrincipalId }: HistorialTrasladoEfectivoCajaProps) {
   const { message } = App.useApp()
-  const { user } = useAuth()
   const [loading, setLoading] = useState(true)
   const [movimientos, setMovimientos] = useState<MovimientoInternoFila[]>([])
   const [rangoFechas, setRangoFechas] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null]>([dayjs(), dayjs()])
@@ -172,7 +170,7 @@ export default function HistorialTrasladoEfectivoCaja({ cajaPrincipalId }: Histo
       field: 'id',
       width: 110,
       cellRenderer: (params: any) => {
-        if (params.data.estado === 'anulado' || params.data.user_id !== user?.id) return null
+        if (params.data.estado === 'anulado') return null
         return (
           <Tooltip title="Anular movimiento">
             <Popconfirm

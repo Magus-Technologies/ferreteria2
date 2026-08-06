@@ -12,11 +12,9 @@ import { AgGridReact } from 'ag-grid-react'
 import type { ColDef } from 'ag-grid-community'
 import { formatFechaPeru } from '~/utils/fechas'
 import { subscribeModelChanged } from '~/lib/realtime-bus'
-import { useAuth } from '~/lib/auth-context'
 
 export default function HistorialMovimientosInternos() {
   const { message } = App.useApp()
-  const { user } = useAuth()
   const [loading, setLoading] = useState(true)
   // El backend (MovimientoInternoService::listarMovimientos) devuelve una forma
   // PLANA (vendedor, sub_caja_origen/destino como texto) — MovimientoInternoFila,
@@ -157,7 +155,7 @@ export default function HistorialMovimientosInternos() {
       field: 'id',
       width: 110,
       cellRenderer: (params: any) => {
-        if (params.data.estado === 'anulado' || params.data.user_id !== user?.id) return null
+        if (params.data.estado === 'anulado') return null
         return (
           <Tooltip title="Anular movimiento">
             <Popconfirm
