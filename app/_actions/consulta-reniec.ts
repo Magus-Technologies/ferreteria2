@@ -51,7 +51,7 @@ async function fetchApiPeru<T>(tipo: "dni" | "ruc", search: string): Promise<T> 
 
   return raw.data;
 }
-
+//DSAWD
 async function consultaDni({ search }: { search: string }): Promise<{ data: ConsultaDni }> {
   if (!/^\d{8}$/.test(search)) throw new Error("El DNI debe tener 8 dígitos");
 
