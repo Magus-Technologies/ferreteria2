@@ -3,6 +3,7 @@
 import { App } from "antd";
 import { PlusCircle } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
+import dayjs from "dayjs";
 import { prestamoVendedorApi } from "~/lib/api/prestamo-vendedor";
 import { cierreCajaApi } from "~/lib/api/cierre-caja";
 import { subscribeModelChanged } from "~/lib/realtime-bus";
@@ -22,7 +23,10 @@ export default function HistorialPrestamosVendedores() {
   const [openAprobar, setOpenAprobar] = useState(false);
   const [openSolicitar, setOpenSolicitar] = useState(false);
   const [aperturaId, setAperturaId] = useState<string>('');
-  const [filters, setFilters] = useState<any>({});
+  const [filters, setFilters] = useState<any>({
+    desde: dayjs().format('YYYY-MM-DD'),
+    hasta: dayjs().format('YYYY-MM-DD'),
+  });
   const gridRef = useRef<AgGridReact<SolicitudEfectivo>>(null);
 
   const cargarSolicitudes = async (currentFilters = filters) => {

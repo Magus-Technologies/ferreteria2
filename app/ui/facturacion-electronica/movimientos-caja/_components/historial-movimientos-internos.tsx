@@ -2,7 +2,10 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { Spin, Select, Button, Popconfirm, Tag, Tooltip, App } from 'antd'
+import dayjs from 'dayjs'
 import { DeleteOutlined } from '@ant-design/icons'
+import { FaCalendar } from 'react-icons/fa'
+import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import { transaccionesCajaApi, type MovimientoInternoFila } from '~/lib/api/transacciones-caja'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { AgGridReact } from 'ag-grid-react'
@@ -21,6 +24,7 @@ export default function HistorialMovimientosInternos() {
   // se usaba antes acá y nunca coincidía con la respuesta real.
   const [movimientos, setMovimientos] = useState<MovimientoInternoFila[]>([])
   const [usuarioFiltro, setUsuarioFiltro] = useState<string | null>(null)
+  const [rangoFechas, setRangoFechas] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null]>([dayjs(), dayjs()])
   const gridRef = useRef<AgGridReact<MovimientoInternoFila>>(null)
 
   const fetchMovimientos = async () => {
@@ -74,9 +78,19 @@ export default function HistorialMovimientosInternos() {
   }, [movimientos])
 
   const movimientosFiltrados = useMemo(() => {
-    if (!usuarioFiltro) return movimientos
-    return movimientos.filter((m) => m.vendedor === usuarioFiltro)
-  }, [movimientos, usuarioFiltro])
+    return movimientos.filter((m) => {
+      if (rangoFechas && rangoFechas[0] && rangoFechas[1]) {
+        const fecha = dayjs(m.fecha)
+        const [start, end] = rangoFechas
+        const dentroRango =
+          (fecha.isAfter(start, 'day') || fecha.isSame(start, 'day')) &&
+          (fecha.isBefore(end, 'day') || fecha.isSame(end, 'day'))
+        if (!dentroRango) return false
+      }
+      if (usuarioFiltro && m.vendedor !== usuarioFiltro) return false
+      return true
+    })
+  }, [movimientos, usuarioFiltro, rangoFechas])
 
   const handleAnular = async (id: string) => {
     try {
@@ -174,18 +188,45 @@ export default function HistorialMovimientosInternos() {
 
   return (
     <div className="w-full flex flex-col gap-3">
-      <div className="flex items-end gap-3">
-        <div className="flex flex-col gap-1">
-          <span className="text-xs text-slate-500 font-medium">Usuario:</span>
-          <Select
-            className="w-56"
-            placeholder="Todos los usuarios"
-            value={usuarioFiltro}
-            onChange={(val) => setUsuarioFiltro(val ?? null)}
-            options={opcionesUsuario}
-            showSearch
-            allowClear
-          />
+      <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">Usuario:</label>
+            <Select
+              className="!w-[180px]"
+              variant="filled"
+              placeholder="Todos"
+              value={usuarioFiltro}
+              onChange={(val) => setUsuarioFiltro(val ?? null)}
+              options={opcionesUsuario}
+              showSearch
+              allowClear
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">Desde:</label>
+            <DatePickerBase
+              className="!w-[140px]"
+              variant="filled"
+              placeholder="Fecha"
+              prefix={<FaCalendar size={15} className="text-amber-600 mx-1" />}
+              value={rangoFechas[0]}
+              onChange={(val) => setRangoFechas([val, rangoFechas[1]])}
+              allowClear
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">Hasta:</label>
+            <DatePickerBase
+              variant="filled"
+              className="!w-[140px]"
+              placeholder="Fecha"
+              prefix={<FaCalendar size={15} className="text-amber-600 mx-1" />}
+              value={rangoFechas[1]}
+              onChange={(val) => setRangoFechas([rangoFechas[0], val])}
+              allowClear
+            />
+          </div>
         </div>
       </div>
 

@@ -7,7 +7,7 @@ import DatePickerBase from "~/app/_components/form/fechas/date-picker-base";
 import SelectVendedor from "~/app/ui/facturacion-electronica/_components/selects/select-vendedor";
 import FormBase from "~/components/form/form-base";
 import ButtonBase from "~/components/buttons/button-base";
-import { Dayjs } from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 
 interface FiltersDepositosSeguridadProps {
   onFilter: (filters: any) => void;
@@ -51,6 +51,7 @@ export default function FiltersDepositosSeguridad({ onFilter }: FiltersDepositos
       form={form}
       name="filtros-depositos-seguridad"
       onFinish={handleFinish}
+      initialValues={{ desde: dayjs(), hasta: dayjs() }}
       className="w-full mb-4"
     >
       <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">

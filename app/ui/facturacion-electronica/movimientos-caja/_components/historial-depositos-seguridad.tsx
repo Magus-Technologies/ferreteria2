@@ -1,8 +1,9 @@
 "use client";
 
 import { App } from "antd";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import dayjs from "dayjs";
 import { movimientoInternoApi } from "~/lib/api/movimiento-interno";
 import TableWithTitle from "~/components/tables/table-with-title";
 import { AgGridReact } from "ag-grid-react";
@@ -13,7 +14,10 @@ import FiltersDepositosSeguridad from "./filters-depositos-seguridad";
 export default function HistorialDepositosSeguridad() {
     const { message } = App.useApp();
     const gridRef = useRef<AgGridReact<DepositoSeguridad>>(null);
-    const [filters, setFilters] = useState<any>({});
+    const [filters, setFilters] = useState<any>({
+        desde: dayjs().format('YYYY-MM-DD'),
+        hasta: dayjs().format('YYYY-MM-DD'),
+    });
 
     const { data: depositos = [], isLoading: loading } = useQuery({
         queryKey: [QueryKeys.MOVIMIENTOS_INTERNOS, 'depositos-seguridad', filters],
@@ -57,6 +61,20 @@ export default function HistorialDepositosSeguridad() {
         setFilters(newFilters);
     };
 
+    // El endpoint no acepta desde/hasta — se filtra en cliente, igual que el resto
+    // de tabs de esta página (Préstamos entre Vendedores, Traslados, etc.).
+    const depositosFiltrados = useMemo(() => {
+        return depositos.filter((d: DepositoSeguridad) => {
+            if (filters.desde) {
+                if (dayjs(d.fecha).isBefore(dayjs(filters.desde), 'day')) return false;
+            }
+            if (filters.hasta) {
+                if (dayjs(d.fecha).isAfter(dayjs(filters.hasta), 'day')) return false;
+            }
+            return true;
+        });
+    }, [depositos, filters]);
+
     return (
         <div className='w-full'>
             <FiltersDepositosSeguridad onFilter={handleFilter} />
@@ -66,7 +84,7 @@ export default function HistorialDepositosSeguridad() {
                     id='historial-depositos-seguridad'
                     title='Depósitos de Seguridad'
                     tableRef={gridRef}
-                    rowData={depositos}
+                    rowData={depositosFiltrados}
                     columnDefs={columns}
                     loading={loading}
                     rowSelection={false}

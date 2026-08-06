@@ -1,7 +1,7 @@
 'use client'
 
 import { Tabs } from 'antd'
-import { UserOutlined, BankOutlined } from '@ant-design/icons'
+import { UserOutlined, BankOutlined, SwapOutlined, DollarOutlined } from '@ant-design/icons'
 import ContenedorGeneral from '~/app/_components/containers/contenedor-general'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
 import NoAutorizado from '~/components/others/no-autorizado'
@@ -9,6 +9,8 @@ import { usePermission } from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 import HistorialPrestamosVendedores from './_components/historial-prestamos-vendedores'
 import HistorialDepositosSeguridad from './_components/historial-depositos-seguridad'
+import HistorialTrasladosBovedaTab from './_components/historial-traslados-boveda-tab'
+import HistorialMovimientosInternos from './_components/historial-movimientos-internos'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 
 export default function MovimientosCajaPage() {
@@ -42,6 +44,34 @@ export default function MovimientosCajaPage() {
       children: (
         <ConfigurableElement componentId="movimientos-caja.depositos-seguridad" label="Tab Depósitos de Seguridad">
           <HistorialDepositosSeguridad />
+        </ConfigurableElement>
+      ),
+    },
+    {
+      key: 'traslados-boveda',
+      label: (
+        <span className="flex items-center gap-2">
+          <SwapOutlined />
+          Traslado a Bóveda
+        </span>
+      ),
+      children: (
+        <ConfigurableElement componentId="movimientos-caja.traslados-boveda" label="Tab Traslado a Bóveda">
+          <HistorialTrasladosBovedaTab />
+        </ConfigurableElement>
+      ),
+    },
+    {
+      key: 'traslado-efectivo',
+      label: (
+        <span className="flex items-center gap-2">
+          <DollarOutlined />
+          Traslado de Efectivo
+        </span>
+      ),
+      children: (
+        <ConfigurableElement componentId="movimientos-caja.traslado-efectivo" label="Tab Traslado de Efectivo">
+          <HistorialMovimientosInternos />
         </ConfigurableElement>
       ),
     },

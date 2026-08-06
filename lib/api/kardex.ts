@@ -12,6 +12,12 @@ export interface MovimientoKardex {
   unidad?: string
   cantidad?: number
   cantidad_fraccion?: number
+  // Cuánto de esta línea ya estaba reservado por una cotización previa. `cantidad`
+  // puede ser solo el excedente sobre esa reserva (venta) — `cantidad_total` es
+  // siempre el total real (excedente + reservado, o el total ya completo si no
+  // hay reserva de por medio).
+  cantidad_reservada?: number
+  cantidad_total?: number
   precio?: number
   costo?: number
   entrada: number

@@ -361,11 +361,12 @@ export default function KardexCombinadoView() {
       minWidth: 90,
     },
     {
-      headerName: 'Cantidad',
-      field: 'cantidad',
+      headerName: 'Cantidades',
+      field: 'cantidad_total' as keyof MovimientoCombinado,
       width: 90,
       minWidth: 80,
       type: 'numericColumn',
+      valueGetter: (params: any) => params.data?.cantidad_total ?? params.data?.cantidad,
       valueFormatter: (params) => params.value ? Number(params.value).toFixed(2) : '-',
     },
     {
@@ -466,16 +467,19 @@ export default function KardexCombinadoView() {
     {
       headerName: 'Cant. Salida',
       field: 'salida' as keyof MovimientoCombinado,
-      width: 110,
-      minWidth: 90,
+      width: 130,
+      minWidth: 110,
       type: 'numericColumn' as const,
       cellRenderer: (params: any) => {
         if (!Number(params.value)) return <span>-</span>
-        const cantidad = Number(params.data?.cantidad ?? 0)
+        const total = Number(params.data?.cantidad_total ?? params.data?.cantidad ?? 0)
+        const reservada = Number(params.data?.cantidad_reservada ?? 0)
         const unidad = params.data?.unidad || ''
         return (
           <div className='flex items-center h-full'>
-            <span className='text-red-600 font-bold text-xs'>{cantidad} <span className='font-normal text-gray-500'>{unidad}</span></span>
+            <span className='text-red-600 font-bold text-xs'>
+              {total} {reservada > 0 && <span className='font-normal text-red-400'>({reservada})</span>} <span className='font-normal text-gray-500'>{unidad}</span>
+            </span>
           </div>
         )
       }
@@ -670,8 +674,8 @@ export default function KardexCombinadoView() {
             {
               label: 'Default',
               columns: productoId
-                ? ['Fecha', 'Origen', 'Proveedor', 'Cliente', 'Tipo', 'Detalle', 'Documento', 'Unidad', 'Cantidad', 'P. Venta', 'Stock Anterior', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual']
-                : ['Fecha', 'Origen', 'Código', 'Producto', 'Proveedor', 'Cliente', 'Tipo', 'Detalle', 'Documento', 'Unidad', 'Cantidad', 'P. Venta', 'Stock Anterior', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual'],
+                ? ['Fecha', 'Origen', 'Proveedor', 'Cliente', 'Tipo', 'Detalle', 'Documento', 'Unidad', 'Cantidades', 'P. Venta', 'Stock Anterior', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual']
+                : ['Fecha', 'Origen', 'Código', 'Producto', 'Proveedor', 'Cliente', 'Tipo', 'Detalle', 'Documento', 'Unidad', 'Cantidades', 'P. Venta', 'Stock Anterior', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual'],
             },
           ]}
         />
