@@ -30,5 +30,5 @@ export function useVeTodosLosMovimientos() {
     )
   }, [user?.role_name, user?.rol_sistema])
 
-  return { veTodo, userId: user?.id }
+  return { veTodo, userId: user?.id, userName: user?.name }
 }

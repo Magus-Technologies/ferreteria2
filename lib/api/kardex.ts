@@ -18,6 +18,10 @@ export interface MovimientoKardex {
   // hay reserva de por medio).
   cantidad_reservada?: number
   cantidad_total?: number
+  // Cuánto se liberó de una reserva de cotización que no se cubrió por
+  // completo con esta venta (o el que corresponde a la fila "RESERVA
+  // LIBERADA" en sí). Se copia también a la ENTREGA pareja de la venta.
+  cantidad_liberada?: number
   precio?: number
   costo?: number
   entrada: number

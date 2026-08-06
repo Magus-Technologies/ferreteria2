@@ -18,7 +18,7 @@ import { useVeTodosLosMovimientos } from '~/hooks/use-ve-todos-los-movimientos'
 
 export default function HistorialTrasladosBovedaTab() {
   const { modal, message } = App.useApp()
-  const { veTodo, userId } = useVeTodosLosMovimientos()
+  const { veTodo, userId, userName } = useVeTodosLosMovimientos()
   const [traslados, setTraslados] = useState<TrasladoBoveda[]>([])
   const [loading, setLoading] = useState(false)
   const [rangoFechas, setRangoFechas] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null]>([dayjs(), dayjs()])
@@ -109,10 +109,14 @@ export default function HistorialTrasladosBovedaTab() {
     traslados.forEach((t) => {
       if (t.vendedor_id) vistos.set(t.vendedor_id, t.vendedor?.name ?? t.vendedor_id)
     })
+    // El usuario logueado puede no tener aún ningún traslado en los datos
+    // cargados (ej. filtrado a "hoy" y todavía no hizo ninguno) — sin esto el
+    // Select no tiene su nombre para mostrar y cae al ID crudo como label.
+    if (userId && !vistos.has(userId)) vistos.set(userId, userName || userId)
     return Array.from(vistos.entries())
       .sort((a, b) => a[1].localeCompare(b[1]))
       .map(([id, nombre]) => ({ label: nombre, value: id }))
-  }, [traslados])
+  }, [traslados, userId, userName])
 
   const filteredTraslados = useMemo(() => {
     return traslados.filter((t) => {

@@ -369,13 +369,27 @@ export default function KardexView() {
       minWidth: 90,
       type: 'numericColumn' as const,
       valueFormatter: (params: any) => {
+        // Si esta venta/entrega liberó un sobrante de reserva (compró menos de
+        // lo reservado), mostrar esa cantidad acá aunque el campo crudo
+        // `entrada` de ESTA fila sea 0 (el ingreso real está en la fila
+        // separada "RESERVA LIBERADA" — esto solo la refleja también aquí).
+        const liberada = Number(params.data?.cantidad_liberada ?? 0)
+        if (liberada > 0) return liberada.toFixed(2)
         if (!Number(params.value)) return '-'
         return Number(params.data?.cantidad ?? 0).toFixed(2)
       },
       cellRenderer: (params: any) => {
+        const liberada = Number(params.data?.cantidad_liberada ?? 0)
+        const unidad = params.data?.unidad || ''
+        if (liberada > 0) {
+          return (
+            <div className='flex items-center h-full'>
+              <span className='text-emerald-600 font-bold text-xs'>{liberada} <span className='font-normal text-gray-500'>{unidad}</span></span>
+            </div>
+          )
+        }
         if (!Number(params.value)) return <span>-</span>
         const cantidad = Number(params.data?.cantidad ?? 0)
-        const unidad = params.data?.unidad || ''
         return (
           <div className='flex items-center h-full'>
             <span className='text-emerald-600 font-bold text-xs'>{cantidad} <span className='font-normal text-gray-500'>{unidad}</span></span>
@@ -391,19 +405,26 @@ export default function KardexView() {
       type: 'numericColumn' as const,
       valueFormatter: (params: any) => {
         // La ENTREGA nunca mueve el acumulador (salida=0 siempre, ver
-        // backend), pero sigue siendo una salida real de mercadería — por
-        // eso acá se muestra igual que su venta pareja, aunque el campo
-        // crudo `salida` esté en 0.
+        // backend). Lo mismo pasa en una VENTA cuando el excedente es 0
+        // (compró igual o menos de lo reservado, ver VentaController::store())
+        // — en ambos casos sigue siendo una salida real de mercadería, así
+        // que se muestra igual aunque el campo crudo `salida` esté en 0.
         const esEntrega = params.data?.tipo === 'entrega'
-        if (!esEntrega && !Number(params.value)) return '-'
+        const tieneReserva = Number(params.data?.cantidad_reservada ?? 0) > 0
+        if (!esEntrega && !tieneReserva && !Number(params.value)) return '-'
         const total = Number(params.data?.cantidad_total ?? params.data?.cantidad ?? 0)
         if (!total) return '-'
+        // Los paréntesis solo tienen sentido si hay una MEZCLA de reservado +
+        // excedente (reservada < total). Si todo vino de la reserva
+        // (reservada === total, sin excedente), mostrar el número plano — el
+        // paréntesis repetiría el mismo número y confundiría.
         const reservada = Number(params.data?.cantidad_reservada ?? 0)
-        return reservada > 0 ? `${total.toFixed(2)} (${reservada.toFixed(2)})` : total.toFixed(2)
+        return reservada > 0 && reservada < total ? `${total.toFixed(2)} (${reservada.toFixed(2)})` : total.toFixed(2)
       },
       cellRenderer: (params: any) => {
         const esEntrega = params.data?.tipo === 'entrega'
-        if (!esEntrega && !Number(params.value)) return <span>-</span>
+        const tieneReserva = Number(params.data?.cantidad_reservada ?? 0) > 0
+        if (!esEntrega && !tieneReserva && !Number(params.value)) return <span>-</span>
         const total = Number(params.data?.cantidad_total ?? params.data?.cantidad ?? 0)
         if (!total) return <span>-</span>
         const reservada = Number(params.data?.cantidad_reservada ?? 0)
@@ -411,7 +432,7 @@ export default function KardexView() {
         return (
           <div className='flex items-center h-full'>
             <span className='text-red-600 font-bold text-xs'>
-              {total} {reservada > 0 && <span className='font-normal text-red-400'>({reservada})</span>} <span className='font-normal text-gray-500'>{unidad}</span>
+              {total} {reservada > 0 && reservada < total && <span className='font-normal text-red-400'>({reservada})</span>} <span className='font-normal text-gray-500'>{unidad}</span>
             </span>
           </div>
         )

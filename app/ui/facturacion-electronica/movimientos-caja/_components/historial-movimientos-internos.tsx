@@ -16,7 +16,7 @@ import { useVeTodosLosMovimientos } from '~/hooks/use-ve-todos-los-movimientos'
 
 export default function HistorialMovimientosInternos() {
   const { message } = App.useApp()
-  const { veTodo, userId } = useVeTodosLosMovimientos()
+  const { veTodo, userId, userName } = useVeTodosLosMovimientos()
   const [loading, setLoading] = useState(true)
   // El backend (MovimientoInternoService::listarMovimientos) devuelve una forma
   // PLANA (vendedor, sub_caja_origen/destino como texto) — MovimientoInternoFila,
@@ -82,10 +82,14 @@ export default function HistorialMovimientosInternos() {
     movimientos.forEach((m) => {
       if (m.user_id) vistos.set(m.user_id, m.vendedor || m.user_id)
     })
+    // El usuario logueado puede no tener aún ningún movimiento en los datos
+    // cargados (ej. filtrado a "hoy" y todavía no hizo ninguno) — sin esto el
+    // Select no tiene su nombre para mostrar y cae al ID crudo como label.
+    if (userId && !vistos.has(userId)) vistos.set(userId, userName || userId)
     return Array.from(vistos.entries())
       .sort((a, b) => a[1].localeCompare(b[1]))
       .map(([id, nombre]) => ({ label: nombre, value: id }))
-  }, [movimientos])
+  }, [movimientos, userId, userName])
 
   const movimientosFiltrados = useMemo(() => {
     return movimientos.filter((m) => {
