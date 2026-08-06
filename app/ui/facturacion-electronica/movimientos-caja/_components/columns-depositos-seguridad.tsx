@@ -18,6 +18,13 @@ export interface DepositoSeguridad {
   motivo?: string
   fecha: string
   estado: 'activo' | 'anulado'
+  // Saldo MOVIBLE (Saldo Cerrado) de cada sub-caja antes/después de este
+  // movimiento — null en movimientos creados antes de que este dato se
+  // empezara a guardar.
+  saldo_origen_anterior?: number | null
+  saldo_origen_actual?: number | null
+  saldo_destino_anterior?: number | null
+  saldo_destino_actual?: number | null
 }
 
 const formatCurrency = (amount: number | string) => {
@@ -53,40 +60,94 @@ export const useColumnsDepositosSeguridad = ({
       ),
     },
     {
-      colId: 'origen',
-      headerName: 'Origen',
+      colId: 'sub_caja_origen',
+      headerName: 'Sub-Caja Origen',
       field: 'sub_caja_origen',
-      width: 200,
-      minWidth: 180,
+      width: 160,
+      minWidth: 140,
+      cellRenderer: (params: any) => (
+        <span className='font-medium text-slate-700'>{params.value}</span>
+      ),
+    },
+    {
+      colId: 'metodo_origen',
+      headerName: 'Método Origen',
+      width: 170,
+      minWidth: 150,
       cellRenderer: (params: any) => {
-        const { sub_caja_origen, metodo_origen, banco_origen } = params.data
+        const { metodo_origen, banco_origen } = params.data
         return (
-          <div>
-            <div className='font-medium text-slate-700'>{sub_caja_origen}</div>
-            <div className='text-xs text-slate-500'>
-              {metodo_origen} {banco_origen && banco_origen !== '-' ? `- ${banco_origen}` : ''}
-            </div>
+          <div className='text-xs text-slate-600'>
+            <div>{metodo_origen}</div>
+            {banco_origen && banco_origen !== '-' && (
+              <div className='text-slate-400'>{banco_origen}</div>
+            )}
           </div>
         )
       },
     },
     {
-      colId: 'destino',
-      headerName: 'Destino',
-      field: 'sub_caja_destino',
-      width: 280,
-      minWidth: 250,
+      colId: 'saldo_origen',
+      headerName: 'Saldo Origen (Ant. → Act.)',
+      width: 190,
+      minWidth: 170,
       cellRenderer: (params: any) => {
-        const { sub_caja_destino, metodo_destino, banco_destino, titular } = params.data
+        const { saldo_origen_anterior, saldo_origen_actual } = params.data
+        if (saldo_origen_anterior == null || saldo_origen_actual == null) {
+          return <span className='text-xs text-slate-400'>N/D</span>
+        }
         return (
-          <div>
-            <div className='font-medium text-slate-700'>{sub_caja_destino}</div>
-            <div className='text-xs text-slate-500'>
-              {metodo_destino} - {banco_destino}
-            </div>
-            {titular && (
-              <div className='text-xs text-slate-400'>Titular: {titular}</div>
+          <div className='text-xs whitespace-nowrap'>
+            <span className='text-slate-500'>{formatCurrency(saldo_origen_anterior)}</span>
+            <span className='mx-1 text-slate-400'>→</span>
+            <span className='font-semibold text-red-600'>{formatCurrency(saldo_origen_actual)}</span>
+          </div>
+        )
+      },
+    },
+    {
+      colId: 'sub_caja_destino',
+      headerName: 'Sub-Caja Destino',
+      field: 'sub_caja_destino',
+      width: 160,
+      minWidth: 140,
+      cellRenderer: (params: any) => (
+        <span className='font-medium text-slate-700'>{params.value}</span>
+      ),
+    },
+    {
+      colId: 'metodo_destino',
+      headerName: 'Método Destino',
+      width: 170,
+      minWidth: 150,
+      cellRenderer: (params: any) => {
+        const { metodo_destino, banco_destino, titular } = params.data
+        return (
+          <div className='text-xs text-slate-600'>
+            <div>{metodo_destino}</div>
+            {banco_destino && banco_destino !== '-' && (
+              <div className='text-slate-400'>{banco_destino}</div>
             )}
+            {titular && <div className='text-slate-400'>Titular: {titular}</div>}
+          </div>
+        )
+      },
+    },
+    {
+      colId: 'saldo_destino',
+      headerName: 'Saldo Destino (Ant. → Act.)',
+      width: 190,
+      minWidth: 170,
+      cellRenderer: (params: any) => {
+        const { saldo_destino_anterior, saldo_destino_actual } = params.data
+        if (saldo_destino_anterior == null || saldo_destino_actual == null) {
+          return <span className='text-xs text-slate-400'>N/D</span>
+        }
+        return (
+          <div className='text-xs whitespace-nowrap'>
+            <span className='text-slate-500'>{formatCurrency(saldo_destino_anterior)}</span>
+            <span className='mx-1 text-slate-400'>→</span>
+            <span className='font-semibold text-emerald-600'>{formatCurrency(saldo_destino_actual)}</span>
           </div>
         )
       },
