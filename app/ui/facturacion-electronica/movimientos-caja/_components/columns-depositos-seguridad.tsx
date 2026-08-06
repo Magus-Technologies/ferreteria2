@@ -1,5 +1,6 @@
 import { ColDef } from 'ag-grid-community'
-import { Tag } from 'antd'
+import { Tag, Button, Popconfirm, Tooltip } from 'antd'
+import { DeleteOutlined } from '@ant-design/icons'
 import { formatFechaPeru } from '~/utils/fechas'
 
 export interface DepositoSeguridad {
@@ -16,6 +17,7 @@ export interface DepositoSeguridad {
   monto: number
   motivo?: string
   fecha: string
+  estado: 'activo' | 'anulado'
 }
 
 const formatCurrency = (amount: number | string) => {
@@ -23,7 +25,11 @@ const formatCurrency = (amount: number | string) => {
   return `S/ ${numAmount.toFixed(2)}`
 }
 
-export const useColumnsDepositosSeguridad = (): ColDef<DepositoSeguridad>[] => {
+export const useColumnsDepositosSeguridad = ({
+  onAnular,
+}: {
+  onAnular: (id: string) => void
+}): ColDef<DepositoSeguridad>[] => {
   return [
     {
       colId: 'id',
@@ -122,6 +128,40 @@ export const useColumnsDepositosSeguridad = (): ColDef<DepositoSeguridad>[] => {
       field: 'fecha',
       width: 200,
       valueFormatter: (params) => params.value ? formatFechaPeru(params.value, 'DD/MM/YYYY hh:mm:ss A') : '-',
+    },
+    {
+      colId: 'estado',
+      headerName: 'Estado',
+      field: 'estado',
+      width: 120,
+      cellRenderer: (params: any) => (
+        <Tag color={params.value === 'anulado' ? 'red' : 'green'}>
+          {params.value === 'anulado' ? 'ANULADO' : 'ACTIVO'}
+        </Tag>
+      ),
+    },
+    {
+      colId: 'acciones',
+      headerName: 'Acciones',
+      field: 'id',
+      width: 110,
+      cellRenderer: (params: any) => {
+        if (params.data.estado === 'anulado') return null
+        return (
+          <Tooltip title='Anular movimiento'>
+            <Popconfirm
+              title='¿Anular este movimiento?'
+              description='El monto se revertirá: volverá a la caja de origen y se descontará del destino.'
+              onConfirm={() => onAnular(params.data.id)}
+              okText='Sí, anular'
+              cancelText='Cancelar'
+              okButtonProps={{ danger: true }}
+            >
+              <Button danger type='text' icon={<DeleteOutlined />} size='small' />
+            </Popconfirm>
+          </Tooltip>
+        )
+      },
     },
   ]
 }
