@@ -488,11 +488,13 @@ export default function KardexCombinadoView() {
       type: 'numericColumn' as const,
       cellRenderer: (params: any) => {
         // La ENTREGA nunca mueve el acumulador (salida=0 siempre, ver
-        // backend), pero sigue siendo una salida real de mercadería — por
-        // eso acá se muestra igual que su venta pareja, aunque el campo
+        // backend). Lo mismo pasa en una VENTA cuando el excedente es 0
+        // (compró igual o menos de lo reservado) — en ambos casos sigue
+        // siendo una salida real, así que se muestra igual aunque el campo
         // crudo `salida` esté en 0.
         const esEntrega = params.data?.tipo === 'entrega'
-        if (!esEntrega && !Number(params.value)) return <span>-</span>
+        const tieneReserva = Number(params.data?.cantidad_reservada ?? 0) > 0
+        if (!esEntrega && !tieneReserva && !Number(params.value)) return <span>-</span>
         const total = Number(params.data?.cantidad_total ?? params.data?.cantidad ?? 0)
         if (!total) return <span>-</span>
         // Los paréntesis solo tienen sentido si hay una MEZCLA de reservado +
