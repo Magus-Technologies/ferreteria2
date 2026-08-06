@@ -390,14 +390,22 @@ export default function KardexView() {
       minWidth: 110,
       type: 'numericColumn' as const,
       valueFormatter: (params: any) => {
-        if (!Number(params.value)) return '-'
+        // La ENTREGA nunca mueve el acumulador (salida=0 siempre, ver
+        // backend), pero sigue siendo una salida real de mercadería — por
+        // eso acá se muestra igual que su venta pareja, aunque el campo
+        // crudo `salida` esté en 0.
+        const esEntrega = params.data?.tipo === 'entrega'
+        if (!esEntrega && !Number(params.value)) return '-'
         const total = Number(params.data?.cantidad_total ?? params.data?.cantidad ?? 0)
+        if (!total) return '-'
         const reservada = Number(params.data?.cantidad_reservada ?? 0)
         return reservada > 0 ? `${total.toFixed(2)} (${reservada.toFixed(2)})` : total.toFixed(2)
       },
       cellRenderer: (params: any) => {
-        if (!Number(params.value)) return <span>-</span>
+        const esEntrega = params.data?.tipo === 'entrega'
+        if (!esEntrega && !Number(params.value)) return <span>-</span>
         const total = Number(params.data?.cantidad_total ?? params.data?.cantidad ?? 0)
+        if (!total) return <span>-</span>
         const reservada = Number(params.data?.cantidad_reservada ?? 0)
         const unidad = params.data?.unidad || ''
         return (
