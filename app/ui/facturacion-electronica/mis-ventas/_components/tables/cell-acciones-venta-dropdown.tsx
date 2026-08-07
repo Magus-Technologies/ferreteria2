@@ -1,10 +1,10 @@
 "use client";
 
 import { ICellRendererParams } from "ag-grid-community";
-import { FaFilePdf, FaFileCode, FaPaperPlane, FaDownload, FaEdit, FaHistory, FaBan, FaTruck, FaStickyNote, FaClipboardList } from "react-icons/fa";
+import { FaFilePdf, FaFileCode, FaPaperPlane, FaDownload, FaEdit, FaHistory, FaBan, FaTruck, FaStickyNote, FaClipboardList, FaCheckCircle } from "react-icons/fa";
 import { MoreOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
-import { Dropdown, message } from "antd";
+import { Dropdown } from "antd";
 import type { MenuProps } from "antd";
 import { useState, useMemo } from "react";
 import { App } from "antd";
@@ -24,7 +24,7 @@ export default function CellAccionesVentaDropdown(
   const venta = props.data;
   const router = useRouter();
   const openModal = useStoreModalPdfVenta((state) => state.openModal);
-  const { modal } = App.useApp();
+  const { modal, message } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [historialOpen, setHistorialOpen] = useState(false);
   const [verEntregasOpen, setVerEntregasOpen] = useState(false);
@@ -146,6 +146,15 @@ export default function CellAccionesVentaDropdown(
 
   const handleEnviarSunat = async () => {
     try {
+      if (isAceptado) {
+        message.info('El comprobante ya fue enviado y aceptado por SUNAT. Podés descargar el CDR.');
+        return;
+      }
+      if (!tieneXml) {
+        message.warning('Esta venta aún no tiene XML generado. Guardá la venta nuevamente para generarlo.');
+        return;
+      }
+
       setLoading(true);
       message.loading({ content: 'Enviando a SUNAT...', key: 'enviar-sunat', duration: 0 });
       
@@ -218,6 +227,11 @@ export default function CellAccionesVentaDropdown(
 
   const handleDescargarCDR = async () => {
     try {
+      if (!tieneCdr) {
+        message.info('Aún no hay CDR. Enviá el comprobante a SUNAT primero.');
+        return;
+      }
+
       message.loading({ content: 'Descargando CDR...', key: 'download-cdr', duration: 0 });
       
       const token = localStorage.getItem('auth_token');
@@ -324,19 +338,21 @@ export default function CellAccionesVentaDropdown(
       key: 'ver-xml',
       label: <span className="flex items-center gap-2"><FaFileCode className="text-green-600" /> Ver XML</span>,
       onClick: handleVerXML,
-      disabled: !tieneXml,
     },
     {
       key: 'enviar-sunat',
-      label: <span className="flex items-center gap-2"><FaPaperPlane className="text-purple-600" /> Enviar a SUNAT</span>,
+      label: isAceptado ? (
+        <span className="flex items-center gap-2"><FaCheckCircle className="text-green-600" /> Enviado</span>
+      ) : (
+        <span className="flex items-center gap-2"><FaPaperPlane className="text-purple-600" /> Enviar a SUNAT</span>
+      ),
       onClick: handleEnviarSunat,
-      disabled: loading || !tieneXml || isAceptado,
+      disabled: isAceptado,
     },
     {
       key: 'descargar-cdr',
       label: <span className="flex items-center gap-2"><FaDownload className="text-orange-600" /> Descargar CDR</span>,
       onClick: handleDescargarCDR,
-      disabled: !tieneCdr,
     },
   ];
 
