@@ -90,8 +90,13 @@ export default function ModalMetodosPagoCompra({
     [metodosPago]
   )
 
+  // Redondeado a centavos: sin esto, restar montos con decimales (ej.
+  // 64151.60 - 64151.60) puede dejar un residuo de punto flotante ínfimo
+  // (0.0000000002) que la tarjeta muestra como "S/. 0.00" (por el toFixed)
+  // pero que sigue siendo > 0 para la comparación — dejando visible "Agregar
+  // Método de Pago" aunque ya esté pagado por completo.
   const saldoPendiente = useMemo(
-    () => Math.max(0, saldoConEgreso - totalPagado),
+    () => Math.max(0, Math.round((saldoConEgreso - totalPagado) * 100) / 100),
     [saldoConEgreso, totalPagado]
   )
 
@@ -126,9 +131,15 @@ export default function ModalMetodosPagoCompra({
     }
   }, [open, desplieguesPago, modalForm])
 
+  // Precarga "Monto Recibe" con el saldo pendiente — las tarjetas de arriba ya
+  // muestran ese monto, así que no debería haber que volver a escribirlo cada
+  // vez (el usuario igual puede cambiarlo si va a recibir más, ej. para
+  // calcular vuelto en efectivo). Antes esto seteaba un campo 'monto' que no
+  // existe en el form (el campo real se llama 'recibe_efectivo'), así que
+  // nunca precargaba nada.
   useEffect(() => {
     if (open && saldoPendiente > 0) {
-      modalForm.setFieldValue('monto', saldoPendiente)
+      modalForm.setFieldValue('recibe_efectivo', saldoPendiente)
     }
   }, [saldoPendiente, open, modalForm])
 
@@ -434,13 +445,12 @@ export default function ModalMetodosPagoCompra({
                   onChange={(value, option: any) => {
                     const name = option?.label || ''
                     setDespliegueName(name)
-                    if (!name.toUpperCase().includes('EFECTIVO')) {
-                      modalForm.setFieldValue('recibe_efectivo', saldoPendiente)
-                      modalForm.setFieldValue('referencia', undefined)
-                    } else {
-                      modalForm.setFieldValue('referencia', undefined)
-                      modalForm.setFieldValue('recibe_efectivo', undefined)
-                    }
+                    // Precargar el monto a recibir con el saldo pendiente en
+                    // cualquier tipo de pago (antes solo lo hacía para no-efectivo,
+                    // y en efectivo lo dejaba vacío) — el usuario igual puede
+                    // aumentarlo si va a recibir más y calcular vuelto.
+                    modalForm.setFieldValue('recibe_efectivo', saldoPendiente)
+                    modalForm.setFieldValue('referencia', undefined)
                   }}
                 />
               </div>
