@@ -45,7 +45,8 @@ export default function CellAccionesGuia({ guia, onRefetch }: CellAccionesGuiaPr
           }
 
           const modo = response.data?.data?.modo || ''
-          message.success(`Guia enviada a SUNAT ${modo === 'SIMULACION' ? '(SIMULACION)' : ''}`)
+          const esBeta = modo === 'BETA' || modo === 'SIMULACION'
+          message.success(`Guia enviada a SUNAT ${esBeta ? '(BETA)' : ''}`)
 
           queryClient.invalidateQueries({ queryKey: [QueryKeys.GUIAS_REMISION] })
 

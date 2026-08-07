@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import {
     Card,
     Switch,
@@ -11,10 +11,9 @@ import {
     Alert,
     InputNumber,
     Input,
-    Divider,
     Upload,
     Tag,
-    Modal,
+    Segmented,
 } from "antd";
 import {
     SaveOutlined,
@@ -23,9 +22,7 @@ import {
     KeyOutlined,
     UserOutlined,
     LockOutlined,
-    CloudOutlined,
     UploadOutlined,
-    FileOutlined,
     CheckCircleOutlined,
     CloseCircleOutlined,
 } from "@ant-design/icons";
@@ -197,15 +194,19 @@ export default function FormEnvioSunat({ empresaId }: FormEnvioSunatProps) {
     }
 
     return (
-        <div className="max-w-5xl mx-auto space-y-6">
-            {/* Credenciales SUNAT */}
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+            {/* Credenciales SUNAT — columna principal */}
+            <div className="xl:col-span-8">
             <Card
                 title={
-                    <span><KeyOutlined className="mr-2" />Credenciales SUNAT</span>
+                    <span className="flex items-center gap-2">
+                        <KeyOutlined className="text-green-600" />
+                        Credenciales SUNAT
+                    </span>
                 }
-                className="shadow-sm border-l-4 border-l-green-500"
+                className="shadow-sm h-full"
             >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <LabelBase label="Usuario SOL:" orientation="column">
                             <Input
@@ -245,26 +246,21 @@ export default function FormEnvioSunat({ empresaId }: FormEnvioSunatProps) {
                             />
                         </LabelBase>
                     </div>
-                    <div>
+                    <div className="md:col-span-2">
                         <LabelBase label="Modo SUNAT:" orientation="column">
-                            <div className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
-                                <Switch
-                                    checked={sunatModo === "produccion"}
-                                    onChange={(val) => setSunatModo(val ? "produccion" : "beta")}
-                                    checkedChildren="PRODUCCIÓN"
-                                    unCheckedChildren="BETA"
-                                    className={sunatModo === "produccion" ? "bg-green-600" : "bg-orange-400"}
-                                />
-                                <span className="text-sm text-gray-500">
-                                    {sunatModo === "beta"
-                                        ? "Usa RUC 20000000001 y credenciales de prueba"
-                                        : "Usa RUC y credenciales reales de la empresa"}
-                                </span>
-                            </div>
+                            <Segmented
+                                block
+                                value={sunatModo}
+                                onChange={(val) => setSunatModo(val as 'beta' | 'produccion')}
+                                options={[
+                                    { label: 'BETA · Pruebas', value: 'beta' },
+                                    { label: 'PRODUCCIÓN · Real', value: 'produccion' },
+                                ]}
+                            />
                         </LabelBase>
                     </div>
-                    <div>
-                        <LabelBase label="Certificado .pem:" orientation="column">
+                    <div className="md:col-span-2">
+                        <LabelBase label="Certificado digital .pem:" orientation="column">
                             <div className="flex items-center gap-2">
                                 <Upload
                                     accept=".pem"
@@ -277,7 +273,7 @@ export default function FormEnvioSunat({ empresaId }: FormEnvioSunatProps) {
                                     </Button>
                                 </Upload>
                                 {certificadoNombre && (
-                                    <span className="text-xs text-gray-500 truncate max-w-[150px]">
+                                    <span className="text-xs text-gray-500 truncate max-w-[200px]">
                                         {certificadoNombre}
                                     </span>
                                 )}
@@ -300,23 +296,41 @@ export default function FormEnvioSunat({ empresaId }: FormEnvioSunatProps) {
                         </LabelBase>
                     </div>
                 </div>
-                <div className="mt-4">
+
+                {/* Estado del modo: informa qué entorno usa SUNAT */}
+                {sunatModo === 'beta' ? (
+                    <Alert
+                        className="mt-5"
+                        type="info"
+                        showIcon
+                        message={<Text strong>Modo BETA · Entorno de pruebas</Text>}
+                        description="Los comprobantes se envían al entorno de pruebas de SUNAT con el RUC 20000000001 y credenciales MODDATOS. No se emiten documentos reales."
+                    />
+                ) : (
+                    <Alert
+                        className="mt-5"
+                        type="warning"
+                        showIcon
+                        message={<Text strong>Modo PRODUCCIÓN · Emisión real</Text>}
+                        description={`Se emitirán documentos reales con el RUC ${empresaRuc || 'de tu empresa'} y tus credenciales SOL. Verifica que el certificado digital esté cargado en API-SUNAT antes de facturar.`}
+                    />
+                )}
+
+                <div className="mt-5 flex justify-end">
                     <Button
                         type="primary"
                         icon={<SaveOutlined />}
                         onClick={handleSaveCredenciales}
                         loading={credencialesMutation.isPending}
-                        className="bg-green-600 hover:bg-green-700"
                     >
                         Guardar Credenciales
                     </Button>
                 </div>
             </Card>
+            </div>
 
-            <Divider />
-
-            {/* Auto-Envio */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Auto-Envio — columna lateral */}
+            <div className="xl:col-span-4 space-y-6">
                 <Card
                     title="Facturas (Doc. 01)"
                     extra={
@@ -327,7 +341,7 @@ export default function FormEnvioSunat({ empresaId }: FormEnvioSunatProps) {
                             unCheckedChildren="INACTIVO"
                         />
                     }
-                    className="shadow-sm border-l-4 border-l-blue-500"
+                    className="shadow-sm"
                 >
                     <div className="space-y-4">
                         <Alert
@@ -373,7 +387,7 @@ export default function FormEnvioSunat({ empresaId }: FormEnvioSunatProps) {
                             unCheckedChildren="INACTIVO"
                         />
                     }
-                    className="shadow-sm border-l-4 border-l-orange-500"
+                    className="shadow-sm"
                 >
                     <div className="space-y-4">
                         <Alert
