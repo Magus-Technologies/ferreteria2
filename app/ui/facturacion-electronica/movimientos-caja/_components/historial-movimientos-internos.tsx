@@ -38,10 +38,7 @@ export default function HistorialMovimientosInternos() {
   const fetchMovimientos = async () => {
     setLoading(true)
     try {
-      const response = await transaccionesCajaApi.getMovimientosInternos({
-        page: 1,
-        per_page: 100,
-      })
+      const response = await transaccionesCajaApi.getMovimientosInternos()
 
       if (response.error) {
         console.error('Error al cargar movimientos:', response.error)
@@ -49,9 +46,12 @@ export default function HistorialMovimientosInternos() {
         return
       }
 
-      if (response.data?.data) {
-        setMovimientos((response.data.data.data as unknown as MovimientoInternoFila[]) || [])
-      }
+      // `/cajas/movimientos-internos` NO está paginado: responde
+      // `{success, data: [...]}` con el array plano (a diferencia de préstamos,
+      // que sí devuelve `{data: {current_page, data: [...]}}`). Antes se leía
+      // `response.data.data.data` — siempre undefined, así que la tabla salía
+      // vacía aunque el traslado se hubiera registrado bien.
+      setMovimientos(response.data?.data ?? [])
     } catch (error) {
       console.error('Error al cargar movimientos:', error)
       setMovimientos([])
@@ -138,6 +138,14 @@ export default function HistorialMovimientosInternos() {
     {
       headerName: 'Usuario',
       field: 'vendedor',
+      width: 200,
+    },
+    {
+      // A quién se le acreditó el dinero. En un Traslado de Efectivo suele ser
+      // distinto de quien lo realizó, y sin esta columna la tabla no dejaba ver
+      // a qué sesión fue a parar el monto.
+      headerName: 'Destino (Usuario)',
+      field: 'usuario_destino',
       width: 200,
     },
     {

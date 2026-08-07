@@ -168,14 +168,13 @@ export interface PrestamoResponse {
   data: Prestamo
 }
 
+// OJO: este endpoint NO está paginado — devuelve el array plano de filas. El tipo
+// declaraba una envoltura `{current_page, data, per_page, total}` que el backend
+// (MovimientoInternoController::index) nunca envió, y por eso quien lo consumía
+// leía `data.data.data` y obtenía undefined.
 export interface MovimientosInternosListResponse {
   success: boolean
-  data: {
-    current_page: number
-    data: MovimientoInterno[]
-    per_page: number
-    total: number
-  }
+  data: MovimientoInternoFila[]
 }
 
 export interface MovimientoInternoResponse {
@@ -350,27 +349,13 @@ export const transaccionesCajaApi = {
   },
 
   /**
-   * Listar movimientos internos
+   * Listar movimientos internos (Traslado de Efectivo). Sin paginación: el
+   * backend devuelve todas las filas y el filtrado (usuario, rango de fechas)
+   * se hace en el cliente. Antes aceptaba `page`/`per_page`, que el backend
+   * ignoraba por completo.
    */
-  getMovimientosInternos(params?: {
-    per_page?: number
-    page?: number
-  }): Promise<ApiResponse<MovimientosInternosListResponse>> {
-    const queryParams = new URLSearchParams()
-
-    if (params?.per_page) {
-      queryParams.append('per_page', params.per_page.toString())
-    }
-    if (params?.page) {
-      queryParams.append('page', params.page.toString())
-    }
-
-    const queryString = queryParams.toString()
-    const url = queryString
-      ? `/cajas/movimientos-internos?${queryString}`
-      : '/cajas/movimientos-internos'
-
-    return apiRequest<MovimientosInternosListResponse>(url)
+  getMovimientosInternos(): Promise<ApiResponse<MovimientosInternosListResponse>> {
+    return apiRequest<MovimientosInternosListResponse>('/cajas/movimientos-internos')
   },
 
   /**
