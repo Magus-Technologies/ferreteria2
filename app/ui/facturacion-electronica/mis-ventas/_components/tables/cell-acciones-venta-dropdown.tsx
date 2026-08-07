@@ -317,13 +317,13 @@ export default function CellAccionesVentaDropdown(
     {
       key: 'nota-credito',
       label: <span className="flex items-center gap-2"><FaClipboardList className="text-rose-600" /> Crear Nota de Crédito</span>,
-      onClick: () => router.push('/ui/facturacion-electronica/mis-notas-credito'),
+      onClick: () => router.push(`/ui/facturacion-electronica/crear-notas-electronicas/nota-credito?venta_id=${ventaId}`),
       disabled: !tieneXml,
     },
     {
       key: 'nota-debito',
       label: <span className="flex items-center gap-2"><FaStickyNote className="text-orange-600" /> Crear Nota de Débito</span>,
-      onClick: () => router.push('/ui/facturacion-electronica/crear-notas-electronicas/nota-debito'),
+      onClick: () => router.push(`/ui/facturacion-electronica/crear-notas-electronicas/nota-debito?venta_id=${ventaId}`),
       disabled: !tieneXml,
     },
     {

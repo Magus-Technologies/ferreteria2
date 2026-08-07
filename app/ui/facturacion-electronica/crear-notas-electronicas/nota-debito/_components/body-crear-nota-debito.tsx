@@ -4,11 +4,16 @@ import { Form, FormInstance } from "antd";
 import { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import { useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import useApp from "antd/es/app/useApp";
 import FormBase from "~/components/form/form-base";
 import FormNotaDebito from "./form-nota-debito";
 import CardsInfoNotaDebito from "./cards-info-nota-debito";
 import FormTableNotaDebito from "./form-table-nota-debito";
 import useCreateNotaDebito from "../_hooks/use-create-nota-debito";
+import { ventaApi } from "~/lib/api/venta";
+import { facturacionElectronicaApi } from "~/lib/api/facturacion-electronica";
+import { aplicarComprobanteAForm } from "../_hooks/use-buscar-comprobante-inteligente";
 
 export type FormCreateNotaDebito = {
   // ID de la venta (requerido por backend)
@@ -64,6 +69,10 @@ export default function BodyCrearNotaDebito({ form }: { form?: FormInstance<Form
   const [internalForm] = Form.useForm<FormCreateNotaDebito>();
   const formToUse = form || internalForm;
   const { handleSubmit, loading } = useCreateNotaDebito(formToUse);
+  const { message } = useApp();
+  // Si venimos de Mis Ventas, la URL trae ?venta_id=X → cargar el comprobante automáticamente
+  const searchParams = useSearchParams();
+  const ventaId = searchParams.get('venta_id');
 
   // ✅ Inicializar fecha_emision con la fecha actual
   useEffect(() => {
@@ -71,6 +80,47 @@ export default function BodyCrearNotaDebito({ form }: { form?: FormInstance<Form
       formToUse.setFieldValue('fecha_emision', dayjs());
     }
   }, [formToUse]);
+
+  // ✅ Auto-cargar el comprobante de la venta si viene por URL (desde Mis Ventas)
+  useEffect(() => {
+    if (!ventaId || formToUse.getFieldValue('venta_id')) return;
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const ventaResponse = await ventaApi.getById(ventaId);
+        // apiRequest devuelve { data: <body Laravel> } → la venta vive en data.data
+        const ventaData = (ventaResponse.data as any)?.data;
+        const comprobanteElectronico = ventaData?.comprobante_electronico;
+
+        if (!comprobanteElectronico?.id) {
+          message.warning('Esta venta no tiene comprobante electrónico asociado')
+          return
+        }
+
+        const response = await facturacionElectronicaApi.getComprobanteById(comprobanteElectronico.id);
+        const comprobante = response.data?.data;
+
+        if (!comprobante || cancelled) return;
+
+        aplicarComprobanteAForm(formToUse, comprobante);
+
+        message.success(
+          `${comprobante.tipo_comprobante === '01' ? 'Factura' : 'Boleta'} ${comprobante.serie}-${comprobante.numero} cargado`
+        );
+      } catch (error) {
+        if (!cancelled) {
+          console.error('Error al cargar venta para nota de débito:', error);
+          message.error('Error al cargar la venta seleccionada');
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [ventaId, formToUse, message]);
 
   return (
     <FormBase<FormCreateNotaDebito>

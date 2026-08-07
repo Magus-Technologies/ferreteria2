@@ -7,6 +7,46 @@ import { useDebounce } from 'use-debounce'
 import { useStoreBuscarComprobanteCredito } from '../_store/store-buscar-comprobante'
 
 /**
+ * Helper compartido: aplica un comprobante electrónico al form de nota de crédito.
+ * Lo usan la búsqueda manual y la carga automática desde Mis Ventas (venta_id).
+ */
+export function aplicarComprobanteAForm(
+  form: FormInstance<FormCreateNotaCredito>,
+  comprobante: any,
+) {
+  const ventaIdString = String(comprobante.venta_id)
+
+  form.setFieldsValue({
+    venta_id: ventaIdString,
+    tipo_documento_modifica: comprobante.tipo_comprobante as '01' | '03',
+    serie_documento_modifica: comprobante.serie,
+    numero_documento_modifica: String(comprobante.numero),
+    cliente_id: comprobante.cliente?.id,
+    cliente_tipo_documento: comprobante.cliente?.tipo_documento,
+    cliente_numero_documento: comprobante.cliente?.numero_documento,
+    cliente_nombre: comprobante.cliente?.nombre,
+    cliente_direccion: comprobante.cliente?.direccion,
+    cliente_telefono: comprobante.cliente?.telefono,
+    cliente_email: comprobante.cliente?.email,
+    tipo_moneda: comprobante.tipo_moneda as 'PEN' | 'USD',
+  })
+
+  if (comprobante.detalles && comprobante.detalles.length > 0) {
+    const productos = comprobante.detalles.map((detalle: any) => ({
+      codigo: detalle.codigo_producto || '',
+      descripcion: detalle.descripcion || '',
+      unidad_medida: detalle.unidad_medida || 'NIU',
+      cantidad: Number(detalle.cantidad),
+      precio_unitario: Number(detalle.precio_unitario),
+      precio_venta: Number(detalle.precio_unitario),
+      subtotal: Number(detalle.cantidad) * Number(detalle.precio_unitario),
+    }))
+
+    form.setFieldValue('productos', productos)
+  }
+}
+
+/**
  * Hook para búsqueda inteligente de comprobantes
  * - Si detecta formato de comprobante (B01-1, F001-123), busca directamente
  * - Si detecta texto general (nombre cliente), abre modal de búsqueda
@@ -101,38 +141,8 @@ export default function useBuscarComprobanteInteligente(form: FormInstance<FormC
           return
         }
 
-        // Cargar datos del cliente y venta
-        const ventaIdString = String(comprobante.venta_id)
-        
-        form.setFieldsValue({
-          venta_id: ventaIdString,
-          tipo_documento_modifica: comprobante.tipo_comprobante as '01' | '03',
-          serie_documento_modifica: comprobante.serie,
-          numero_documento_modifica: String(comprobante.numero),
-          cliente_id: comprobante.cliente?.id,
-          cliente_tipo_documento: comprobante.cliente?.tipo_documento,
-          cliente_numero_documento: comprobante.cliente?.numero_documento,
-          cliente_nombre: comprobante.cliente?.nombre,
-          cliente_direccion: comprobante.cliente?.direccion,
-          cliente_telefono: comprobante.cliente?.telefono,
-          cliente_email: comprobante.cliente?.email,
-          tipo_moneda: comprobante.tipo_moneda as 'PEN' | 'USD',
-        })
-
-        // Cargar productos del comprobante
-        if (comprobante.detalles && comprobante.detalles.length > 0) {
-          const productos = comprobante.detalles.map((detalle: any) => ({
-            codigo: detalle.codigo_producto || '',
-            descripcion: detalle.descripcion || '',
-            unidad_medida: detalle.unidad_medida || 'NIU',
-            cantidad: Number(detalle.cantidad),
-            precio_unitario: Number(detalle.precio_unitario),
-            precio_venta: Number(detalle.precio_unitario),
-            subtotal: Number(detalle.cantidad) * Number(detalle.precio_unitario),
-          }))
-
-          form.setFieldValue('productos', productos)
-        }
+        // Cargar datos del cliente, venta y productos
+        aplicarComprobanteAForm(form, comprobante)
 
         notification.success({
           message: 'Comprobante cargado',
