@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { FaFilePdf, FaEdit, FaCheckCircle, FaBan, FaTrash, FaCloudUploadAlt } from 'react-icons/fa'
+import { FaFilePdf, FaEdit, FaCheckCircle, FaBan, FaTrash, FaCloudUploadAlt, FaFileCode, FaDownload } from 'react-icons/fa'
 import { Button, Space, Modal } from 'antd'
 import useApp from 'antd/es/app/useApp'
 import { guiaRemisionApi } from '~/lib/api/guia-remision'
@@ -190,6 +190,89 @@ export default function CellAccionesGuia({ guia, onRefetch }: CellAccionesGuiaPr
     })
   }
 
+  const handleVerXML = async () => {
+    if (!guia.sunat_xml_path) {
+      message.info('La guía aún no tiene XML generado. Emitila primero.')
+      return
+    }
+
+    try {
+      const token = localStorage.getItem('auth_token')
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/guias-remision/${guia.id}/xml?t=${new Date().getTime()}`,
+        {
+          credentials: 'include',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      )
+
+      if (!response.ok) {
+        const text = await response.text()
+        throw new Error(text.replace(/^Error al obtener XML:\s*/, '') || 'Error al obtener el XML')
+      }
+
+      const xmlText = await response.text()
+      const blob = new Blob([xmlText], { type: 'application/xml' })
+      const blobUrl = URL.createObjectURL(blob)
+
+      const newWindow = window.open(blobUrl, '_blank')
+
+      if (newWindow) {
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 1000)
+      } else {
+        message.error('No se pudo abrir la ventana. Verifica que los popups no estén bloqueados.')
+        URL.revokeObjectURL(blobUrl)
+      }
+    } catch (error) {
+      console.error('Error al ver XML:', error)
+      message.error(error instanceof Error ? error.message : 'Error al obtener el XML')
+    }
+  }
+
+  const handleDescargarCDR = async () => {
+    if (!guia.sunat_cdr_xml && !guia.sunat_cdr_path) {
+      message.info('Aún no hay CDR. Enviá la guía a SUNAT primero.')
+      return
+    }
+
+    try {
+      message.loading({ content: 'Descargando CDR...', key: 'download-cdr', duration: 0 })
+
+      const token = localStorage.getItem('auth_token')
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/guias-remision/${guia.id}/cdr?t=${new Date().getTime()}`,
+        {
+          credentials: 'include',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      )
+
+      if (!response.ok) {
+        const text = await response.text()
+        throw new Error(text.replace(/^Error al obtener CDR:\s*/, '') || 'Error al descargar el CDR')
+      }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `R-${guia.serie || 'T001'}-${guia.numero || '0'}-CDR.zip`
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+
+      message.success({ content: 'CDR descargado', key: 'download-cdr' })
+    } catch (error) {
+      console.error('Error al descargar CDR:', error)
+      message.error({ content: error instanceof Error ? error.message : 'Error al descargar el CDR', key: 'download-cdr' })
+    }
+  }
+
   const estado = guia.estado
 
   return (
@@ -263,6 +346,38 @@ export default function CellAccionesGuia({ guia, onRefetch }: CellAccionesGuiaPr
       
       {estado === 'EMITIDA' && (
         <>
+          {guia.tipo_guia !== 'FISICA' && guia.sunat_xml_path && (
+            <ConfigurableElement
+              componentId="mis-guias.boton-ver-xml"
+              label="Botón Ver XML"
+              noFullWidth
+            >
+              <Button
+                type="link"
+                size="small"
+                icon={<FaFileCode />}
+                onClick={handleVerXML}
+                title="Ver XML"
+                className="text-green-600"
+              />
+            </ConfigurableElement>
+          )}
+          {guia.tipo_guia !== 'FISICA' && (guia.sunat_cdr_xml || guia.sunat_cdr_path) && (
+            <ConfigurableElement
+              componentId="mis-guias.boton-descargar-cdr"
+              label="Botón Descargar CDR"
+              noFullWidth
+            >
+              <Button
+                type="link"
+                size="small"
+                icon={<FaDownload />}
+                onClick={handleDescargarCDR}
+                title="Descargar CDR"
+                className="text-blue-600"
+              />
+            </ConfigurableElement>
+          )}
           {guia.tipo_guia !== 'FISICA' && guia.sunat_estado !== 'ACEPTADO' && (
             <ConfigurableElement
               componentId="mis-guias.boton-enviar-sunat"
