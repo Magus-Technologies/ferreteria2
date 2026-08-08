@@ -124,6 +124,21 @@ export default function ModalVerSubCajas({
         saldosMovimiento.map((s) => [s.sub_caja_id, s.saldo_disponible])
     ), [saldosMovimiento])
 
+    // Saldo Total = suma EXACTA de lo que se ve en la tabla (Cerrado + No Cerrado
+    // de cada fila), con la misma resolución de valores que usan las columnas.
+    // NO se usa `cajaData.saldo_total`, que el backend calcula sumando la columna
+    // guardada `sub_cajas.saldo_actual`: esa columna no se descuenta en los
+    // Traslados a Bóveda (ver TrasladoBovedaService), así que quedaba por encima
+    // del dinero real y el header nunca cuadraba con las filas.
+    const saldoTotalMostrado = useMemo(
+        () => cajaData.sub_cajas.reduce((acc: number, sc: SubCaja) => {
+            const cerrado = saldosCerrados[sc.id] ?? parseFloat(sc.saldo_actual)
+            const noCerrado = saldosNoCerrados[sc.id] ?? 0
+            return acc + cerrado + noCerrado
+        }, 0),
+        [cajaData.sub_cajas, saldosCerrados, saldosNoCerrados]
+    )
+
     // MEMOIZAR las columnas: si el array cambia de identidad en cada render,
     // AG Grid recibe columnDefs nuevas constantemente y resetea el orden en
     // pleno arrastre (por eso "no dejaba" mover las columnas).
@@ -168,13 +183,9 @@ export default function ModalVerSubCajas({
                         <div className='flex justify-between items-center mb-4'>
                             <div className='flex gap-4'>
                                 <div className='text-sm'>
-                                    <span className='text-slate-500'>Responsable:</span>{' '}
-                                    <span className='font-semibold'>{cajaData.user.name}</span>
-                                </div>
-                                <div className='text-sm'>
                                     <span className='text-slate-500'>Saldo Total:</span>{' '}
                                     <span className='font-bold text-emerald-600'>
-                                        S/. {parseFloat(cajaData.saldo_total).toFixed(2)}
+                                        S/. {saldoTotalMostrado.toFixed(2)}
                                     </span>
                                 </div>
                             </div>
@@ -296,7 +307,7 @@ export default function ModalVerSubCajas({
                 ),
             },
         ],
-        [cajaData, isLoading, columns, cajaChica, cajaPrincipal.id, onSuccess, cajaActiva?.id]
+        [cajaData, isLoading, columns, cajaChica, cajaPrincipal.id, onSuccess, cajaActiva?.id, saldoTotalMostrado]
     )
 
     return (
