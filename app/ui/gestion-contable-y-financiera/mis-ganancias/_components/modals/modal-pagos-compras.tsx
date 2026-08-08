@@ -90,20 +90,17 @@ export default function ModalPagosCompras({ open, onClose, filtros: filtrosGloba
     [gastosFiltrados]
   )
 
-  // Totales por tipo de gasto
+  // Totales por tipo de gasto. Los gastos asociados a una compra ya no llegan acá:
+  // su monto es costo de mercadería (se descuenta vía costo al vender), contarlo
+  // también como gasto lo restaba dos veces de la Ganancia Neta.
   const totalesPorTipo = useMemo(() => {
     const operativos = gastosRaw.filter((g: any) => g.tipo === 'gasto_operativo')
-    const compras = gastosRaw.filter((g: any) => g.tipo === 'gasto_compra')
     const comisiones = gastosRaw.filter((g: any) => g.tipo === 'comision_vendedor')
 
     return {
       operativos: {
         total: operativos.reduce((sum: number, g: any) => sum + (Number(g.monto) || 0), 0),
         count: operativos.length
-      },
-      compras: {
-        total: compras.reduce((sum: number, g: any) => sum + (Number(g.monto) || 0), 0),
-        count: compras.length
       },
       comisiones: {
         total: comisiones.reduce((sum: number, g: any) => sum + (Number(g.monto) || 0), 0),
@@ -133,7 +130,6 @@ export default function ModalPagosCompras({ open, onClose, filtros: filtrosGloba
       cellStyle: (params) => {
         const tipo = params.data?.tipo
         if (tipo === 'gasto_operativo') return { fontWeight: 'bold', color: '#dc2626' }
-        if (tipo === 'gasto_compra') return { fontWeight: 'bold', color: '#ea580c' }
         if (tipo === 'comision_vendedor') return { fontWeight: 'bold', color: '#9333ea' }
         return { fontWeight: 'bold', color: '#000000' }
       },
@@ -305,7 +301,6 @@ export default function ModalPagosCompras({ open, onClose, filtros: filtrosGloba
               getRowStyle={(params) => {
                 const tipo = params.data?.tipo
                 if (tipo === 'gasto_operativo') return { borderLeft: '3px solid #dc2626' }
-                if (tipo === 'gasto_compra') return { borderLeft: '3px solid #ea580c' }
                 if (tipo === 'comision_vendedor') return { borderLeft: '3px solid #9333ea' }
                 return { borderLeft: '3px solid #fca5a5' }
               }}
