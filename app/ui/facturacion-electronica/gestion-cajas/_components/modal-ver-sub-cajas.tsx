@@ -124,19 +124,21 @@ export default function ModalVerSubCajas({
         saldosMovimiento.map((s) => [s.sub_caja_id, s.saldo_disponible])
     ), [saldosMovimiento])
 
-    // Saldo Total = suma EXACTA de lo que se ve en la tabla (Cerrado + No Cerrado
-    // de cada fila), con la misma resolución de valores que usan las columnas.
-    // NO se usa `cajaData.saldo_total`, que el backend calcula sumando la columna
-    // guardada `sub_cajas.saldo_actual`: esa columna no se descuenta en los
-    // Traslados a Bóveda (ver TrasladoBovedaService), así que quedaba por encima
-    // del dinero real y el header nunca cuadraba con las filas.
+    // Saldo Total = suma de la columna "Saldo Cerrado" de la tabla, y NADA más.
+    // El "No Cerrado" queda fuera a propósito: es dinero todavía dentro de la
+    // sesión abierta de un vendedor, no plata consolidada de la caja, así que
+    // sumarlo hacía que el header no coincidiera con la columna que el usuario
+    // suma a ojo.
+    //
+    // Tampoco se usa `cajaData.saldo_total` (el backend lo calcula aparte): la
+    // única fuente es la misma que alimenta la columna, para que header y filas
+    // nunca puedan divergir.
     const saldoTotalMostrado = useMemo(
         () => cajaData.sub_cajas.reduce((acc: number, sc: SubCaja) => {
             const cerrado = saldosCerrados[sc.id] ?? parseFloat(sc.saldo_actual)
-            const noCerrado = saldosNoCerrados[sc.id] ?? 0
-            return acc + cerrado + noCerrado
+            return acc + cerrado
         }, 0),
-        [cajaData.sub_cajas, saldosCerrados, saldosNoCerrados]
+        [cajaData.sub_cajas, saldosCerrados]
     )
 
     // MEMOIZAR las columnas: si el array cambia de identidad en cada render,
