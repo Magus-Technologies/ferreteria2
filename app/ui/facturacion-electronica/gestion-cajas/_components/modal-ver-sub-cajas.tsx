@@ -124,22 +124,27 @@ export default function ModalVerSubCajas({
         saldosMovimiento.map((s) => [s.sub_caja_id, s.saldo_disponible])
     ), [saldosMovimiento])
 
-    // Saldo Total = suma de la columna "Saldo Cerrado" de la tabla, y NADA más.
-    // El "No Cerrado" queda fuera a propósito: es dinero todavía dentro de la
-    // sesión abierta de un vendedor, no plata consolidada de la caja, así que
-    // sumarlo hacía que el header no coincidiera con la columna que el usuario
-    // suma a ojo.
+    // Totales del header: cada uno es la suma EXACTA de su columna en la tabla,
+    // resuelta con la misma lógica de fallback que usan las celdas. Así lo que el
+    // usuario suma a ojo siempre coincide con lo que muestra el header.
     //
-    // Tampoco se usa `cajaData.saldo_total` (el backend lo calcula aparte): la
-    // única fuente es la misma que alimenta la columna, para que header y filas
-    // nunca puedan divergir.
-    const saldoTotalMostrado = useMemo(
-        () => cajaData.sub_cajas.reduce((acc: number, sc: SubCaja) => {
-            const cerrado = saldosCerrados[sc.id] ?? parseFloat(sc.saldo_actual)
-            return acc + cerrado
-        }, 0),
-        [cajaData.sub_cajas, saldosCerrados]
-    )
+    // No se usa `cajaData.saldo_total` (el backend lo calcula por su cuenta): la
+    // única fuente son estos mismos saldos, para que header y filas no diverjan.
+    const { saldoTotalMostrado, totalNoCerrado } = useMemo(() => {
+        let cerrado = 0
+        let noCerrado = 0
+
+        for (const sc of cajaData.sub_cajas as SubCaja[]) {
+            cerrado += saldosCerrados[sc.id] ?? parseFloat(sc.saldo_actual)
+            noCerrado += saldosNoCerrados[sc.id] ?? 0
+        }
+
+        return { saldoTotalMostrado: cerrado, totalNoCerrado: noCerrado }
+    }, [cajaData.sub_cajas, saldosCerrados, saldosNoCerrados])
+
+    // Todo el dinero que hay en la caja: lo consolidado más lo que sigue dentro
+    // de las sesiones abiertas.
+    const totalGeneral = saldoTotalMostrado + totalNoCerrado
 
     // MEMOIZAR las columnas: si el array cambia de identidad en cada render,
     // AG Grid recibe columnDefs nuevas constantemente y resetea el orden en
@@ -183,11 +188,25 @@ export default function ModalVerSubCajas({
                 children: (
                     <div className='pt-2 animate-in fade-in duration-500'>
                         <div className='flex justify-between items-center mb-4'>
-                            <div className='flex gap-4'>
+                            <div className='flex gap-4 items-center'>
+                                {/* Cada total usa el color de su columna en la tabla:
+                                    verde = Saldo Cerrado, azul = Saldo No Cerrado. */}
                                 <div className='text-sm'>
                                     <span className='text-slate-500'>Saldo Total:</span>{' '}
                                     <span className='font-bold text-emerald-600'>
                                         S/. {saldoTotalMostrado.toFixed(2)}
+                                    </span>
+                                </div>
+                                <div className='text-sm'>
+                                    <span className='text-slate-500'>No Cerrado:</span>{' '}
+                                    <span className='font-bold text-blue-600'>
+                                        S/. {totalNoCerrado.toFixed(2)}
+                                    </span>
+                                </div>
+                                <div className='text-sm border-l border-slate-300 pl-4'>
+                                    <span className='text-slate-500'>Total General:</span>{' '}
+                                    <span className='font-bold text-slate-800'>
+                                        S/. {totalGeneral.toFixed(2)}
                                     </span>
                                 </div>
                             </div>
@@ -309,7 +328,7 @@ export default function ModalVerSubCajas({
                 ),
             },
         ],
-        [cajaData, isLoading, columns, cajaChica, cajaPrincipal.id, onSuccess, cajaActiva?.id, saldoTotalMostrado]
+        [cajaData, isLoading, columns, cajaChica, cajaPrincipal.id, onSuccess, cajaActiva?.id, saldoTotalMostrado, totalNoCerrado, totalGeneral]
     )
 
     return (
