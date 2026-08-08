@@ -108,7 +108,13 @@ export default function ModalDetalleCierre({ open, onClose, tipo, resumen, apert
             title = 'Detalle de Gastos'
             icon = <FaArrowCircleDown className='text-red-500' />
             columns = columnasMovimientosTransacciones
-            rowData = resumen.detalle_egresos ? Object.values(resumen.detalle_egresos) : []
+            // Solo gastos reales: el traslado a bóveda tiene su propia línea.
+            rowData = resumen.detalle_egresos
+                ? Object.values(resumen.detalle_egresos).filter(
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    (e: any) => e?.tipo !== 'traslado_boveda'
+                )
+                : []
             break
         case 'ingreso_extra':
             title = 'Detalle de Ingresos Extras'
