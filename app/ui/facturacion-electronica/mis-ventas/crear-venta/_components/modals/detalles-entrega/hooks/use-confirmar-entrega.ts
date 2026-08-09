@@ -19,6 +19,30 @@ import { useDetallesEntrega } from '../context'
 import type { TipoDespachoUI } from '../types'
 
 /**
+ * Valores del formulario de venta listos para enviar al backend.
+ *
+ * `form.getFieldsValue()` SOLO devuelve los campos que tienen un `<Form.Item>`
+ * que los registre. Hay campos que se escriben con `form.setFieldValue(...)` sin
+ * renderizar ningún input, y esos se perdían silenciosamente al guardar desde
+ * este modal (que no pasa por el `onFinish` del form, arma el payload por su
+ * cuenta).
+ *
+ * El caso que lo destapó: el modal "Cobrar Diferencia" guarda el pago en
+ * `diferencia_pago`, pero al confirmar la entrega no llegaba al backend, que
+ * entonces rechazaba la edición con "Esta edición deja una diferencia de S/ X
+ * pendiente de cobrar" — aunque el usuario SÍ había registrado el pago.
+ */
+function leerValoresVenta(form: FormInstance<any>): any {
+  return {
+    ...form.getFieldsValue(),
+    diferencia_pago: form.getFieldValue('diferencia_pago') || undefined,
+    direccion_seleccionada: form.getFieldValue('direccion_seleccionada') || undefined,
+    cotizacion_id: form.getFieldValue('cotizacion_id') || undefined,
+    stock_ya_aplicado: form.getFieldValue('stock_ya_aplicado') || undefined,
+  }
+}
+
+/**
  * Snapshot mínimo de la entrega "origen" de un restante — los datos que el
  * backend ya tenía y que el restante hereda (almacén de salida y user que
  * registró la venta).
@@ -95,7 +119,7 @@ export function useConfirmarEntrega({
   // Modo CREAR-VENTA — lógica histórica del modal (split parcial/domicilio).
   // ───────────────────────────────────────────────────────────────────────
   const handleConfirmarCrearVenta = useCallback(async () => {
-    const ventaValues = form.getFieldsValue()
+    const ventaValues = leerValoresVenta(form)
 
     if (tipoDespacho === 'Domicilio' && productosEntrega.length > 0) {
       // Domicilio con split: una entrega con solo entregar_programado.
@@ -512,7 +536,7 @@ export function useConfirmarEntrega({
   // ───────────────────────────────────────────────────────────────────────
   const handleOmitir = useCallback(async () => {
     if (mode.kind !== 'crear-venta') return
-    const ventaValues = form.getFieldsValue()
+    const ventaValues = leerValoresVenta(form)
     await crearVenta({ ...ventaValues, _omitir_entrega: true })
     onOmitir?.()
   }, [mode.kind, form, crearVenta, onOmitir])
