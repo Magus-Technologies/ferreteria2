@@ -39,8 +39,14 @@ export default function ModalDetalleCierre({ open, onClose, tipo, resumen, apert
             headerName: 'Pagos',
             field: 'pagos',
             flex: 1.5,
+            // autoHeight: una venta puede tener VARIOS pagos del mismo método
+            // (cobro inicial + diferencia de una edición). Sin esto la fila
+            // conservaba su alto fijo y el segundo chip quedaba cortado por debajo,
+            // dando la impresión de que la diferencia no se había registrado.
+            autoHeight: true,
+            wrapText: true,
             cellRenderer: (params: any) => (
-                <div className='flex flex-wrap gap-1'>
+                <div className='flex flex-wrap gap-1 py-1.5 leading-tight'>
                     {(params.value || []).map((p: any, i: number) => (
                         <span key={i} className='text-[10px] bg-blue-50 text-blue-700 px-1 rounded border border-blue-100'>
                             {p.metodo_pago}: <strong>{Number(p.monto).toFixed(2)}</strong>
@@ -50,6 +56,44 @@ export default function ModalDetalleCierre({ open, onClose, tipo, resumen, apert
             )
         },
         { headerName: 'Total', field: 'total', width: 100, valueFormatter: (params) => `S/. ${Number(params.value).toFixed(2)}`, cellStyle: { fontWeight: 'bold' } },
+        { headerName: 'Fecha', field: 'created_at', width: 140, valueFormatter: (params) => formatFechaPeru(params.value, 'DD/MM HH:mm') },
+    ]
+
+    // Detalle de cobros de UN método: una fila por cobro. Una venta editada con
+    // cobro diferencial aporta varias filas (inicial + diferencia), cada una con
+    // su monto y su fecha.
+    const columnasCobros: ColDef[] = [
+        { headerName: 'Serie-Número', valueGetter: (params) => `${params.data.serie}-${params.data.numero}`, width: 130 },
+        { headerName: 'Cliente', field: 'cliente_nombre', valueFormatter: (params) => params.value || 'Sin cliente', flex: 1 },
+        { headerName: 'Sub-Caja', field: 'sub_caja', width: 130, valueFormatter: (params) => params.value || '-' },
+        // Despliegue de pago con el que se cobró, en formato "banco/despliegue"
+        // (ej. "efectivo/efectivo", "bcp/transferencia"). Aunque el modal ya está
+        // filtrado por método, se muestra para que la fila se entienda sola al
+        // exportarla a Excel o PDF.
+        { headerName: 'Despliegue de Pago', field: 'metodo_pago', width: 190, valueFormatter: (params) => params.value || '-' },
+        {
+            headerName: 'Tipo Cobro',
+            field: 'tipo',
+            width: 120,
+            valueFormatter: (params) => ({
+                inicial: 'Inicial',
+                diferencia: 'Diferencia',
+                devolucion: 'Devolución',
+            } as Record<string, string>)[params.value] ?? (params.value || '-'),
+        },
+        { headerName: 'N° Operación', field: 'numero_operacion', width: 130, valueFormatter: (params) => params.value || '-' },
+        {
+            headerName: 'Monto Cobrado',
+            field: 'monto',
+            width: 140,
+            valueFormatter: (params) => `S/. ${Number(params.value).toFixed(2)}`,
+            cellStyle: (params: any) => ({
+                fontWeight: 'bold',
+                // Una devolución llega en negativo — se distingue en rojo.
+                color: Number(params.value) < 0 ? '#dc2626' : '#047857',
+            }),
+        },
+        { headerName: 'Total Venta', field: 'total_venta', width: 120, valueFormatter: (params) => `S/. ${Number(params.value).toFixed(2)}` },
         { headerName: 'Fecha', field: 'created_at', width: 140, valueFormatter: (params) => formatFechaPeru(params.value, 'DD/MM HH:mm') },
     ]
 
@@ -160,16 +204,35 @@ export default function ModalDetalleCierre({ open, onClose, tipo, resumen, apert
         const labelBusqueda = tipo.split(':')[1]
         title = `Detalle de Cobros: ${labelBusqueda}`
         icon = <FaFileInvoiceDollar className='text-amber-500' />
-        columns = columnasVentas
-        // Filtrar ventas que tengan al menos un pago con este método
-        rowData = (resumen.detalle_ventas || []).filter((v: any) =>
-            v.pagos?.some((p: any) => p.metodo_pago === labelBusqueda)
+        columns = columnasCobros
+        // UNA FILA POR COBRO, no por venta: una venta editada con cobro
+        // diferencial tiene varios pagos del mismo método (el inicial y la
+        // diferencia) y cada uno debe verse por separado, con su propio monto y
+        // su propia fecha. Antes se listaba una fila por venta con los pagos
+        // apilados como chips dentro de la celda, así que los cobros de una misma
+        // venta quedaban escondidos y la fecha mostrada era la de la venta, no la
+        // del cobro.
+        rowData = (resumen.detalle_ventas || []).flatMap((v: any) =>
+            (v.pagos || [])
+                .filter((p: any) => p.metodo_pago === labelBusqueda)
+                .map((p: any) => ({
+                    serie: v.serie,
+                    numero: v.numero,
+                    cliente_nombre: v.cliente_nombre,
+                    created_at: p.fecha ?? v.created_at,
+                    metodo_pago: p.metodo_pago,
+                    sub_caja: p.sub_caja,
+                    tipo: p.tipo,
+                    numero_operacion: p.numero_operacion,
+                    monto: p.monto,
+                    total_venta: v.total,
+                }))
         )
 
-        const totalMetodo = rowData.reduce((sum, v) => {
-            const pago = v.pagos?.find((p: any) => p.metodo_pago === labelBusqueda)
-            return sum + (Number(pago?.monto) || 0)
-        }, 0)
+        const totalMetodo = rowData.reduce(
+            (sum: number, p: any) => sum + (Number(p.monto) || 0),
+            0
+        )
 
         footer = (
             <div className='p-3 bg-amber-50 rounded flex justify-between items-center mt-2 border border-amber-100'>
