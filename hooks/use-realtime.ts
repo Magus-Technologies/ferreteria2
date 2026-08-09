@@ -19,6 +19,9 @@ import { emitModelChanged } from '~/lib/realtime-bus'
  */
 const SALDOS_SUB_CAJAS_KEYS = [
   'saldos-disponibles-movimiento',
+  // Desglose del "Saldo No Cerrado" por método y vendedor: sale del mismo
+  // cálculo que la columna, así que se invalida junto con ella.
+  'detalle-no-cerrado',
   QueryKeys.CAJAS_PRINCIPALES,
   QueryKeys.SUB_CAJAS,
 ]

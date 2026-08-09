@@ -14,6 +14,7 @@ import { QueryKeys } from '~/app/_lib/queryKeys'
 import ModalCrearSubCaja from '~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-crear-sub-caja'
 import ModalEditarSubCaja from '~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-editar-sub-caja'
 import ModalTransferirEntreSubCajas from '~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-transferir-entre-sub-cajas'
+import ModalDetalleNoCerrado from '~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-detalle-no-cerrado'
 import ButtonBase from '~/components/buttons/button-base'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { AgGridReact } from 'ag-grid-react'
@@ -42,6 +43,10 @@ export default function ModalVerSubCajas({
     const [openEditarSubCaja, setOpenEditarSubCaja] = useState(false)
     const [openTransferirSubCajas, setOpenTransferirSubCajas] = useState(false)
     const [subCajaSeleccionada, setSubCajaSeleccionada] = useState<SubCaja | null>(null)
+    const [openDetalleNoCerrado, setOpenDetalleNoCerrado] = useState(false)
+    // Estado propio (no `subCajaSeleccionada`) para que abrir el detalle no pise
+    // la fila que estén usando los modales de editar/eliminar.
+    const [subCajaDetalle, setSubCajaDetalle] = useState<SubCaja | null>(null)
     const gridRef = useRef<AgGridReact<SubCaja>>(null)
 
     // Obtener datos actualizados de la caja principal
@@ -96,6 +101,11 @@ export default function ModalVerSubCajas({
                 }
             },
         })
+    }
+
+    const handleVerDetalleNoCerrado = (subCaja: SubCaja) => {
+        setSubCajaDetalle(subCaja)
+        setOpenDetalleNoCerrado(true)
     }
 
     const handleVerHistorialTraslados = (subCaja: SubCaja) => {
@@ -155,6 +165,7 @@ export default function ModalVerSubCajas({
             onEditar: handleEditarSubCaja,
             onEliminar: handleEliminarSubCaja,
             onVerHistorialTraslados: handleVerHistorialTraslados,
+            onVerDetalleNoCerrado: handleVerDetalleNoCerrado,
             saldosNoCerrados,
             saldosCerrados,
         }),
@@ -379,6 +390,12 @@ export default function ModalVerSubCajas({
                     }}
                 />
             )}
+
+            <ModalDetalleNoCerrado
+                open={openDetalleNoCerrado}
+                setOpen={setOpenDetalleNoCerrado}
+                subCaja={subCajaDetalle}
+            />
 
             <ModalTransferirEntreSubCajas
                 open={openTransferirSubCajas}

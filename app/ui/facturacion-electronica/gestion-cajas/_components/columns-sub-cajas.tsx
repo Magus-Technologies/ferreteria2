@@ -1,18 +1,21 @@
 import { ColDef } from 'ag-grid-community'
 import { SubCaja } from '~/lib/api/caja-principal'
 import { Button, Space, Tag, Tooltip } from 'antd'
-import { FaEdit, FaTrash, FaWarehouse } from 'react-icons/fa'
+import { FaEdit, FaSearch, FaTrash, FaWarehouse } from 'react-icons/fa'
 
 export const useColumnsSubCajas = ({
   onEditar,
   onEliminar,
   onVerHistorialTraslados,
+  onVerDetalleNoCerrado,
   saldosNoCerrados,
   saldosCerrados,
 }: {
   onEditar: (subCaja: SubCaja) => void
   onEliminar: (subCaja: SubCaja) => void
   onVerHistorialTraslados?: (subCaja: SubCaja) => void
+  /** Abre el desglose del saldo no cerrado por despliegue de pago y vendedor */
+  onVerDetalleNoCerrado?: (subCaja: SubCaja) => void
   /** Dinero de la sesión ABIERTA + apertura por sub-caja (se consolida al cerrar) */
   saldosNoCerrados?: Record<number, number>
   /** Dinero CERRADO por sub-caja (solo sesiones cerradas) */
@@ -122,15 +125,28 @@ export const useColumnsSubCajas = ({
       colId: 'saldo_no_cerrado',
       headerName: 'Saldo No Cerrado',
       headerTooltip: 'Dinero de la sesión abierta (aún sin cerrar caja); no se puede trasladar hasta cerrar',
-      width: 150,
+      width: 180,
       cellRenderer: (params: any) => {
         const noCerrado = saldosNoCerrados?.[params.data?.id] ?? 0
         if (noCerrado <= 0) {
           return <div className='text-right text-slate-400'>S/. 0.00</div>
         }
         return (
-          <div className='text-right font-bold text-blue-600'>
-            S/. {noCerrado.toFixed(2)}
+          <div className='flex items-center justify-end gap-2'>
+            <span className='font-bold text-blue-600'>
+              S/. {noCerrado.toFixed(2)}
+            </span>
+            {onVerDetalleNoCerrado && (
+              <Tooltip title='Ver detalle por método de pago y vendedor'>
+                <Button
+                  type='default'
+                  icon={<FaSearch />}
+                  size='small'
+                  className='text-blue-600 hover:text-blue-700 border-blue-300 hover:border-blue-400'
+                  onClick={() => onVerDetalleNoCerrado(params.data)}
+                />
+              </Tooltip>
+            )}
           </div>
         )
       },
