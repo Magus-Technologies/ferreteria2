@@ -113,7 +113,14 @@ export const useColumnsSubCajas = ({
       field: 'saldo_actual',
       width: 140,
       cellRenderer: (params: any) => {
-        const cerrado = saldosCerrados?.[params.data?.id] ?? parseFloat(params.value)
+        // Sin fallback a `saldo_actual`: esa columna guardada está por encima del
+        // dinero real (los Traslados a Bóveda no la descuentan) y usarla mientras
+        // cargaba el endpoint mostraba un monto inflado que después saltaba al
+        // correcto. Mientras no haya dato se muestra un guion.
+        const cerrado = saldosCerrados?.[params.data?.id]
+        if (cerrado === undefined) {
+          return <div className='text-right text-slate-400'>—</div>
+        }
         return (
           <div className='text-right font-bold text-emerald-600'>
             S/. {Number(cerrado).toFixed(2)}

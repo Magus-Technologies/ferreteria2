@@ -115,7 +115,7 @@ export default function ModalVerSubCajas({
 
     // Saldo NO CERRADO por sub-caja = saldo actual − disponible cerrado
     // (dinero de la sesión abierta, aún sin cerrar caja)
-    const { data: saldosMovimiento = [] } = useQuery({
+    const { data: saldosMovimiento = [], isPending: cargandoSaldos } = useQuery({
         queryKey: ['saldos-disponibles-movimiento'],
         queryFn: async () => {
             const response = await transaccionesCajaApi.getSaldosDisponiblesMovimiento()
@@ -134,18 +134,22 @@ export default function ModalVerSubCajas({
         saldosMovimiento.map((s) => [s.sub_caja_id, s.saldo_disponible])
     ), [saldosMovimiento])
 
-    // Totales del header: cada uno es la suma EXACTA de su columna en la tabla,
-    // resuelta con la misma lógica de fallback que usan las celdas. Así lo que el
-    // usuario suma a ojo siempre coincide con lo que muestra el header.
+    // Totales del header: cada uno es la suma EXACTA de su columna en la tabla.
+    // La única fuente son los saldos recalculados del endpoint, para que header y
+    // filas no puedan diverger.
     //
-    // No se usa `cajaData.saldo_total` (el backend lo calcula por su cuenta): la
-    // única fuente son estos mismos saldos, para que header y filas no diverjan.
+    // NO se cae a `sc.saldo_actual` cuando falta el dato: esa columna guardada está
+    // por encima del dinero real (los Traslados a Bóveda no la descuentan, y arrastra
+    // descuadres viejos), así que usarla como respaldo hacía que al abrir el modal
+    // apareciera un total inflado durante un instante —ej. 25,948.30— y luego saltara
+    // al valor correcto —18,948.30— apenas respondía el endpoint. Mientras carga no se
+    // muestra ningún número; una sub-caja sin dato aporta 0.
     const { saldoTotalMostrado, totalNoCerrado } = useMemo(() => {
         let cerrado = 0
         let noCerrado = 0
 
         for (const sc of cajaData.sub_cajas as SubCaja[]) {
-            cerrado += saldosCerrados[sc.id] ?? parseFloat(sc.saldo_actual)
+            cerrado += saldosCerrados[sc.id] ?? 0
             noCerrado += saldosNoCerrados[sc.id] ?? 0
         }
 
@@ -205,19 +209,19 @@ export default function ModalVerSubCajas({
                                 <div className='text-sm'>
                                     <span className='text-slate-500'>Saldo Total:</span>{' '}
                                     <span className='font-bold text-emerald-600'>
-                                        S/. {saldoTotalMostrado.toFixed(2)}
+                                        {cargandoSaldos ? '—' : `S/. ${saldoTotalMostrado.toFixed(2)}`}
                                     </span>
                                 </div>
                                 <div className='text-sm'>
                                     <span className='text-slate-500'>No Cerrado:</span>{' '}
                                     <span className='font-bold text-blue-600'>
-                                        S/. {totalNoCerrado.toFixed(2)}
+                                        {cargandoSaldos ? '—' : `S/. ${totalNoCerrado.toFixed(2)}`}
                                     </span>
                                 </div>
                                 <div className='text-sm border-l border-slate-300 pl-4'>
                                     <span className='text-slate-500'>Total General:</span>{' '}
                                     <span className='font-bold text-slate-800'>
-                                        S/. {totalGeneral.toFixed(2)}
+                                        {cargandoSaldos ? '—' : `S/. ${totalGeneral.toFixed(2)}`}
                                     </span>
                                 </div>
                             </div>
