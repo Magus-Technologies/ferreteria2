@@ -84,6 +84,16 @@ export const trasladoBovedaApi = {
   },
 
   /**
+   * Historial de traslados del usuario, SIN depender de que tenga caja abierta.
+   * El backend lo resuelve desde su última apertura (abierta o cerrada) y amplía
+   * a toda la caja principal.
+   */
+  obtenerHistorial: async () => {
+    const response = await apiRequest('/cajas/traslados-boveda/historial');
+    return response.data;
+  },
+
+  /**
    * Obtener todos los traslados (incluyendo anulados) para historial
    */
   obtenerTodosLosTrasladosPorCaja: async (aperturaCierreId: string) => {

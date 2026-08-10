@@ -41,12 +41,14 @@ export default function HistorialTrasladosBovedaTab() {
     retry: 1,
   })
 
+  // El historial NO depende de tener caja abierta: antes se pedía la apertura
+  // activa y, si no había, ni siquiera se llamaba al backend — la pestaña salía
+  // vacía como si no existieran traslados. El endpoint resuelve la caja principal
+  // desde la última apertura del usuario (abierta o cerrada).
   const cargarTraslados = async () => {
-    if (!cajaActiva?.id) return
-
     try {
       setLoading(true)
-      const response = await trasladoBovedaApi.obtenerTodosLosTrasladosPorCaja(cajaActiva.id)
+      const response = await trasladoBovedaApi.obtenerHistorial()
       setTraslados(Array.isArray(response) ? response : (response as any)?.data || [])
     } catch (error) {
       message.error('Error al cargar traslados')
@@ -56,11 +58,9 @@ export default function HistorialTrasladosBovedaTab() {
   }
 
   useEffect(() => {
-    if (cajaActiva?.id) {
-      cargarTraslados()
-    }
+    cargarTraslados()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cajaActiva?.id])
+  }, [])
 
   useEffect(() => {
     const unsub = subscribeModelChanged((ev) => {
