@@ -168,11 +168,13 @@ export default function ModalRegistroCompleto({
 
         bancoIdFinal = responseBanco.data?.data.id || null
       } else {
-        // Actualizar el banco
+        // Actualizar el banco. Se manda `monto_inicial` igual que al crear: sin él
+        // el backend conservaba el valor anterior y editarlo no tenía ningún efecto.
         const responseBanco = await metodoDePagoApi.update(bancoId!, {
           name: nombreBanco,
           cuenta_bancaria: values.cuenta_bancaria,
           nombre_titular: values.nombre_titular,
+          monto_inicial: montoInicial,
         })
 
         if (responseBanco.error) {
