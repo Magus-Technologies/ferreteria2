@@ -38,12 +38,19 @@ type SubtotalRow = {
   compra_forma_pago: string | null
   compra_proveedor: string | null
   compra_registrado_por: string | null
+  compra_moneda: string | null
 }
 type GridRow = GananciaRow | DetalleRow | SubtotalRow
 
 // "N compras" no identifica una compra específica (una venta que se surtió de varios
 // lotes) — no se puede usar como llave de agrupación o mezclaría ventas no relacionadas.
 const esDocumentoAgrupable = (doc?: string | null): doc is string => !!doc && !/\d+ compras$/i.test(doc)
+
+// El subtotal por compra solo tiene sentido en compras en DÓLARES ('d'): ahí la
+// ganancia real depende del tipo de cambio al que se pagó, así que hay que ver el
+// grupo entero junto. En soles la ganancia ya se lee fila por fila y la línea de
+// resumen solo estorba.
+const esCompraEnDolares = (row: { compra_moneda?: string | null }) => row.compra_moneda === 'd'
 
 // fecha_pago_compra/compra_fecha_vencimiento llegan como "YYYY-MM-DD[ HH:mm:ss]"
 const formatFechaCorta = (iso?: string | null) => {
@@ -91,7 +98,7 @@ export default function TableMisGanancias() {
   const rowDataConSubtotales = useMemo<(GananciaDetalle | SubtotalRow)[]>(() => {
     const grupos = new Map<string, GananciaDetalle[]>()
     rowData.forEach((row) => {
-      if (esDocumentoAgrupable(row.documento_pagado)) {
+      if (esDocumentoAgrupable(row.documento_pagado) && esCompraEnDolares(row)) {
         const key = row.documento_pagado
         if (!grupos.has(key)) grupos.set(key, [])
         grupos.get(key)!.push(row)
@@ -103,7 +110,7 @@ export default function TableMisGanancias() {
     const ultimoIndicePorDoc = new Map<string, number>()
     rowData.forEach((row, i) => {
       const doc = row.documento_pagado
-      if (esDocumentoAgrupable(doc) && (grupos.get(doc)?.length ?? 0) > 1) {
+      if (esDocumentoAgrupable(doc) && esCompraEnDolares(row) && (grupos.get(doc)?.length ?? 0) > 1) {
         ultimoIndicePorDoc.set(doc, i)
       }
     })
@@ -138,6 +145,7 @@ export default function TableMisGanancias() {
           compra_forma_pago: miembros.find((r) => r.compra_forma_pago)?.compra_forma_pago ?? null,
           compra_proveedor: miembros.find((r) => r.compra_proveedor)?.compra_proveedor ?? null,
           compra_registrado_por: miembros.find((r) => r.compra_registrado_por)?.compra_registrado_por ?? null,
+          compra_moneda: 'd',
         })
       }
     })
