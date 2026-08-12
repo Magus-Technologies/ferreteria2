@@ -409,6 +409,18 @@ export const transaccionesCajaApi = {
       saldo_disponible: number
       /** Dinero de la sesión abierta + monto de apertura (se consolida al cerrar) */
       saldo_no_cerrado: number
+      /**
+       * El mismo desglose acotado a cada método de pago de la sub-caja. Necesario
+       * para elegir origen en el Traslado de Dinero: el total de arriba mezcla
+       * efectivo, bancos y billeteras.
+       */
+      despliegues?: Array<{
+        despliegue_pago_id: string
+        nombre: string
+        saldo_actual: number
+        saldo_disponible: number
+        saldo_no_cerrado: number
+      }>
     }>
   }>> {
     return apiRequest('/cajas/movimientos-internos/saldos-disponibles')

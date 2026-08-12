@@ -94,7 +94,7 @@ const itemsCaja: MenuProps['items'] = [
   },
   {
     key: 'traslado-efectivo',
-    label: 'Traslado de Efectivo',
+    label: 'Traslado de Dinero',
     onClick: () => {
       setOpenTrasladoEfectivo(true)
     }
