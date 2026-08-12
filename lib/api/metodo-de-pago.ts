@@ -83,6 +83,12 @@ class MetodoDePagoApi {
     name: string;
     cuenta_bancaria?: string;
     nombre_titular?: string;
+    /**
+     * El backend acepta este campo desde siempre, pero el tipo no lo declaraba, así
+     * que el modal de edición no lo mandaba: editar el monto inicial no cambiaba
+     * nada. `create` sí lo incluía, por eso crear un banco nuevo sí funcionaba.
+     */
+    monto_inicial?: number;
   }): Promise<ApiResponse<LaravelResponse<MetodoDePago>>> {
     return apiRequest<LaravelResponse<MetodoDePago>>(`/metodos-de-pago/${id}`, {
       method: 'PUT',

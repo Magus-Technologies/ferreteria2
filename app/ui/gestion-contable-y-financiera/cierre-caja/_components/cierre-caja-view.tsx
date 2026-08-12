@@ -15,7 +15,7 @@ import { useCierreCaja } from '../_hooks/use-cierre-caja'
 import { useCerrarCaja } from '../_hooks/use-cerrar-caja'
 import { apiRequest, getAuthToken } from '../../../../../lib/api'
 import { cierreCajaApi } from '../../../../../lib/api/cierre-caja'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useEmpresaPublica } from '~/hooks/use-empresa-publica'
 import dayjs from 'dayjs'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
@@ -24,6 +24,10 @@ const { TextArea } = Input
 
 export default function CierreCajaView() {
   const router = useRouter()
+  // Ruta actual, para que los redirects se queden en ESTE módulo. Esta vista es
+  // una copia de la de facturacion-electronica y arrastraba esa ruta hardcodeada,
+  // así que al cerrar caja desde gestión contable te sacaba al otro módulo.
+  const pathname = usePathname()
   const searchParams = useSearchParams()
   const cierreId = searchParams.get('cierre_id')
   const isReCierre = searchParams.get('re_cierre') === 'true'
@@ -316,9 +320,14 @@ export default function CierreCajaView() {
   const totalOtrosIngresos = detalleIngresosList.reduce((s, i) => s + Number(i?.monto || 0), 0)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const detalleEgresosList = Object.values(resumen?.detalle_egresos || {}) as any[]
-  const egresosSinBoveda = detalleEgresosList.filter(
-    (e) => !String(e?.concepto || '').toUpperCase().startsWith('TRASLADO A B')
-  )
+
+  // Se separa por el campo `tipo` que manda el backend, no por el texto del
+  // concepto (antes: `concepto.startsWith('TRASLADO A B')`, que solo apartaba
+  // los traslados a bóveda). Los traslados de efectivo ya no llegan acá: el
+  // backend no los cuenta como egreso del vendedor, porque salen del pozo
+  // cerrado de la sub-caja y no de su sesión.
+  const egresosSinBoveda = detalleEgresosList.filter((e) => e?.tipo !== 'traslado_boveda')
+
   const totalGastosSesion = egresosSinBoveda.reduce((s, e) => s + Number(e?.monto || 0), 0)
 
   const handleFinalizarCaja = async () => {
@@ -360,14 +369,11 @@ export default function CierreCajaView() {
       if (ticketCaja) {
         setModalTicketOpen(true)
       }
-      if (isReCierre) {
-        // CORREGIDO: Después de re-cerrar exitosamente, quitar re_cierre=true de la URL
-        // para que la vista vuelva a modo solo lectura
-        router.replace(`/ui/facturacion-electronica/cierre-caja?cierre_id=${cajaActiva.id}`)
-      } else {
-        // Persistir el ID en la URL para que no se pierda al recargar
-        router.replace(`/ui/facturacion-electronica/cierre-caja?cierre_id=${cajaActiva.id}`)
-      }
+      // En re-cierre esto además quita `re_cierre=true` de la URL para que la
+      // vista vuelva a modo solo lectura; en cierre normal persiste el ID para
+      // que no se pierda al recargar. Se usa `pathname` en vez de una ruta fija
+      // para no saltar de módulo.
+      router.replace(`${pathname}?cierre_id=${cajaActiva.id}`)
     }
   }
 
@@ -906,7 +912,7 @@ export default function CierreCajaView() {
                               type='primary'
                               className='flex-1 text-sm bg-amber-600 hover:bg-amber-700'
                               size='large'
-                              onClick={() => router.push('/ui/facturacion-electronica/mis-aperturas-cierres')}
+                              onClick={() => router.push('/ui/gestion-contable-y-financiera/mis-aperturas-cierres')}
                             >
                               Volver al Historial
                             </Button>

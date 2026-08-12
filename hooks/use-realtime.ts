@@ -8,6 +8,25 @@ import { getAuthToken } from '~/lib/api'
 import { emitModelChanged } from '~/lib/realtime-bus'
 
 /**
+ * Queries que muestran el saldo de las sub-cajas: las columnas "Saldo Cerrado" /
+ * "Saldo No Cerrado" del modal Sub-Cajas, su header y la tabla de cajas
+ * principales.
+ *
+ * Van en TODOS los canales que mueven dinero real, no solo en `cajas`: una
+ * venta, un gasto, un pago de compra, un traslado a bóveda o un préstamo entre
+ * vendedores escriben en `transacciones_caja` y por lo tanto cambian estos
+ * montos. Sin esto el modal solo se refrescaba al recargar o al reabrirlo.
+ */
+const SALDOS_SUB_CAJAS_KEYS = [
+  'saldos-disponibles-movimiento',
+  // Desglose del "Saldo No Cerrado" por método y vendedor: sale del mismo
+  // cálculo que la columna, así que se invalida junto con ella.
+  'detalle-no-cerrado',
+  QueryKeys.CAJAS_PRINCIPALES,
+  QueryKeys.SUB_CAJAS,
+]
+
+/**
  * Mapeo de módulo del backend → query keys del frontend a invalidar.
  */
 const MODULE_TO_QUERY_KEYS: Record<string, string[]> = {
@@ -36,6 +55,8 @@ const MODULE_TO_QUERY_KEYS: Record<string, string[]> = {
     // Una venta puede aplicar vales y descontar su stock → refrescar la lista de vales.
     'vales-compra',
     'vale-compra',
+    // Una venta cobrada entra a una sub-caja → mueve Cerrado / No Cerrado.
+    ...SALDOS_SUB_CAJAS_KEYS,
   ],
   compras: [
     QueryKeys.COMPRAS,
@@ -57,6 +78,8 @@ const MODULE_TO_QUERY_KEYS: Record<string, string[]> = {
     'productos-infinite',
     'productos-listado-completo',
     'vencimientos-proximos',
+    // Un pago de compra sale de una sub-caja → mueve Cerrado / No Cerrado.
+    ...SALDOS_SUB_CAJAS_KEYS,
   ],
   productos: [
     QueryKeys.PRODUCTOS,
@@ -197,8 +220,8 @@ const MODULE_TO_QUERY_KEYS: Record<string, string[]> = {
   // Un gasto/ingreso extra también mueve efectivo entre sub-cajas (ManejaFlujoCajaExtra)
   // → invalidar SUB_CAJAS para que el modal de Traslado a Bóveda ("efectivo-por-vendedor")
   // refresque solo, sin que el usuario tenga que cerrar y reabrir el modal.
-  gastos: [QueryKeys.MIS_GASTOS, QueryKeys.EGRESOS_DINERO, QueryKeys.SUB_CAJAS],
-  ingresos: [QueryKeys.GANANCIAS, QueryKeys.GANANCIAS_RESUMEN, QueryKeys.SUB_CAJAS],
+  gastos: [QueryKeys.MIS_GASTOS, QueryKeys.EGRESOS_DINERO, ...SALDOS_SUB_CAJAS_KEYS],
+  ingresos: [QueryKeys.GANANCIAS, QueryKeys.GANANCIAS_RESUMEN, ...SALDOS_SUB_CAJAS_KEYS],
   'ordenes-compra': [QueryKeys.ORDENES_COMPRA, QueryKeys.SOLICITUD_ORDEN_COMPRA],
   almacenes: [QueryKeys.ALMACENES],
   categorias: [QueryKeys.CATEGORIAS],
@@ -215,7 +238,7 @@ const MODULE_TO_QUERY_KEYS: Record<string, string[]> = {
   // Registrar/anular un traslado a bóveda mueve dinero real entre sub-cajas —
   // invalidar también CAJA_ACTIVA (Cierre de Caja) y SUB_CAJAS, no solo la lista
   // propia del historial de traslados.
-  'traslados-boveda': ['traslados-boveda', QueryKeys.CAJA_ACTIVA, QueryKeys.SUB_CAJAS],
+  'traslados-boveda': ['traslados-boveda', QueryKeys.CAJA_ACTIVA, ...SALDOS_SUB_CAJAS_KEYS],
   'despliegues-de-pago': [QueryKeys.DESPLIEGUE_DE_PAGO, QueryKeys.METODO_DE_PAGO],
   'series-documentos': [],
   choferes: [QueryKeys.CHOFERES],
@@ -229,8 +252,8 @@ const MODULE_TO_QUERY_KEYS: Record<string, string[]> = {
   'prestamos-vendedores': [
     'solicitudes-efectivo-pendientes',
     QueryKeys.CAJA_ACTIVA,
-    QueryKeys.SUB_CAJAS,
     'vendedores-con-efectivo-real-time',
+    ...SALDOS_SUB_CAJAS_KEYS,
   ],
   'requerimientos-internos': [
     QueryKeys.ORDENES_DE_SERVICIO,

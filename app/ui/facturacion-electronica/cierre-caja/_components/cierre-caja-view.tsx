@@ -317,9 +317,14 @@ export default function CierreCajaView() {
   const totalOtrosIngresos = detalleIngresosList.reduce((s, i) => s + Number(i?.monto || 0), 0)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const detalleEgresosList = Object.values(resumen?.detalle_egresos || {}) as any[]
-  const egresosSinBoveda = detalleEgresosList.filter(
-    (e) => !String(e?.concepto || '').toUpperCase().startsWith('TRASLADO A B')
-  )
+
+  // Se separa por el campo `tipo` que manda el backend, no por el texto del
+  // concepto (antes: `concepto.startsWith('TRASLADO A B')`, que solo apartaba
+  // los traslados a bóveda). Los traslados de efectivo ya no llegan acá: el
+  // backend no los cuenta como egreso del vendedor, porque salen del pozo
+  // cerrado de la sub-caja y no de su sesión.
+  const egresosSinBoveda = detalleEgresosList.filter((e) => e?.tipo !== 'traslado_boveda')
+
   const totalGastosSesion = egresosSinBoveda.reduce((s, e) => s + Number(e?.monto || 0), 0)
 
   const handleFinalizarCaja = async () => {

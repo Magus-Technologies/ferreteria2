@@ -165,10 +165,6 @@ export default function ModalVerSubCajas({
                         <div className='flex justify-between items-center mb-4'>
                             <div className='flex gap-4'>
                                 <div className='text-sm'>
-                                    <span className='text-slate-500'>Responsable:</span>{' '}
-                                    <span className='font-semibold'>{cajaData.user.name}</span>
-                                </div>
-                                <div className='text-sm'>
                                     <span className='text-slate-500'>Saldo Total:</span>{' '}
                                     <span className='font-bold text-emerald-600'>
                                         S/. {parseFloat(cajaData.saldo_total).toFixed(2)}

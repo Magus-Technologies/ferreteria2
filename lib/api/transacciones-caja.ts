@@ -414,6 +414,33 @@ export const transaccionesCajaApi = {
     return apiRequest('/cajas/movimientos-internos/saldos-disponibles')
   },
 
+  /**
+   * Desglose del "Saldo No Cerrado" de una sub-caja: cuánto aporta cada usuario
+   * con sesión abierta en cada despliegue de pago. Sale del mismo cálculo que la
+   * columna, así que la suma del detalle cuadra con el monto mostrado.
+   */
+  getDetalleNoCerrado(subCajaId: number): Promise<ApiResponse<{
+    success: boolean
+    data: {
+      sub_caja_id: number
+      sub_caja_nombre: string
+      total: number
+      /** El neto de la sesión es negativo y la columna lo muestra como 0.00 */
+      total_aplanado: boolean
+      detalle: Array<{
+        despliegue_pago_id: string | null
+        despliegue_nombre: string
+        user_id: string
+        user_nombre: string
+        ingresos: number
+        egresos: number
+        monto: number
+      }>
+    }
+  }>> {
+    return apiRequest(`/cajas/movimientos-internos/detalle-no-cerrado/${subCajaId}`)
+  },
+
   getUsuariosConSaldo(): Promise<ApiResponse<{
     success: boolean
     data: Array<{

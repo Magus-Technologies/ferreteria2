@@ -207,6 +207,14 @@ function FormVentaInternal({
           direccion_seleccionada: form.getFieldValue('direccion_seleccionada') || undefined,
           cotizacion_id: form.getFieldValue('cotizacion_id') || undefined,
           stock_ya_aplicado: form.getFieldValue('stock_ya_aplicado') || undefined,
+          // Mismo caso: el modal de "Cobrar Diferencia" guarda el pago con
+          // setFieldValue('diferencia_pago', ...), pero ese campo no tiene un
+          // <Form.Item> que lo registre (a diferencia de `metodos_de_pago`, que sí
+          // tiene su input oculto), así que onFinish no lo entregaba y el payload
+          // salía sin él. El backend entonces rechazaba la edición con "Esta edición
+          // deja una diferencia de S/ X pendiente de cobrar" aunque el usuario SÍ
+          // había registrado el pago en el modal.
+          diferencia_pago: form.getFieldValue('diferencia_pago') || undefined,
         })}
     >
       <div className='xl:flex-1 flex flex-col gap-4 xl:gap-6 min-w-0 xl:min-h-0'>

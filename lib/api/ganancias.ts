@@ -46,6 +46,8 @@ export interface GananciaDetalle {
   compra_forma_pago?: string | null;
   compra_proveedor?: string | null;
   compra_registrado_por?: string | null;
+  // Moneda de la compra de origen: 'd' = dólares, 's' = soles.
+  compra_moneda?: string | null;
 }
 
 export interface ResumenGanancias {

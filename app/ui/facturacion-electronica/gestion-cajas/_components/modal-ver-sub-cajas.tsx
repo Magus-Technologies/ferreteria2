@@ -14,6 +14,7 @@ import { QueryKeys } from '~/app/_lib/queryKeys'
 import ModalCrearSubCaja from '~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-crear-sub-caja'
 import ModalEditarSubCaja from '~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-editar-sub-caja'
 import ModalTransferirEntreSubCajas from '~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-transferir-entre-sub-cajas'
+import ModalDetalleNoCerrado from '~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-detalle-no-cerrado'
 import ButtonBase from '~/components/buttons/button-base'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { AgGridReact } from 'ag-grid-react'
@@ -42,6 +43,10 @@ export default function ModalVerSubCajas({
     const [openEditarSubCaja, setOpenEditarSubCaja] = useState(false)
     const [openTransferirSubCajas, setOpenTransferirSubCajas] = useState(false)
     const [subCajaSeleccionada, setSubCajaSeleccionada] = useState<SubCaja | null>(null)
+    const [openDetalleNoCerrado, setOpenDetalleNoCerrado] = useState(false)
+    // Estado propio (no `subCajaSeleccionada`) para que abrir el detalle no pise
+    // la fila que estén usando los modales de editar/eliminar.
+    const [subCajaDetalle, setSubCajaDetalle] = useState<SubCaja | null>(null)
     const gridRef = useRef<AgGridReact<SubCaja>>(null)
 
     // Obtener datos actualizados de la caja principal
@@ -98,6 +103,11 @@ export default function ModalVerSubCajas({
         })
     }
 
+    const handleVerDetalleNoCerrado = (subCaja: SubCaja) => {
+        setSubCajaDetalle(subCaja)
+        setOpenDetalleNoCerrado(true)
+    }
+
     const handleVerHistorialTraslados = (subCaja: SubCaja) => {
         setSubCajaSeleccionada(subCaja)
         setActiveTab('historial-traslados')
@@ -105,7 +115,7 @@ export default function ModalVerSubCajas({
 
     // Saldo NO CERRADO por sub-caja = saldo actual − disponible cerrado
     // (dinero de la sesión abierta, aún sin cerrar caja)
-    const { data: saldosMovimiento = [] } = useQuery({
+    const { data: saldosMovimiento = [], isPending: cargandoSaldos } = useQuery({
         queryKey: ['saldos-disponibles-movimiento'],
         queryFn: async () => {
             const response = await transaccionesCajaApi.getSaldosDisponiblesMovimiento()
@@ -124,6 +134,32 @@ export default function ModalVerSubCajas({
         saldosMovimiento.map((s) => [s.sub_caja_id, s.saldo_disponible])
     ), [saldosMovimiento])
 
+    // Totales del header: cada uno es la suma EXACTA de su columna en la tabla.
+    // La única fuente son los saldos recalculados del endpoint, para que header y
+    // filas no puedan diverger.
+    //
+    // NO se cae a `sc.saldo_actual` cuando falta el dato: esa columna guardada está
+    // por encima del dinero real (los Traslados a Bóveda no la descuentan, y arrastra
+    // descuadres viejos), así que usarla como respaldo hacía que al abrir el modal
+    // apareciera un total inflado durante un instante —ej. 25,948.30— y luego saltara
+    // al valor correcto —18,948.30— apenas respondía el endpoint. Mientras carga no se
+    // muestra ningún número; una sub-caja sin dato aporta 0.
+    const { saldoTotalMostrado, totalNoCerrado } = useMemo(() => {
+        let cerrado = 0
+        let noCerrado = 0
+
+        for (const sc of cajaData.sub_cajas as SubCaja[]) {
+            cerrado += saldosCerrados[sc.id] ?? 0
+            noCerrado += saldosNoCerrados[sc.id] ?? 0
+        }
+
+        return { saldoTotalMostrado: cerrado, totalNoCerrado: noCerrado }
+    }, [cajaData.sub_cajas, saldosCerrados, saldosNoCerrados])
+
+    // Todo el dinero que hay en la caja: lo consolidado más lo que sigue dentro
+    // de las sesiones abiertas.
+    const totalGeneral = saldoTotalMostrado + totalNoCerrado
+
     // MEMOIZAR las columnas: si el array cambia de identidad en cada render,
     // AG Grid recibe columnDefs nuevas constantemente y resetea el orden en
     // pleno arrastre (por eso "no dejaba" mover las columnas).
@@ -133,6 +169,7 @@ export default function ModalVerSubCajas({
             onEditar: handleEditarSubCaja,
             onEliminar: handleEliminarSubCaja,
             onVerHistorialTraslados: handleVerHistorialTraslados,
+            onVerDetalleNoCerrado: handleVerDetalleNoCerrado,
             saldosNoCerrados,
             saldosCerrados,
         }),
@@ -166,15 +203,25 @@ export default function ModalVerSubCajas({
                 children: (
                     <div className='pt-2 animate-in fade-in duration-500'>
                         <div className='flex justify-between items-center mb-4'>
-                            <div className='flex gap-4'>
-                                <div className='text-sm'>
-                                    <span className='text-slate-500'>Responsable:</span>{' '}
-                                    <span className='font-semibold'>{cajaData.user.name}</span>
-                                </div>
+                            <div className='flex gap-4 items-center'>
+                                {/* Cada total usa el color de su columna en la tabla:
+                                    verde = Saldo Cerrado, azul = Saldo No Cerrado. */}
                                 <div className='text-sm'>
                                     <span className='text-slate-500'>Saldo Total:</span>{' '}
                                     <span className='font-bold text-emerald-600'>
-                                        S/. {parseFloat(cajaData.saldo_total).toFixed(2)}
+                                        {cargandoSaldos ? '—' : `S/. ${saldoTotalMostrado.toFixed(2)}`}
+                                    </span>
+                                </div>
+                                <div className='text-sm'>
+                                    <span className='text-slate-500'>No Cerrado:</span>{' '}
+                                    <span className='font-bold text-blue-600'>
+                                        {cargandoSaldos ? '—' : `S/. ${totalNoCerrado.toFixed(2)}`}
+                                    </span>
+                                </div>
+                                <div className='text-sm border-l border-slate-300 pl-4'>
+                                    <span className='text-slate-500'>Total General:</span>{' '}
+                                    <span className='font-bold text-slate-800'>
+                                        {cargandoSaldos ? '—' : `S/. ${totalGeneral.toFixed(2)}`}
                                     </span>
                                 </div>
                             </div>
@@ -296,7 +343,7 @@ export default function ModalVerSubCajas({
                 ),
             },
         ],
-        [cajaData, isLoading, columns, cajaChica, cajaPrincipal.id, onSuccess, cajaActiva?.id]
+        [cajaData, isLoading, columns, cajaChica, cajaPrincipal.id, onSuccess, cajaActiva?.id, saldoTotalMostrado, totalNoCerrado, totalGeneral]
     )
 
     return (
@@ -347,6 +394,12 @@ export default function ModalVerSubCajas({
                     }}
                 />
             )}
+
+            <ModalDetalleNoCerrado
+                open={openDetalleNoCerrado}
+                setOpen={setOpenDetalleNoCerrado}
+                subCaja={subCajaDetalle}
+            />
 
             <ModalTransferirEntreSubCajas
                 open={openTransferirSubCajas}
