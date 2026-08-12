@@ -104,6 +104,14 @@ export default function BodyCrearNotaCredito({ form }: { form?: FormInstance<For
 
         if (!comprobante || cancelled) return;
 
+        // Requisito SUNAT: el comprobante original debe estar aceptado
+        if (!['ACEPTADO', 'ACEPTADO_CON_OBSERVACIONES'].includes(comprobante.estado_sunat)) {
+          message.warning(
+            `El comprobante ${comprobante.serie}-${comprobante.numero} no está ACEPTADO por SUNAT (estado: ${comprobante.estado_sunat}). Solo se pueden crear notas de crédito sobre facturas o boletas aceptadas.`
+          );
+          return;
+        }
+
         aplicarComprobanteAForm(formToUse, comprobante);
 
         message.success(
