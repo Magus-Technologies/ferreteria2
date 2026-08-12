@@ -33,7 +33,7 @@ export default function ModalBuscarComprobante({
   const [text, setText] = useState(searchQueryProp);
   const [tipoDocumento, setTipoDocumento] = useState<"01" | "03" | undefined>(tipoDocumentoInicial);
   const [value] = useDebounce(text, 1000);
-  const [desde, setDesde] = useState<Dayjs | null>(dayjs());
+  const [desde, setDesde] = useState<Dayjs | null>(dayjs().subtract(30, "day"));
   const [hasta, setHasta] = useState<Dayjs | null>(dayjs());
   const [comprobanteSeleccionado, setComprobanteSeleccionado] = useState<ComprobanteElectronico | null>(null);
 

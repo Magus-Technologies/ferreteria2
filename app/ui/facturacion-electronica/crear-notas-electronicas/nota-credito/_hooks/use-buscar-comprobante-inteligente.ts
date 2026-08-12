@@ -141,6 +141,16 @@ export default function useBuscarComprobanteInteligente(form: FormInstance<FormC
           return
         }
 
+        // Validar que SUNAT haya aceptado el comprobante original
+        if (!['ACEPTADO', 'ACEPTADO_CON_OBSERVACIONES'].includes(comprobante.estado_sunat)) {
+          notification.error({
+            message: 'Comprobante no aceptado por SUNAT',
+            description: `El comprobante ${comprobante.serie}-${comprobante.numero} está en estado "${comprobante.estado_sunat}". Solo se pueden crear notas de crédito sobre facturas o boletas ACEPTADAS por SUNAT.`,
+            duration: 6,
+          })
+          return
+        }
+
         // Cargar datos del cliente, venta y productos
         aplicarComprobanteAForm(form, comprobante)
 
