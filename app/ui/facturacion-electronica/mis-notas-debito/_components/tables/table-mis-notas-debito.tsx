@@ -1,7 +1,7 @@
 "use client";
 
 import { AgGridReact } from "ag-grid-react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ColDef } from "ag-grid-community";
 import { useStoreFiltrosMisNotasDebito } from "../../_store/store-filtros-mis-notas-debito";
 import useGetNotasDebito from "../../_hooks/use-get-notas-debito";
@@ -33,6 +33,22 @@ export default function TableMisNotasDebito() {
   const { response, isLoading, refetch } = useGetNotasDebito({ where: filtros });
   const [enviandoId, setEnviandoId] = useState<string | null>(null);
   const setNotaSeleccionada = useStoreNotaDebitoSeleccionada((state) => state.setNota);
+
+  // Auto-seleccionar la primera fila al cargar, como en mis-ventas, para que
+  // el detalle se muestre sin necesidad de hacer clic.
+  useEffect(() => {
+    if (!response || response.length === 0) return;
+    const t = setTimeout(() => {
+      const api = gridRef.current?.api;
+      if (!api) return;
+      const node = api.getDisplayedRowAtIndex(0);
+      if (node) {
+        node.setSelected(true);
+        setNotaSeleccionada(node.data);
+      }
+    }, 100);
+    return () => clearTimeout(t);
+  }, [response]);
 
   const handleEnviarSunat = async (id: string) => {
     try {

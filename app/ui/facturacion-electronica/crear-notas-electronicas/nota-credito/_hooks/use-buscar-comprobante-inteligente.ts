@@ -13,6 +13,7 @@ import { useStoreBuscarComprobanteCredito } from '../_store/store-buscar-comprob
 export function aplicarComprobanteAForm(
   form: FormInstance<FormCreateNotaCredito>,
   comprobante: any,
+  unidades?: string[],
 ) {
   const ventaIdString = String(comprobante.venta_id)
 
@@ -32,10 +33,11 @@ export function aplicarComprobanteAForm(
   })
 
   if (comprobante.detalles && comprobante.detalles.length > 0) {
-    const productos = comprobante.detalles.map((detalle: any) => ({
+    const productos = comprobante.detalles.map((detalle: any, index: number) => ({
       codigo: detalle.codigo_producto || '',
       descripcion: detalle.descripcion || '',
-      unidad_medida: detalle.unidad_medida || 'NIU',
+      // Preferir la unidad con la que se vendió (venta) sobre el código del comprobante.
+      unidad_medida: unidades?.[index] || detalle.unidad_medida_nombre || detalle.unidad_medida || 'NIU',
       cantidad: Number(detalle.cantidad),
       precio_unitario: Number(detalle.precio_unitario),
       precio_venta: Number(detalle.precio_unitario),

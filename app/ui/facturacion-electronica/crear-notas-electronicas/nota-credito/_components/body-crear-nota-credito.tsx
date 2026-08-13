@@ -112,7 +112,12 @@ export default function BodyCrearNotaCredito({ form }: { form?: FormInstance<For
           return;
         }
 
-        aplicarComprobanteAForm(formToUse, comprobante);
+        // Unidad de medida con la que se vendió (la venta es la fuente real).
+        const unidades = (ventaData?.productos_por_almacen || []).flatMap((pa: any) =>
+          (pa?.unidades_derivadas || []).map((u: any) => u?.unidad_derivada_inmutable?.name || ''),
+        );
+
+        aplicarComprobanteAForm(formToUse, comprobante, unidades);
 
         message.success(
           `${comprobante.tipo_comprobante === '01' ? 'Factura' : 'Boleta'} ${comprobante.serie}-${comprobante.numero} cargado`
