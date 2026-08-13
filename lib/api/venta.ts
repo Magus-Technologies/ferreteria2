@@ -610,6 +610,8 @@ export type VentaCompleta = {
     igv?: number
     total?: number
   }
+  notas_credito_activas_count?: number
+  anulado_por_nota_credito?: boolean
 }
 
 /**

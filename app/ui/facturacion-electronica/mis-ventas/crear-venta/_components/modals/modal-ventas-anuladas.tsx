@@ -44,6 +44,10 @@ export default function ModalVentasAnuladas({
 
       let ventas = response.data?.data || []
 
+      // Excluir las anuladas por Nota de Crédito: esas se anulan desde facturación
+      // electrónica y no deben poder "recuperarse" como una anulación manual.
+      ventas = ventas.filter((v: any) => v.anulado_por_nota_credito !== true)
+
       if (desde) {
         const desdeStart = desde.startOf('day')
         ventas = ventas.filter((v: any) => {

@@ -395,9 +395,10 @@ export function useColumnsMisVentas() {
     {
       headerName: "Estado",
       field: "estado_de_venta",
-      width: 100,
+      width: 130,
       cellRenderer: (params: any) => {
         const estado = params.value;
+        const anuladoPorNC = params.data?.anulado_por_nota_credito === true;
         const config: Record<
           string,
           { label: string; bg: string; text: string }
@@ -407,11 +408,15 @@ export function useColumnsMisVentas() {
           ee: { label: "En Espera", bg: "#fef9c3", text: "#854d0e" },
           an: { label: "Anulado", bg: "#fee2e2", text: "#dc2626" },
         };
-        const { label, bg, text } = config[estado] ?? {
+        const base = config[estado] ?? {
           label: estado || "",
           bg: "#f1f5f9",
           text: "#475569",
         };
+        // Anulada por nota de crédito: texto + color distintivo.
+        const label = anuladoPorNC ? `${base.label} (NC)` : base.label;
+        const bg = anuladoPorNC ? "#fce7f3" : base.bg;
+        const text = anuladoPorNC ? "#9d174d" : base.text;
         return (
           <div className="flex items-center h-full">
             <span
@@ -425,6 +430,37 @@ export function useColumnsMisVentas() {
               }}
             >
               {label}
+            </span>
+          </div>
+        );
+      },
+    },
+    {
+      headerName: "Anul. por NC",
+      colId: "anulado_por_nota_credito",
+      field: "anulado_por_nota_credito",
+      width: 120,
+      filter: "agSetColumnFilter",
+      filterParams: {
+        values: ["Sí", "No"],
+      },
+      valueGetter: (params) =>
+        params.data?.anulado_por_nota_credito === true ? "Sí" : "No",
+      cellRenderer: (params: any) => {
+        const si = params.value === "Sí";
+        return (
+          <div className="flex items-center h-full">
+            <span
+              style={{
+                background: si ? "#fce7f3" : "#f1f5f9",
+                color: si ? "#9d174d" : "#9ca3af",
+                fontWeight: "bold",
+                fontSize: "11px",
+                padding: "2px 8px",
+                borderRadius: "9999px",
+              }}
+            >
+              {si ? "Sí" : "No"}
             </span>
           </div>
         );

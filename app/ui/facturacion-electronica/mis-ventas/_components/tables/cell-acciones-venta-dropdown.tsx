@@ -58,6 +58,9 @@ export default function CellAccionesVentaDropdown(
 
   const { comprobanteElectronico, estadoSunat, tieneXml, tieneCdr, isAceptado } = comprobanteInfo;
 
+  // Ya existe una nota de crédito activa (no cancelada) para esta venta.
+  const hasNotaCredito = (venta?.notas_credito_activas_count ?? 0) > 0;
+
   // Determinar label de edición según tipo de documento
   const tipoDocumento = venta?.tipo_documento;
   const editLabel = tipoDocumento === '01' ? 'Editar Factura'
@@ -318,7 +321,7 @@ export default function CellAccionesVentaDropdown(
       key: 'nota-credito',
       label: <span className="flex items-center gap-2"><FaClipboardList className="text-rose-600" /> Crear Nota de Crédito</span>,
       onClick: () => router.push(`/ui/facturacion-electronica/crear-notas-electronicas/nota-credito?venta_id=${ventaId}`),
-      disabled: !isAceptado,
+      disabled: !isAceptado || hasNotaCredito,
     },
     {
       key: 'nota-debito',
