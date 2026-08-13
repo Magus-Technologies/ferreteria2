@@ -35,13 +35,16 @@ export default function ModalTrasladoEfectivo({ open, setOpen, onSuccess }: Prop
   const { mutate: crearMovimiento, isPending } = useCrearMovimientoInterno()
   const [origenValue, setOrigenValue] = useState<string | null>(null)
 
-  const { data: metodosEfectivo = [], refetch: refetchMetodos } = useQuery({
-    queryKey: ['metodos-para-ventas-efectivo'],
+  // TODOS los métodos, no solo efectivo: el traslado también mueve bancos y
+  // billeteras. La restricción real es que origen y destino sean del mismo
+  // método, y eso se aplica más abajo sobre los destinos.
+  const { data: metodosOrigen = [], refetch: refetchMetodos } = useQuery({
+    queryKey: ['metodos-para-ventas-traslado'],
     queryFn: async () => {
       const res = await apiRequest<{ success: boolean; data: MetodoParaVenta[] }>(
         '/cajas/sub-cajas/metodos-para-ventas'
       )
-      return (res.data?.data || []).filter((m) => m.tipo === 'efectivo')
+      return res.data?.data || []
     },
     enabled: open,
   })
@@ -86,8 +89,15 @@ export default function ModalTrasladoEfectivo({ open, setOpen, onSuccess }: Prop
 
   // Disponible del ORIGEN: solo el dinero CERRADO (saldo_disponible). Lo de la
   // sesión abierta —incluida la apertura— no se puede mover hasta cerrar caja.
-  const origen = metodosEfectivo.find((m) => m.value === origenValue)
-  const saldoRowOrigen = origen ? saldos.find((s) => s.sub_caja_id === origen.sub_caja_id) : undefined
+  //
+  // Se lee del despliegue puntual, no del total de la sub-caja: una misma caja
+  // mezcla efectivo, bancos y billeteras, y el total haría creer que en "bcp"
+  // hay disponible el efectivo que está al lado.
+  const saldoDeDespliegue = (subCajaId: number, desplieguePagoId: string) =>
+    saldos.find((s) => s.sub_caja_id === subCajaId)?.despliegues?.find((d) => d.despliegue_pago_id === desplieguePagoId)
+
+  const origen = metodosOrigen.find((m) => m.value === origenValue)
+  const saldoRowOrigen = origen ? saldoDeDespliegue(origen.sub_caja_id, origen.despliegue_pago_id) : undefined
   const saldoOrigen = saldoRowOrigen?.saldo_disponible ?? 0
   const saldoTotalOrigen = saldoRowOrigen?.saldo_actual ?? 0
 
@@ -96,12 +106,16 @@ export default function ModalTrasladoEfectivo({ open, setOpen, onSuccess }: Prop
   const destinoKey = (d: { vendedor_id: string; sub_caja_id: number; despliegue_pago_id: string }) =>
     `${d.vendedor_id}|${d.sub_caja_id}|${d.despliegue_pago_id}`
 
-  // El destino debe ser del MISMO método que el origen (ej. origen "efectivo negro"
-  // → destino también "efectivo negro"). No se puede mezclar tipos de efectivo al
-  // trasladar. Incluye la misma sub-caja del origen (traslado de dinero cerrado al
-  // efectivo de sesión del usuario), mientras el método coincida.
+  // El destino debe ser el MISMO despliegue de pago que el origen, cambiando solo
+  // de usuario: el traslado le acredita a alguien dinero ya cerrado, no lo convierte
+  // de un método a otro.
+  //
+  // Se compara por `despliegue_pago_id`, no por nombre: cada sub-caja tiene su
+  // propio despliegue aunque se llamen igual, y "transferencia" existe en bcp,
+  // interbank, scotiabank y bbva. Emparejar por nombre dejaría mandar dinero de
+  // un banco a otro como si fuera el mismo.
   const destinosDisponibles = origen
-    ? destinosUsuarios.filter((d) => d.metodo_nombre === origen.metodo)
+    ? destinosUsuarios.filter((d) => d.despliegue_pago_id === origen.despliegue_pago_id)
     : destinosUsuarios
 
   const handleSubmit = async () => {
@@ -118,19 +132,19 @@ export default function ModalTrasladoEfectivo({ open, setOpen, onSuccess }: Prop
           despliegue_de_pago_destino_id: destino.despliegue_pago_id,
           destino_user_id: destino.vendedor_id,
           monto: values.monto,
-          concepto: 'TRASLADO DE EFECTIVO',
+          concepto: 'TRASLADO DE DINERO',
           justificacion: values.justificacion,
         },
         {
           onSuccess: () => {
-            message.success('Efectivo trasladado correctamente')
+            message.success('Dinero trasladado correctamente')
             form.resetFields()
             setOrigenValue(null)
             onSuccess?.()
             setOpen(false)
           },
           onError: (error: any) => {
-            message.error(error.message || 'Error al trasladar el efectivo')
+            message.error(error.message || 'Error al trasladar el dinero')
           },
         }
       )
@@ -147,7 +161,7 @@ export default function ModalTrasladoEfectivo({ open, setOpen, onSuccess }: Prop
 
   return (
     <Modal
-      title="Traslado de Efectivo"
+      title="Traslado de Dinero"
       open={open}
       onOk={handleSubmit}
       onCancel={handleCancel}
@@ -157,12 +171,13 @@ export default function ModalTrasladoEfectivo({ open, setOpen, onSuccess }: Prop
       width={600}
     >
       <p className="text-xs text-slate-500 mb-4">
-        Mueve el efectivo <strong>cerrado</strong> (acumulado de sesiones cerradas) hacia el
-        efectivo de un usuario. Lo de la sesión abierta no se puede mover hasta cerrar caja.
+        Mueve el dinero <strong>cerrado</strong> (acumulado de sesiones cerradas) —efectivo,
+        banco o billetera— hacia el mismo método de pago de un usuario. Lo de la sesión
+        abierta no se puede mover hasta cerrar caja.
       </p>
       <Form form={form} layout="vertical">
         <Form.Item
-          label="Origen (efectivo)"
+          label="Origen (método de pago)"
           name="origen"
           rules={[{ required: true, message: 'Seleccione el origen' }]}
         >
@@ -174,10 +189,10 @@ export default function ModalTrasladoEfectivo({ open, setOpen, onSuccess }: Prop
               setOrigenValue(value)
               form.setFieldValue('destino', undefined)
             }}
-            options={metodosEfectivo.map((m) => ({
+            options={metodosOrigen.map((m) => ({
               value: m.value,
-              // Muestra el disponible CERRADO (lo realmente movible)
-              label: `${m.label} — S/ ${(saldos.find((s) => s.sub_caja_id === m.sub_caja_id)?.saldo_disponible ?? 0).toFixed(2)}`,
+              // Muestra el disponible CERRADO (lo realmente movible) de ese método
+              label: `${m.label} — S/ ${Number(saldoDeDespliegue(m.sub_caja_id, m.despliegue_pago_id)?.saldo_disponible ?? 0).toFixed(2)}`,
             }))}
           />
         </Form.Item>
@@ -185,7 +200,8 @@ export default function ModalTrasladoEfectivo({ open, setOpen, onSuccess }: Prop
         {origen && (
           <div className="mb-4 p-3 bg-emerald-50 rounded border border-emerald-200">
             <p className="text-sm text-gray-600 m-0">
-              Disponible para trasladar (caja cerrada) en <strong>{origen.sub_caja_nombre}</strong>:{' '}
+              Disponible para trasladar (caja cerrada) en{' '}
+              <strong>{origen.sub_caja_nombre}/{origen.metodo}</strong>:{' '}
               <span className="font-semibold text-emerald-700">S/ {Number(saldoOrigen).toFixed(2)}</span>
               <span className="text-xs text-gray-400 ml-2">
                 (saldo total: S/ {Number(saldoTotalOrigen).toFixed(2)} — lo de la sesión abierta no se mueve)
@@ -195,12 +211,12 @@ export default function ModalTrasladoEfectivo({ open, setOpen, onSuccess }: Prop
         )}
 
         <Form.Item
-          label="Destino (efectivo)"
+          label="Destino (mismo método)"
           name="destino"
           rules={[{ required: true, message: 'Seleccione el destino' }]}
         >
           <Select
-            placeholder="Seleccione destino (a qué usuario/efectivo va el dinero)"
+            placeholder="Seleccione destino (a qué usuario/método va el dinero)"
             disabled={!origen}
             showSearch
             optionFilterProp="label"
@@ -256,7 +272,7 @@ export default function ModalTrasladoEfectivo({ open, setOpen, onSuccess }: Prop
           rules={[{ required: true, message: 'Ingrese una justificación' }]}
         >
           <Input.TextArea
-            placeholder="Ej: Trasladar efectivo a efectivo negro para pagar compra"
+            placeholder="Ej: Trasladar dinero a efectivo negro para pagar compra"
             rows={2}
             maxLength={1000}
             showCount
