@@ -3,6 +3,7 @@
 import { Select, Form, Tooltip } from "antd";
 import { InfoCircleOutlined } from "@ant-design/icons";
 import { FormItemProps } from "antd/lib/form";
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { facturacionElectronicaApi } from "~/lib/api/facturacion-electronica";
 
@@ -39,6 +40,18 @@ export default function SelectMotivoNota({
     },
     staleTime: 1000 * 60 * 60, // 1 hora
   });
+
+  // Seleccionar el primer motivo por defecto cuando cargan los motivos
+  // y el campo aún no tiene valor.
+  const form = Form.useFormInstance();
+  useEffect(() => {
+    const fieldName = propsForm?.name;
+    if (!fieldName || !motivos || motivos.length === 0) return;
+    const current = form.getFieldValue(fieldName);
+    if (current === undefined || current === null || current === "") {
+      form.setFieldValue(fieldName, motivos[0].id);
+    }
+  }, [motivos, propsForm?.name, form]);
 
   // Textos de ayuda por código SUNAT
   const motivoHelp: Record<string, string> = {
