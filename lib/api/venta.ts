@@ -224,6 +224,7 @@ export interface VentaFilters {
 export interface VentaResponse {
   data: any; // TODO: Definir interfaz completa de Venta
   message?: string;
+  enviado_sunat?: boolean;
 }
 
 export interface VentasListResponse {
