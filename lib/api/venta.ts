@@ -224,6 +224,7 @@ export interface VentaFilters {
 export interface VentaResponse {
   data: any; // TODO: Definir interfaz completa de Venta
   message?: string;
+  enviado_sunat?: boolean;
 }
 
 export interface VentasListResponse {
@@ -610,6 +611,8 @@ export type VentaCompleta = {
     igv?: number
     total?: number
   }
+  notas_credito_activas_count?: number
+  anulado_por_nota_credito?: boolean
 }
 
 /**

@@ -502,6 +502,22 @@ export default function useCreateVenta({
         message.success('Venta creada exitosamente')
       }
 
+      // Alerta de envío a SUNAT (solo facturas/boletas con comprobante).
+      const tipoDocRespuesta = response.data?.data?.tipo_documento
+      if (tipoDocRespuesta === '01' || tipoDocRespuesta === '03') {
+        if (response.data?.enviado_sunat === true) {
+          notification.success({
+            message: 'Comprobante enviado a SUNAT',
+            description: 'El comprobante se envió a SUNAT automáticamente al momento.',
+          })
+        } else {
+          notification.info({
+            message: 'Comprobante programado para envío a SUNAT',
+            description: 'Se enviará automáticamente según la configuración de envío.',
+          })
+        }
+      }
+
       // Emitir evento de venta creada/actualizada — abre el modal de
       // ticket/PDF y, al cerrarlo, navega fuera de la página en modo
       // edición (ver body-vender.tsx). El cobro/devolución de la diferencia

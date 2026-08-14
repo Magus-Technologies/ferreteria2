@@ -1,7 +1,7 @@
 "use client";
 
 import { AgGridReact } from "ag-grid-react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ColDef } from "ag-grid-community";
 import { useStoreFiltrosMisNotasCredito } from "../../_store/store-filtros-mis-notas-credito";
 import useGetNotasCredito from "../../_hooks/use-get-notas-credito";
@@ -35,6 +35,22 @@ export default function TableMisNotasCredito() {
   const [enviandoId, setEnviandoId] = useState<number | null>(null);
   const openModalPdf = useStoreModalPdfNotaCredito((state) => state.openModal);
   const setNotaSeleccionada = useStoreNotaCreditoSeleccionada((state) => state.setNota);
+
+  // Auto-seleccionar la primera fila al cargar, como en mis-ventas, para que
+  // el detalle se muestre sin necesidad de hacer clic.
+  useEffect(() => {
+    if (!response || response.length === 0) return;
+    const t = setTimeout(() => {
+      const api = gridRef.current?.api;
+      if (!api) return;
+      const node = api.getDisplayedRowAtIndex(0);
+      if (node) {
+        node.setSelected(true);
+        setNotaSeleccionada(node.data);
+      }
+    }, 100);
+    return () => clearTimeout(t);
+  }, [response]);
 
   const handleEnviarSunat = async (id: number) => {
     try {
