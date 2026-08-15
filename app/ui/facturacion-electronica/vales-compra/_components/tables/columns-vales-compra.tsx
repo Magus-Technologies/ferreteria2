@@ -7,6 +7,7 @@ import { ValeCompra, cambiarEstadoVale, valesCompraKeys } from "~/lib/api/vales-
 import { Tag, Tooltip, Popconfirm, message } from "antd";
 import { FaFilePdf, FaPause, FaPlay, FaStop, FaEdit } from "react-icons/fa";
 import ButtonBase from "~/components/buttons/button-base";
+import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
 import { useStoreModalPdfVale } from "../../_store/store-modal-pdf-vale";
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from "@tanstack/react-query";
@@ -124,29 +125,34 @@ function CellAcciones({ data }: { data: ValeCompra }) {
 
   return (
     <div className="flex items-center justify-center gap-1 h-full">
-      <Tooltip title="Ver Ticket">
-        <ButtonBase
-          color="danger"
-          size="sm"
-          onClick={handleVerPDF}
-          className="!px-2"
-        >
-          <FaFilePdf size={12} />
-        </ButtonBase>
-      </Tooltip>
+      <ConfigurableElement componentId="vales-compra.boton-ver-ticket" label="Botón Ver Ticket del Vale">
+        <Tooltip title="Ver Ticket">
+          <ButtonBase
+            color="danger"
+            size="sm"
+            onClick={handleVerPDF}
+            className="!px-2"
+          >
+            <FaFilePdf size={12} />
+          </ButtonBase>
+        </Tooltip>
+      </ConfigurableElement>
 
-      <Tooltip title="Editar">
-        <ButtonBase
-          color="info"
-          size="sm"
-          onClick={handleEditar}
-          className="!px-2"
-        >
-          <FaEdit size={12} />
-        </ButtonBase>
-      </Tooltip>
+      <ConfigurableElement componentId="vales-compra.boton-editar" label="Botón Editar Vale">
+        <Tooltip title="Editar">
+          <ButtonBase
+            color="info"
+            size="sm"
+            onClick={handleEditar}
+            className="!px-2"
+          >
+            <FaEdit size={12} />
+          </ButtonBase>
+        </Tooltip>
+      </ConfigurableElement>
 
       {data.estado === 'ACTIVO' && (
+        <ConfigurableElement componentId="vales-compra.boton-pausar" label="Botón Pausar Vale">
         <Tooltip title="Pausar">
           <Popconfirm
             title="¿Pausar este vale?"
@@ -164,9 +170,11 @@ function CellAcciones({ data }: { data: ValeCompra }) {
             </ButtonBase>
           </Popconfirm>
         </Tooltip>
+        </ConfigurableElement>
       )}
 
       {data.estado === 'PAUSADO' && (
+        <ConfigurableElement componentId="vales-compra.boton-activar" label="Botón Activar Vale">
         <Tooltip title="Activar">
           <Popconfirm
             title="¿Activar este vale?"
@@ -184,9 +192,11 @@ function CellAcciones({ data }: { data: ValeCompra }) {
             </ButtonBase>
           </Popconfirm>
         </Tooltip>
+        </ConfigurableElement>
       )}
 
       {data.estado !== 'FINALIZADO' && (
+        <ConfigurableElement componentId="vales-compra.boton-finalizar" label="Botón Finalizar Vale">
         <Tooltip title="Finalizar">
           <Popconfirm
             title="¿Finalizar este vale? Esta acción no se puede deshacer."
@@ -205,6 +215,7 @@ function CellAcciones({ data }: { data: ValeCompra }) {
             </ButtonBase>
           </Popconfirm>
         </Tooltip>
+        </ConfigurableElement>
       )}
     </div>
   );

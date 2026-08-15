@@ -5,6 +5,7 @@ import { FaSearch, FaFileInvoice, FaPlus } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import TituloModulos from "~/app/_components/others/titulo-modulos";
 import ButtonBase from "~/components/buttons/button-base";
+import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
 import FormBase from "~/components/form/form-base";
 import InputBase from "~/app/_components/form/inputs/input-base";
 import FilterDateRangeFields from "~/app/_components/filters/filter-date-range-fields";
@@ -66,15 +67,20 @@ export default function FiltersMisNotasCredito() {
         title="Mis Notas de Crédito"
         icon={<FaFileInvoice className="text-green-600" />}
       >
-        <ButtonBase
-          color="success"
-          size="md"
-          onClick={() => router.push('/ui/facturacion-electronica/crear-notas-electronicas/nota-credito')}
-          className="flex items-center gap-2"
+        <ConfigurableElement
+          componentId='mis-notas-credito.boton-crear'
+          label='Botón Crear Nota de Crédito'
         >
-          <FaPlus />
-          Crear Nota de Crédito
-        </ButtonBase>
+          <ButtonBase
+            color="success"
+            size="md"
+            onClick={() => router.push('/ui/facturacion-electronica/crear-notas-electronicas/nota-credito')}
+            className="flex items-center gap-2"
+          >
+            <FaPlus />
+            Crear Nota de Crédito
+          </ButtonBase>
+        </ConfigurableElement>
       </TituloModulos>
       <div className="mt-4 grid grid-cols-12 gap-x-3 gap-y-2.5">
         <div className="col-span-6 flex gap-3">
@@ -91,7 +97,7 @@ export default function FiltersMisNotasCredito() {
           <InputBase propsForm={{ name: "serie_numero", hasFeedback: false, className: "!w-full" }} placeholder="NC01-00001" formWithMessage={false} />
         </div>
         <div className="col-span-1 flex items-center">
-          <ButtonBase color="info" size="md" type="submit" className="flex items-center gap-2 w-full justify-center"><FaSearch />Buscar</ButtonBase>
+          <ConfigurableElement componentId='mis-notas-credito.boton-buscar' label='Botón Buscar'><ButtonBase color="info" size="md" type="submit" className="flex items-center gap-2 w-full justify-center"><FaSearch />Buscar</ButtonBase></ConfigurableElement>
         </div>
       </div>
     </FormBase>

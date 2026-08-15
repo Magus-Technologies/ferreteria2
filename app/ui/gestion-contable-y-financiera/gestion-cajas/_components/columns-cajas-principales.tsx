@@ -2,6 +2,7 @@ import { ColDef } from 'ag-grid-community'
 import { CajaPrincipal } from '~/lib/api/caja-principal'
 import { Button, Space, Tag, Tooltip } from 'antd'
 import { FaEye, FaTrash } from 'react-icons/fa'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 
 export const useColumnsCajasPrincipales = ({
   onVerSubCajas,
@@ -106,22 +107,32 @@ export const useColumnsCajasPrincipales = ({
       suppressMovable: true,
       cellRenderer: (params: any) => (
         <Space size='small'>
-          <Tooltip title='Ver Sub-Cajas'>
-            <Button
-              type='primary'
-              icon={<FaEye />}
-              size='small'
-              onClick={() => onVerSubCajas(params.data)}
-            />
-          </Tooltip>
-          <Tooltip title='Eliminar Caja'>
-            <Button
-              danger
-              icon={<FaTrash />}
-              size='small'
-              onClick={() => onEliminar(params.data)}
-            />
-          </Tooltip>
+          <ConfigurableElement
+            componentId='gestion-cajas.boton-ver-sub-cajas'
+            label='Botón Ver Sub-Cajas'
+          >
+            <Tooltip title='Ver Sub-Cajas'>
+              <Button
+                type='primary'
+                icon={<FaEye />}
+                size='small'
+                onClick={() => onVerSubCajas(params.data)}
+              />
+            </Tooltip>
+          </ConfigurableElement>
+          <ConfigurableElement
+            componentId='gestion-cajas.boton-eliminar-caja'
+            label='Botón Eliminar Caja'
+          >
+            <Tooltip title='Eliminar Caja'>
+              <Button
+                danger
+                icon={<FaTrash />}
+                size='small'
+                onClick={() => onEliminar(params.data)}
+              />
+            </Tooltip>
+          </ConfigurableElement>
         </Space>
       ),
     },

@@ -19,7 +19,7 @@
         "icon": "FaCog",
         "route": null,
         "action": "openConfiguraciones",
-        "permission": null
+        "permission": "configuracion.configuraciones"
       }
     ]
   },

@@ -24,14 +24,14 @@
             "label": "Ingresos",
             "route": null,
             "action": "openIngresoExtra",
-            "permission": null
+            "permission": "gestion-contable-y-financiera.ingreso-extra"
           },
           {
             "key": "gastos",
             "label": "Gastos",
             "route": null,
             "action": "openGastoExtra",
-            "permission": null
+            "permission": "gestion-contable-y-financiera.gasto-extra"
           }
         ]
       },
@@ -47,14 +47,14 @@
             "label": "Aperturar Caja",
             "route": null,
             "action": "openAperturarCaja",
-            "permission": null
+            "permission": "gestion-contable-y-financiera.aperturar-caja"
           },
           {
             "key": "efectivo-apertura",
             "label": "Efectivo de Apertura",
             "route": null,
             "action": "openEfectivoApertura",
-            "permission": null
+            "permission": "gestion-contable-y-financiera.efectivo-apertura"
           },
           {
             "key": "cierre-caja",
@@ -67,28 +67,28 @@
             "label": "Mover Dinero entre Sub-Cajas",
             "route": null,
             "action": "openMoverDinero",
-            "permission": null
+            "permission": "gestion-contable-y-financiera.mover-dinero"
           },
           {
             "key": "traslado-efectivo",
             "label": "Traslado de Efectivo",
             "route": null,
             "action": "openTrasladoEfectivo",
-            "permission": null
+            "permission": "gestion-contable-y-financiera.traslado-efectivo"
           },
           {
             "key": "pedir-prestamo",
             "label": "Pedir Préstamo",
             "route": null,
             "action": "openPedirPrestamo",
-            "permission": null
+            "permission": "gestion-contable-y-financiera.pedir-prestamo"
           },
           {
             "key": "traslado-boveda",
             "label": "Traslado a Bóveda",
             "route": null,
             "action": "openTrasladoBoveda",
-            "permission": null
+            "permission": "gestion-contable-y-financiera.traslado-boveda"
           },
           {
             "key": "gestion-cajas",
@@ -172,7 +172,7 @@
         "label": "Movimientos de Caja",
         "icon": "SwapOutlined",
         "route": "/ui/gestion-contable-y-financiera/movimientos-caja",
-        "permission": null
+        "permission": "facturacion-electronica.movimientos-caja.index"
       },
       {
         "id": "arqueos-diarios",
@@ -180,7 +180,7 @@
         "label": "Arqueos Diarios",
         "icon": "FaBalanceScale",
         "route": "/ui/gestion-contable-y-financiera/arqueos-diarios",
-        "permission": null
+        "permission": "facturacion-electronica.arqueos-diarios.index"
       },
       {
         "id": "aperturas-cierres",
@@ -188,7 +188,7 @@
         "label": "Mis Aperturas y Cierres de Caja",
         "icon": "HistoryOutlined",
         "route": "/ui/gestion-contable-y-financiera/mis-aperturas-cierres",
-        "permission": null
+        "permission": "facturacion-electronica.mis-aperturas-cierres.index"
       }
     ]
   }

@@ -2,6 +2,7 @@ import modulesData from './modules.json'
 import facturacionNav from './module-navs/facturacion-electronica.json'
 import configuracionNav from './module-navs/configuracion.json'
 import gestionComercialNav from './module-navs/gestion-comercial-e-inventario.json'
+import gestionContableNav from './module-navs/gestion-contable-y-financiera.json'
 import reportesNav from './module-navs/reportes.json'
 
 // Tipos
@@ -65,6 +66,10 @@ const moduleNavs: Record<string, ModuleNav> = {
   'facturacion-electronica': facturacionNav as ModuleNav,
   'configuracion': configuracionNav as ModuleNav,
   'gestion-comercial-e-inventario': gestionComercialNav as ModuleNav,
+  // Faltaba: su JSON existía y lo usaba la página de Permisos importándolo
+  // directo, pero `getModuleNav` devolvía null. Cualquier consumidor que pase
+  // por acá —como la barra inferior compartida— se quedaba sin ítems.
+  'gestion-contable-y-financiera': gestionContableNav as ModuleNav,
   'reportes': reportesNav as ModuleNav,
 }
 

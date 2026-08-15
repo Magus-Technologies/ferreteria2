@@ -7,6 +7,7 @@ import { FaPlus, FaEdit, FaTrash } from 'react-icons/fa'
 import { ColDef } from 'ag-grid-community'
 import TableWithTitle from '~/components/tables/table-with-title'
 import ButtonBase from '~/components/buttons/button-base'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import { blueColors } from '~/lib/colors'
 import { permissionsApi, type Role } from '~/lib/api/permissions'
 
@@ -153,9 +154,18 @@ export default function TabRoles() {
           const bloqueado = esAdminGlobal(rol)
           return (
             <div className='flex gap-2 items-center h-full'>
-              <ButtonBase size='sm' color='warning' onClick={() => abrirEditar(rol)}>
-                <FaEdit />
-              </ButtonBase>
+              <ConfigurableElement
+                componentId='configuracion-usuarios.boton-editar-rol'
+                label='Botón Editar Rol'
+              >
+                <ButtonBase size='sm' color='warning' onClick={() => abrirEditar(rol)}>
+                  <FaEdit />
+                </ButtonBase>
+              </ConfigurableElement>
+              <ConfigurableElement
+                componentId='configuracion-usuarios.boton-eliminar-rol'
+                label='Botón Eliminar Rol'
+              >
               {bloqueado ? (
                 <Tooltip title='El administrador global no se puede eliminar'>
                   <ButtonBase size='sm' color='danger' disabled>
@@ -182,6 +192,7 @@ export default function TabRoles() {
                   </ButtonBase>
                 </Popconfirm>
               )}
+              </ConfigurableElement>
             </div>
           )
         },
@@ -193,10 +204,15 @@ export default function TabRoles() {
   return (
     <div className='mt-4 space-y-4'>
       <div className='flex justify-end'>
-        <ButtonBase color='success' size='md' onClick={abrirCrear} className='flex items-center gap-2'>
-          <FaPlus />
-          Nuevo Rol
-        </ButtonBase>
+        <ConfigurableElement
+          componentId='configuracion-usuarios.boton-nuevo-rol'
+          label='Botón Nuevo Rol'
+        >
+          <ButtonBase color='success' size='md' onClick={abrirCrear} className='flex items-center gap-2'>
+            <FaPlus />
+            Nuevo Rol
+          </ButtonBase>
+        </ConfigurableElement>
       </div>
 
       <TableWithTitle

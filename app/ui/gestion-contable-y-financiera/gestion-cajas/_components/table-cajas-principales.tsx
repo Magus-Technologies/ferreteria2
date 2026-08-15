@@ -16,6 +16,7 @@ import { AgGridReact } from 'ag-grid-react'
 import { useColumnsCajasPrincipales } from './columns-cajas-principales'
 import { usePermission } from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 
 export default function TableCajasPrincipales() {
   const { modal, message } = App.useApp()
@@ -85,23 +86,33 @@ export default function TableCajasPrincipales() {
 
   const extraTitle = (
     <Space>
-      <ButtonBase
-        color='info'
-        onClick={() => setOpenAperturarCaja(true)}
-        className='flex items-center gap-2'
+      <ConfigurableElement
+        componentId='gestion-cajas.boton-agregar-efectivo'
+        label='Botón Agregar Efectivo'
       >
-        <FaDoorOpen />
-        Agregar Efectivo
-      </ButtonBase>
-      {canCreateCaja && (
         <ButtonBase
-          color='success'
-          onClick={() => setOpenCrearCaja(true)}
+          color='info'
+          onClick={() => setOpenAperturarCaja(true)}
           className='flex items-center gap-2'
         >
-          <FaPlus />
-          Nueva Caja
+          <FaDoorOpen />
+          Agregar Efectivo
         </ButtonBase>
+      </ConfigurableElement>
+      {canCreateCaja && (
+        <ConfigurableElement
+          componentId='gestion-cajas.boton-nueva-caja'
+          label='Botón Nueva Caja'
+        >
+          <ButtonBase
+            color='success'
+            onClick={() => setOpenCrearCaja(true)}
+            className='flex items-center gap-2'
+          >
+            <FaPlus />
+            Nueva Caja
+          </ButtonBase>
+        </ConfigurableElement>
       )}
     </Space>
   )

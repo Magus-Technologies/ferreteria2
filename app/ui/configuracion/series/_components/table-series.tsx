@@ -9,6 +9,7 @@ import { serieDocumentoApi, type SerieDocumentoResponse } from '~/lib/api/serie-
 import { almacenesApi } from '~/lib/api/almacen'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import ButtonBase from '~/components/buttons/button-base'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import LabelBase from '~/components/form/label-base'
 import {blueColors} from '~/lib/colors'
 
@@ -295,10 +296,15 @@ export default function TableSeries() {
           <h1 className='text-2xl font-bold text-gray-800'>Series de Documentos</h1>
           <p className='text-sm text-gray-500 mt-1'>Configura las series para Facturas, Boletas, Notas y más</p>
         </div>
-        <ButtonBase color='success' size='md' onClick={openCreateModal} className='flex items-center gap-2'>
-          <FaPlus size={14} />
-          Nueva Serie
-        </ButtonBase>
+        <ConfigurableElement
+          componentId='configuracion-series.boton-nueva-serie'
+          label='Botón Nueva Serie'
+        >
+          <ButtonBase color='success' size='md' onClick={openCreateModal} className='flex items-center gap-2'>
+            <FaPlus size={14} />
+            Nueva Serie
+          </ButtonBase>
+        </ConfigurableElement>
       </div>
 
       <div className='bg-white rounded-lg border p-4'>

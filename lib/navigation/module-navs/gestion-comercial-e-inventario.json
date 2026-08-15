@@ -31,7 +31,7 @@
             "label": "Transferir Stock",
             "route": null,
             "action": "openTransferirStock",
-            "permission": null
+            "permission": "gestion-comercial-e-inventario.transferir-stock"
           }
         ]
       },

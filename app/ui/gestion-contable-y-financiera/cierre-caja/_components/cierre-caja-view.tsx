@@ -862,48 +862,68 @@ export default function CierreCajaView() {
                       {/* Botones de acción */}
                       <div className='space-y-2 pt-1'>
                         <div className='flex gap-2'>
-                          <Button
-                            type='primary'
-                            icon={<FaCheckCircle />}
-                            className='flex-1 bg-amber-600 hover:bg-amber-700 text-sm'
-                            size='large'
-                            loading={enviandoTicket}
-                            onClick={handleEnviarTicket}
-                            disabled={!emailReporte}
+                          <ConfigurableElement
+                            componentId='cierre-caja.boton-enviar-ventas'
+                            label='Botón Ventas Enviar'
                           >
-                            Ventas Enviar
-                          </Button>
-                          <Button
-                            type='default'
-                            className='flex-1 text-sm'
-                            size='large'
-                          >
-                            + Ganancias
-                          </Button>
-                        </div>
-                        <div className='flex gap-2'>
-                          <Button
-                            type='default'
-                            className='flex-1 text-sm border-amber-400 text-amber-600 hover:bg-amber-50'
-                            size='large'
-                            onClick={handleVerTicket}
-                          >
-                            Ver Ticket
-                          </Button>
-
-                          {/* Estado 1: Caja abierta - Botón Finalizar */}
-                          {!cajaYaFinalizada && !arqueoFinalizado && !isReCierre && (
                             <Button
                               type='primary'
                               icon={<FaCheckCircle />}
-                              className='flex-1 text-sm bg-green-600 hover:bg-green-700'
+                              className='flex-1 bg-amber-600 hover:bg-amber-700 text-sm'
                               size='large'
-                              loading={loadingCierre}
-                              onClick={handleFinalizarCaja}
-                              disabled={totalEfectivo === 0}
+                              loading={enviandoTicket}
+                              onClick={handleEnviarTicket}
+                              disabled={!emailReporte}
                             >
-                              Finalizar caja [F10]
+                              Ventas Enviar
                             </Button>
+                          </ConfigurableElement>
+                          <ConfigurableElement
+                            componentId='cierre-caja.boton-ganancias'
+                            label='Botón + Ganancias'
+                          >
+                            <Button
+                              type='default'
+                              className='flex-1 text-sm'
+                              size='large'
+                            >
+                              + Ganancias
+                            </Button>
+                          </ConfigurableElement>
+                        </div>
+                        <div className='flex gap-2'>
+                          <ConfigurableElement
+                            componentId='cierre-caja.boton-ver-ticket'
+                            label='Botón Ver Ticket'
+                          >
+                            <Button
+                              type='default'
+                              className='flex-1 text-sm border-amber-400 text-amber-600 hover:bg-amber-50'
+                              size='large'
+                              onClick={handleVerTicket}
+                            >
+                              Ver Ticket
+                            </Button>
+                          </ConfigurableElement>
+
+                          {/* Estado 1: Caja abierta - Botón Finalizar */}
+                          {!cajaYaFinalizada && !arqueoFinalizado && !isReCierre && (
+                            <ConfigurableElement
+                              componentId='cierre-caja.boton-finalizar'
+                              label='Botón Finalizar Caja'
+                            >
+                              <Button
+                                type='primary'
+                                icon={<FaCheckCircle />}
+                                className='flex-1 text-sm bg-green-600 hover:bg-green-700'
+                                size='large'
+                                loading={loadingCierre}
+                                onClick={handleFinalizarCaja}
+                                disabled={totalEfectivo === 0}
+                              >
+                                Finalizar caja [F10]
+                              </Button>
+                            </ConfigurableElement>
                           )}
 
                           {/* Estado 2: Caja cerrada (solo lectura) - Botón Volver (SIEMPRE visible cuando está cerrada) */}
@@ -920,17 +940,22 @@ export default function CierreCajaView() {
 
                           {/* Estado 3: Re-Cierre - Botón Re-Cerrar */}
                           {isReCierre && (
-                            <Button
-                              type='primary'
-                              icon={<FaCheckCircle />}
-                              className='flex-1 text-sm bg-orange-600 hover:bg-orange-700'
-                              size='large'
-                              loading={loadingCierre}
-                              onClick={handleFinalizarCaja}
-                              disabled={totalEfectivo === 0}
+                            <ConfigurableElement
+                              componentId='cierre-caja.boton-re-cerrar'
+                              label='Botón Re-Cerrar Caja'
                             >
-                              Re-Cerrar Caja
-                            </Button>
+                              <Button
+                                type='primary'
+                                icon={<FaCheckCircle />}
+                                className='flex-1 text-sm bg-orange-600 hover:bg-orange-700'
+                                size='large'
+                                loading={loadingCierre}
+                                onClick={handleFinalizarCaja}
+                                disabled={totalEfectivo === 0}
+                              >
+                                Re-Cerrar Caja
+                              </Button>
+                            </ConfigurableElement>
                           )}
                         </div>
                       </div>

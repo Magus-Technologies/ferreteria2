@@ -7,6 +7,7 @@ import { FaPlus, FaEdit, FaTrash } from 'react-icons/fa'
 import { ColDef } from 'ag-grid-community'
 import TableWithTitle from '~/components/tables/table-with-title'
 import ButtonBase from '~/components/buttons/button-base'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import { blueColors } from '~/lib/colors'
 import { vehiculosApi, type Vehiculo } from '~/lib/api/catalogos'
 import { QueryKeys } from '~/app/_lib/queryKeys'
@@ -170,21 +171,31 @@ export default function TabVehiculos() {
           const v = params.data
           return (
             <div className='flex gap-2 items-center h-full'>
-              <ButtonBase size='sm' color='warning' onClick={() => abrirEditar(v)}>
-                <FaEdit />
-              </ButtonBase>
-              <Popconfirm
-                title='¿Eliminar este vehículo?'
-                description='Esta acción no se puede deshacer'
-                okText='Sí, eliminar'
-                cancelText='Cancelar'
-                okButtonProps={{ danger: true }}
-                onConfirm={() => eliminarMutation.mutate(v.id)}
+              <ConfigurableElement
+                componentId='configuracion-usuarios.boton-editar-vehiculo'
+                label='Botón Editar Vehículo'
               >
-                <ButtonBase size='sm' color='danger'>
-                  <FaTrash />
+                <ButtonBase size='sm' color='warning' onClick={() => abrirEditar(v)}>
+                  <FaEdit />
                 </ButtonBase>
-              </Popconfirm>
+              </ConfigurableElement>
+              <ConfigurableElement
+                componentId='configuracion-usuarios.boton-eliminar-vehiculo'
+                label='Botón Eliminar Vehículo'
+              >
+                <Popconfirm
+                  title='¿Eliminar este vehículo?'
+                  description='Esta acción no se puede deshacer'
+                  okText='Sí, eliminar'
+                  cancelText='Cancelar'
+                  okButtonProps={{ danger: true }}
+                  onConfirm={() => eliminarMutation.mutate(v.id)}
+                >
+                  <ButtonBase size='sm' color='danger'>
+                    <FaTrash />
+                  </ButtonBase>
+                </Popconfirm>
+              </ConfigurableElement>
             </div>
           )
         },
@@ -196,10 +207,15 @@ export default function TabVehiculos() {
   return (
     <div className='mt-4 space-y-4'>
       <div className='flex justify-end'>
-        <ButtonBase color='success' size='md' onClick={abrirCrear} className='flex items-center gap-2'>
-          <FaPlus />
-          Nuevo Vehículo
-        </ButtonBase>
+        <ConfigurableElement
+          componentId='configuracion-usuarios.boton-nuevo-vehiculo'
+          label='Botón Nuevo Vehículo'
+        >
+          <ButtonBase color='success' size='md' onClick={abrirCrear} className='flex items-center gap-2'>
+            <FaPlus />
+            Nuevo Vehículo
+          </ButtonBase>
+        </ConfigurableElement>
       </div>
 
       <TableWithTitle
