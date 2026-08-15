@@ -1,38 +1,19 @@
 "use client";
 
 import { ReactNode, useState } from "react";
-import { FaCheck, FaLock, FaTimes } from "react-icons/fa";
 import { useConfigMode } from "./config-mode-context";
 import { usePermission } from "~/hooks/use-permission";
 import ComponenteAccesoGuard from "~/app/ui/_components/componente-acceso-guard";
 
 type EstadoConfig = "visible" | "autorizacion" | "oculto";
 
-const ESTILO_ESTADO: Record<
-  EstadoConfig,
-  { badge: string; borde: string; icon: ReactNode; label: string; tint: string }
-> = {
-  visible: {
-    badge: "bg-green-500",
-    borde: "border-green-400/70",
-    icon: <FaCheck />,
-    label: "✅ VISIBLE",
-    tint: "",
-  },
-  autorizacion: {
-    badge: "bg-orange-500",
-    borde: "border-orange-400/80",
-    icon: <FaLock />,
-    label: "🔒 REQUIERE AUTORIZACIÓN",
-    tint: "",
-  },
-  oculto: {
-    badge: "bg-red-500",
-    borde: "border-red-400/70",
-    icon: <FaTimes />,
-    label: "❌ OCULTO",
-    tint: "opacity-40 grayscale",
-  },
+// `color` alimenta la variable CSS --cfg-color, que pinta el borde y el punto de
+// estado desde globals.css (.cfg-el). Los estilos viven en CSS, no en divs, para
+// no alterar el marcado de la vista previsualizada.
+const ESTILO_ESTADO: Record<EstadoConfig, { color: string; label: string }> = {
+  visible: { color: "#22c55e", label: "✅ VISIBLE" },
+  autorizacion: { color: "#f97316", label: "🔒 REQUIERE AUTORIZACIÓN" },
+  oculto: { color: "#ef4444", label: "❌ OCULTO" },
 };
 
 interface ConfigurableElementProps {
@@ -40,12 +21,21 @@ interface ConfigurableElementProps {
   label: string; // Label legible (ej: "Botón Crear Producto")
   children: ReactNode;
   className?: string;
-  /** Si true, el wrapper no fuerza width:100% (útil para sidebars que deben mantener su ancho) */
+  /**
+   * @deprecated Ya no hace nada. Existía para que el wrapper no forzara
+   * `width: 100%` en sidebars. Ahora el wrapper usa `display: contents` y no
+   * genera caja, así que nunca impone ancho. Se sigue aceptando para no tener
+   * que tocar las ~40 vistas que lo pasan; se puede ir quitando sin efecto.
+   */
   noFullWidth?: boolean;
 }
 
 /**
  * Wrapper que hace que un elemento sea configurable en modo configuración.
+ *
+ * Fuera del modo configuración no renderiza nada propio: aplica el permiso y
+ * devuelve el hijo. Dentro del modo configuración tampoco altera el layout,
+ * porque usa `display: contents` (ver .cfg-el en globals.css).
  *
  * USO:
  * <ConfigurableElement componentId="producto.create" label="Botón Crear">
@@ -57,7 +47,6 @@ export default function ConfigurableElement({
   label,
   children,
   className = "",
-  noFullWidth = false,
 }: ConfigurableElementProps) {
   const configMode = useConfigMode();
   const [isHovered, setIsHovered] = useState(false);
@@ -97,54 +86,42 @@ export default function ConfigurableElement({
     configMode.onElementClick(componentId, label);
   };
 
+  // `display: contents` (clase .cfg-el en globals.css): el wrapper NO genera caja.
+  // Los hijos siguen siendo hijos directos del grid/flex de la vista, así que
+  // conservan `flex-1`, `w-full`, `grid-column`, gaps y anchos, y el preview se
+  // ve igual que la pantalla real. Antes este wrapper metía dos divs en medio y
+  // el layout se rompía: filtros mal apilados, labels encimados, columnas sin ancho.
+  //
+  // Los clicks se capturan en fase de captura y se cortan ahí, así el control real
+  // nunca los recibe (equivale al overlay que había antes, sin ocupar espacio).
+  const bloquear = (e: React.SyntheticEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
   return (
     <div
-      className={`configurable-wrapper ${className}`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      style={{
-        position: 'relative',
-      }}
+      className={[
+        "cfg-el",
+        `cfg-el--${estado}`,
+        isHovered ? "cfg-el--hover" : "",
+        className,
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      style={
+        {
+          "--cfg-color": estilo.color,
+          "--cfg-label": `"${label.replace(/"/g, "'")} ${estilo.label}"`,
+        } as React.CSSProperties
+      }
+      onClickCapture={handleClick}
+      onMouseDownCapture={bloquear}
+      onKeyDownCapture={bloquear}
+      onMouseOver={() => setIsHovered(true)}
+      onMouseOut={() => setIsHovered(false)}
     >
-      {/* Contenido original - sin forzar anchos */}
-      <div
-        className={`${estilo.tint} pointer-events-none select-none`}
-        style={{ userSelect: "none" }}
-      >
-        {children}
-      </div>
-
-      {/* Overlay clickeable */}
-      <div
-        className="absolute inset-0 cursor-pointer z-[9999]"
-        onClick={handleClick}
-        onMouseDown={(e) => e.stopPropagation()}
-        title={`Click para configurar: ${label}`}
-      />
-
-      {/* Borde de estado SIEMPRE visible (marcado sin necesidad de hover) */}
-      <div
-        className={`absolute inset-0 pointer-events-none rounded border-2 ${estilo.borde} z-[9997] transition-all`}
-      />
-
-      {/* Resalte + label SOLO al pasar el mouse (detalle) */}
-      {isHovered && (
-        <div className="absolute inset-0 pointer-events-none border-2 border-blue-500 rounded bg-blue-500/10 z-[9998]">
-          <div className="absolute -top-6 left-0 bg-blue-600 text-white text-xs px-2 py-1 rounded whitespace-nowrap shadow-lg z-[10000]">
-            {label} {estilo.label}
-          </div>
-        </div>
-      )}
-
-      {/* Badge de estado SIEMPRE visible (verde ✓ / naranja 🔒 / rojo ✗), con animación */}
-      <div
-        className={`absolute -top-2 -right-2 w-5 h-5 rounded-full border-2 border-white shadow-md flex items-center justify-center z-[9998] ${estilo.badge} ${estado === "autorizacion" ? "animate-pulse" : ""}`}
-        title={estilo.label}
-      >
-        <span className="text-white text-[9px] font-bold flex items-center justify-center">
-          {estilo.icon}
-        </span>
-      </div>
+      {children}
     </div>
   );
 }
