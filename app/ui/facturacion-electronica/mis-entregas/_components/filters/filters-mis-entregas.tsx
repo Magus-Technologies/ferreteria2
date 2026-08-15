@@ -29,6 +29,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import type { TipoDespacho, TipoEntrega } from '~/lib/api/entrega-producto'
 import ModalConfigRolesEntrega from '../modals/modal-config-roles-entrega'
+import { esAdminEntregas } from '~/lib/permisos-entregas'
 
 interface ValuesFiltersMisEntregas {
   fecha_desde?: dayjs.Dayjs
@@ -45,7 +46,9 @@ export default function FiltersMisEntregas() {
   const setFiltros = useStoreFiltrosMisEntregas((state) => state.setFiltros)
   const { user } = useAuth()
   const esDespachador = user?.rol_sistema === 'DESPACHADOR'
-  const esAdmin = user?.rol_sistema === 'ADMINISTRADOR'
+  // Admin resuelto por rol (role_name): cualquier "gerente general" /
+  // "administrador general" ve el icono, sin depender del legacy rol_sistema.
+  const esAdmin = esAdminEntregas(user)
 
   // Initialize estado filter once when user loads.
   // Non-admin: default to ['pe', 'ec'] — PENDIENTE y EN CAMINO. Son los dos
