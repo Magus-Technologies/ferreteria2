@@ -161,7 +161,29 @@ export async function apiRequest<T = unknown>(
       credentials: "include",
     });
 
-    const data = await response.json();
+    // Un 204 (o cualquier respuesta sin cuerpo) no trae JSON que parsear. Los DELETE
+    // de Laravel responden así: la operación salió bien pero `response.json()` lanza
+    // "Unexpected end of JSON input" y el borrado se reportaba como error aunque el
+    // registro ya estuviera eliminado.
+    const sinCuerpo =
+      response.status === 204 ||
+      response.status === 205 ||
+      response.headers.get('content-length') === '0';
+
+    let data: any = null;
+    if (!sinCuerpo) {
+      const texto = await response.text();
+      if (texto) {
+        try {
+          data = JSON.parse(texto);
+        } catch {
+          // Respuesta no-JSON (HTML de error de nginx, traza de PHP): se conserva el
+          // texto crudo para poder mostrar algo útil en vez de un fallo de parseo.
+          data = { message: texto };
+        }
+      }
+    }
+    data ??= {};
 
     if (!response.ok) {
       // Manejar errores de validación de Laravel

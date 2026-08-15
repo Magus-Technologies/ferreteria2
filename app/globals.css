@@ -254,3 +254,80 @@
 .theme-finanzas .border-amber-200 {
   border-color: var(--color-rose-200) !important;
 }
+
+/* ============================================================
+   MODO CONFIGURACIÓN VISUAL (ui/configuracion/permisos-visuales)
+   ------------------------------------------------------------
+   El wrapper de ConfigurableElement usa `display: contents`, así que NO crea
+   caja propia: sus hijos siguen siendo hijos directos del grid/flex del padre
+   y conservan `flex-1`, `w-full`, `grid-column`, gaps y anchos.
+
+   Antes el wrapper metía DOS divs entre el layout y el control. Los hijos
+   dejaban de ser items del grid y las vistas se veían distintas en el preview:
+   filtros que se apilaban mal, labels encimados y columnas laterales sin ancho.
+   Como el marcado ya no cambia, el resalte se pinta sobre los propios hijos.
+   ============================================================ */
+.cfg-el {
+  display: contents;
+}
+
+.cfg-el > * {
+  position: relative;
+  outline: 2px solid var(--cfg-color, transparent);
+  outline-offset: -2px;
+  border-radius: 4px;
+}
+
+/* Punto de estado. Va en ::after del hijo real, no en un div hermano: un
+   hermano dentro de un `display: contents` seria un item mas del grid. */
+.cfg-el > *::after {
+  content: '';
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 13px;
+  height: 13px;
+  border-radius: 9999px;
+  border: 2px solid #fff;
+  background: var(--cfg-color, transparent);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);
+  z-index: 20;
+  pointer-events: none;
+}
+
+.cfg-el--oculto > * {
+  opacity: 0.4;
+  filter: grayscale(1);
+}
+
+.cfg-el--autorizacion > *::after {
+  animation: cfg-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes cfg-pulse {
+  50% { opacity: 0.5; }
+}
+
+/* Al pasar el mouse: resalte azul y etiqueta con el nombre del elemento.
+   El texto llega por la variable --cfg-label desde el componente. */
+.cfg-el--hover > * {
+  outline-color: #3b82f6;
+  background-color: rgb(59 130 246 / 0.08);
+}
+
+.cfg-el--hover > *::before {
+  content: var(--cfg-label, '');
+  position: absolute;
+  top: -21px;
+  left: 0;
+  background: #2563eb;
+  color: #fff;
+  font-size: 10px;
+  line-height: 1.4;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+  z-index: 21;
+  pointer-events: none;
+}

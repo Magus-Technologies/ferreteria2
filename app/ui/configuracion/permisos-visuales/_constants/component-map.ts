@@ -154,6 +154,19 @@ export const COMPONENT_MAP_BY_ROUTE: Partial<Record<string, React.LazyExoticComp
   '/ui/facturacion-electronica/mis-ventas/historial': HistorialVentas,
   '/ui/facturacion-electronica/mis-ventas/calendario': CalendarioEntregas,
   '/ui/facturacion-electronica/arqueos-diarios': ArqueosDiarios,
+
+  // Estos tres items del nav de Gestión Contable y Financiera NO declaran
+  // `permission`, así que no hay forma de resolverlos por permiso y se quedaban
+  // sin vista previa. Sus páginas reexportan las de Facturación Electrónica
+  // (misma vista, otra ruta), por eso apuntan al mismo componente.
+  '/ui/gestion-contable-y-financiera/movimientos-caja': MovimientosCaja,
+  '/ui/gestion-contable-y-financiera/arqueos-diarios': ArqueosDiarios,
+  '/ui/gestion-contable-y-financiera/mis-aperturas-cierres': MisAperturasCierres,
+
+  // "Crear Producto" usa el permiso `producto.create`, que se deja fuera de
+  // COMPONENT_MAP porque abre un modal y no una página propia. Pero el item del
+  // nav sí navega a Mi Almacén, así que por ruta sí se puede previsualizar.
+  '/ui/gestion-comercial-e-inventario/mi-almacen': MiAlmacen,
 };
 
 /**
