@@ -29,11 +29,13 @@ interface ProductoDevolucion {
   producto_name: string
   producto_codigo: string
   unidad_name: string
-  total: number
-  entregado: number
-  pendiente: number
-  devolver: number
+  base_name: string
   factor: number
+  total_base: number
+  entregado_base: number
+  pendiente_base: number
+  devolver_unidad: number
+  devolver_base: number
 }
 
 interface FormValues {
@@ -41,70 +43,77 @@ interface FormValues {
   observaciones?: string
 }
 
+// Formatea una fracción base como "X unidad + Y base" (ej. "1 unidad + 4 metros").
+function formatMixto(base: number, factor: number, unidadName: string, baseName: string): string {
+  const f = Number(factor) || 0
+  const b = Number(base) || 0
+  if (f <= 0) return `${formatCantidadPlana(b)} ${baseName}`
+  const unidades = Math.floor(b / f)
+  const resto = b - unidades * f
+  const partes: string[] = []
+  if (unidades > 0) partes.push(`${unidades} ${unidadName.toLowerCase()}`)
+  if (resto > 0.0001) partes.push(`${formatCantidadPlana(resto)} ${baseName.toLowerCase()}`)
+  if (partes.length === 0) partes.push(`0 ${unidadName.toLowerCase()}`)
+  return partes.join(' + ')
+}
+
 interface DevolverCellProps {
   id: number
-  initialValue: number
+  value: number
   max: number
+  allowDecimal: boolean
+  placeholder: string
   onCommit: (id: number, value: number) => void
 }
 
+// Input numérico para "unidad" (entero) o "base" (decimal).
 const DevolverCell = memo(function DevolverCell({
   id,
-  initialValue,
+  value,
   max,
+  allowDecimal,
+  placeholder,
   onCommit,
 }: DevolverCellProps) {
-  const [value, setValue] = useState<string>(initialValue === 0 ? '' : String(initialValue))
+  const [local, setLocal] = useState<string>(value === 0 ? '' : String(value))
 
   useEffect(() => {
-    setValue(initialValue === 0 ? '' : String(initialValue))
-  }, [initialValue])
+    setLocal(value === 0 ? '' : String(value))
+  }, [value])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Solo permitir números enteros (sin decimales ni signos negativos)
-    const raw = e.target.value.replace(/[^0-9]/g, '')
-    setValue(raw)
+    const raw = allowDecimal
+      ? e.target.value.replace(/[^0-9.]/g, '')
+      : e.target.value.replace(/[^0-9]/g, '')
+    setLocal(raw)
   }
 
-  const handleBlur = () => {
-    let num = Number(value) || 0
-    if (num > max) num = max
-    if (num < 0) num = 0
-    setValue(num === 0 ? '' : String(num))
-    onCommit(id, num)
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      let num = Number(value) || 0
-      if (num > max) num = max
-      if (num < 0) num = 0
-      setValue(num === 0 ? '' : String(num))
-      onCommit(id, num)
-    }
+  const commit = () => {
+    const num = Number(local) || 0
+    const clamped = Math.min(Math.max(num, 0), max)
+    setLocal(clamped === 0 ? '' : String(clamped))
+    onCommit(id, clamped)
   }
 
   return (
-    <div className='flex justify-center items-center h-full w-full py-1 pr-2'>
-      <input
-        type='text'
-        inputMode='numeric'
-        value={value}
-        onChange={handleChange}
-        onBlur={handleBlur}
-        onKeyDown={handleKeyDown}
-        placeholder='0'
-        style={{
-          width: '100%',
-          border: '1px solid #d9d9d9',
-          borderRadius: '4px',
-          padding: '2px 8px',
-          fontSize: '13px',
-          outline: 'none',
-          textAlign: 'right',
-        }}
-      />
-    </div>
+    <input
+      type='text'
+      inputMode={allowDecimal ? 'decimal' : 'numeric'}
+      value={local}
+      onChange={handleChange}
+      onBlur={commit}
+      onKeyDown={(e) => { if (e.key === 'Enter') commit() }}
+      placeholder={placeholder}
+      style={{
+        width: '100%',
+        border: '1px solid #d9d9d9',
+        borderRadius: '4px',
+        padding: '2px 8px',
+        fontSize: '13px',
+        outline: 'none',
+        textAlign: 'right',
+      }}
+    />
   )
 })
 
@@ -128,8 +137,6 @@ export default function ModalRegistrarDevolucion({
   const [form] = Form.useForm<FormValues>()
   const [loading, setLoading] = useState(false)
   const [productos, setProductos] = useState<ProductoDevolucion[]>([])
-  // IDs quitados con la "x": se ocultan de la tabla pero conservan su cantidad,
-  // para poder restaurarlos sin reabrir el modal.
   const [ocultos, setOcultos] = useState<Set<number>>(new Set())
   const queryClient = useQueryClient()
 
@@ -177,14 +184,15 @@ export default function ModalRegistrarDevolucion({
       return true
     }
 
-    const getReturnedQty = (id: number) => {
+    // Suma lo devuelto en FRACCIÓN BASE (cantidad_fraccion), para mezclarlo bien.
+    const getReturnedBase = (id: number) => {
       let sum = 0
       devoluciones.forEach((d: any) => {
         if (!isDevolucionActiva(d)) return
         const pdList = d.productos_devueltos ?? d.productosDevueltos ?? []
         pdList.forEach((pd: any) => {
           if (Number(pd.producto_almacen_prestamo_id) === Number(id)) {
-            sum += Number(pd.cantidad || 0)
+            sum += Number(pd.cantidad_fraccion || 0)
           }
         })
       })
@@ -198,20 +206,25 @@ export default function ModalRegistrarDevolucion({
         const prodAlmacen = pa.producto_almacen ?? pa.productoAlmacen
         const prod = prodAlmacen?.producto
 
-        const total = unidad ? Number(unidad.cantidad) : Number(prestamo?.monto_total || 0)
-        const entregado = getReturnedQty(pa.id)
-        const pendiente = Math.max(0, total - entregado)
+        const factor = unidad ? Number(unidad.factor || 1) : 1
+        const unidadName = unidad?.name ?? 'UNIDAD'
+        const baseName = (prod as any)?.unidad_medida?.name ?? 'UNIDAD'
+        const totalBase = (unidad ? Number(unidad.cantidad || 0) : 0) * factor
+        const entregadoBase = getReturnedBase(pa.id)
+        const pendienteBase = Math.max(0, totalBase - entregadoBase)
 
         return {
           producto_almacen_prestamo_id: pa.id,
-          producto_name: prod ? prod.name : 'N/A',
-          producto_codigo: prod ? prod.cod_producto : '',
-          unidad_name: unidad ? unidad.name : 'UNIDAD',
-          total,
-          entregado,
-          pendiente,
-          devolver: pendiente,
-          factor: unidad ? Number(unidad.factor) : 1,
+          producto_name: prod?.name ?? 'N/A',
+          producto_codigo: prod?.cod_producto ?? '',
+          unidad_name: unidadName,
+          base_name: baseName,
+          factor,
+          total_base: totalBase,
+          entregado_base: entregadoBase,
+          pendiente_base: pendienteBase,
+          devolver_unidad: 0,
+          devolver_base: 0,
         }
       })
       setProductos(initialProductos)
@@ -226,10 +239,11 @@ export default function ModalRegistrarDevolucion({
       if (!prestamo) throw new Error('No hay préstamo seleccionado')
 
       const selectedProductos = productos
-        .filter(p => !ocultos.has(p.producto_almacen_prestamo_id) && p.devolver > 0)
+        .filter(p => !ocultos.has(p.producto_almacen_prestamo_id) && (p.devolver_unidad > 0 || p.devolver_base > 0))
         .map(p => ({
           producto_almacen_prestamo_id: p.producto_almacen_prestamo_id,
-          cantidad: p.devolver,
+          cantidad: p.devolver_unidad,
+          cantidad_base: p.devolver_base,
           factor: p.factor,
         }))
 
@@ -273,21 +287,18 @@ export default function ModalRegistrarDevolucion({
     setOpen(false)
   }
 
-  const handleProductoChange = useCallback((id: number, value: number) => {
-    setProductos(prev =>
-      prev.map(p => {
-        if (p.producto_almacen_prestamo_id === id) {
-          return {
-            ...p,
-            devolver: value
-          }
-        }
-        return p
-      })
-    )
+  const handleUnidadChange = useCallback((id: number, value: number) => {
+    setProductos(prev => prev.map(p =>
+      p.producto_almacen_prestamo_id === id ? { ...p, devolver_unidad: value } : p
+    ))
   }, [])
 
-  // Oculta el producto de la tabla (no se devuelve) conservando su cantidad.
+  const handleBaseChange = useCallback((id: number, value: number) => {
+    setProductos(prev => prev.map(p =>
+      p.producto_almacen_prestamo_id === id ? { ...p, devolver_base: value } : p
+    ))
+  }, [])
+
   const handleQuitarProducto = useCallback((id: number) => {
     setOcultos(prev => {
       const next = new Set(prev)
@@ -312,47 +323,73 @@ export default function ModalRegistrarDevolucion({
     {
       headerName: 'Total',
       colId: 'total',
-      field: 'total',
-      width: 100,
-      valueFormatter: (params) => Number(params.value || 0).toFixed(2),
+      width: 140,
+      valueGetter: (params: any) => {
+        const d = params.data as ProductoDevolucion
+        return d ? formatMixto(d.total_base, d.factor, d.unidad_name, d.base_name) : ''
+      },
       cellStyle: { fontWeight: 'bold' },
     },
     {
       headerName: 'Entregado',
       colId: 'entregado',
-      field: 'entregado',
-      width: 110,
-      valueFormatter: (params) => Number(params.value || 0).toFixed(2),
+      width: 140,
+      valueGetter: (params: any) => {
+        const d = params.data as ProductoDevolucion
+        return d ? formatMixto(d.entregado_base, d.factor, d.unidad_name, d.base_name) : ''
+      },
       cellStyle: { color: '#059669', fontWeight: 'bold' },
     },
     {
       headerName: 'Pendiente',
       colId: 'pendiente',
-      field: 'pendiente',
-      width: 110,
-      valueFormatter: (params) => Number(params.value || 0).toFixed(2),
+      width: 140,
+      valueGetter: (params: any) => {
+        const d = params.data as ProductoDevolucion
+        return d ? formatMixto(d.pendiente_base, d.factor, d.unidad_name, d.base_name) : ''
+      },
       cellStyle: { color: '#ef4444', fontWeight: 'bold' },
     },
     {
-      headerName: 'Devolver',
-      colId: 'devolver',
-      field: 'devolver',
-      width: 130,
+      headerName: 'Dev. Unidad',
+      colId: 'devolver_unidad',
+      width: 110,
       cellRenderer: (params: any) => {
         const data = params.data as ProductoDevolucion
         if (!data) return null
         return (
           <DevolverCell
             id={data.producto_almacen_prestamo_id}
-            initialValue={data.devolver}
-            max={data.pendiente}
-            onCommit={handleProductoChange}
+            value={data.devolver_unidad}
+            max={Math.floor(data.pendiente_base / (data.factor || 1))}
+            allowDecimal={false}
+            placeholder='0'
+            onCommit={handleUnidadChange}
           />
         )
       },
-      cellStyle: {
-        backgroundColor: '#f0fdf4',
+      cellStyle: { backgroundColor: '#f0fdf4' },
+    },
+    {
+      headerName: 'Dev. Base',
+      colId: 'devolver_base',
+      width: 110,
+      headerTooltip: 'Cantidad en la unidad base (ej. metros)',
+      cellRenderer: (params: any) => {
+        const data = params.data as ProductoDevolucion
+        if (!data) return null
+        return (
+          <DevolverCell
+            id={data.producto_almacen_prestamo_id}
+            value={data.devolver_base}
+            max={data.pendiente_base}
+            allowDecimal
+            placeholder='0'
+            onCommit={handleBaseChange}
+          />
+        )
       },
+      cellStyle: { backgroundColor: '#fefce8' },
     },
     {
       headerName: '',
@@ -360,8 +397,6 @@ export default function ModalRegistrarDevolucion({
       width: 50,
       sortable: false,
       filter: false,
-      // "x" que quita el producto del listado (no se devuelve) — igual que
-      // "configurar entrega" en ventas. Se repuebla al reabrir el modal.
       cellRenderer: (params: any) => {
         const data = params.data as ProductoDevolucion
         if (!data) return null
@@ -383,8 +418,10 @@ export default function ModalRegistrarDevolucion({
     p => !ocultos.has(p.producto_almacen_prestamo_id)
   )
 
-  const totalSelected = productosVisibles
-    .reduce((sum, p) => sum + p.devolver, 0)
+  const totalSelectedBase = productosVisibles
+    .reduce((sum, p) => sum + (p.devolver_unidad * p.factor + p.devolver_base), 0)
+
+  const totalSelectedText = formatCantidadPlana(totalSelectedBase)
 
   return (
     <Modal
@@ -402,7 +439,7 @@ export default function ModalRegistrarDevolucion({
       open={open}
       onCancel={handleCancel}
       footer={null}
-      width={800}
+      width={1000}
       destroyOnHidden
     >
       {prestamoActual && (
@@ -472,7 +509,7 @@ export default function ModalRegistrarDevolucion({
 
       <div className='flex justify-between items-center bg-orange-50/50 border border-orange-100/60 rounded-xl px-4 py-2.5 mb-6'>
         <span className='text-orange-850 text-sm font-semibold'>Total Seleccionado:</span>
-        <span className='font-bold text-lg text-orange-950'>{formatCantidadPlana(totalSelected)} <span className='text-xs font-normal text-orange-800'>unidades</span></span>
+        <span className='font-bold text-lg text-orange-950'>{totalSelectedText} <span className='text-xs font-normal text-orange-800'>unidades</span></span>
       </div>
 
       <FormBase
@@ -519,7 +556,7 @@ export default function ModalRegistrarDevolucion({
               color='success'
               size='md'
               type='submit'
-              disabled={loading || totalSelected === 0}
+              disabled={loading || totalSelectedBase === 0}
               className='flex items-center gap-2'
             >
               <FaSave />

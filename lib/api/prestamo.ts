@@ -204,6 +204,7 @@ export interface CreatePagoRequest {
 export interface ProductoDevolucionRequest {
   producto_almacen_prestamo_id: number;
   cantidad: number;
+  cantidad_base?: number;
   factor: number;
 }
 
