@@ -4,6 +4,7 @@ import { useStoreFiltrosMisEntregas } from '../_store/store-filtros-mis-entregas
 import { useAuth } from '~/lib/auth-context'
 import { entregasNuevasApi, type EntregaNueva } from '~/lib/api/entregas'
 import { configuracionEntregaApi } from '~/lib/api/configuracion-entrega'
+import { esAdminEntregas } from '~/lib/permisos-entregas'
 
 /**
  * Map EntregaNueva (new entrega table) → shape compatible with TableMisEntregas
@@ -142,7 +143,9 @@ export default function useGetEntregas() {
   const { user } = useAuth()
 
   const esDespachador = user?.rol_sistema === 'DESPACHADOR'
-  const esAdmin = user?.rol_sistema === 'ADMINISTRADOR'
+  // Admin resuelto por rol (role_name): cualquier "gerente general" /
+  // "administrador general" es admin, sin depender del legacy rol_sistema.
+  const esAdmin = esAdminEntregas(user)
 
   const { data: configData } = useQuery({
     queryKey: ['configuracion-entrega'],
