@@ -384,7 +384,7 @@ export default function ModalRegistrarDevolucion({
   )
 
   const totalSelected = productosVisibles
-    .reduce((sum, p) => sum + (p.devolver * p.factor), 0)
+    .reduce((sum, p) => sum + p.devolver, 0)
 
   return (
     <Modal
