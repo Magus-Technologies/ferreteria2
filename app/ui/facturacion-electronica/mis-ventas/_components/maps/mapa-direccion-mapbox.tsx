@@ -165,8 +165,11 @@ export default function MapaDireccionMapbox({
 
     const coordenadasDefault: [number, number] = [-79.063692, -8.033405] // Trujillo - El Milagro [lng, lat] (fallback)
 
-    // Función para inicializar el mapa con un centro dado
-    const inicializarMapa = (centro: [number, number]) => {
+    // Función para inicializar el mapa con un centro dado.
+    // `centroEsGpsReal` distingue el GPS real del usuario (se confirma como
+    // coordenada del cliente) del centro por defecto Trujillo/El Milagro
+    // (solo referencia visual: no se guarda hasta que el usuario la ajuste).
+    const inicializarMapa = (centro: [number, number], centroEsGpsReal = false) => {
       if (!mapContainer.current) return
 
       if (!mapboxgl.supported()) {
@@ -198,6 +201,13 @@ export default function MapaDireccionMapbox({
       map.current.addControl(geolocateControl, 'top-right')
 
       if (editable) {
+        // El control "Find my location" de Mapbox solo mostraba el punto azul
+        // de posición sin tocar el marcador de dirección. Lo conectamos para
+        // que también fije/mueva el marcador rojo del cliente.
+        geolocateControl.on('geolocate', (position: GeolocationPosition) => {
+          actualizarMarcador({ lng: position.coords.longitude, lat: position.coords.latitude })
+        })
+
         map.current.on('click', (e) => {
           actualizarMarcador({ lng: e.lngLat.lng, lat: e.lngLat.lat })
         })
@@ -214,6 +224,15 @@ export default function MapaDireccionMapbox({
 
         if (direccion && geocodificarDesdeDireccion) {
           geocodificarDireccion(direccion)
+          return
+        }
+
+        // Cliente nuevo sin dirección ni coordenadas iniciales: antes no se
+        // dejaba ningún marcador acá (el mapa quedaba centrado pero "vacío").
+        // Se deja uno de partida en el centro ya resuelto (GPS real o
+        // fallback) para que siempre haya algo que arrastrar/ajustar.
+        if (editable) {
+          actualizarMarcador({ lng: centro[0], lat: centro[1] }, centroEsGpsReal)
         }
       })
     }
@@ -227,7 +246,7 @@ export default function MapaDireccionMapbox({
       // Sin coordenadas ni dirección: intentar obtener GPS antes de crear el mapa
       navigator.geolocation.getCurrentPosition(
         (pos) => {
-          inicializarMapa([pos.coords.longitude, pos.coords.latitude])
+          inicializarMapa([pos.coords.longitude, pos.coords.latitude], true)
         },
         () => {
           // GPS no disponible o denegado: usar fallback
