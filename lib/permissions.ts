@@ -77,6 +77,25 @@ export enum permissions {
   GESTION_CONTABLE_Y_FINANCIERA_METODOS_PAGO_INDEX = "gestion-contable-y-financiera.metodos-pago.index",
   GESTION_CONTABLE_Y_FINANCIERA_KARDEX_FINANZAS_INDEX = "gestion-contable-y-financiera.kardex-finanzas.index",
 
+  // Acciones de la barra superior de Gestión Contable. No son vistas: abren un
+  // modal, así que no tienen ruta y por eso nacieron sin permiso. Sin uno no
+  // aparecen en la pantalla de Permisos y no se pueden ocultar por rol, aunque
+  // mueven dinero (bóveda, préstamos, traslados entre sub-cajas).
+  // El sistema es lista NEGRA: declararlos no las oculta para nadie, solo las
+  // vuelve restringibles.
+  GESTION_CONTABLE_Y_FINANCIERA_INGRESO_EXTRA = "gestion-contable-y-financiera.ingreso-extra",
+  GESTION_CONTABLE_Y_FINANCIERA_GASTO_EXTRA = "gestion-contable-y-financiera.gasto-extra",
+  GESTION_CONTABLE_Y_FINANCIERA_APERTURAR_CAJA = "gestion-contable-y-financiera.aperturar-caja",
+  GESTION_CONTABLE_Y_FINANCIERA_EFECTIVO_APERTURA = "gestion-contable-y-financiera.efectivo-apertura",
+  GESTION_CONTABLE_Y_FINANCIERA_MOVER_DINERO = "gestion-contable-y-financiera.mover-dinero",
+  GESTION_CONTABLE_Y_FINANCIERA_TRASLADO_EFECTIVO = "gestion-contable-y-financiera.traslado-efectivo",
+  GESTION_CONTABLE_Y_FINANCIERA_PEDIR_PRESTAMO = "gestion-contable-y-financiera.pedir-prestamo",
+  GESTION_CONTABLE_Y_FINANCIERA_TRASLADO_BOVEDA = "gestion-contable-y-financiera.traslado-boveda",
+
+  // Mismo caso en otros módulos: acciones de barra sin ruta ni permiso.
+  GESTION_COMERCIAL_TRANSFERIR_STOCK = "gestion-comercial-e-inventario.transferir-stock",
+  CONFIGURACION_CONFIGURACIONES = "configuracion.configuraciones",
+
   // ============================================
   // SUBMÓDULOS - REPORTES
   // ============================================
@@ -449,6 +468,26 @@ const permissionstoDescripcion: Record<PermisosValidos, string> = {
     "Ver Página Métodos de Pago",
   [permissions.GESTION_CONTABLE_Y_FINANCIERA_KARDEX_FINANZAS_INDEX]:
     "Ver Página Kardex de Finanzas",
+  [permissions.GESTION_CONTABLE_Y_FINANCIERA_INGRESO_EXTRA]:
+    "Registrar Ingreso Extra",
+  [permissions.GESTION_CONTABLE_Y_FINANCIERA_GASTO_EXTRA]:
+    "Registrar Gasto Extra",
+  [permissions.GESTION_CONTABLE_Y_FINANCIERA_APERTURAR_CAJA]:
+    "Aperturar Caja",
+  [permissions.GESTION_CONTABLE_Y_FINANCIERA_EFECTIVO_APERTURA]:
+    "Asignar Efectivo de Apertura",
+  [permissions.GESTION_CONTABLE_Y_FINANCIERA_MOVER_DINERO]:
+    "Mover Dinero entre Sub-Cajas",
+  [permissions.GESTION_CONTABLE_Y_FINANCIERA_TRASLADO_EFECTIVO]:
+    "Traslado de Dinero a un Vendedor",
+  [permissions.GESTION_CONTABLE_Y_FINANCIERA_PEDIR_PRESTAMO]:
+    "Pedir Préstamo entre Vendedores",
+  [permissions.GESTION_CONTABLE_Y_FINANCIERA_TRASLADO_BOVEDA]:
+    "Traslado a Bóveda",
+  [permissions.GESTION_COMERCIAL_TRANSFERIR_STOCK]:
+    "Transferir Stock entre Almacenes",
+  [permissions.CONFIGURACION_CONFIGURACIONES]:
+    "Abrir Configuraciones",
 
   // SUBMÓDULOS - REPORTES
   [permissions.REPORTES_VENTAS_INDEX]: "Ver Reportes de Ventas",

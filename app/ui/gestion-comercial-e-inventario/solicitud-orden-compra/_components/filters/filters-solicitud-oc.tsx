@@ -5,6 +5,7 @@ import { FaSearch, FaFilter, FaPlusCircle } from 'react-icons/fa'
 import { FaClipboardList, FaCalendar } from 'react-icons/fa6'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
 import ButtonBase from '~/components/buttons/button-base'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import FormBase from '~/components/form/form-base'
 import LabelBase from '~/components/form/label-base'
 import { useStoreFiltrosSolicitudOC } from '../../_store/store-filtros-solicitud-oc'
@@ -92,10 +93,12 @@ export default function FiltersSolicitudOC({
         icon={<FaClipboardList className="text-emerald-600" />}
       >
         <div className="hidden lg:flex items-center gap-4 ml-auto">
-           <ButtonBase color="success" size="md" type="button" onClick={onNueva} className="flex items-center gap-2 whitespace-nowrap py-1.5">
-            <FaPlusCircle />
-            Nueva Solicitud
-          </ButtonBase>
+           <ConfigurableElement componentId="solicitud-orden-compra.boton-nueva" label="Botón Nueva Solicitud">
+            <ButtonBase color="success" size="md" type="button" onClick={onNueva} className="flex items-center gap-2 whitespace-nowrap py-1.5">
+              <FaPlusCircle />
+              Nueva Solicitud
+            </ButtonBase>
+          </ConfigurableElement>
         </div>
       </TituloModulos>
 
@@ -150,16 +153,18 @@ export default function FiltersSolicitudOC({
             </div>
           </div>
 
-          <ButtonBase
-            color="info"
-            size="md"
-            type="button"
-            onClick={() => form.submit()}
-            className="hidden lg:flex items-center gap-2 py-1.5"
-          >
-            <FaSearch size={14} />
-            Buscar
-          </ButtonBase>
+          <ConfigurableElement componentId="solicitud-orden-compra.boton-buscar" label="Botón Buscar">
+            <ButtonBase
+              color="info"
+              size="md"
+              type="button"
+              onClick={() => form.submit()}
+              className="hidden lg:flex items-center gap-2 py-1.5"
+            >
+              <FaSearch size={14} />
+              Buscar
+            </ButtonBase>
+          </ConfigurableElement>
         </div>
 
         {/* Mobile controls */}
@@ -172,9 +177,11 @@ export default function FiltersSolicitudOC({
               </ButtonBase>
             </Badge>
           </div>
-          <ButtonBase color="success" size="md" type="button" onClick={onNueva} className="flex-shrink-0">
-            <FaPlusCircle />
-          </ButtonBase>
+          <ConfigurableElement componentId="solicitud-orden-compra.boton-nueva" label="Botón Nueva Solicitud">
+            <ButtonBase color="success" size="md" type="button" onClick={onNueva} className="flex-shrink-0">
+              <FaPlusCircle />
+            </ButtonBase>
+          </ConfigurableElement>
         </div>
       </div>
 

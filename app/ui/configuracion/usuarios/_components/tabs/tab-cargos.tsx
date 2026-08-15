@@ -18,6 +18,7 @@ import { FaPlus, FaEdit, FaTrash } from 'react-icons/fa'
 import { ColDef } from 'ag-grid-community'
 import TableWithTitle from '~/components/tables/table-with-title'
 import ButtonBase from '~/components/buttons/button-base'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import { blueColors } from '~/lib/colors'
 import { cargosApi, type Cargo } from '~/lib/api/catalogos'
 import { permissionsApi } from '~/lib/api/permissions'
@@ -219,9 +220,18 @@ export default function TabCargos() {
           const enUso = (c.users_count ?? 0) > 0
           return (
             <div className='flex gap-2 items-center h-full'>
-              <ButtonBase size='sm' color='warning' onClick={() => abrirEditar(c)}>
-                <FaEdit />
-              </ButtonBase>
+              <ConfigurableElement
+                componentId='configuracion-usuarios.boton-editar-cargo'
+                label='Botón Editar Cargo'
+              >
+                <ButtonBase size='sm' color='warning' onClick={() => abrirEditar(c)}>
+                  <FaEdit />
+                </ButtonBase>
+              </ConfigurableElement>
+              <ConfigurableElement
+                componentId='configuracion-usuarios.boton-eliminar-cargo'
+                label='Botón Eliminar Cargo'
+              >
               {enUso ? (
                 <Tooltip title='En uso por usuarios. Desactívalo en lugar de eliminar.'>
                   <ButtonBase size='sm' color='danger' disabled>
@@ -242,6 +252,7 @@ export default function TabCargos() {
                   </ButtonBase>
                 </Popconfirm>
               )}
+              </ConfigurableElement>
             </div>
           )
         },
@@ -253,10 +264,15 @@ export default function TabCargos() {
   return (
     <div className='mt-4 space-y-4'>
       <div className='flex justify-end'>
-        <ButtonBase color='success' size='md' onClick={abrirCrear} className='flex items-center gap-2'>
-          <FaPlus />
-          Nuevo Cargo
-        </ButtonBase>
+        <ConfigurableElement
+          componentId='configuracion-usuarios.boton-nuevo-cargo'
+          label='Botón Nuevo Cargo'
+        >
+          <ButtonBase color='success' size='md' onClick={abrirCrear} className='flex items-center gap-2'>
+            <FaPlus />
+            Nuevo Cargo
+          </ButtonBase>
+        </ConfigurableElement>
       </div>
 
       <TableWithTitle

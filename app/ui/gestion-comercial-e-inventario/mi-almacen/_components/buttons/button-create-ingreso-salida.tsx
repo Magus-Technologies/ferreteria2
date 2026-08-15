@@ -5,6 +5,7 @@ import { GiPayMoney, GiReceiveMoney } from 'react-icons/gi'
 import ModalCreateIngresoSalida from '../modals/modal-create-ingreso-salida'
 import { useState } from 'react'
 import { TipoDocumento } from '~/types'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 
 interface ButtonCreateIngresoSalidaProps {
   tipo: TipoDocumento
@@ -21,18 +22,27 @@ export default function ButtonCreateIngresoSalida({
         open={open}
         setOpen={setOpen}
       />
-      <ButtonBase
-        className='flex items-center justify-center gap-2 !rounded-md w-full lg:h-full h-10'
-        size='sm'
-        onClick={() => setOpen(true)}
+      <ConfigurableElement
+        componentId={
+          tipo === TipoDocumento.Ingreso
+            ? 'mi-almacen.boton-ingresos'
+            : 'mi-almacen.boton-salidas'
+        }
+        label={tipo === TipoDocumento.Ingreso ? 'Botón Ingresos' : 'Botón Salidas'}
       >
-        {tipo === TipoDocumento.Ingreso ? (
-          <GiReceiveMoney className='text-orange-600' size={15} />
-        ) : (
-          <GiPayMoney className='text-rose-600' size={15} />
-        )}
-        {tipo === TipoDocumento.Ingreso ? 'Ingresos' : 'Salidas'}
-      </ButtonBase>
+        <ButtonBase
+          className='flex items-center justify-center gap-2 !rounded-md w-full lg:h-full h-10'
+          size='sm'
+          onClick={() => setOpen(true)}
+        >
+          {tipo === TipoDocumento.Ingreso ? (
+            <GiReceiveMoney className='text-orange-600' size={15} />
+          ) : (
+            <GiPayMoney className='text-rose-600' size={15} />
+          )}
+          {tipo === TipoDocumento.Ingreso ? 'Ingresos' : 'Salidas'}
+        </ButtonBase>
+      </ConfigurableElement>
     </>
   )
 }

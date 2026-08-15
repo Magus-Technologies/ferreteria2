@@ -10,6 +10,7 @@ import { usuariosApi, Usuario } from '~/lib/api/usuarios'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import ModalUsuarioForm from '../modals/modal-usuario-form'
 import ButtonBase from '~/components/buttons/button-base'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import {blueColors} from  '~/lib/colors'
 
 interface TableUsuariosProps {
@@ -132,28 +133,38 @@ export default function TableUsuarios({ onUsuarioSelect }: TableUsuariosProps) {
         cellRenderer: (params: { data: Usuario }) => {
           return (
             <div className='flex gap-2 items-center h-full'>
-              <ButtonBase
-                size='sm'
-                color='warning'
-                onClick={() => {
-                  setUsuarioEdit(params.data)
-                  setOpenModal(true)
-                }}
+              <ConfigurableElement
+                componentId='configuracion-usuarios.boton-editar-usuario'
+                label='Botón Editar Usuario'
               >
-                <FaEdit />
-              </ButtonBase>
-              <Popconfirm
-                title='¿Desactivar usuario?'
-                description='El usuario será desactivado pero no eliminado'
-                onConfirm={() => deleteMutation.mutate(params.data.id)}
-                okText='Sí, desactivar'
-                cancelText='Cancelar'
-                okButtonProps={{ danger: true }}
-              >
-                <ButtonBase size='sm' color='danger'>
-                  <FaTrash />
+                <ButtonBase
+                  size='sm'
+                  color='warning'
+                  onClick={() => {
+                    setUsuarioEdit(params.data)
+                    setOpenModal(true)
+                  }}
+                >
+                  <FaEdit />
                 </ButtonBase>
-              </Popconfirm>
+              </ConfigurableElement>
+              <ConfigurableElement
+                componentId='configuracion-usuarios.boton-desactivar-usuario'
+                label='Botón Desactivar Usuario'
+              >
+                <Popconfirm
+                  title='¿Desactivar usuario?'
+                  description='El usuario será desactivado pero no eliminado'
+                  onConfirm={() => deleteMutation.mutate(params.data.id)}
+                  okText='Sí, desactivar'
+                  cancelText='Cancelar'
+                  okButtonProps={{ danger: true }}
+                >
+                  <ButtonBase size='sm' color='danger'>
+                    <FaTrash />
+                  </ButtonBase>
+                </Popconfirm>
+              </ConfigurableElement>
             </div>
           )
         },

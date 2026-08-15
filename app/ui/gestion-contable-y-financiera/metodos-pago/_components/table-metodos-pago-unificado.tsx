@@ -12,6 +12,7 @@ import { metodoDePagoApi, type MetodoDePago } from '~/lib/api/metodo-de-pago'
 import { despliegueDePagoApi, type DespliegueDePago } from '~/lib/api/despliegue-de-pago'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import ButtonBase from '~/components/buttons/button-base'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import TableWithTitle from '~/components/tables/table-with-title'
 import ModalRegistroCompleto from './modal-registro-completo'
 
@@ -209,31 +210,46 @@ export default function TableMetodosPagoUnificado({ onBancoDoubleClick }: Props)
         return (
           <Space size='small'>
             {!esEfectivo && (
-              <Tooltip title='Ver resumen detallado'>
+              <ConfigurableElement
+                componentId='metodos-pago.boton-ver-resumen'
+                label='Botón Ver Resumen del Banco'
+              >
+                <Tooltip title='Ver resumen detallado'>
+                  <Button
+                    type='default'
+                    size='small'
+                    icon={<Eye className="h-4 w-4" />}
+                    onClick={() => onBancoDoubleClick?.(params.data)}
+                  />
+                </Tooltip>
+              </ConfigurableElement>
+            )}
+            <ConfigurableElement
+              componentId='metodos-pago.boton-editar-banco'
+              label='Botón Editar Banco'
+            >
+              <Tooltip title='Editar banco'>
                 <Button
-                  type='default'
+                  type='primary'
                   size='small'
-                  icon={<Eye className="h-4 w-4" />}
-                  onClick={() => onBancoDoubleClick?.(params.data)}
+                  icon={<FaEdit />}
+                  onClick={() => handleEditarBanco(params.data)}
                 />
               </Tooltip>
-            )}
-            <Tooltip title='Editar banco'>
-              <Button
-                type='primary'
-                size='small'
-                icon={<FaEdit />}
-                onClick={() => handleEditarBanco(params.data)}
-              />
-            </Tooltip>
-            <Tooltip title='Eliminar banco'>
-              <Button
-                danger
-                size='small'
-                icon={<FaTrash />}
-                onClick={() => handleEliminarBanco(params.data)}
-              />
-            </Tooltip>
+            </ConfigurableElement>
+            <ConfigurableElement
+              componentId='metodos-pago.boton-eliminar-banco'
+              label='Botón Eliminar Banco'
+            >
+              <Tooltip title='Eliminar banco'>
+                <Button
+                  danger
+                  size='small'
+                  icon={<FaTrash />}
+                  onClick={() => handleEliminarBanco(params.data)}
+                />
+              </Tooltip>
+            </ConfigurableElement>
           </Space>
         )
       },
@@ -241,14 +257,19 @@ export default function TableMetodosPagoUnificado({ onBancoDoubleClick }: Props)
   ]
 
   const extraTitle = (
-    <ButtonBase
-      color='success'
-      onClick={() => setOpenRegistro(true)}
-      className='flex items-center gap-2'
+    <ConfigurableElement
+      componentId='metodos-pago.boton-registrar-banco'
+      label='Botón Registrar Banco y Métodos'
     >
-      <FaPlus />
-      Registrar Banco y Métodos
-    </ButtonBase>
+      <ButtonBase
+        color='success'
+        onClick={() => setOpenRegistro(true)}
+        className='flex items-center gap-2'
+      >
+        <FaPlus />
+        Registrar Banco y Métodos
+      </ButtonBase>
+    </ConfigurableElement>
   )
 
   return (

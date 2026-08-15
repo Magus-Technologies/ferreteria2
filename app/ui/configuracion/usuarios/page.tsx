@@ -6,6 +6,7 @@ import { FaUserPlus, FaUsers, FaTruck, FaUserShield, FaSitemap } from 'react-ico
 import ContenedorGeneral from '~/app/_components/containers/contenedor-general'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
 import ButtonBase from '~/components/buttons/button-base'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import ModalUsuarioForm from './_components/modals/modal-usuario-form'
 import { Usuario } from '~/lib/api/usuarios'
 import TabRoles from './_components/tabs/tab-roles'
@@ -40,15 +41,20 @@ export default function UsuariosPage() {
           icon={<FaUsers className='text-blue-600' />}
         >
           {tabActiva === 'usuarios' && (
-            <ButtonBase
-              color='success'
-              size='md'
-              onClick={() => setOpenModal(true)}
-              className='flex items-center gap-2'
+            <ConfigurableElement
+              componentId='configuracion-usuarios.boton-crear-usuario'
+              label='Botón Crear Usuario'
             >
-              <FaUserPlus />
-              Crear Usuario
-            </ButtonBase>
+              <ButtonBase
+                color='success'
+                size='md'
+                onClick={() => setOpenModal(true)}
+                className='flex items-center gap-2'
+              >
+                <FaUserPlus />
+                Crear Usuario
+              </ButtonBase>
+            </ConfigurableElement>
           )}
         </TituloModulos>
 

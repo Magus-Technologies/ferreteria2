@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState, useMemo } from 'react'
 import { FaPlus, FaEdit, FaTrash, FaCheck, FaTimes, FaSearch } from 'react-icons/fa'
 import ButtonBase from '~/components/buttons/button-base'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 
 export interface CatalogoItem {
   id: number
@@ -158,15 +159,24 @@ export default function TablaCatalogo<T extends CatalogoItem>({
             className='w-[250px]'
             allowClear
           />
-          <ButtonBase
-            color='success'
-            size='md'
-            onClick={() => setCreando(true)}
-            className='flex items-center gap-1'
+          {/* Este componente es genérico: lo reusan todos los catálogos de
+              Registros (marcas, categorías, unidades…), así que un único id
+              los cubre a todos. Si más adelante hace falta configurarlos por
+              separado, habría que derivar el id de `entityName`. */}
+          <ConfigurableElement
+            componentId='configuracion-registros.boton-nuevo'
+            label='Botón Nuevo Registro'
           >
-            <FaPlus size={12} />
-            Nuevo
-          </ButtonBase>
+            <ButtonBase
+              color='success'
+              size='md'
+              onClick={() => setCreando(true)}
+              className='flex items-center gap-1'
+            >
+              <FaPlus size={12} />
+              Nuevo
+            </ButtonBase>
+          </ConfigurableElement>
         </div>
       </div>
 
