@@ -264,8 +264,17 @@
 
    Antes el wrapper metía DOS divs entre el layout y el control. Los hijos
    dejaban de ser items del grid y las vistas se veían distintas en el preview:
-   filtros que se apilaban mal, labels encimados y columnas laterales sin ancho.
-   Como el marcado ya no cambia, el resalte se pinta sobre los propios hijos.
+   filtros mal apilados, labels encimados y columnas laterales sin ancho.
+
+   Como el marcado ya no cambia, todo el modo configuración se pinta con
+   pseudo-elementos SOBRE los propios hijos:
+     ::after  → capa de click a pantalla completa + punto de estado
+     ::before → etiqueta con el nombre del elemento (solo al pasar el mouse)
+
+   La capa de click es imprescindible: un control DESHABILITADO (un input o un
+   Select de antd en disabled) no emite eventos de ratón, así que sin ella esos
+   elementos no se podían marcar. Al vivir en el ::after del hijo, el click lo
+   recibe el hijo —que no está deshabilitado— y de ahí sube al wrapper.
    ============================================================ */
 .cfg-el {
   display: contents;
@@ -278,25 +287,31 @@
   border-radius: 4px;
 }
 
-/* Punto de estado. Va en ::after del hijo real, no en un div hermano: un
-   hermano dentro de un `display: contents` seria un item mas del grid. */
+/* `pointer-events` se hereda, y antd apaga los eventos en sus componentes
+   deshabilitados. Sin esto, la capa de click heredaba ese `none` y los campos
+   en disabled seguian sin poder marcarse. Reactivarlos no los vuelve usables:
+   el wrapper corta el evento en fase de captura antes de que llegue al control. */
+.cfg-el > *,
+.cfg-el > *::after {
+  pointer-events: auto !important;
+}
+
+/* Capa de click + punto de estado (circulo solido en la esquina superior
+   derecha, dibujado con un degradado radial para no necesitar otra caja). */
 .cfg-el > *::after {
   content: '';
   position: absolute;
-  top: -5px;
-  right: -5px;
-  width: 13px;
-  height: 13px;
-  border-radius: 9999px;
-  border: 2px solid #fff;
-  background: var(--cfg-color, transparent);
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);
-  z-index: 20;
-  pointer-events: none;
+  inset: 0;
+  z-index: 50;
+  cursor: pointer;
+  border-radius: inherit;
+  background-image:
+    radial-gradient(circle at calc(100% - 8px) 8px, #fff 0 6px, transparent 6px),
+    radial-gradient(circle at calc(100% - 8px) 8px, var(--cfg-color, transparent) 0 5px, transparent 5px);
 }
 
 .cfg-el--oculto > * {
-  opacity: 0.4;
+  opacity: 0.45;
   filter: grayscale(1);
 }
 
@@ -305,14 +320,17 @@
 }
 
 @keyframes cfg-pulse {
-  50% { opacity: 0.5; }
+  50% { opacity: 0.55; }
 }
 
 /* Al pasar el mouse: resalte azul y etiqueta con el nombre del elemento.
    El texto llega por la variable --cfg-label desde el componente. */
 .cfg-el--hover > * {
   outline-color: #3b82f6;
-  background-color: rgb(59 130 246 / 0.08);
+}
+
+.cfg-el--hover > *::after {
+  background-color: rgb(59 130 246 / 0.1);
 }
 
 .cfg-el--hover > *::before {
@@ -328,6 +346,15 @@
   border-radius: 4px;
   white-space: nowrap;
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
-  z-index: 21;
+  z-index: 31;
   pointer-events: none;
+}
+
+/* Elementos reemplazados (input, img, svg sueltos) no admiten pseudo-elementos:
+   ahi no hay capa de click ni punto. Se marcan con un borde discontinuo para
+   que se note que ese elemento necesita ir envuelto en un contenedor. */
+.cfg-el > input,
+.cfg-el > img,
+.cfg-el > svg {
+  outline-style: dashed;
 }

@@ -8,6 +8,7 @@ import CardInfoGuia from './card-info-guia'
 import { TbTruckDelivery } from 'react-icons/tb'
 import { MdOutlineLocalShipping } from 'react-icons/md'
 import CheckboxBase from '~/app/_components/form/checkbox/checkbox-base'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 
 export default function CardsInfoGuia({
   form,
@@ -60,35 +61,45 @@ export default function CardsInfoGuia({
       {/* Móvil/tablet: grid compacto de 3 columnas (stats en una fila,
           checkboxes + botón debajo). Desktop xl: columna lateral de 256px. */}
       <div className='grid grid-cols-3 gap-2 sm:gap-3 w-full xl:flex xl:flex-col xl:gap-4 xl:w-64 xl:max-w-64'>
-        <CardInfoGuia title='Total Costo' value={totalCosto} />
-        <CardInfoGuia title='Total Venta' value={totalVenta} className='border-cyan-500 border-2' />
-        <CardInfoGuia
-          title='Peso Total'
-          value={pesoTotal}
-          prefix=''
-          suffix='kg'
-          trimDecimales
-          valueColor='text-amber-600'
-          className='border-amber-500 border-2'
-        />
+        <ConfigurableElement componentId='crear-guia.card-total-costo' label='Tarjeta Total Costo'>
+          <CardInfoGuia title='Total Costo' value={totalCosto} />
+        </ConfigurableElement>
+        <ConfigurableElement componentId='crear-guia.card-total-venta' label='Tarjeta Total Venta'>
+          <CardInfoGuia title='Total Venta' value={totalVenta} className='border-cyan-500 border-2' />
+        </ConfigurableElement>
+        <ConfigurableElement componentId='crear-guia.card-peso-total' label='Tarjeta Peso Total'>
+          <CardInfoGuia
+            title='Peso Total'
+            value={pesoTotal}
+            prefix=''
+            suffix='kg'
+            trimDecimales
+            valueColor='text-amber-600'
+            className='border-amber-500 border-2'
+          />
+        </ConfigurableElement>
 
         <div className='col-span-2 xl:col-span-1 flex flex-row xl:flex-col items-center xl:items-start gap-3 xl:gap-2 p-3 bg-white rounded-lg shadow-sm border border-gray-200'>
-          <CheckboxBase
-            propsForm={{
-              name: 'validar_modalidad',
-              valuePropName: 'checked',
-            }}
-          >
-            <span className='text-sm'>Validar Modalidad</span>
-          </CheckboxBase>
-          <CheckboxBase
-            propsForm={{
-              name: 'validar_costo',
-              valuePropName: 'checked',
-            }}
-          >
-            <span className='text-sm'>Validar P. Costo</span>
-          </CheckboxBase>
+          <ConfigurableElement componentId='crear-guia.validar-modalidad' label='Casilla Validar Modalidad'>
+            <CheckboxBase
+              propsForm={{
+                name: 'validar_modalidad',
+                valuePropName: 'checked',
+              }}
+            >
+              <span className='text-sm'>Validar Modalidad</span>
+            </CheckboxBase>
+          </ConfigurableElement>
+          <ConfigurableElement componentId='crear-guia.validar-costo' label='Casilla Validar P. Costo'>
+            <CheckboxBase
+              propsForm={{
+                name: 'validar_costo',
+                valuePropName: 'checked',
+              }}
+            >
+              <span className='text-sm'>Validar P. Costo</span>
+            </CheckboxBase>
+          </ConfigurableElement>
         </div>
 
         {/* Ilustración decorativa: solo en la columna lateral de desktop. */}
@@ -96,23 +107,28 @@ export default function CardsInfoGuia({
           <TbTruckDelivery size={80} className='text-cyan-600' />
         </div>
 
-        <ButtonBase
-          onClick={() => {
-            form.submit()
-          }}
-          loading={isCreating}
-          color={guia ? 'info' : 'success'}
-          className='flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance'
+        <ConfigurableElement
+          componentId='crear-guia.boton-guardar'
+          label={guia ? 'Botón Editar Guía' : 'Botón Crear Guía'}
         >
-          {guia ? (
-            <MdOutlineLocalShipping className='min-w-fit' size={30} />
-          ) : (
-            <TbTruckDelivery className='min-w-fit' size={30} />
-          )}{' '}
-          {isCreating
-            ? guia ? 'Editando...' : 'Creando...'
-            : `${guia ? 'Editar' : 'Crear'} Guía`}
-        </ButtonBase>
+          <ButtonBase
+            onClick={() => {
+              form.submit()
+            }}
+            loading={isCreating}
+            color={guia ? 'info' : 'success'}
+            className='flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance'
+          >
+            {guia ? (
+              <MdOutlineLocalShipping className='min-w-fit' size={30} />
+            ) : (
+              <TbTruckDelivery className='min-w-fit' size={30} />
+            )}{' '}
+            {isCreating
+              ? guia ? 'Editando...' : 'Creando...'
+              : `${guia ? 'Editar' : 'Crear'} Guía`}
+          </ButtonBase>
+        </ConfigurableElement>
       </div>
     </>
   )
