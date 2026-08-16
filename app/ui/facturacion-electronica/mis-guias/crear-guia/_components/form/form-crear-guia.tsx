@@ -167,7 +167,7 @@ export default function FormCrearGuia({
     (forzar = false) => {
       if (guia) return
       guiaRemisionApi
-        .siguienteNumero(tipoGuia, almacenOrigenId)
+        .siguienteNumero(tipoGuia, almacenOrigenId || 1)
         .then((resp) => {
           const data = resp.data?.data
           if (!data) return
