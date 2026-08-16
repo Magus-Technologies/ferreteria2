@@ -26,6 +26,20 @@ const TIPO_DOCUMENTO_OPCIONES = [
   { value: 'gt', label: 'Guía Transportista' },
 ]
 
+// Serie sugerida al elegir el tipo de documento (se puede editar después).
+const SERIE_DEFAULT_BY_TIPO: Record<string, string> = {
+  '01': 'F001',
+  '03': 'B001',
+  'nc': 'BC01',
+  'nd': 'BD01',
+  'nv': 'NV01',
+  'in': 'IN01',
+  'sa': 'SA01',
+  'rc': 'RC01',
+  'gr': 'T001',
+  'gt': 'V001',
+}
+
 interface FormState {
   tipo_documento: string
   serie: string
@@ -362,7 +376,15 @@ export default function TableSeries() {
                 placeholder='Seleccionar tipo'
                 className='w-full'
                 value={form.tipo_documento || undefined}
-                onChange={val => setForm(prev => ({ ...prev, tipo_documento: val }))}
+                onChange={val => {
+                  const defaultSerie = SERIE_DEFAULT_BY_TIPO[val]
+                  setForm(prev => ({
+                    ...prev,
+                    tipo_documento: val,
+                    ...(defaultSerie ? { serie: defaultSerie } : {}),
+                  }))
+                  setSerieError('')
+                }}
                 options={TIPO_DOCUMENTO_OPCIONES}
               />
             </LabelBase>
