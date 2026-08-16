@@ -282,11 +282,15 @@ export const guiaRemisionApi = {
    * Obtiene la serie y el siguiente número sin reservarlo
    */
   async siguienteNumero(
-    tipoGuia?: string
+    tipoGuia?: string,
+    almacenOrigenId?: number
   ): Promise<ApiResponse<{ data: { serie: string; numero: number } }>> {
-    const params = tipoGuia ? `?tipo_guia=${tipoGuia}` : '';
+    const params = new URLSearchParams()
+    if (tipoGuia) params.set('tipo_guia', tipoGuia)
+    if (almacenOrigenId) params.set('almacen_origen_id', String(almacenOrigenId))
+    const qs = params.toString()
     return apiRequest<{ data: { serie: string; numero: number } }>(
-      `/guias-remision/siguiente-numero/preview${params}`
+      `/guias-remision/siguiente-numero/preview${qs ? `?${qs}` : ''}`
     );
   },
 

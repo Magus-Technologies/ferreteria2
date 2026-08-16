@@ -60,6 +60,7 @@ export default function FormCrearGuia({
   // Watch sobre tipo_guia para mostrar campos específicos de GRE-Transportista.
   const tipoGuia = Form.useWatch('tipo_guia', form) as string | undefined
   const esTransportista = tipoGuia === 'ELECTRONICA_TRANSPORTISTA'
+  const almacenOrigenId = Form.useWatch('almacen_origen_id', form) as number | undefined
 
   // Watch sobre modalidad_transporte: si es PRIVADO, el chofer es un USER
   // (despachador interno, datos vienen de tabla `user`). Si es PUBLICO o
@@ -166,7 +167,7 @@ export default function FormCrearGuia({
     (forzar = false) => {
       if (guia) return
       guiaRemisionApi
-        .siguienteNumero(tipoGuia)
+        .siguienteNumero(tipoGuia, almacenOrigenId)
         .then((resp) => {
           const data = resp.data?.data
           if (!data) return
@@ -184,7 +185,7 @@ export default function FormCrearGuia({
         })
         .catch(() => {})
     },
-    [form, guia, tipoGuia],
+    [form, guia, tipoGuia, almacenOrigenId],
   )
 
   useEffect(() => {
@@ -235,7 +236,6 @@ export default function FormCrearGuia({
   }, [almacenes, form, resolveAlmacenAddress])
 
   // Watch almacén origen para saber si tiene slot fijo → bloquear radio
-  const almacenOrigenId = Form.useWatch('almacen_origen_id', form) as number | undefined
   const almacenOrigenTieneSlot = !!(
     esEntreEstablecimientos &&
     almacenOrigenId &&
