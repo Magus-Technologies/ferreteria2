@@ -16,12 +16,14 @@ import {blueColors} from '~/lib/colors'
 const TIPO_DOCUMENTO_OPCIONES = [
   { value: '01', label: 'Factura' },
   { value: '03', label: 'Boleta' },
-  { value: '07', label: 'Nota de Crédito' },
-  { value: '08', label: 'Nota de Débito' },
+  { value: 'nc', label: 'Nota de Crédito' },
+  { value: 'nd', label: 'Nota de Débito' },
   { value: 'nv', label: 'Nota de Venta' },
   { value: 'in', label: 'Ingreso' },
   { value: 'sa', label: 'Salida' },
   { value: 'rc', label: 'Recibo' },
+  { value: 'gr', label: 'Guía Remitente' },
+  { value: 'gt', label: 'Guía Transportista' },
 ]
 
 interface FormState {
