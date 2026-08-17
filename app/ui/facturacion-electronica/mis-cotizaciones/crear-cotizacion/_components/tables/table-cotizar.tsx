@@ -68,6 +68,10 @@ export default function TableCotizar({
 
   useEffect(() => {
     if (productoAgregado && productoAgregado.producto_id) {
+      // Ver nota de performance en handleOk (card-agregar-producto-venta.tsx).
+      if (typeof window !== 'undefined') {
+        console.timeLog('⏱️ agregar-producto', 'store → efecto TableCotizar')
+      }
       // Agregar al store si no existe
       if (
         !productosStore.find(
@@ -164,6 +168,18 @@ export default function TableCotizar({
   }, [productoAgregado])
 
   const agGridRef = useRef<AgGridReact>(null)
+
+  // Medición de performance (mismo timer que arranca en handleOk de
+  // card-agregar-producto-venta.tsx, compartido por ventas y cotizaciones):
+  // cierra recién cuando la fila nueva aparece de verdad (fields.length sube).
+  // TODO: sacar junto con el resto de la instrumentación de ⏱️ agregar-producto.
+  const prevFieldsLengthRef = useRef(fields.length)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && fields.length > prevFieldsLengthRef.current) {
+      console.timeEnd('⏱️ agregar-producto')
+    }
+    prevFieldsLengthRef.current = fields.length
+  }, [fields.length])
 
   return (
     <>

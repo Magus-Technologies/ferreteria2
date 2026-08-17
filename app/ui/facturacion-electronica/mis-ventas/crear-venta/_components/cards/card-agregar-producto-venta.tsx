@@ -187,10 +187,19 @@ export default function CardAgregarProductoVenta({
   const unidades_derivadas = producto_en_almacen?.unidades_derivadas
 
   function handleOk(closeModal?: boolean) {
-    if (!values.cantidad || !values.unidad_derivada_id || !values.precio_venta)
+    // Medición temporal de performance: arranca acá (click en "Más" /
+    // "Más y Salir") y termina en table-vender.tsx cuando la fila realmente
+    // aparece en la tabla (fields.length cambia). Mirar la consola del
+    // navegador (F12) al reproducir la demora — imprime el tiempo real en ms.
+    // TODO: sacar este console.time una vez identificado el cuello de botella.
+    if (typeof window !== 'undefined') console.time('⏱️ agregar-producto')
+
+    if (!values.cantidad || !values.unidad_derivada_id || !values.precio_venta) {
+      if (typeof window !== 'undefined') console.timeEnd('⏱️ agregar-producto')
       return notification.error({
         message: 'Complete todos los campos obligatorios',
       })
+    }
 
     const unidad_derivada = unidades_derivadas?.find(
       (item) => item.unidad_derivada.id === values.unidad_derivada_id

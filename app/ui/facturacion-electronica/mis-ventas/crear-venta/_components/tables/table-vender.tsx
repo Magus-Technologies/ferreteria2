@@ -107,6 +107,10 @@ export default function TableVender({
       Object.keys(productoAgregadoVenta).length &&
       productoAgregadoVenta.producto_id
     ) {
+      // Ver nota de performance en handleOk (card-agregar-producto-venta.tsx).
+      if (typeof window !== 'undefined') {
+        console.timeLog('⏱️ agregar-producto', 'store → efecto TableVender')
+      }
       // Sub-produto de paquete → saltar si ya existe en la tabla (evita duplicar al re-agregar el mismo paquete)
       // Usa path-based getFieldValue igual que getRowStyle, garantizado por Form.List
       if (productoAgregadoVenta._tipo_fila === 'paquete_producto') {
@@ -426,6 +430,18 @@ export default function TableVender({
       subtotal: 400.00,
     },
   ], [])
+
+  // Medición de performance (ver handleOk en card-agregar-producto-venta.tsx):
+  // cierra el timer recién cuando la fila nueva REALMENTE aparece en la tabla
+  // (fields.length sube), que es lo que el usuario percibe como "se agregó".
+  // TODO: sacar junto con el resto de la instrumentación de ⏱️ agregar-producto.
+  const prevFieldsLengthRef = useRef(fields.length)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && fields.length > prevFieldsLengthRef.current) {
+      console.timeEnd('⏱️ agregar-producto')
+    }
+    prevFieldsLengthRef.current = fields.length
+  }, [fields.length])
 
   // Usar datos de demo si estamos en modo configuración y no hay fields
   const baseRowData = configMode?.enabled && fields.length === 0 ? demoData : fields
