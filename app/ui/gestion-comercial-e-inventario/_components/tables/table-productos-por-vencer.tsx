@@ -217,6 +217,10 @@ export default function TableProductosPorVencer({ dias = -1, busqueda = '' }: Ta
     )
   }
 
+  // Memoizar columnDefs: AG Grid React compara props por REFERENCIA; un array
+  // nuevo en cada render destruye y recrea todas las celdas (tabla en blanco).
+  const detalleColumns = useMemo(() => useColumnsProductosPorVencer(), [])
+
   return (
     <div className="flex flex-col gap-4 h-full overflow-hidden">
       <TableWithTitle
@@ -245,7 +249,7 @@ export default function TableProductosPorVencer({ dias = -1, busqueda = '' }: Ta
           </span>
         }
         selectionColor={greenColors[10]}
-        columnDefs={useColumnsProductosPorVencer()}
+        columnDefs={detalleColumns}
         rowData={detalleFiltrado}
         style={{ height: 'calc((100% - 1rem) / 2)', minHeight: 0 }}
       />

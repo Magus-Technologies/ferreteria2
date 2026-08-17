@@ -61,6 +61,12 @@ export default function TableMisVentas() {
   const setVentaSeleccionada = useStoreVentaSeleccionada((state) => state.setVenta);
   const ventaActual         = useStoreVentaSeleccionada((state) => state.venta);
 
+  // Memoizar columnDefs: AG Grid React compara props por REFERENCIA. Si se
+  // crea un array nuevo en cada render (useColumnsMisVentas() inline), el
+  // grid destruye y recrea TODAS las celdas en cada re-render del padre
+  // (cambio de selección, refresh) → la tabla parpadea en blanco.
+  const columnDefs = React.useMemo(() => useColumnsMisVentas(), []);
+
   // Al refrescar datos: re-seleccionar la venta previa por ID.
   // Si ya no existe en los nuevos datos (fue borrada o filtrada), seleccionar la primera.
   // Esto evita que un WebSocket refresh pise la selección mientras el usuario tiene un modal abierto.
@@ -144,7 +150,7 @@ export default function TableMisVentas() {
         id="mis-ventas-v2"
         title="N° DE CLIENTES/VENTAS"
         loading={loading}
-        columnDefs={useColumnsMisVentas()}
+        columnDefs={columnDefs}
         rowData={response || []}
         tableRef={tableRef}
         selectionColor="overlay"

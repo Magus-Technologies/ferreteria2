@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { useColumnsProductosUrgenteStock } from './columns-productos-urgente-stock'
@@ -21,12 +22,16 @@ export default function TableProductosUrgenteStock() {
     enabled: !!almacen_id,
   })
 
+  // Memoizar columnDefs: AG Grid React compara props por REFERENCIA; un array
+  // nuevo en cada render destruye y recrea todas las celdas (tabla en blanco).
+  const columnDefs = useMemo(() => useColumnsProductosUrgenteStock(), [])
+
   return (
     <TableWithTitle
       id='g-c-e-i.dashboard.productos-urgente-stock'
       title='Productos Urgente por Stockear'
       selectionColor={greenColors[10]}
-      columnDefs={useColumnsProductosUrgenteStock()}
+      columnDefs={columnDefs}
       rowData={data ?? []}
     />
   )

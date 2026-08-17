@@ -508,6 +508,19 @@ export default function TableBase<T>({
     columnStateForRender,
   ]);
 
+// Desactivar la virtualización de filas en datasets chicos: AG Grid monta
+  // TODAS las filas una sola vez y durante el scroll solo las mueve con
+  // `transform` (GPU). Con virtualización activa, cada fila que entra al
+  // viewport se monta desde cero (cell renderers React: Dropdowns de antd,
+  // Tags, etc.) — con scroll rápido el hilo principal se bloquea y el
+  // viewport queda EN BLANCO ~1s hasta que terminan de montarse. Las tablas
+  // de la app traen datasets chicos (filtros por día/almacén, per_page<=100),
+  // así que montar todo al inicio es más barato que re-montar en cada scroll.
+  // Las páginas pueden forzar el valor con la prop suppressRowVirtualisation.
+  const rowCount = Array.isArray(props.rowData) ? props.rowData.length : 0;
+  const shouldSuppressRowVirtualisation =
+    props.suppressRowVirtualisation ?? rowCount <= 300;
+
   return (
     <>
       <style>
@@ -693,18 +706,14 @@ export default function TableBase<T>({
               : undefined
           }
           pagination={props.pagination ?? false}
-          suppressRowVirtualisation={false}
+          suppressRowVirtualisation={shouldSuppressRowVirtualisation}
           suppressColumnVirtualisation={false}
           rowBuffer={20}
-          debounceVerticalScrollbar={true}
           suppressAnimationFrame={false}
-          // false (default de AG Grid): posiciona las filas con CSS
-          // `transform` (acelerado por GPU) en vez de `top` (layout/reflow).
-          // Estaba en `true` — con virtualización de filas + scroll rápido
-          // (bajar y subir), el reposicionamiento por `top` no llegaba a
-          // tiempo y la tabla se veía en blanco ~1s hasta que terminaba de
-          // recalcular. Afecta a TODAS las tablas de la app (componente
-          // compartido).
+          // `transform` (default) para posicionar filas: acelerado por GPU, evita
+          // layout/reflow durante scroll. NO usar `top` (suppressRowTransform=true):
+          // con virtualización + scroll rápido las filas no se reposicionan a
+          // tiempo y se ve la tabla en blanco.
           suppressRowTransform={false}
           rowHeight={props.rowHeight ?? 42}
           suppressScrollOnNewData={true}

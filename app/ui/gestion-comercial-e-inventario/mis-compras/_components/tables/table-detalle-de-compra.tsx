@@ -2,7 +2,7 @@
 
 import TableWithTitle from '~/components/tables/table-with-title'
 import { ProductoAlmacenUnidadDerivadaCreateInputSchema } from '~/types/zod-schemas'
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useMemo } from 'react'
 import {
   TableDetalleDeCompraProps,
   useColumnsDetalleDeCompra,
@@ -42,13 +42,17 @@ export default function TableDetalleDeCompra({
     [setProductoSeleccionado]
   )
 
+  // Memoizar columnDefs: AG Grid React compara props por REFERENCIA; un array
+  // nuevo en cada render destruye y recrea todas las celdas (tabla en blanco).
+  const columnDefs = useMemo(() => useColumnsDetalleDeCompra(), [])
+
   return (
     <TableWithTitle<TableDetalleDeCompraProps>
       id={id}
       title='Detalle de Compra'
       schema={ProductoAlmacenUnidadDerivadaCreateInputSchema}
       headersRequired={['Cod. Producto']}
-      columnDefs={useColumnsDetalleDeCompra()}
+      columnDefs={columnDefs}
       onRowClicked={handleRowClicked}
       optionsSelectColumns={[
         {
