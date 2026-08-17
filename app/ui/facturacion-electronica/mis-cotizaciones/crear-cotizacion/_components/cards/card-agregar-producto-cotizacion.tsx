@@ -11,6 +11,12 @@ export default function CardAgregarProductoCotizacion({
   const setProductoAgregadoCotizacion = useStoreProductoAgregadoCotizacion(
     (store) => store.setProductoAgregado
   )
+  // Para que el loader de "Más"/"Más y Salir" (en el card base) sepa cuándo
+  // terminó de agregarse: acá se agrega a la tabla de COTIZACIÓN, no a la de
+  // ventas, así que hay que pasarle su propio array en vez del default.
+  const productosCotizacion = useStoreProductoAgregadoCotizacion(
+    (store) => store.productos
+  )
 
   return (
     <ConfigurableElement
@@ -19,6 +25,7 @@ export default function CardAgregarProductoCotizacion({
     >
       <CardAgregarProductoVentaBase
         setOpen={setOpen}
+        productosDestino={productosCotizacion}
         onOk={(values) => {
           // Usar el store de cotizaciones en lugar del de ventas
           setProductoAgregadoCotizacion(values as any)

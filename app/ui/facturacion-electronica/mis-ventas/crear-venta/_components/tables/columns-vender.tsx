@@ -425,31 +425,33 @@ export function useColumnsVender({
         const servicioNombre = form.getFieldValue(['productos', value, 'servicio_nombre'])
         const servicioReferencia = form.getFieldValue(['productos', value, 'servicio_referencia'])
 
-        // Hidden fields comunes
+        // Hidden fields comunes. Solo se registran acá los campos que:
+        //   (a) lee use-create-venta.ts al armar el payload de la venta (vía
+        //       onFinish, que solo recolecta valores de paths con un
+        //       <Form.Item> montado), o
+        //   (b) necesitan disparar un re-render reactivo propio.
+        // Ant Design Form (rc-field-form) notifica a TODOS los campos
+        // registrados en cada setFieldValue/add() — con ~20 campos ocultos
+        // por fila, esto escalaba en O(filas × campos) y volvía cada
+        // "agregar producto" más lento cuantos más productos ya hubiera en
+        // el carrito (confirmado con mediciones reales).
+        // stock_fraccion, cantidad_paquete, cantidad_base, servicio_nombre,
+        // servicio_codigo_sunat y los 8 paq_precio_*/paq_descuento_* NO se
+        // leen en ningún punto del envío (grep confirmado sobre
+        // use-create-venta.ts) — solo se leen/escriben acá mismo vía
+        // form.getFieldValue/setFieldValue, que operan directo sobre el
+        // store del formulario y NO requieren un <Form.Item> montado para
+        // funcionar. Se sacan del registro sin perder el dato.
         const hiddenFields = (
           <>
             <InputNumberBase propsForm={{ name: [value, 'producto_id'], rules: tipoFila === 'paquete_cabecera' ? undefined : [{ required: true, message: '' }], hidden: true }} formWithMessage={false} />
-            <InputNumberBase propsForm={{ name: [value, 'stock_fraccion'], hidden: true }} formWithMessage={false} />
             <InputNumberBase propsForm={{ name: [value, 'paquete_id'], hidden: true }} formWithMessage={false} />
             <InputBase propsForm={{ name: [value, 'paquete_nombre'], hidden: true }} formWithMessage={false} />
             <InputBase propsForm={{ name: [value, '_tipo'], hidden: true }} formWithMessage={false} />
             <InputBase propsForm={{ name: [value, '_tipo_fila'], hidden: true }} formWithMessage={false} />
             <InputNumberBase propsForm={{ name: [value, 'servicio_id'], hidden: true }} formWithMessage={false} />
-            <InputBase propsForm={{ name: [value, 'servicio_nombre'], hidden: true }} formWithMessage={false} />
-            <InputBase propsForm={{ name: [value, 'servicio_codigo_sunat'], hidden: true }} formWithMessage={false} />
             <InputBase propsForm={{ name: [value, 'servicio_referencia'], hidden: true }} formWithMessage={false} />
-            <InputNumberBase propsForm={{ name: [value, 'cantidad_paquete'], hidden: true }} formWithMessage={false} />
-            <InputNumberBase propsForm={{ name: [value, 'cantidad_base'], hidden: true }} formWithMessage={false} />
             <InputBase propsForm={{ name: [value, 'producto_name'], rules: tipoFila === 'paquete_cabecera' ? undefined : [{ required: true, message: '' }], hidden: true }} readOnly variant='borderless' formWithMessage={false} />
-            {/* Precios y descuentos por tipo del paquete (registrados para que Ant Form los preserve al cambiar tipo de precio) */}
-            <InputNumberBase propsForm={{ name: [value, 'paq_precio_publico'], hidden: true }} formWithMessage={false} />
-            <InputNumberBase propsForm={{ name: [value, 'paq_precio_especial'], hidden: true }} formWithMessage={false} />
-            <InputNumberBase propsForm={{ name: [value, 'paq_precio_minimo'], hidden: true }} formWithMessage={false} />
-            <InputNumberBase propsForm={{ name: [value, 'paq_precio_ultimo'], hidden: true }} formWithMessage={false} />
-            <InputNumberBase propsForm={{ name: [value, 'paq_descuento_publico'], hidden: true }} formWithMessage={false} />
-            <InputNumberBase propsForm={{ name: [value, 'paq_descuento_especial'], hidden: true }} formWithMessage={false} />
-            <InputNumberBase propsForm={{ name: [value, 'paq_descuento_minimo'], hidden: true }} formWithMessage={false} />
-            <InputNumberBase propsForm={{ name: [value, 'paq_descuento_ultimo'], hidden: true }} formWithMessage={false} />
           </>
         )
 

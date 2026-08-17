@@ -118,10 +118,16 @@ export default function CardAgregarProductoVenta({
   onOk,
   setOpen,
   onChangeValues,
+  // Array de productos del carrito que este card alimenta. Por defecto lee
+  // el de ventas; el wrapper de cotizaciones (card-agregar-producto-cotizacion)
+  // pasa el suyo. Se usa solo para saber cuándo "terminó" de agregarse
+  // (para el loader de los botones) — no se lee ni escribe nada de acá.
+  productosDestino,
 }: {
   onOk?: (values: ValuesCardAgregarProductoVenta) => void
   setOpen: (open: boolean) => void
   onChangeValues?: (values: ValuesCardAgregarProductoVenta) => void
+  productosDestino?: unknown[]
 }) {
   const [values, setValues] =
     useState<ValuesCardAgregarProductoVenta>(valuesDefault)
@@ -134,6 +140,29 @@ export default function CardAgregarProductoVenta({
   const setProductoAgregadoVenta = useStoreProductoAgregadoVenta(
     (store) => store.setProductoAgregado
   )
+  const productosVentaParaLoader = useStoreProductoAgregadoVenta(
+    (store) => store.productos
+  )
+  // "Agregar" dispara una cadena async (store → efecto de la tabla → Form.List
+  // → AG Grid) que puede tardar. Sin loader, el usuario reclickeaba pensando
+  // que no funcionó — y eso disparaba la validación "Complete todos los
+  // campos" porque Cantidad ya se había limpiado del click anterior.
+  const [agregando, setAgregando] = useState(false)
+  const productosParaLoader = productosDestino ?? productosVentaParaLoader
+  const prevProductosRef = useRef(productosParaLoader)
+  useEffect(() => {
+    if (agregando && productosParaLoader !== prevProductosRef.current) {
+      setAgregando(false)
+    }
+    prevProductosRef.current = productosParaLoader
+  }, [productosParaLoader, agregando])
+  // Red de seguridad: si por lo que sea nunca se detecta el cambio (bug en
+  // otro lado, carrera rara), no dejar el botón trabado en loading para siempre.
+  useEffect(() => {
+    if (!agregando) return
+    const timeoutId = setTimeout(() => setAgregando(false), 5000)
+    return () => clearTimeout(timeoutId)
+  }, [agregando])
 
   const paqueteSeleccionadoStore = useStorePaqueteSeleccionado(s => s.paquete)
 
@@ -200,6 +229,8 @@ export default function CardAgregarProductoVenta({
         message: 'Complete todos los campos obligatorios',
       })
     }
+
+    setAgregando(true)
 
     const unidad_derivada = unidades_derivadas?.find(
       (item) => item.unidad_derivada.id === values.unidad_derivada_id
@@ -554,6 +585,7 @@ export default function CardAgregarProductoVenta({
           color='success'
           className='flex items-center justify-center gap-3 !rounded-md w-full h-full text-balance px-4! hover:!scale-100'
           onClick={() => handleOk(false)}
+          loading={agregando}
         >
           <FaPlusCircle className='min-w-fit' size={12} /> Más
         </ButtonBase>
@@ -561,6 +593,7 @@ export default function CardAgregarProductoVenta({
           color='warning'
           className='flex items-center justify-center gap-3 !rounded-md w-full h-full text-nowrap px-4! hover:!scale-100'
           onClick={() => handleOk(true)}
+          loading={agregando}
         >
           <FaPlusCircle className='min-w-fit' size={12} /> Más y Salir
         </ButtonBase>
