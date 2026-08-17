@@ -332,6 +332,15 @@ export default function useInitVenta({
         hora_fin: '18:00',
       })
     }
+    // Dispara solo cuando cambia la venta/cotización que se está cargando
+    // (por id), NO en cada render. `venta` llega como objeto NUEVO en cada
+    // render de su caller (ej. editar-venta/[id]/page.tsx construye
+    // `ventaFormated` sin useMemo), así que depender de `[venta]` completo
+    // reseteaba el carrito (setCarrito([]) más arriba) cada vez que
+    // React Query refetcheaba esa venta en segundo plano (foco de ventana,
+    // invalidación de ['venta', id] desde otra pantalla) — el vendedor
+    // agregaba productos, el refetch vaciaba el carrito en silencio, y al
+    // cobrar salía "ingresa al menos un producto o servicio".
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [venta])
+  }, [venta?.id])
 }

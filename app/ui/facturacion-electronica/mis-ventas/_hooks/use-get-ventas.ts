@@ -14,7 +14,10 @@ export default function useGetVentas({
     queryKey: [QueryKeys.VENTAS, where],
     queryFn: async () => {
       // Usar la API de Laravel en lugar del action de Prisma
-      const response = await ventaApi.list(where)
+      // per_page: -1 = traer todas las ventas sin paginar (el backend
+      // paginaba a 50 por default y la tabla mostraba solo esas, aunque
+      // hubiera más). Mismo criterio que el listado completo de productos.
+      const response = await ventaApi.list({ ...where, per_page: -1 })
       if (response.error) {
         throw new Error(response.error.message)
       }

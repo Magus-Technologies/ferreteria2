@@ -17,6 +17,7 @@ import {
 import useCreateVenta from '../../../../_hooks/use-create-venta'
 import { useDetallesEntrega } from '../context'
 import type { TipoDespachoUI } from '../types'
+import { useStoreProductoAgregadoVenta } from '../../../../_store/store-producto-agregado-venta'
 
 /**
  * Valores del formulario de venta listos para enviar al backend.
@@ -31,10 +32,20 @@ import type { TipoDespachoUI } from '../types'
  * `diferencia_pago`, pero al confirmar la entrega no llegaba al backend, que
  * entonces rechazaba la edición con "Esta edición deja una diferencia de S/ X
  * pendiente de cobrar" — aunque el usuario SÍ había registrado el pago.
+ *
+ * Mismo problema con `productos`: la tabla de productos vive en Zustand, no
+ * en el form (ver store-producto-agregado-venta.ts) — no hay ningún
+ * <Form.Item name="productos"> registrado, así que `form.getFieldsValue()`
+ * nunca lo trae. Este modal es el camino MÁS COMÚN al crear una venta desde
+ * cero (Cobrar → Configurar Entrega → Confirmar) y NO pasa por el `onFinish`
+ * del form (ver body-vender.tsx, que sí inyecta `productos` ahí) — sin esto
+ * acá también, el vendedor agregaba productos y al confirmar la entrega
+ * salía "ingresa al menos un producto o servicio" con el carrito lleno.
  */
 function leerValoresVenta(form: FormInstance<any>): any {
   return {
     ...form.getFieldsValue(),
+    productos: useStoreProductoAgregadoVenta.getState().carrito,
     diferencia_pago: form.getFieldValue('diferencia_pago') || undefined,
     direccion_seleccionada: form.getFieldValue('direccion_seleccionada') || undefined,
     cotizacion_id: form.getFieldValue('cotizacion_id') || undefined,
