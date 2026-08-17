@@ -59,12 +59,57 @@ export interface ImportDetallePreciosResponse {
   message: string;
 }
 
+export interface ImportUpdateDetallePreciosItem {
+  cod_producto: string;
+  formato: string;
+  factor?: number;
+  precio_publico?: number;
+  comision_publico?: number;
+  precio_especial?: number;
+  comision_especial?: number;
+  activador_especial?: number;
+  precio_minimo?: number;
+  comision_minimo?: number;
+  activador_minimo?: number;
+  precio_ultimo?: number;
+  comision_ultimo?: number;
+  activador_ultimo?: number;
+}
+
+export interface ImportUpdateDetallePreciosResult {
+  total: number;
+  updated: number;
+  not_found: string[];
+  not_found_count: number;
+  errors: string[];
+  errors_count: number;
+}
+
+export interface ImportUpdateDetallePreciosResponse {
+  data: ImportUpdateDetallePreciosResult;
+  message: string;
+}
+
 export const detallePreciosApi = {
   /**
    * Importar detalles de precios (unidades derivadas)
    */
   async import(data: { data: ImportDetallePreciosItem[] }): Promise<ApiResponse<ImportDetallePreciosResponse>> {
     return apiRequest<ImportDetallePreciosResponse>('/detalle-precios/import', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Actualizar detalles de precios (unidades derivadas) existentes desde Excel.
+   * Solo actualiza los campos presentes en cada fila; celda vacía = no tocar.
+   */
+  async importUpdate(data: {
+    data: ImportUpdateDetallePreciosItem[];
+    almacen_id: number;
+  }): Promise<ApiResponse<ImportUpdateDetallePreciosResponse>> {
+    return apiRequest<ImportUpdateDetallePreciosResponse>('/detalle-precios/import-update', {
       method: 'POST',
       body: JSON.stringify(data),
     });

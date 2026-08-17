@@ -11,6 +11,8 @@ import InputImport from '~/app/_components/form/inputs/input-import'
 import { useEffect, useRef, useState } from 'react'
 import { AgGridReact } from 'ag-grid-react'
 import { ProductoAlmacenUnidadDerivadaCreateInputSchema } from '~/types/zod-schemas'
+import { z } from 'zod'
+import { App } from 'antd'
 import { detallePreciosApi } from '~/lib/api/detalle-precios'
 import { useQueryClient } from '@tanstack/react-query'
 import ButtonBase from '~/components/buttons/button-base'
@@ -57,6 +59,42 @@ function excelDateToISODate(value: unknown): string | undefined {
   return asDefault.isValid() ? asDefault.format('YYYY-MM-DD') : undefined
 }
 
+// Columnas aceptadas por "Actualizar con Excel" (partial update). Cada key
+// normalizada se construye en preProcessData desde los headers del Excel.
+const updateDetallePreciosColumnasExtra: { headerName: string; field: string }[] = [
+  { headerName: 'cod_producto', field: 'cod_producto' },
+  { headerName: 'formato', field: 'formato' },
+  { headerName: 'factor', field: 'factor' },
+  { headerName: 'precio_publico', field: 'precio_publico' },
+  { headerName: 'comision_publico', field: 'comision_publico' },
+  { headerName: 'precio_especial', field: 'precio_especial' },
+  { headerName: 'comision_especial', field: 'comision_especial' },
+  { headerName: 'activador_especial', field: 'activador_especial' },
+  { headerName: 'precio_minimo', field: 'precio_minimo' },
+  { headerName: 'comision_minimo', field: 'comision_minimo' },
+  { headerName: 'activador_minimo', field: 'activador_minimo' },
+  { headerName: 'precio_ultimo', field: 'precio_ultimo' },
+  { headerName: 'comision_ultimo', field: 'comision_ultimo' },
+  { headerName: 'activador_ultimo', field: 'activador_ultimo' },
+]
+
+const updateDetallePrecioImportSchema = z.object({
+  cod_producto: z.string(),
+  formato: z.string(),
+  factor: z.number().optional(),
+  precio_publico: z.number().optional(),
+  comision_publico: z.number().optional(),
+  precio_especial: z.number().optional(),
+  comision_especial: z.number().optional(),
+  activador_especial: z.number().optional(),
+  precio_minimo: z.number().optional(),
+  comision_minimo: z.number().optional(),
+  activador_minimo: z.number().optional(),
+  precio_ultimo: z.number().optional(),
+  comision_ultimo: z.number().optional(),
+  activador_ultimo: z.number().optional(),
+})
+
 export default function TableDetalleDePrecios() {
   const tableRef = useRef<AgGridReact>(null)
   const { can } = usePermissionHook()
@@ -75,6 +113,7 @@ export default function TableDetalleDePrecios() {
   )
 
   const queryClient = useQueryClient()
+  const { notification } = App.useApp()
 
   // Reutilizar el mismo hook y queryKey que la tabla principal para evitar peticiones duplicadas
   const {
@@ -315,6 +354,145 @@ export default function TableDetalleDePrecios() {
                   // tabla caiga al branch "todos los productos filtrados".
                   if (productoSeleccionado) {
                     const pages = (result.data as any)?.pages ?? []
+                    const freshData = pages.flatMap((p: any) => p.data) as typeof productosData
+                    const actualizado = freshData?.find(p => p.id === productoSeleccionado.id)
+                    setProductoSeleccionado(actualizado ?? productoSeleccionado)
+                  }
+                },
+                queryKey: [QueryKeys.PRODUCTOS],
+              }}
+            />
+            <InputImport
+              tableRef={tableRef}
+              schema={updateDetallePrecioImportSchema}
+              title="Actualizar con Excel"
+              columnasExtra={updateDetallePreciosColumnasExtra}
+              preProcessData={async (data) => {
+                if (!almacen_id)
+                  throw new Error('No se seleccionó un almacén')
+
+                // Alias soportados por columna (mismos que el import). La
+                // celda vacía en cualquier campo = no tocar ese campo.
+                const optionalFields: Record<string, string[]> = {
+                  factor: ['Factor'],
+                  precio_publico: ['P. Público', 'Precio Público'],
+                  comision_publico: ['Comisión Público', 'Comisión P. Público', 'Comisión Precio Público'],
+                  precio_especial: ['P. Especial', 'Precio Especial', 'Precio Ferretería'],
+                  comision_especial: ['Comisión Especial', 'Comisión P. Especial', 'Comisión Precio Especial', 'Comisión Ferretería'],
+                  activador_especial: ['Activador Especial', 'Activador Ferretería', 'Activador P. Especial', 'Activador Precio Especial'],
+                  precio_minimo: ['P. Mínimo', 'Precio Mínimo'],
+                  comision_minimo: ['Comisión Mínimo', 'Comisión P. Mínimo', 'Comisión Precio Mínimo'],
+                  activador_minimo: ['Activador Mínimo', 'Activador P. Mínimo', 'Activador Precio Mínimo'],
+                  precio_ultimo: ['P. Final', 'Precio Final'],
+                  comision_ultimo: ['Comisión Final', 'Comisión P. Final', 'Comisión Precio Final'],
+                  activador_ultimo: ['Activador Final', 'Activador P. Final', 'Activador Precio Final'],
+                }
+
+                return data.map((item, index) => {
+                  const codProducto = String(item['Cod. Producto'] ?? '').trim()
+                  const formato = String(item['Formato'] ?? '').trim()
+
+                  if (!codProducto)
+                    throw new Error(
+                      `Fila ${index + 2}: falta el 'Cod. Producto'. Solo se actualizan unidades derivadas existentes.`
+                    )
+                  if (!formato)
+                    throw new Error(
+                      `Fila ${index + 2}: falta el 'Formato'.`
+                    )
+
+                  const row: Record<string, unknown> = {
+                    cod_producto: codProducto,
+                    formato,
+                  }
+
+                  for (const [apiKey, excelKeys] of Object.entries(optionalFields)) {
+                    for (const excelKey of excelKeys) {
+                      const raw = item[excelKey]
+                      if (raw === undefined || raw === null || String(raw).trim() === '') continue
+                      const parsed = Number(raw)
+                      if (isNaN(parsed))
+                        throw new Error(
+                          `Fila ${index + 2}: "${excelKey}" no es un número válido`
+                        )
+                      row[apiKey] = parsed
+                      break
+                    }
+                  }
+
+                  return row
+                })
+              }}
+              propsUseServerMutation={{
+                action: async (payload: { data: Array<Record<string, unknown>> }) => {
+                  if (!almacen_id)
+                    throw new Error('No se seleccionó un almacén')
+                  const res = await detallePreciosApi.importUpdate({
+                    data: payload.data as any,
+                    almacen_id,
+                  })
+                  if (res.error) throw new Error(res.error.message)
+                  return { data: (res.data as any)?.data ?? res.data }
+                },
+                msgSuccess: 'Precios actualizados exitosamente',
+                onSuccess: async (res) => {
+                  const result = res.data as any
+                  if (
+                    result?.not_found_count > 0 ||
+                    result?.errors_count > 0
+                  ) {
+                    notification.warning({
+                      message: 'Resultado de actualización',
+                      description: (
+                        <div className="max-h-[60dvh] overflow-y-auto">
+                          <div className="mb-2">
+                            Actualizados:{" "}
+                            <strong className="text-green-600">
+                              {result.updated}
+                            </strong>
+                          </div>
+                          {result.not_found_count > 0 && (
+                            <div className="mb-4">
+                              <div className="font-bold text-orange-600">
+                                Código|Formato no encontrados (
+                                {result.not_found_count}):
+                              </div>
+                              <ul className="text-red-500 list-disc ml-4 max-h-40 overflow-y-auto">
+                                {result.not_found.map(
+                                  (codigo: string, index: number) => (
+                                    <li key={index}>{codigo}</li>
+                                  ),
+                                )}
+                              </ul>
+                            </div>
+                          )}
+                          {result.errors_count > 0 && (
+                            <div>
+                              <div className="font-bold text-red-600">
+                                Errores ({result.errors_count}):
+                              </div>
+                              <ul className="text-red-500 list-disc ml-4 max-h-40 overflow-y-auto">
+                                {result.errors.map(
+                                  (error: string, index: number) => (
+                                    <li key={index}>{error}</li>
+                                  ),
+                                )}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      ),
+                    })
+                  }
+
+                  await queryClient.invalidateQueries({
+                    queryKey: ['productos-infinite']
+                  });
+                  const resultRefetch = await refetch();
+
+                  // Mantener el producto seleccionado con su versión actualizada
+                  if (productoSeleccionado) {
+                    const pages = (resultRefetch.data as any)?.pages ?? []
                     const freshData = pages.flatMap((p: any) => p.data) as typeof productosData
                     const actualizado = freshData?.find(p => p.id === productoSeleccionado.id)
                     setProductoSeleccionado(actualizado ?? productoSeleccionado)
