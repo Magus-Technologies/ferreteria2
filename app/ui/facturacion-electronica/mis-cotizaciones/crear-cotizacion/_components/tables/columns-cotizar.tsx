@@ -1,6 +1,7 @@
 'use client'
 
 import { Form, FormInstance, Tooltip, FormListFieldData, Image } from 'antd'
+import { useMemo } from 'react'
 import { ColDef, ICellRendererParams } from 'ag-grid-community'
 import type { FormCreateCotizacion, DescuentoTipo, TipoPrecio } from '../../_types/cotizacion.types'
 import { FaTrash } from 'react-icons/fa'
@@ -182,9 +183,14 @@ export function useColumnsCotizar({
   form: FormInstance<FormCreateCotizacion>
   remove: (index: number | number[]) => void
 }): ColDef[] {
-  const productosStore = useStoreProductoAgregadoCotizacion((s) => s.productos)
-
-  return [
+  // `columns` se pasa como columnDefs a AG Grid y antes se reconstruía en
+  // cada render (incluyendo cada agregado/eliminación de producto), lo que
+  // fuerza a AG Grid a redibujar toda la grilla en vez de solo actualizar
+  // filas. Se memoiza con las dependencias reales (mismo fix aplicado en
+  // columns-vender.tsx). `productosStore` se lee fresco vía .getState() en
+  // vez de suscripción reactiva para poder omitirlo del array de
+  // dependencias sin quedar con datos viejos.
+  return useMemo(() => [
     // {
     //   headerName: '#',
     //   valueGetter: 'node.rowIndex + 1',
@@ -441,7 +447,11 @@ export function useColumnsCotizar({
               formWithMessage={false}
               onChange={() => {
                 calcularSubtotalForm({ form, value })
-                autoSeleccionarMejorPrecioCotizacion({ form, fieldIndex: value, productosStore })
+                autoSeleccionarMejorPrecioCotizacion({
+                  form,
+                  fieldIndex: value,
+                  productosStore: useStoreProductoAgregadoCotizacion.getState().productos,
+                })
               }}
             />
             {stockInsuficiente && cantidad && (
@@ -595,5 +605,5 @@ export function useColumnsCotizar({
         )
       },
     },
-  ]
+  ], [form, remove])
 }

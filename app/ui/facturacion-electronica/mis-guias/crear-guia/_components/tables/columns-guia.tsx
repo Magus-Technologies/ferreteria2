@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import { ColDef, ICellRendererParams } from 'ag-grid-community'
 import { FormInstance, FormListFieldData, Tooltip } from 'antd'
 import InputBase from '~/app/_components/form/inputs/input-base'
@@ -13,7 +14,11 @@ export function useColumnsGuia({
   form: FormInstance
   remove: (index: number | number[]) => void
 }) {
-  const columns: ColDef<FormListFieldData>[] = [
+  // Memoizado para que AG Grid no trate cada agregado/eliminación de
+  // producto como un cambio de columnas (mismo fix que columns-vender.tsx /
+  // columns-cotizar.tsx: sin esto, columnDefs cambia de referencia en cada
+  // render y fuerza un redibujo completo de la grilla).
+  const columns: ColDef<FormListFieldData>[] = useMemo(() => [
     {
       colId: 'codigo',
       headerName: 'Código',
@@ -272,7 +277,7 @@ export function useColumnsGuia({
         )
       },
     },
-  ]
+  ], [form, remove])
 
   return columns
 }
