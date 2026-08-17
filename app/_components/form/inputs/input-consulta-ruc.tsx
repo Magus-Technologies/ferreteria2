@@ -25,7 +25,9 @@ export default function InputConsultaRuc({
   const { execute, loading } = useServerMutation({
     action: consultaReniec,
     onSuccess: res => {
-      onSuccess?.(res.data!)
+      if (res.data) {
+        onSuccess?.(res.data)
+      }
     },
   })
 

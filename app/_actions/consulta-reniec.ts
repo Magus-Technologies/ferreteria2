@@ -1,6 +1,7 @@
 "use server";
 
 import { ConsultaDni, ConsultaRuc } from "../_types/consulta-ruc";
+import { ServerResult } from "~/hooks/use-server-mutation";
 
 interface ApiPeruResponse<T> {
   success: boolean;
@@ -29,9 +30,16 @@ interface ApiPeruRuc {
   ubigeo_sunat: string | null;
 }
 
+function errorResult(message: string): {
+  data: undefined;
+  error: { message: string };
+} {
+  return { data: undefined, error: { message } };
+}
+
 async function fetchApiPeru<T>(tipo: "dni" | "ruc", search: string): Promise<T> {
   const token = process.env.APIPERU_TOKEN;
-  if (!token) throw new Error("Falta APIPERU_TOKEN en .env");
+  if (!token) throw new Error("Falta APIPERU_TOKEN en .env del servidor");
 
   const response = await fetch(`https://apiperu.dev/api/${tipo}`, {
     method: "POST",
@@ -51,66 +59,74 @@ async function fetchApiPeru<T>(tipo: "dni" | "ruc", search: string): Promise<T> 
 
   return raw.data;
 }
-//DSAWD
-async function consultaDni({ search }: { search: string }): Promise<{ data: ConsultaDni }> {
-  if (!/^\d{8}$/.test(search)) throw new Error("El DNI debe tener 8 dígitos");
 
-  const raw = await fetchApiPeru<ApiPeruDni>("dni", search);
-  const data: ConsultaDni = {
-    success: true,
-    dni: raw.numero || search,
-    nombres: raw.nombres || "",
-    apellidoPaterno: raw.apellido_paterno || "",
-    apellidoMaterno: raw.apellido_materno || "",
-    codVerifica: Number(raw.codigo_verificacion) || 0,
-    codVerificaLetra: "",
-  };
+async function consultaDni({ search }: { search: string }): Promise<ServerResult<ConsultaDni>> {
+  try {
+    if (!/^\d{8}$/.test(search)) return errorResult("El DNI debe tener 8 dígitos");
 
-  return { data };
+    const raw = await fetchApiPeru<ApiPeruDni>("dni", search);
+    const data: ConsultaDni = {
+      success: true,
+      dni: raw.numero || search,
+      nombres: raw.nombres || "",
+      apellidoPaterno: raw.apellido_paterno || "",
+      apellidoMaterno: raw.apellido_materno || "",
+      codVerifica: Number(raw.codigo_verificacion) || 0,
+      codVerificaLetra: "",
+    };
+
+    return { data };
+  } catch (error) {
+    return errorResult(error instanceof Error ? error.message : "No se pudo consultar el DNI");
+  }
 }
 
-async function consultaRuc({ search }: { search: string }): Promise<{ data: ConsultaRuc }> {
-  if (!/^\d{11}$/.test(search)) throw new Error("El RUC debe tener 11 dígitos");
+async function consultaRuc({ search }: { search: string }): Promise<ServerResult<ConsultaRuc>> {
+  try {
+    if (!/^\d{11}$/.test(search)) return errorResult("El RUC debe tener 11 dígitos");
 
-  const raw = await fetchApiPeru<ApiPeruRuc>("ruc", search);
-  const data: ConsultaRuc = {
-    ruc: raw.ruc || search,
-    razonSocial: raw.nombre_o_razon_social || "",
-    nombreComercial: null,
-    telefonos: [],
-    tipo: null,
-    estado: raw.estado || "",
-    condicion: raw.condicion || "",
-    direccion: raw.direccion_completa || raw.direccion,
-    departamento: raw.departamento,
-    provincia: raw.provincia,
-    distrito: raw.distrito,
-    fechaInscripcion: null,
-    sistEmsion: null,
-    sistContabilidad: null,
-    actExterior: null,
-    actEconomicas: [],
-    cpPago: [],
-    sistElectronica: [],
-    fechaEmisorFe: null,
-    cpeElectronico: [],
-    fechaPle: null,
-    padrones: [],
-    fechaBaja: null,
-    profesion: null,
-    ubigeo: raw.ubigeo_sunat,
-    capital: null,
-  };
+    const raw = await fetchApiPeru<ApiPeruRuc>("ruc", search);
+    const data: ConsultaRuc = {
+      ruc: raw.ruc || search,
+      razonSocial: raw.nombre_o_razon_social || "",
+      nombreComercial: null,
+      telefonos: [],
+      tipo: null,
+      estado: raw.estado || "",
+      condicion: raw.condicion || "",
+      direccion: raw.direccion_completa || raw.direccion,
+      departamento: raw.departamento,
+      provincia: raw.provincia,
+      distrito: raw.distrito,
+      fechaInscripcion: null,
+      sistEmsion: null,
+      sistContabilidad: null,
+      actExterior: null,
+      actEconomicas: [],
+      cpPago: [],
+      sistElectronica: [],
+      fechaEmisorFe: null,
+      cpeElectronico: [],
+      fechaPle: null,
+      padrones: [],
+      fechaBaja: null,
+      profesion: null,
+      ubigeo: raw.ubigeo_sunat,
+      capital: null,
+    };
 
-  return { data };
+    return { data };
+  } catch (error) {
+    return errorResult(error instanceof Error ? error.message : "No se pudo consultar el RUC");
+  }
 }
 
 async function consultaReniec(
   { search }: { search: string },
-): Promise<{ data: ConsultaDni | ConsultaRuc }> {
+): Promise<ServerResult<ConsultaDni | ConsultaRuc>> {
   if (search.length === 8) return consultaDni({ search });
   if (search.length === 11) return consultaRuc({ search });
-  throw new Error("El número del documento debe tener 8 u 11 dígitos");
+  return errorResult("El número del documento debe tener 8 u 11 dígitos");
 }
 
 export { consultaDni, consultaRuc, consultaReniec };
