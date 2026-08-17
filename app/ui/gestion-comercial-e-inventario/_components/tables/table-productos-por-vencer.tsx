@@ -208,6 +208,10 @@ export default function TableProductosPorVencer({ dias = -1, busqueda = '' }: Ta
     })
   }, [filteredData, selectedResumen])
 
+  // Memoizar columnDefs: AG Grid React compara props por REFERENCIA; un array
+  // nuevo en cada render destruye y recrea todas las celdas (tabla en blanco).
+  const detalleColumns = useMemo(() => useColumnsProductosPorVencer(), [])
+
   if (isLoading) {
     return (
       <div className='flex flex-col items-center justify-center p-10 gap-3'>
@@ -216,10 +220,6 @@ export default function TableProductosPorVencer({ dias = -1, busqueda = '' }: Ta
       </div>
     )
   }
-
-  // Memoizar columnDefs: AG Grid React compara props por REFERENCIA; un array
-  // nuevo en cada render destruye y recrea todas las celdas (tabla en blanco).
-  const detalleColumns = useMemo(() => useColumnsProductosPorVencer(), [])
 
   return (
     <div className="flex flex-col gap-4 h-full overflow-hidden">

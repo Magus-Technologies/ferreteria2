@@ -15,6 +15,7 @@ import type { GetRowIdParams } from "ag-grid-community";
 import usePermissionHook from "~/hooks/use-permission";
 import { permissions } from "~/lib/permissions";
 import { ProductoCreateInputSchema } from "~/types/zod-schemas";
+import { z } from "zod";
 import InputUploadMasivo from "../inputs/input-upload-masivo";
 import { useStoreProductoSeleccionado } from "../../_store/store-producto-seleccionado";
 import { useStoreFiltrosProductos } from "../../_store/store-filtros-productos";
@@ -34,6 +35,44 @@ import { useQueryClient } from "@tanstack/react-query";
  * - Quick Filter local de AG Grid para búsquedas rápidas
  * - Loader visible durante carga
  */
+
+// Columnas aceptadas por "Actualizar con Excel" (partial update). Cada header
+// debe coincidir EXACTO con el nombre de columna del Excel.
+const updateColumnasExtra: { headerName: string; field: string }[] = [
+  { headerName: "Código de Producto", field: "cod_producto" },
+  { headerName: "Código de Barra", field: "cod_barra" },
+  { headerName: "Producto", field: "name" },
+  { headerName: "Ticket", field: "name_ticket" },
+  { headerName: "U. Contenidas", field: "unidades_contenidas" },
+  { headerName: "Marca", field: "marca" },
+  { headerName: "Categoria", field: "categoria" },
+  { headerName: "Unidad de Medida", field: "unidad_medida" },
+  { headerName: "Ubicación en Almacén", field: "ubicacion" },
+  { headerName: "Stock Fracción en Almacén", field: "stock_fraccion" },
+  { headerName: "Costo en Almacén", field: "costo" },
+  { headerName: "S. Min", field: "stock_min" },
+  { headerName: "S. Max", field: "stock_max" },
+  { headerName: "Activo", field: "permitido" },
+  { headerName: "Acción Técnica", field: "accion_tecnica" },
+];
+
+const updateProductoImportSchema = z.object({
+  cod_producto: z.string().optional(),
+  cod_barra: z.string().optional(),
+  name: z.string().optional(),
+  name_ticket: z.string().optional(),
+  unidades_contenidas: z.number().optional(),
+  marca: z.string().optional(),
+  categoria: z.string().optional(),
+  unidad_medida: z.string().optional(),
+  ubicacion: z.string().optional(),
+  stock_fraccion: z.number().optional(),
+  costo: z.number().optional(),
+  stock_min: z.number().optional(),
+  stock_max: z.number().optional(),
+  permitido: z.boolean().optional(),
+  accion_tecnica: z.string().optional(),
+});
 function TableProductosOptimized() {
   const tableRef = useRef<AgGridReact>(null);
   const almacen_id = useStoreAlmacen((store) => store.almacen_id);
@@ -319,6 +358,153 @@ function TableProductosOptimized() {
                     QueryKeys.CATEGORIAS,
                     QueryKeys.UNIDADES_MEDIDA,
                   ],
+                }}
+              />
+              <InputImport
+                tableRef={tableRef}
+                schema={updateProductoImportSchema}
+                title="Actualizar con Excel"
+                columnasExtra={updateColumnasExtra}
+                preProcessData={async (data) => {
+                  if (!almacen_id)
+                    throw new Error("No se seleccionó un almacén");
+
+                  return data.map((item, index) => {
+                    const codProducto = String(
+                      item["Código de Producto"] ?? "",
+                    ).trim();
+                    const codBarra = String(
+                      item["Código de Barra"] ?? "",
+                    ).trim();
+
+                    if (!codProducto && !codBarra) {
+                      throw new Error(
+                        `Fila ${index + 2}: falta el 'Código de Producto'. Solo se actualizan productos existentes.`,
+                      );
+                    }
+
+                    const row: Record<string, unknown> = {
+                      ...item,
+                      almacen_id,
+                    };
+
+                    if (codProducto) row["Código de Producto"] = codProducto;
+                    if (codBarra) row["Código de Barra"] = codBarra;
+
+                    // "Activo": solo se envía cuando el valor es explícito;
+                    // celda vacía = no tocar el campo en el backend.
+                    const activo = item["Activo"];
+                    if (
+                      activo !== undefined &&
+                      activo !== null &&
+                      String(activo).trim() !== ""
+                    ) {
+                      const v = String(activo).trim().toUpperCase();
+                      row["Activo"] = ["ACTIVO", "SI", "TRUE", "1"].includes(
+                        v,
+                      )
+                        ? true
+                        : false;
+                    } else {
+                      delete row["Activo"];
+                    }
+
+                    return row;
+                  });
+                }}
+                propsUseServerMutation={{
+                  action: async (payload: {
+                    data: Array<Record<string, unknown>>;
+                  }) => {
+                    const res = await productosApiV2.importUpdate({
+                      data: payload.data.map((fila) => ({
+                        ...fila,
+                        almacen_id,
+                      })),
+                    });
+                    if (res.error) {
+                      throw new Error(res.error.message);
+                    }
+
+                    const resultData =
+                      (res.data as any)?.data ?? res.data;
+
+                    return {
+                      data: {
+                        total: resultData?.total ?? 0,
+                        updated: resultData?.updated ?? 0,
+                        not_found: resultData?.not_found ?? [],
+                        not_found_count: resultData?.not_found_count ?? 0,
+                        errors: resultData?.errors ?? [],
+                        errors_count: resultData?.errors_count ?? 0,
+                      },
+                    };
+                  },
+                  msgSuccess: "Productos actualizados exitosamente",
+                  onSuccess: async (res) => {
+                    const result = res.data as any;
+                    if (
+                      result?.not_found_count > 0 ||
+                      result?.errors_count > 0
+                    ) {
+                      notification.warning({
+                        message: "Resultado de actualización",
+                        description: (
+                          <div className="max-h-[60dvh] overflow-y-auto">
+                            <div className="mb-2">
+                              Actualizados:{" "}
+                              <strong className="text-green-600">
+                                {result.updated}
+                              </strong>
+                            </div>
+                            {result.not_found_count > 0 && (
+                              <div className="mb-4">
+                                <div className="font-bold text-orange-600">
+                                  Códigos no encontrados (
+                                  {result.not_found_count}):
+                                </div>
+                                <ul className="text-red-500 list-disc ml-4 max-h-40 overflow-y-auto">
+                                  {result.not_found.map(
+                                    (codigo: string, index: number) => (
+                                      <li key={index}>{codigo}</li>
+                                    ),
+                                  )}
+                                </ul>
+                              </div>
+                            )}
+                            {result.errors_count > 0 && (
+                              <div>
+                                <div className="font-bold text-red-600">
+                                  Errores ({result.errors_count}):
+                                </div>
+                                <ul className="text-red-500 list-disc ml-4 max-h-40 overflow-y-auto">
+                                  {result.errors.map(
+                                    (error: string, index: number) => (
+                                      <li key={index}>{error}</li>
+                                    ),
+                                  )}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        ),
+                      });
+                    }
+
+                    await queryClient.refetchQueries({
+                      queryKey: ["productos-listado-completo"],
+                    });
+                    queryClient.invalidateQueries({
+                      queryKey: [QueryKeys.PRODUCTOS],
+                    });
+                    queryClient.invalidateQueries({
+                      queryKey: ["productos-by-almacen"],
+                    });
+                    queryClient.invalidateQueries({
+                      queryKey: ["productos-infinite"],
+                    });
+                  },
+                  queryKey: [QueryKeys.PRODUCTOS],
                 }}
               />
               <InputUploadMasivo

@@ -305,6 +305,32 @@ export const productosApiV2 = {
   },
 
   /**
+   * Actualizar productos existentes desde Excel (parcial)
+   * POST /api/productos/import-update
+   *
+   * Actualiza solo los campos presentes en cada fila, buscando el producto
+   * por cod_producto (o cod_barra). Los no encontrados se reportan.
+   */
+  async importUpdate(data: {
+    data: Array<Record<string, unknown>>;
+  }): Promise<ApiResponse<{
+    message: string;
+    data: {
+      total: number;
+      updated: number;
+      not_found: string[];
+      not_found_count: number;
+      errors: string[];
+      errors_count: number;
+    };
+  }>> {
+    return apiRequest(`/productos/import-update`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
    * Obtener progreso de importación
    * GET /api/productos/import-progress/{importId}
    */
