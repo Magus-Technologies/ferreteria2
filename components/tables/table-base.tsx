@@ -698,7 +698,14 @@ export default function TableBase<T>({
           rowBuffer={20}
           debounceVerticalScrollbar={true}
           suppressAnimationFrame={false}
-          suppressRowTransform={true}
+          // false (default de AG Grid): posiciona las filas con CSS
+          // `transform` (acelerado por GPU) en vez de `top` (layout/reflow).
+          // Estaba en `true` — con virtualización de filas + scroll rápido
+          // (bajar y subir), el reposicionamiento por `top` no llegaba a
+          // tiempo y la tabla se veía en blanco ~1s hasta que terminaba de
+          // recalcular. Afecta a TODAS las tablas de la app (componente
+          // compartido).
+          suppressRowTransform={false}
           rowHeight={props.rowHeight ?? 42}
           suppressScrollOnNewData={true}
           onGridReady={onGridReady}
