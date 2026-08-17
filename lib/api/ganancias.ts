@@ -101,17 +101,28 @@ export const gananciasApi = {
    * Obtener reporte de ganancias con filtros
    */
   async getGanancias(filtros?: FiltrosGanancias) {
-    const queryString = filtros
-      ? "?" + new URLSearchParams(
-          Object.entries(filtros).reduce((acc, [key, value]) => {
-            if (value !== undefined && value !== null && value !== "") {
-              acc[key] = String(value);
-            }
-            return acc;
-          }, {} as Record<string, string>)
-        ).toString()
-      : "";
-    
+    // `per_page` se fuerza acá y no en el estado de los filtros porque el
+    // formulario arma un objeto NUEVO en cada búsqueda (`setFiltros(data)`), sin
+    // copiar lo que no sea un campo del formulario. Así el valor inicial se perdía
+    // en el primer "Buscar", la petición salía sin `per_page` y el backend aplicaba
+    // su default de 50: la tabla mostraba 50 de 218 filas y no dejaba seguir
+    // bajando, porque no hay paginador. Al ir en el cliente de API, ningún llamador
+    // puede perderlo.
+    const conPaginacion: FiltrosGanancias = {
+      per_page: 10000, // máximo que acepta GananciasController
+      page: 1,
+      ...filtros,
+    };
+
+    const queryString = "?" + new URLSearchParams(
+      Object.entries(conPaginacion).reduce((acc, [key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          acc[key] = String(value);
+        }
+        return acc;
+      }, {} as Record<string, string>)
+    ).toString();
+
     return apiRequest<ResponseGanancias>(
       `/ganancias${queryString}`
     );
