@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { useColumnsUltimasComprasIngresadas } from './columns-ultimas-compras-ingresadas'
 import type { UltimasComprasType } from './columns-ultimas-compras-ingresadas'
@@ -32,6 +33,10 @@ export default function TableUltimasComprasIngresadas({
       )
     : []
 
+  // Memoizar columnDefs: AG Grid React compara props por REFERENCIA; un array
+  // nuevo en cada render destruye y recrea todas las celdas (tabla en blanco).
+  const columnDefs = useMemo(() => useColumnsUltimasComprasIngresadas(), [])
+
   return (
     <TableWithTitle
       id={id}
@@ -45,7 +50,7 @@ export default function TableUltimasComprasIngresadas({
           </span>
         </span>
       }
-      columnDefs={useColumnsUltimasComprasIngresadas()}
+      columnDefs={columnDefs}
       optionsSelectColumns={[
         {
           label: 'Default',

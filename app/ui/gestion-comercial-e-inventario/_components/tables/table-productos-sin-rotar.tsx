@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { useColumnsProductosSinRotar } from './columns-productos-sin-rotar'
@@ -22,12 +23,16 @@ export default function TableProductosSinRotar() {
     enabled: !!baseFiltros.almacen_id,
   })
 
+  // Memoizar columnDefs: AG Grid React compara props por REFERENCIA; un array
+  // nuevo en cada render destruye y recrea todas las celdas (tabla en blanco).
+  const columnDefs = useMemo(() => useColumnsProductosSinRotar(), [])
+
   return (
     <TableWithTitle
       id='g-c-e-i.dashboard.productos-sin-rotar'
       title='Productos sin Rotar'
       selectionColor={greenColors[10]}
-      columnDefs={useColumnsProductosSinRotar()}
+      columnDefs={columnDefs}
       rowData={data ?? []}
     />
   )

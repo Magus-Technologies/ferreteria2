@@ -89,13 +89,17 @@ export default function TableMisCotizaciones() {
     };
   };
 
+  // Memoizar columnDefs: AG Grid React compara props por REFERENCIA; un array
+  // nuevo en cada render destruye y recrea todas las celdas (tabla en blanco).
+  const columnDefs = React.useMemo(() => useColumnsMisCotizaciones(), []);
+
   return (
     <div className='w-full' style={{ height: '300px' }}>
       <TableWithTitle<Cotizacion>
         id='mis-cotizaciones'
         title='N° DE CLIENTES/COTIZACIONES'
         loading={loading}
-        columnDefs={useColumnsMisCotizaciones()}
+        columnDefs={columnDefs}
         rowData={response || []}
         tableRef={tableRef}
         selectionColor="overlay"

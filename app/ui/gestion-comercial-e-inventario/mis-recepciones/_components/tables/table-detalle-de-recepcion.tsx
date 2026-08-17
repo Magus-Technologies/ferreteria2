@@ -2,7 +2,7 @@
 
 import TableWithTitle from '~/components/tables/table-with-title'
 import { AgGridReact } from 'ag-grid-react'
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useStoreRecepcionAlmacenSeleccionada } from '../../_store/store-recepcion-almacen-seleccionado'
 import {
   TableDetalleDeRecepcionProps,
@@ -25,6 +25,10 @@ export default function TableDetalleDeRecepcion() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Memoizar columnDefs: AG Grid React compara props por REFERENCIA; un array
+  // nuevo en cada render destruye y recrea todas las celdas (tabla en blanco).
+  const columnDefs = useMemo(() => useColumnsDetalleDeRecepcion(), [])
+
   return (
     <TableWithTitle<TableDetalleDeRecepcionProps>
       key={`estado-${recepcionSeleccionada?.estado ?? false}`}
@@ -32,7 +36,7 @@ export default function TableDetalleDeRecepcion() {
       id='g-c-e-i.mis-recepciones.detalle-de-recepcion'
       title='Detalle de Recepción'
       headersRequired={['Cod. Producto']}
-      columnDefs={useColumnsDetalleDeRecepcion()}
+      columnDefs={columnDefs}
       optionsSelectColumns={[
         {
           label: 'Default',
