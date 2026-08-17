@@ -8,6 +8,7 @@ import ButtonBase from '~/components/buttons/button-base'
 import TitleForm from '~/components/form/title-form'
 // `useCreateVenta` se consume ahora dentro de `use-confirmar-entrega.ts`.
 import type { FormCreateVenta } from '../others/body-vender'
+import { useStoreProductoAgregadoVenta } from '../../_store/store-producto-agregado-venta'
 import type { ProductoEntrega } from '../../../_hooks/use-productos-entrega'
 import dayjs from 'dayjs'
 import 'dayjs/locale/es'
@@ -461,8 +462,9 @@ function ModalDetallesEntregaInner({
   // `useTotalesParcial`). Aquí el placeholder. Esta organización quedará
   // limpia cuando se extraigan también las secciones (Fase D).
 
-  // Obtener productos del formulario
-  const productos = Form.useWatch('productos', form) as FormCreateVenta['productos']
+  // La tabla de venta vive en Zustand, no en el form (ver
+  // store-producto-agregado-venta.ts).
+  const productos = useStoreProductoAgregadoVenta((s) => s.carrito) as FormCreateVenta['productos']
 
   // En modo `editar venta` (crear-venta con ventaId), leer la venta del backend
   // para conocer cuánto se entregó previamente. El backend mantiene

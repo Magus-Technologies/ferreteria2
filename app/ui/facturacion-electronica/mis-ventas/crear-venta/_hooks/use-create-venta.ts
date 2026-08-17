@@ -45,7 +45,7 @@ type ProductoAgrupado = Pick<
   unidades_derivadas: Array<
     Omit<
       FormCreateVenta['productos'][number],
-      'producto_id' | 'marca_name' | 'producto_name' | 'subtotal'
+      '_row_id' | 'producto_id' | 'marca_name' | 'producto_name' | 'subtotal'
     >
   >
 }

@@ -12,7 +12,7 @@ import usePermissionHook from "~/hooks/use-permission";
 import { permissions } from "~/lib/permissions";
 import CardAgregarProductoVenta from "../cards/card-agregar-producto-venta";
 import { useStoreProductoSeleccionadoSearch } from "~/app/ui/gestion-comercial-e-inventario/mi-almacen/_store/store-producto-seleccionado-search";
-import { useStoreProductoAgregadoVenta } from "../../_store/store-producto-agregado-venta";
+import { useStoreProductoAgregadoVenta, generarRowId } from "../../_store/store-producto-agregado-venta";
 import ModalBuscarServicio from "~/app/_components/modals/modal-buscar-servicio";
 import { useStoreServicioSeleccionado } from "../../../store/store-servicio-seleccionado";
 import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
@@ -133,6 +133,7 @@ export default function HeaderCrearVenta({
 
     // 1. Agregar fila cabecera del paquete
     setProductoAgregado({
+      _row_id: generarRowId(),
       _tipo_fila: 'paquete_cabecera',
       producto_id: paquete.id,
       producto_name: paquete.nombre,
@@ -179,6 +180,7 @@ export default function HeaderCrearVenta({
         const factorReal = Number(unidadDerivadaReal?.factor ?? 1);
 
         setProductoAgregado({
+          _row_id: generarRowId(),
           _tipo_fila: 'paquete_producto',
           producto_id: paqueteProducto.producto_id,
           producto_name: paqueteProducto.producto.name,
@@ -236,6 +238,7 @@ export default function HeaderCrearVenta({
     const { servicio, cantidad, precio_unitario, referencia } = seleccion;
 
     setProductoAgregado({
+      _row_id: generarRowId(),
       _tipo: 'servicio',
       producto_id: -servicio.id, // Negativo para no colisionar con producto_id
       producto_name: servicio.nombre,

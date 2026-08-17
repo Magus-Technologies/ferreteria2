@@ -48,9 +48,11 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
     | "Parcial"
     | "Omitir"
     | "OmitirConStock";
-  const productos = Form.useWatch(
-    "productos",
-    form,
+  // La tabla de venta vive en Zustand, no en el form (ver
+  // store-producto-agregado-venta.ts) — Form.useWatch('productos') ya no
+  // recibiría nada porque no hay Form.Item registrado para esa ruta.
+  const productos = useStoreProductoAgregadoVenta(
+    (s) => s.carrito,
   ) as FormCreateVenta["productos"];
   const direccionSeleccionada = Form.useWatch("direccion_seleccionada", form);
   const clienteNombre = Form.useWatch("cliente_nombre", form);

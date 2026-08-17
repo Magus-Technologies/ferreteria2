@@ -4,6 +4,17 @@ import { TipoMoneda } from '~/lib/api/venta'
 import type { Producto } from '~/app/_types/producto'
 import type { ValeCompra } from '~/lib/api/vales-compra'
 
+// Identidad estable por fila del carrito. Antes la daba Form.List (`field.key`);
+// ahora que la tabla vive en este store (no en Ant Design Form), cada fila
+// necesita la suya propia para que AG Grid (getRowId) y las funciones de
+// update/remove puedan identificarla sin ambigüedad — incluso dos filas del
+// mismo producto_id (ej. dos instancias de paquete) tienen cada una la suya.
+let rowIdCounter = 0
+export function generarRowId(): string {
+  rowIdCounter += 1
+  return `row-${Date.now()}-${rowIdCounter}`
+}
+
 export type ValuesCardAgregarProductoVenta = Partial<
   FormCreateVenta['productos'][number]
 > & {
@@ -13,7 +24,15 @@ export type ValuesCardAgregarProductoVenta = Partial<
 
 type UseStoreProductoAgregadoVentaProps = {
   productoAgregado?: ValuesCardAgregarProductoVenta
+  // Catálogo de productos distintos ya agregados a la venta — SOLO guarda
+  // `unidades_derivadas_disponibles` por producto_id para que los selects
+  // (SelectUnidadDerivadaVenta, SelectTipoPrecioVenta) tengan de dónde leer
+  // las opciones. NO son las filas reales de la tabla (ver `carrito`).
   productos: ValuesCardAgregarProductoVenta[]
+  // Filas reales de la tabla de venta (una por producto/servicio/paquete/vale
+  // en el carrito, identificadas por `_row_id`). Reemplaza a Form.List — ver
+  // nota de performance en table-vender.tsx.
+  carrito: ValuesCardAgregarProductoVenta[]
   tipo_moneda: TipoMoneda
   valesAplicables: ValeCompra[]
   valesExcluidos: number[]
@@ -21,6 +40,14 @@ type UseStoreProductoAgregadoVentaProps = {
     value: ValuesCardAgregarProductoVenta | undefined
   ) => void
   setProductos: (
+    value:
+      | ValuesCardAgregarProductoVenta[]
+      | undefined
+      | ((
+          prev: ValuesCardAgregarProductoVenta[]
+        ) => ValuesCardAgregarProductoVenta[])
+  ) => void
+  setCarrito: (
     value:
       | ValuesCardAgregarProductoVenta[]
       | undefined
@@ -40,6 +67,7 @@ export const useStoreProductoAgregadoVenta =
     return {
       productoAgregado: undefined,
       productos: [],
+      carrito: [],
       tipo_moneda: TipoMoneda.SOLES,
       valesAplicables: [],
       valesExcluidos: [],
@@ -48,6 +76,11 @@ export const useStoreProductoAgregadoVenta =
         set((state) => ({
           productos:
             typeof value === 'function' ? value(state.productos) : value ?? [],
+        })),
+      setCarrito: (value) =>
+        set((state) => ({
+          carrito:
+            typeof value === 'function' ? value(state.carrito) : value ?? [],
         })),
       setTipoMoneda: (value) => set({ tipo_moneda: value }),
       setValesAplicables: (vales) => set({ valesAplicables: vales }),
@@ -63,6 +96,7 @@ export const useStoreProductoAgregadoVenta =
         set({
           productoAgregado: undefined,
           productos: [],
+          carrito: [],
           tipo_moneda: TipoMoneda.SOLES,
           valesAplicables: [],
           valesExcluidos: [],

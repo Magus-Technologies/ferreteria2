@@ -24,10 +24,10 @@ export default function InputCodigoVale({ form }: { form: FormInstance }) {
 
   const clienteId = Form.useWatch('cliente_id', form)
 
-  // Fuente de verdad = el campo `productos` del formulario (la tabla de venta).
-  // Así la detección reacciona a agregar, quitar y EDITAR la cantidad en la celda,
-  // a diferencia del store que solo se llenaba al agregar un producto nuevo.
-  const formProductos = (Form.useWatch('productos', form) || []) as any[]
+  // Fuente de verdad = el carrito en Zustand (la tabla de venta ya no vive en
+  // el form — ver store-producto-agregado-venta.ts). Así la detección
+  // reacciona a agregar, quitar y EDITAR la cantidad en la celda.
+  const formProductos = useStoreProductoAgregadoVenta((s) => s.carrito) as any[]
 
   // Excluir filas que no son productos vendibles: filas de vale y cabecera de paquete.
   const productosReales = useMemo(
@@ -101,7 +101,7 @@ export default function InputCodigoVale({ form }: { form: FormInstance }) {
       // Guard anti-carrera: si el carrito se vació (o quedó sin productos reales)
       // MIENTRAS la consulta estaba en vuelo, no aplicar ni notificar. Evita que el
       // vale reaparezca "solo" tras borrar el producto.
-      const productosActuales = (form.getFieldValue('productos') || []) as any[]
+      const productosActuales = useStoreProductoAgregadoVenta.getState().carrito as any[]
       const hayProductosReales = productosActuales.some(
         (p) => p?._tipo_fila !== 'vale_promocional' && p?._tipo_fila !== 'paquete_cabecera' && p?.producto_id
       )

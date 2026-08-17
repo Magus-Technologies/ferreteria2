@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Alert, App, Button } from 'antd'
 import { MdRefresh } from 'react-icons/md'
-import type { FormInstance } from 'antd'
 import { subscribeModelChanged } from '~/lib/realtime-bus'
 import { useStoreProductoAgregadoVenta } from '../../_store/store-producto-agregado-venta'
 import { useStoreAlmacen } from '~/store/store-almacen'
@@ -26,11 +25,7 @@ type TipoPrecio = 'publico' | 'especial' | 'minimo' | 'ultimo'
  * - Refresca precio_venta + comisión + subtotal respetando el tipo_precio
  *   que el vendedor eligió en cada fila.
  */
-export default function AlertaPreciosActualizados({
-  form,
-}: {
-  form: FormInstance<FormCreateVenta>
-}) {
+export default function AlertaPreciosActualizados() {
   const { notification } = App.useApp()
   const [visible, setVisible] = useState(false)
   const [aplicando, setAplicando] = useState(false)
@@ -40,6 +35,7 @@ export default function AlertaPreciosActualizados({
   const almacen_id = useStoreAlmacen((s) => s.almacen_id)
   const productosStore = useStoreProductoAgregadoVenta((s) => s.productos)
   const setProductosStore = useStoreProductoAgregadoVenta((s) => s.setProductos)
+  const setCarrito = useStoreProductoAgregadoVenta((s) => s.setCarrito)
 
   useEffect(() => {
     const unsubscribe = subscribeModelChanged((event) => {
@@ -50,17 +46,17 @@ export default function AlertaPreciosActualizados({
       if (Number.isFinite(ts) && ts < montadoEnRef.current) return
 
       const hayProductos =
-        (form.getFieldValue('productos') || []).length > 0
+        useStoreProductoAgregadoVenta.getState().carrito.length > 0
       if (!hayProductos) return
 
       setVisible(true)
     })
     return unsubscribe
-  }, [form])
+  }, [])
 
   const aplicarRefresh = async () => {
-    const productosForm = (form.getFieldValue('productos') ||
-      []) as FormCreateVenta['productos']
+    const productosForm = useStoreProductoAgregadoVenta.getState()
+      .carrito as FormCreateVenta['productos']
     if (!productosForm.length || !almacen_id) {
       setVisible(false)
       return
@@ -125,7 +121,7 @@ export default function AlertaPreciosActualizados({
         }
       })
 
-      form.setFieldValue('productos', nuevos)
+      setCarrito(nuevos)
 
       // Refrescar también los `unidades_derivadas_disponibles` del store,
       // para que SelectTipoPrecioVenta muestre activadores/precios frescos.
