@@ -35,7 +35,7 @@ import LabelBase from "~/components/form/label-base";
 
 const { Text } = Typography;
 
-const API_SUNAT_URL = 'http://api-sunat-laravel.test/api/v1'
+const API_SUNAT_URL = process.env.NEXT_PUBLIC_API_SUNAT_URL || 'http://api-sunat-laravel.test/api/v1'
 
 interface FormEnvioSunatProps {
     empresaId: number;
