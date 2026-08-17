@@ -27,6 +27,17 @@ const SALDOS_SUB_CAJAS_KEYS = [
 ]
 
 /**
+ * Claves de "Mis Ganancias". La ganancia se calcula a partir de las ventas, sus
+ * costos y las entradas/salidas de almacén, así que cualquier movimiento de esos
+ * módulos la deja obsoleta.
+ *
+ * Sus consultas usan `staleTime: 5 minutos`, de modo que sin invalidarlas había
+ * que esperar ese rato —o recargar— para ver el efecto de borrar una entrada o
+ * salida desde Cuadres.
+ */
+const GANANCIAS_KEYS = ['ganancias', 'ganancias-resumen']
+
+/**
  * Mapeo de módulo del backend → query keys del frontend a invalidar.
  */
 const MODULE_TO_QUERY_KEYS: Record<string, string[]> = {
@@ -57,6 +68,7 @@ const MODULE_TO_QUERY_KEYS: Record<string, string[]> = {
     'vale-compra',
     // Una venta cobrada entra a una sub-caja → mueve Cerrado / No Cerrado.
     ...SALDOS_SUB_CAJAS_KEYS,
+    ...GANANCIAS_KEYS,
   ],
   compras: [
     QueryKeys.COMPRAS,
@@ -68,6 +80,8 @@ const MODULE_TO_QUERY_KEYS: Record<string, string[]> = {
     QueryKeys.COMPRAS_RESUMEN_MENSUAL,
     QueryKeys.COMPRAS_REPORTE,
     QueryKeys.COMPRAS_RESUMEN,
+    // El costo de la compra es la base del cálculo de ganancia (PEPS).
+    ...GANANCIAS_KEYS,
     QueryKeys.KARDEX,
     QueryKeys.PRODUCTOS,
     QueryKeys.PRODUCTOS_BY_ALMACEN,
@@ -126,6 +140,7 @@ const MODULE_TO_QUERY_KEYS: Record<string, string[]> = {
   proveedores: [QueryKeys.PROVEEDORES, QueryKeys.PROVEEDORES_SEARCH],
   'cliente-calificaciones': ['ultima-calificacion', 'cliente-calificaciones', 'cliente-calificaciones-resumen'],
   'ingresos-salidas': [
+    ...GANANCIAS_KEYS,
     QueryKeys.INGRESOS_SALIDAS,
     QueryKeys.KARDEX,
     QueryKeys.KARDEX_INVENTARIO,

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useServerQuery } from "~/hooks/use-server-query";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 import { GetIngresosSalidasParams, ingresosSalidasApi } from "~/lib/api/ingreso-salida";
@@ -29,6 +30,7 @@ export interface MovimientoCuadre {
 }
 
 export function useCuadres() {
+    const queryClient = useQueryClient();
     const [filters, setFilters] = useState<GetIngresosSalidasParams>({
         desde: dayjs().startOf('day').format('YYYY-MM-DD'),
         hasta: dayjs().format('YYYY-MM-DD'),
@@ -145,6 +147,17 @@ export function useCuadres() {
         try {
             await ingresosSalidasApi.anular(headerId);
             refetch();
+
+            // Anular una entrada o salida cambia la ganancia, y esas consultas
+            // cachean 5 minutos: sin esto había que esperar o recargar para ver el
+            // efecto en Mis Ganancias y en el modal de Análisis de Pérdidas.
+            //
+            // El DELETE ya emite un evento `ingresos-salidas` por WebSocket que
+            // invalida lo mismo (ver use-realtime.ts), pero ese broadcast es "best
+            // effort": si Reverb está caído no llega nada. Invalidar acá también deja
+            // el refresco garantizado sin depender del servidor de WebSockets.
+            queryClient.invalidateQueries({ queryKey: ["ganancias"] });
+            queryClient.invalidateQueries({ queryKey: ["ganancias-resumen"] });
         } catch (error) {
             console.error("Error al anular:", error);
             throw error;
