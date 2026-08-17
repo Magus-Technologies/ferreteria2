@@ -91,6 +91,13 @@ export default function FormCrearVenta({
   const almacenId = useStoreAlmacen((s) => s.almacen_id);
   const esEdicion = Boolean(venta?.serie && venta?.numero);
   const tipoDocOriginalRef = useRef(venta?.tipo_documento);
+  // En edición, boleta (03) y factura (01) no pueden cambiar de tipo de
+  // documento: la serie/número ya están asociados a su serie documental y
+  // cambiar el tipo implicaría reemitir el comprobante. La nota de venta (nv)
+  // sí puede convertirse a boleta o factura.
+  const tipoDocumentoBloqueado =
+    esEdicion &&
+    (venta?.tipo_documento === "01" || venta?.tipo_documento === "03");
 
   const cargarSiguienteNumero = useCallback(() => {
     if (!tipoDocumento || !almacenId) return;
@@ -271,6 +278,7 @@ export default function FormCrearVenta({
             className="w-full sm:w-auto"
           >
             <SelectTipoDocumento
+              disabled={tipoDocumentoBloqueado}
               propsForm={{
                 name: "tipo_documento",
                 initialValue: "03", // Valor por defecto: Boleta
