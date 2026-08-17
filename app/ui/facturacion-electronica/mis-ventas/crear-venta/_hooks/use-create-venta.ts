@@ -502,6 +502,17 @@ export default function useCreateVenta({
         message.success('Venta creada exitosamente')
       }
 
+      // La venta se guardó, pero la generación del XML/comprobante falló.
+      // Mostrar el motivo real en vez de dejar la venta sin XML en silencio.
+      const comprobanteError = response.data?.comprobante_error
+      if (comprobanteError) {
+        notification.error({
+          message: 'La venta se guardó, pero NO se generó el comprobante electrónico',
+          description: `Motivo: ${comprobanteError}`,
+          duration: 8,
+        })
+      }
+
       // Alerta de envío a SUNAT (solo facturas/boletas con comprobante).
       const tipoDocRespuesta = response.data?.data?.tipo_documento
       if (tipoDocRespuesta === '01' || tipoDocRespuesta === '03') {

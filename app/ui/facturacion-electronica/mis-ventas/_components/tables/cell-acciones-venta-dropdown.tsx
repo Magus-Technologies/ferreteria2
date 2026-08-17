@@ -207,7 +207,26 @@ export default function CellAccionesVentaDropdown(
 
   const handleVerXML = () => {
     if (!comprobanteElectronico?.xml_firmado && !tieneXml) {
-      message.error('XML no disponible para este comprobante');
+      // La venta quedó sin XML (falló la generación al guardar). Intentar
+      // regenerarlo ahora y mostrar el motivo real si vuelve a fallar.
+      message.warning('Esta venta no tiene XML. Intentando generarlo...');
+      setLoading(true);
+      facturacionElectronicaApi
+        .generarComprobanteDesdeVenta(ventaId)
+        .then(res => {
+          if (res.error) {
+            message.error({
+              content: `No se pudo generar el XML: ${res.error.message || 'error desconocido'}`,
+              duration: 6,
+            });
+            return;
+          }
+          message.success('XML generado correctamente. Actualizá la lista para verlo.');
+        })
+        .catch(() => {
+          message.error('No se pudo generar el XML. Revisá los logs del servidor.');
+        })
+        .finally(() => setLoading(false));
       return;
     }
     

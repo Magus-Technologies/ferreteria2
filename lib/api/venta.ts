@@ -225,6 +225,7 @@ export interface VentaResponse {
   data: any; // TODO: Definir interfaz completa de Venta
   message?: string;
   enviado_sunat?: boolean;
+  comprobante_error?: string | null;
 }
 
 export interface VentasListResponse {
