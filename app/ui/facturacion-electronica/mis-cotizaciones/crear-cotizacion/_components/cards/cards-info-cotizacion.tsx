@@ -8,6 +8,7 @@ import CardInfoCotizacion from "./card-info-cotizacion";
 import { MdSell } from "react-icons/md";
 import { FaPrint } from "react-icons/fa";
 import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
+import { useStoreProductoAgregadoCotizacion } from "../../_store/store-producto-agregado-cotizacion";
 
 export default function CardsInfoCotizacion({
   form,
@@ -18,9 +19,11 @@ export default function CardsInfoCotizacion({
 }) {
   const tipo_moneda = Form.useWatch("tipo_moneda", form);
   const ruc_dni = Form.useWatch("ruc_dni", form) as string | undefined;
-  const productos = Form.useWatch(
-    "productos",
-    form
+  // La tabla de productos vive en Zustand, no en el form (ver
+  // store-producto-agregado-cotizacion.ts) — Form.useWatch('productos') ya
+  // no reflejaría nada.
+  const productos = useStoreProductoAgregadoCotizacion(
+    (s) => s.carrito
   ) as FormCreateCotizacion["productos"];
 
   // El IGV solo aplica cuando el documento del cliente es RUC (11 dígitos).

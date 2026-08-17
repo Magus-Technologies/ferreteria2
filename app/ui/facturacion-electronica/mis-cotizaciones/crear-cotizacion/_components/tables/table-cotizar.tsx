@@ -1,12 +1,12 @@
 'use client'
 
-import { FormInstance, FormListFieldData } from 'antd'
-import { StoreValue } from 'antd/es/form/interface'
-import type { FormCreateCotizacion } from '../../_types/cotizacion.types'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { useColumnsCotizar, calcularSubtotalCotizacion } from './columns-cotizar'
-import { useStoreProductoAgregadoCotizacion, ProductoCotizacionConUnidades } from '../../_store/store-producto-agregado-cotizacion'
-import { useEffect, useRef } from 'react'
+import {
+  useStoreProductoAgregadoCotizacion,
+  ProductoCotizacionConUnidades,
+} from '../../_store/store-producto-agregado-cotizacion'
+import { useEffect, useRef, useCallback } from 'react'
 import { AgGridReact } from 'ag-grid-react'
 import CellFocusWithoutStyle from '~/components/tables/cell-focus-without-style'
 
@@ -23,23 +23,15 @@ function condicionEditarProductoCotizacion({
   )
 }
 
-export default function TableCotizar({
-  form,
-  fields,
-  remove,
-  add,
-}: {
-  form: FormInstance<FormCreateCotizacion>
-  fields: FormListFieldData[]
-  remove: (index: number | number[]) => void
-  add: (defaultValue?: StoreValue, insertIndex?: number) => void
-}) {
+export default function TableCotizar() {
   const productoAgregado = useStoreProductoAgregadoCotizacion(
     (store) => store.productoAgregado
   )
   const setProductoAgregado = useStoreProductoAgregadoCotizacion(
     (store) => store.setProductoAgregado
   )
+  const carrito = useStoreProductoAgregadoCotizacion((store) => store.carrito)
+  const setCarrito = useStoreProductoAgregadoCotizacion((store) => store.setCarrito)
   const productosStore = useStoreProductoAgregadoCotizacion(
     (store) => store.productos
   )
@@ -47,24 +39,20 @@ export default function TableCotizar({
     (store) => store.setProductos
   )
 
-  function agregarProducto({
-    producto,
-  }: {
-    producto: ProductoCotizacionConUnidades
-  }) {
-    const subtotal = calcularSubtotalCotizacion({
-      precio_venta: producto.precio_venta || 0,
-      recargo: producto.recargo || 0,
-      cantidad: producto.cantidad || 0,
-      descuento: producto.descuento || 0,
-      descuento_tipo: producto.descuento_tipo || 'Monto',
-    })
+  const agregarProducto = useCallback(
+    ({ producto }: { producto: ProductoCotizacionConUnidades }) => {
+      const subtotal = calcularSubtotalCotizacion({
+        precio_venta: producto.precio_venta || 0,
+        recargo: producto.recargo || 0,
+        cantidad: producto.cantidad || 0,
+        descuento: producto.descuento || 0,
+        descuento_tipo: producto.descuento_tipo || 'Monto',
+      })
 
-    add({
-      ...producto,
-      subtotal: Number(subtotal)
-    })
-  }
+      setCarrito((prev) => [...prev, { ...producto, subtotal: Number(subtotal) }])
+    },
+    [setCarrito]
+  )
 
   useEffect(() => {
     if (productoAgregado && productoAgregado.producto_id) {
@@ -72,7 +60,7 @@ export default function TableCotizar({
       if (typeof window !== 'undefined') {
         console.timeLog('⏱️ agregar-producto', 'store → efecto TableCotizar')
       }
-      // Agregar al store si no existe
+      // Agregar al catálogo si no existe
       if (
         !productosStore.find(
           (item) => item.producto_id === productoAgregado.producto_id
@@ -81,10 +69,11 @@ export default function TableCotizar({
         setProductosStore((prev) => [...prev, productoAgregado])
       }
 
-      const productos = (form.getFieldValue('productos') ||
-        []) as FormCreateCotizacion['productos']
+      // Leer el carrito SIEMPRE fresco (este efecto solo depende de
+      // productoAgregado — mismo motivo que table-vender.tsx).
+      const carritoActual = useStoreProductoAgregadoCotizacion.getState().carrito
 
-      const producto_existente = productos.find(
+      const producto_existente = carritoActual.find(
         (item) => item.producto_id === productoAgregado.producto_id
       )
 
@@ -94,8 +83,7 @@ export default function TableCotizar({
         return
       }
 
-      // Verificar si existe el mismo producto con la misma unidad derivada
-      const producto_unidad_derivada_existente = productos.find((item) =>
+      const producto_unidad_derivada_existente = carritoActual.find((item) =>
         condicionEditarProductoCotizacion({
           producto: productoAgregado,
           item,
@@ -103,19 +91,6 @@ export default function TableCotizar({
       )
 
       if (producto_unidad_derivada_existente) {
-        const index = productos.findIndex((item) =>
-          condicionEditarProductoCotizacion({
-            producto: productoAgregado,
-            item,
-          })
-        )
-
-        if (index <= -1) {
-          setProductoAgregado(undefined)
-          return
-        }
-
-        // Incrementar la cantidad
         const nueva_cantidad =
           Number(productoAgregado.cantidad) +
           Number(producto_unidad_derivada_existente.cantidad)
@@ -128,29 +103,17 @@ export default function TableCotizar({
           descuento_tipo: productoAgregado.descuento_tipo || 'Monto',
         })
 
-        // Actualizar en el store
-        setProductosStore((prev) =>
-          prev.map((item) => {
-            return condicionEditarProductoCotizacion({
+        setCarrito((prev) =>
+          prev.map((item) =>
+            condicionEditarProductoCotizacion({
               producto: productoAgregado,
               item,
             })
               ? {
                   ...productoAgregado,
-                  cantidad: nueva_cantidad,
-                  subtotal: Number(nuevo_subtotal),
-                }
-              : item
-          })
-        )
-
-        // Actualizar en el formulario
-        form.setFieldValue(
-          'productos',
-          productos.map((item, i) =>
-            i === index
-              ? {
-                  ...productoAgregado,
+                  // Conservar la identidad de la fila EXISTENTE — ver nota
+                  // en table-vender.tsx sobre por qué esto es necesario.
+                  _row_id: item._row_id,
                   cantidad: nueva_cantidad,
                   subtotal: Number(nuevo_subtotal),
                 }
@@ -161,7 +124,6 @@ export default function TableCotizar({
         agregarProducto({ producto: productoAgregado })
       }
 
-      // Limpiar el producto agregado
       setProductoAgregado(undefined)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -171,15 +133,15 @@ export default function TableCotizar({
 
   // Medición de performance (mismo timer que arranca en handleOk de
   // card-agregar-producto-venta.tsx, compartido por ventas y cotizaciones):
-  // cierra recién cuando la fila nueva aparece de verdad (fields.length sube).
+  // cierra recién cuando la fila nueva aparece de verdad (carrito.length sube).
   // TODO: sacar junto con el resto de la instrumentación de ⏱️ agregar-producto.
-  const prevFieldsLengthRef = useRef(fields.length)
+  const prevCarritoLengthRef = useRef(carrito.length)
   useEffect(() => {
-    if (typeof window !== 'undefined' && fields.length > prevFieldsLengthRef.current) {
+    if (typeof window !== 'undefined' && carrito.length > prevCarritoLengthRef.current) {
       console.timeEnd('⏱️ agregar-producto')
     }
-    prevFieldsLengthRef.current = fields.length
-  }, [fields.length])
+    prevCarritoLengthRef.current = carrito.length
+  }, [carrito.length])
 
   return (
     <>
@@ -191,14 +153,12 @@ export default function TableCotizar({
         className='h-full'
         rowHeight={56}
         rowSelection={false}
-        // Ver nota de performance en table-vender.tsx: sin getRowId, AG Grid
-        // identifica filas por referencia de objeto, y Form.List de Ant
-        // Design entrega `fields` con objetos nuevos en cada render (aunque
-        // `field.key` es estable) — provocaba redibujar toda la grilla en
-        // cada producto agregado/quitado.
-        getRowId={(params) => String(params.data?.key ?? params.data?.name)}
-        rowData={fields}
-        columnDefs={useColumnsCotizar({ form, remove })}
+        // Identidad estable de fila independiente de índice — ver nota en
+        // table-vender.tsx. `_row_id` se genera una sola vez por fila (ver
+        // store-producto-agregado-cotizacion.ts / generarRowId reusado de venta).
+        getRowId={(params) => String(params.data?._row_id)}
+        rowData={carrito as any}
+        columnDefs={useColumnsCotizar()}
         suppressCellFocus={true}
       />
     </>

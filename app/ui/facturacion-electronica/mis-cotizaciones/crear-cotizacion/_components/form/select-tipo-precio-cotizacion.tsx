@@ -1,16 +1,16 @@
 'use client'
 
-import { Form, FormInstance } from 'antd'
 import SelectBase from '~/app/_components/form/selects/select-base'
 import { MdPriceChange } from 'react-icons/md'
-import { useStoreProductoAgregadoCotizacion } from '../../_store/store-producto-agregado-cotizacion'
+import {
+  useStoreProductoAgregadoCotizacion,
+  ProductoCotizacionConUnidades,
+} from '../../_store/store-producto-agregado-cotizacion'
 import { calcularSubtotalCotizacion } from '../tables/columns-cotizar'
-import type { DescuentoTipo, TipoPrecio } from '../../_types/cotizacion.types'
+import type { TipoPrecio } from '../../_types/cotizacion.types'
 
 interface Props {
-  form: FormInstance
-  fieldIndex: number
-  productoId: number
+  row: ProductoCotizacionConUnidades
 }
 
 const activadorMap: Record<TipoPrecio, string | null> = {
@@ -27,29 +27,22 @@ const LABELS: Record<TipoPrecio, string> = {
   ultimo: 'Final',
 }
 
-export default function SelectTipoPrecioCotizacion({
-  form,
-  fieldIndex,
-  productoId,
-}: Props) {
-  const productos = useStoreProductoAgregadoCotizacion(s => s.productos)
+// Análogo a select-unidad-derivada-cotizacion.tsx: recibe la fila del
+// carrito en vez de form+fieldIndex.
+export default function SelectTipoPrecioCotizacion({ row }: Props) {
+  const productoId = row.producto_id
+  const productos = useStoreProductoAgregadoCotizacion((s) => s.productos)
+  const setCarrito = useStoreProductoAgregadoCotizacion((s) => s.setCarrito)
 
-  const productoEnStore = productos.find(p => p.producto_id === productoId)
+  const productoEnStore = productos.find((p) => p.producto_id === productoId)
   const unidadesDerivadas = productoEnStore?.unidades_derivadas_disponibles || []
 
-  const unidadDerivadaId = form.getFieldValue([
-    'productos',
-    fieldIndex,
-    'unidad_derivada_id',
-  ])
-  const tipoPrecioActual =
-    Form.useWatch(['productos', fieldIndex, 'tipo_precio'], form) || 'publico'
-  const cantidad = Number(
-    Form.useWatch(['productos', fieldIndex, 'cantidad'], form) ?? 0
-  )
+  const unidadDerivadaId = row.unidad_derivada_id
+  const tipoPrecioActual = (row.tipo_precio || 'publico') as TipoPrecio
+  const cantidad = Number(row.cantidad ?? 0)
 
   const unidadDerivadaActual = unidadesDerivadas.find(
-    ud => ud.unidad_derivada.id === unidadDerivadaId
+    (ud) => ud.unidad_derivada.id === unidadDerivadaId
   )
 
   if (!unidadDerivadaActual) {
@@ -61,13 +54,12 @@ export default function SelectTipoPrecioCotizacion({
   }
 
   const opciones = (['publico', 'especial', 'minimo', 'ultimo'] as TipoPrecio[]).map(
-    tipo => {
+    (tipo) => {
       const activadorKey = activadorMap[tipo]
       let disabled = false
       let label = LABELS[tipo]
 
       if (activadorKey) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const activador = Number((unidadDerivadaActual as any)[activadorKey] ?? 0)
         if (activador > 0 && cantidad < activador) {
           disabled = true
@@ -101,32 +93,29 @@ export default function SelectTipoPrecioCotizacion({
 
     const { precio, comision } = precios[nuevoTipo]
 
-    form.setFieldValue(['productos', fieldIndex, 'tipo_precio'], nuevoTipo)
-    form.setFieldValue(['productos', fieldIndex, 'precio_venta'], precio)
-    form.setFieldValue(['productos', fieldIndex, 'comision'], comision)
+    const recargo = Number(row.recargo ?? 0)
+    const descuento_tipo = row.descuento_tipo || 'Monto'
+    const descuento = Number(row.descuento ?? 0)
 
-    const recargo = Number(form.getFieldValue(['productos', fieldIndex, 'recargo']) ?? 0)
-    const descuento_tipo = form.getFieldValue([
-      'productos',
-      fieldIndex,
-      'descuento_tipo',
-    ]) as DescuentoTipo
-    const descuento = Number(
-      form.getFieldValue(['productos', fieldIndex, 'descuento']) ?? 0
+    const nuevoSubtotal = Number(
+      calcularSubtotalCotizacion({
+        precio_venta: precio,
+        recargo,
+        descuento_tipo,
+        descuento,
+        cantidad,
+      })
     )
 
-    const nuevoSubtotal = calcularSubtotalCotizacion({
-      precio_venta: precio,
-      recargo,
-      descuento_tipo: descuento_tipo || 'Monto',
-      descuento,
-      cantidad,
-    })
-
-    form.setFieldValue(['productos', fieldIndex, 'subtotal'], Number(nuevoSubtotal))
+    setCarrito((prev) =>
+      prev.map((r) =>
+        r._row_id === row._row_id
+          ? { ...r, tipo_precio: nuevoTipo, precio_venta: precio, comision, subtotal: nuevoSubtotal }
+          : r
+      )
+    )
   }
 
-  // Siguiente escalón de precio aún no alcanzado, para avisar al vendedor.
   const nextHint = (() => {
     const cant = Number(cantidad || 0)
     if (cant < 1) return null
@@ -136,13 +125,11 @@ export default function SelectTipoPrecioCotizacion({
       { key: 'precio_ultimo', activadorKey: 'activador_ultimo' },
     ] as const
     const next = tiers
-      .map(t => ({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .map((t) => ({
         activador: Number((unidadDerivadaActual as any)[t.activadorKey] ?? 0),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         precio: Number((unidadDerivadaActual as any)[t.key] ?? 0),
       }))
-      .find(t => t.activador > 0 && cant < t.activador)
+      .find((t) => t.activador > 0 && cant < t.activador)
     if (!next) return null
     return `Llevando ${next.activador} → S/${next.precio.toFixed(2)}`
   })()

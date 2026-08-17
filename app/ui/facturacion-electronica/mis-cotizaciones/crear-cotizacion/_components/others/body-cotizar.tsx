@@ -18,6 +18,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import dayjs from "dayjs";
 import { useStoreProductoAgregadoCotizacion, type ProductoCotizacionConUnidades } from "../../_store/store-producto-agregado-cotizacion";
+import { generarRowId } from "~/app/ui/facturacion-electronica/mis-ventas/crear-venta/_store/store-producto-agregado-venta";
 import type { Cotizacion } from "~/lib/api/cotizaciones";
 import { Spin } from "antd";
 
@@ -32,6 +33,9 @@ export default function BodyCotizar() {
   
   const setProductosStore = useStoreProductoAgregadoCotizacion(
     (store) => store.setProductos
+  );
+  const setCarrito = useStoreProductoAgregadoCotizacion(
+    (store) => store.setCarrito
   );
   const searchParams = useSearchParams();
   const duplicarId = searchParams.get('duplicar');
@@ -65,6 +69,7 @@ export default function BodyCotizar() {
               (u) => Number(u.factor) === factorBuscado
             );
             return {
+              _row_id: generarRowId(),
               producto_id: pac.producto_almacen.producto.id,
               producto_name: pac.producto_almacen.producto.name,
               producto_codigo: pac.producto_almacen.producto.cod_producto || '',
@@ -92,6 +97,7 @@ export default function BodyCotizar() {
               (u) => Number(u.factor) === factorBuscado
             );
             return {
+              _row_id: generarRowId(),
               producto_id: pac.producto_almacen.producto.id,
               producto_name: pac.producto_almacen.producto.name,
               producto_codigo: pac.producto_almacen.producto.cod_producto || '',
@@ -111,9 +117,11 @@ export default function BodyCotizar() {
             };
           }) || [];
         setProductosStore(productosStore);
+        // La tabla de productos vive en Zustand, no en el form (ver
+        // store-producto-agregado-cotizacion.ts).
+        setCarrito(productos);
 
         form.setFieldsValue({
-          productos,
           vigencia_dias: cotizacion.vigencia_dias,
           vendedor: cotizacion.vendedor || undefined,
           forma_de_pago: cotizacion.forma_de_pago || undefined,
@@ -140,7 +148,7 @@ export default function BodyCotizar() {
     };
 
     loadCotizacion();
-  }, [duplicarId, form, setAlmacenId, setProductosStore]);
+  }, [duplicarId, form, setAlmacenId, setProductosStore, setCarrito]);
 
   const handleSubmit = async (values: FormCreateCotizacion) => {
     if (!almacen_id) {
@@ -148,7 +156,13 @@ export default function BodyCotizar() {
       return;
     }
 
-    if (!values.productos || values.productos.length === 0) {
+    // La tabla de productos vive en Zustand, no en el form — no hay ningún
+    // <Form.Item name="productos"> registrado, así que `values.productos`
+    // nunca lo trae por su cuenta (ver onFinish en body-vender.tsx para el
+    // mismo caso en ventas).
+    const productosCarrito = useStoreProductoAgregadoCotizacion.getState().carrito;
+
+    if (!productosCarrito || productosCarrito.length === 0) {
       message.error("Debe agregar al menos un producto");
       return;
     }
@@ -158,7 +172,7 @@ export default function BodyCotizar() {
     try {
       // Transformar datos del formulario al formato del backend
       const requestData: CreateCotizacionRequest = {
-        productos: values.productos.map((p) => ({
+        productos: productosCarrito.map((p) => ({
           producto_id: p.producto_id,
           unidad_derivada_id: p.unidad_derivada_id,
           unidad_derivada_factor: p.unidad_derivada_factor,
@@ -219,8 +233,10 @@ export default function BodyCotizar() {
         setOpenDoc(true);
       }
 
-      // Limpiar formulario
+      // Limpiar formulario. form.resetFields() ya no limpia el carrito (vive
+      // en Zustand, no en el form) — se limpia explícitamente acá.
       form.resetFields();
+      setCarrito([]);
     } catch (error) {
       console.error("Error al crear cotización:", error);
       message.error("Error inesperado al crear la cotización");
@@ -252,7 +268,7 @@ export default function BodyCotizar() {
       >
         <div className="flex-1 flex flex-col gap-6 min-w-0 min-h-0">
           <div className="flex-1 min-h-0">
-            <FormTableCotizar form={form} />
+            <FormTableCotizar />
           </div>
           <FormCrearCotizacion
             form={form}

@@ -1,19 +1,10 @@
 'use client'
 
-import { Form, FormInstance } from 'antd'
-import type { FormCreateCotizacion } from '../../_types/cotizacion.types'
 import TableCotizar from '../tables/table-cotizar'
 
-export default function FormTableCotizar({
-  form,
-}: {
-  form: FormInstance<FormCreateCotizacion>
-}) {
-  return (
-    <Form.List name="productos">
-      {(fields, { add, remove }) => (
-        <TableCotizar form={form} fields={fields} remove={remove} add={add} />
-      )}
-    </Form.List>
-  )
+// La tabla de productos vive en Zustand, no en el form (ver
+// store-producto-agregado-cotizacion.ts) — ya no necesita el Form.List que
+// la envolvía antes para darle `fields`/`add`/`remove`.
+export default function FormTableCotizar() {
+  return <TableCotizar />
 }

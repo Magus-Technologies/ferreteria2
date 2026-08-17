@@ -9,11 +9,27 @@ export type ProductoCotizacionConUnidades = FormCreateCotizacion['productos'][nu
 
 type UseStoreProductoAgregadoCotizacion = {
   productoAgregado?: ProductoCotizacionConUnidades
+  // Catálogo de productos distintos ya agregados — SOLO guarda
+  // `unidades_derivadas_disponibles` por producto_id para los selects
+  // (SelectUnidadDerivadaCotizacion, SelectTipoPrecioCotizacion). NO son las
+  // filas de la tabla (ver `carrito`).
   productos: ProductoCotizacionConUnidades[]
+  // Filas reales de la tabla de cotización, identificadas por `_row_id`.
+  // Reemplaza a Form.List — mismo motivo de performance que crear-venta
+  // (ver nota en table-vender.tsx).
+  carrito: ProductoCotizacionConUnidades[]
   setProductoAgregado: (
     producto: ProductoCotizacionConUnidades | undefined
   ) => void
   setProductos: (
+    value:
+      | ProductoCotizacionConUnidades[]
+      | undefined
+      | ((
+          prev: ProductoCotizacionConUnidades[]
+        ) => ProductoCotizacionConUnidades[])
+  ) => void
+  setCarrito: (
     value:
       | ProductoCotizacionConUnidades[]
       | undefined
@@ -29,11 +45,17 @@ export const useStoreProductoAgregadoCotizacion =
   create<UseStoreProductoAgregadoCotizacion>((set) => ({
     productoAgregado: undefined,
     productos: [],
+    carrito: [],
     setProductoAgregado: (producto) => set({ productoAgregado: producto }),
     setProductos: (value) =>
       set((state) => ({
         productos:
           typeof value === 'function' ? value(state.productos) : value ?? [],
+      })),
+    setCarrito: (value) =>
+      set((state) => ({
+        carrito:
+          typeof value === 'function' ? value(state.carrito) : value ?? [],
       })),
     tipo_moneda: 's',
     setTipoMoneda: (tipo_moneda) => set({ tipo_moneda }),

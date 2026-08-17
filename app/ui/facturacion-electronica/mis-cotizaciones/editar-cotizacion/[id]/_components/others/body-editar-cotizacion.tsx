@@ -15,6 +15,7 @@ import {
 import { useStoreAlmacen } from "~/store/store-almacen";
 import type { FormCreateCotizacion, DescuentoTipo } from "~/app/ui/facturacion-electronica/mis-cotizaciones/crear-cotizacion/_types/cotizacion.types";
 import { useStoreProductoAgregadoCotizacion, type ProductoCotizacionConUnidades } from "~/app/ui/facturacion-electronica/mis-cotizaciones/crear-cotizacion/_store/store-producto-agregado-cotizacion";
+import { generarRowId } from "~/app/ui/facturacion-electronica/mis-ventas/crear-venta/_store/store-producto-agregado-venta";
 import ModalDocCotizacion, { CotizacionResponse } from "~/app/ui/facturacion-electronica/mis-cotizaciones/_components/modals/modal-doc-cotizacion";
 import dayjs from "dayjs";
 
@@ -32,6 +33,9 @@ export default function BodyEditarCotizacion({ cotizacionId }: BodyEditarCotizac
   const [cotizacionActual, setCotizacionActual] = useState<Cotizacion>();
   const setProductosStore = useStoreProductoAgregadoCotizacion(
     (store) => store.setProductos
+  );
+  const setCarrito = useStoreProductoAgregadoCotizacion(
+    (store) => store.setCarrito
   );
   const router = useRouter();
 
@@ -88,6 +92,7 @@ export default function BodyEditarCotizacion({ cotizacionId }: BodyEditarCotizac
               (u) => Number(u.factor) === factorBuscado
             );
             return {
+              _row_id: generarRowId(),
               producto_id: pac.producto_almacen.producto.id,
               producto_name: pac.producto_almacen.producto.name,
               producto_codigo: pac.producto_almacen.producto.cod_producto || '',
@@ -119,6 +124,7 @@ export default function BodyEditarCotizacion({ cotizacionId }: BodyEditarCotizac
               (u) => Number(u.factor) === factorBuscado
             );
             return {
+              _row_id: generarRowId(),
               producto_id: pac.producto_almacen.producto.id,
               producto_name: pac.producto_almacen.producto.name,
               producto_codigo: pac.producto_almacen.producto.cod_producto || '',
@@ -138,10 +144,12 @@ export default function BodyEditarCotizacion({ cotizacionId }: BodyEditarCotizac
             };
           }) || [];
         setProductosStore(productosStore);
+        // La tabla de productos vive en Zustand, no en el form (ver
+        // store-producto-agregado-cotizacion.ts).
+        setCarrito(productos);
 
         // Establecer valores iniciales del formulario
         form.setFieldsValue({
-          productos,
           fecha: dayjs(cotizacion.fecha),
           vigencia_dias: cotizacion.vigencia_dias,
           fecha_vencimiento: cotizacion.fecha_vencimiento ? dayjs(cotizacion.fecha_vencimiento) : undefined,
@@ -174,7 +182,7 @@ export default function BodyEditarCotizacion({ cotizacionId }: BodyEditarCotizac
     if (cotizacionId) {
       loadCotizacion();
     }
-  }, [cotizacionId, form, router, setAlmacenId, setProductosStore]);
+  }, [cotizacionId, form, router, setAlmacenId, setProductosStore, setCarrito]);
 
   const handleSubmit = async (values: FormCreateCotizacion) => {
     if (!almacen_id) {
@@ -182,7 +190,12 @@ export default function BodyEditarCotizacion({ cotizacionId }: BodyEditarCotizac
       return;
     }
 
-    if (!values.productos || values.productos.length === 0) {
+    // La tabla de productos vive en Zustand, no en el form — no hay ningún
+    // <Form.Item name="productos"> registrado, así que `values.productos`
+    // nunca lo trae por su cuenta.
+    const productosCarrito = useStoreProductoAgregadoCotizacion.getState().carrito;
+
+    if (!productosCarrito || productosCarrito.length === 0) {
       message.error("Debe agregar al menos un producto");
       return;
     }
@@ -194,7 +207,7 @@ export default function BodyEditarCotizacion({ cotizacionId }: BodyEditarCotizac
       // Nota: `fecha` y `fecha_proforma` se omiten intencionalmente — son la
       // fecha de emisión original de la cotización y no deben modificarse al editar.
       const requestData: Partial<CreateCotizacionRequest> = {
-        productos: values.productos.map((p) => ({
+        productos: productosCarrito.map((p) => ({
           producto_id: p.producto_id,
           unidad_derivada_id: p.unidad_derivada_id,
           unidad_derivada_factor: p.unidad_derivada_factor,
@@ -283,7 +296,7 @@ export default function BodyEditarCotizacion({ cotizacionId }: BodyEditarCotizac
       >
         <div className="flex-1 flex flex-col gap-6 min-w-0 min-h-0">
           <div className="flex-1 min-h-0">
-            <FormTableCotizar form={form} />
+            <FormTableCotizar />
           </div>
           <FormCrearCotizacion
             form={form}

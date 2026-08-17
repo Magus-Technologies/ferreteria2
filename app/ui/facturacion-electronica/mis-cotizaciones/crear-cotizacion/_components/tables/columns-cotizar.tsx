@@ -1,17 +1,19 @@
 'use client'
 
-import { Form, FormInstance, Tooltip, FormListFieldData, Image } from 'antd'
+import { Tooltip, Image } from 'antd'
 import { useMemo } from 'react'
 import { ColDef, ICellRendererParams } from 'ag-grid-community'
-import type { FormCreateCotizacion, DescuentoTipo, TipoPrecio } from '../../_types/cotizacion.types'
+import type { DescuentoTipo, TipoPrecio } from '../../_types/cotizacion.types'
 import { FaTrash } from 'react-icons/fa'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
-import InputBase from '~/app/_components/form/inputs/input-base'
 import SelectBase from '~/app/_components/form/selects/select-base'
 import SelectUnidadDerivadaCotizacion from '../form/select-unidad-derivada-cotizacion'
 import SelectTipoPrecioCotizacion from '../form/select-tipo-precio-cotizacion'
-import { useStoreProductoAgregadoCotizacion } from '../../_store/store-producto-agregado-cotizacion'
-import {getStorageUrl} from '~/utils/upload'
+import {
+  useStoreProductoAgregadoCotizacion,
+  ProductoCotizacionConUnidades,
+} from '../../_store/store-producto-agregado-cotizacion'
+import { getStorageUrl } from '~/utils/upload'
 
 export function calcularSubtotalCotizacion({
   precio_venta,
@@ -37,116 +39,68 @@ export function calcularSubtotalCotizacion({
   }
 }
 
-function calcularSubtotalForm({
-  form,
-  value,
-}: {
-  form: FormInstance
-  value: number
-}) {
-  const precio_venta = Number(
-    form.getFieldValue(['productos', value, 'precio_venta']) ?? 0
-  )
-  const recargo = Number(form.getFieldValue(['productos', value, 'recargo']) ?? 0)
-  const cantidad = Number(
-    form.getFieldValue(['productos', value, 'cantidad']) ?? 0
-  )
-  const descuento = Number(
-    form.getFieldValue(['productos', value, 'descuento']) ?? 0
-  )
-  const descuento_tipo = form.getFieldValue([
-    'productos',
-    value,
-    'descuento_tipo',
-  ]) as DescuentoTipo
+// --- Helpers de lectura/escritura sobre el carrito (Zustand) ---
+// Mismo patrón que columns-vender.tsx: leen SIEMPRE fresco vía .getState()
+// para poder quedar fuera de las deps de `columns` (useMemo más abajo).
 
-  const subtotal = calcularSubtotalCotizacion({
-    precio_venta,
-    recargo,
-    cantidad,
-    descuento,
-    descuento_tipo: descuento_tipo || 'Monto',
-  })
-
-  form.setFieldValue(['productos', value, 'subtotal'], Number(subtotal))
+function calcularSubtotalDeFila(row: ProductoCotizacionConUnidades): number {
+  return Number(
+    calcularSubtotalCotizacion({
+      precio_venta: Number(row.precio_venta ?? 0),
+      recargo: Number(row.recargo ?? 0),
+      cantidad: Number(row.cantidad ?? 0),
+      descuento: Number(row.descuento ?? 0),
+      descuento_tipo: row.descuento_tipo || 'Monto',
+    })
+  )
 }
 
-/**
- * Aplica un tipo de precio a la línea: setea precio, comisión y recalcula el
- * subtotal. Espejo de `aplicarPrecio` en venta.
- */
-function aplicarPrecioCotizacion(
-  form: FormInstance,
-  fieldIndex: number,
-  tipo: TipoPrecio,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ud: any,
-  cantidad: number
-) {
-  const preciosMap: Record<TipoPrecio, { precio: string; comision: string }> = {
-    publico: { precio: 'precio_publico', comision: 'comision_publico' },
-    especial: { precio: 'precio_especial', comision: 'comision_especial' },
-    minimo: { precio: 'precio_minimo', comision: 'comision_minimo' },
-    ultimo: { precio: 'precio_ultimo', comision: 'comision_ultimo' },
-  }
-  const { precio: precioKey, comision: comisionKey } = preciosMap[tipo]
-  const precio = Number(ud[precioKey] ?? 0)
-  const comision = Number(ud[comisionKey] ?? 0)
-
-  form.setFieldValue(['productos', fieldIndex, 'tipo_precio'], tipo)
-  form.setFieldValue(['productos', fieldIndex, 'precio_venta'], precio)
-  form.setFieldValue(['productos', fieldIndex, 'comision'], comision)
-
-  const recargo = Number(form.getFieldValue(['productos', fieldIndex, 'recargo']) ?? 0)
-  const descuento_tipo = form.getFieldValue(['productos', fieldIndex, 'descuento_tipo']) as DescuentoTipo
-  const descuento = Number(form.getFieldValue(['productos', fieldIndex, 'descuento']) ?? 0)
-
-  form.setFieldValue(
-    ['productos', fieldIndex, 'subtotal'],
-    Number(
-      calcularSubtotalCotizacion({
-        precio_venta: precio,
-        recargo,
-        descuento_tipo: descuento_tipo || 'Monto',
-        descuento,
-        cantidad,
-      })
-    )
+/** Aplica un patch a una fila del carrito por _row_id y recalcula su subtotal. */
+function patchCarritoRow(rowId: string, patch: Partial<ProductoCotizacionConUnidades>) {
+  useStoreProductoAgregadoCotizacion.getState().setCarrito((prev) =>
+    prev.map((row) => {
+      if (row._row_id !== rowId) return row
+      const patched = { ...row, ...patch }
+      return { ...patched, subtotal: calcularSubtotalDeFila(patched) }
+    })
   )
+}
+
+function removeCarritoRow(rowId: string) {
+  useStoreProductoAgregadoCotizacion
+    .getState()
+    .setCarrito((prev) => prev.filter((row) => row._row_id !== rowId))
+}
+
+function handleCantidadChange(rowId: string, nuevaCantidad: number | null) {
+  patchCarritoRow(rowId, { cantidad: Number(nuevaCantidad ?? 0) })
+  autoSeleccionarMejorPrecioCotizacion(rowId)
 }
 
 /**
  * Auto-selecciona el mejor tipo de precio según la cantidad y los activadores.
- * "Mejor" = el tier habilitado con el activador MÁS ALTO. Si la cantidad baja y
- * el tier actual ya no es válido, cae al mejor disponible. Espejo de venta
- * (`autoSeleccionarMejorPrecio`) — antes cotización no analizaba activadores.
+ * Espejo de autoSeleccionarMejorPrecio en columns-vender.tsx.
  */
-function autoSeleccionarMejorPrecioCotizacion({
-  form,
-  fieldIndex,
-  productosStore,
-}: {
-  form: FormInstance
-  fieldIndex: number
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  productosStore: any[]
-}) {
-  const productoId = form.getFieldValue(['productos', fieldIndex, 'producto_id'])
-  const unidadDerivadaId = form.getFieldValue(['productos', fieldIndex, 'unidad_derivada_id'])
-  const cantidad = Number(form.getFieldValue(['productos', fieldIndex, 'cantidad']) ?? 0)
-  const tipoPrecioActual = (form.getFieldValue(['productos', fieldIndex, 'tipo_precio']) || 'publico') as TipoPrecio
+function autoSeleccionarMejorPrecioCotizacion(rowId: string) {
+  const row = useStoreProductoAgregadoCotizacion.getState().carrito.find((r) => r._row_id === rowId)
+  if (!row) return
 
+  const productoId = row.producto_id
+  const unidadDerivadaId = row.unidad_derivada_id
+  const cantidad = Number(row.cantidad ?? 0)
+  const tipoPrecioActual = (row.tipo_precio || 'publico') as TipoPrecio
+
+  const productosStore = useStoreProductoAgregadoCotizacion.getState().productos
   const productoEnStore = productosStore.find((p) => p.producto_id === productoId)
   const unidadesDerivadas = productoEnStore?.unidades_derivadas_disponibles || []
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const ud = unidadesDerivadas.find((u: any) => u.unidad_derivada.id === unidadDerivadaId)
+  const ud = unidadesDerivadas.find((u) => u.unidad_derivada.id === unidadDerivadaId)
   if (!ud) return
 
   const activadores: Record<TipoPrecio, number> = {
     publico: 0,
-    especial: Number(ud.activador_especial ?? 0),
-    minimo: Number(ud.activador_minimo ?? 0),
-    ultimo: Number(ud.activador_ultimo ?? 0),
+    especial: Number((ud as any).activador_especial ?? 0),
+    minimo: Number((ud as any).activador_minimo ?? 0),
+    ultimo: Number((ud as any).activador_ultimo ?? 0),
   }
 
   const estaHabilitado = (tipo: TipoPrecio) => {
@@ -163,296 +117,174 @@ function autoSeleccionarMejorPrecioCotizacion({
     }
   }
 
-  // Si el tier actual ya no aplica (bajó la cantidad), usar el mejor disponible.
   if (!estaHabilitado(tipoPrecioActual)) {
-    if (mejor !== tipoPrecioActual) aplicarPrecioCotizacion(form, fieldIndex, mejor, ud, cantidad)
+    if (mejor !== tipoPrecioActual) aplicarPrecioCotizacion(rowId, mejor, ud)
     return
   }
 
-  // Solo subir de tier automáticamente; respeta una baja manual si la cantidad no sube.
   const activadorActual = activadores[tipoPrecioActual] ?? 0
   if (mejorAct > activadorActual) {
-    aplicarPrecioCotizacion(form, fieldIndex, mejor, ud, cantidad)
+    aplicarPrecioCotizacion(rowId, mejor, ud)
   }
 }
 
-export function useColumnsCotizar({
-  form,
-  remove,
-}: {
-  form: FormInstance<FormCreateCotizacion>
-  remove: (index: number | number[]) => void
-}): ColDef[] {
-  // `columns` se pasa como columnDefs a AG Grid y antes se reconstruía en
-  // cada render (incluyendo cada agregado/eliminación de producto), lo que
-  // fuerza a AG Grid a redibujar toda la grilla en vez de solo actualizar
-  // filas. Se memoiza con las dependencias reales (mismo fix aplicado en
-  // columns-vender.tsx). `productosStore` se lee fresco vía .getState() en
-  // vez de suscripción reactiva para poder omitirlo del array de
-  // dependencias sin quedar con datos viejos.
+function aplicarPrecioCotizacion(rowId: string, tipo: TipoPrecio, ud: any) {
+  const preciosMap: Record<TipoPrecio, { precio: string; comision: string }> = {
+    publico: { precio: 'precio_publico', comision: 'comision_publico' },
+    especial: { precio: 'precio_especial', comision: 'comision_especial' },
+    minimo: { precio: 'precio_minimo', comision: 'comision_minimo' },
+    ultimo: { precio: 'precio_ultimo', comision: 'comision_ultimo' },
+  }
+  const { precio: precioKey, comision: comisionKey } = preciosMap[tipo]
+  const precio = Number(ud[precioKey] ?? 0)
+  const comision = Number(ud[comisionKey] ?? 0)
+
+  patchCarritoRow(rowId, { tipo_precio: tipo, precio_venta: precio, comision })
+}
+
+export function useColumnsCotizar(): ColDef<ProductoCotizacionConUnidades>[] {
+  // `columns` se pasa como columnDefs a AG Grid. Memoizado con las
+  // dependencias reales (mismo fix que columns-vender.tsx) — los
+  // cellRenderers leen `params.data` (fresco en cada invocación de AG Grid)
+  // en vez de cerrar sobre una variable del scope de render.
   return useMemo(() => [
-    // {
-    //   headerName: '#',
-    //   valueGetter: 'node.rowIndex + 1',
-    //   width: 50,
-    //   pinned: 'left',
-    // },
     {
       colId: 'codigo',
       headerName: 'Código',
-      field: 'name',
       width: 120,
-      cellRenderer: ({ value }: ICellRendererParams) => (
+      cellRenderer: ({ data }: ICellRendererParams<ProductoCotizacionConUnidades>) => (
         <div className='flex items-center h-full'>
-          <Tooltip
-            classNames={{ body: 'text-center!' }}
-            title={form.getFieldValue(['productos', value, 'producto_codigo'])}
-          >
+          <Tooltip classNames={{ body: 'text-center!' }} title={data?.producto_codigo}>
             <div className='overflow-hidden text-ellipsis whitespace-nowrap'>
-              {form.getFieldValue(['productos', value, 'producto_codigo'])}
+              {data?.producto_codigo}
             </div>
           </Tooltip>
-          <InputBase
-            propsForm={{
-              name: [value, 'producto_codigo'],
-              rules: [{ required: true, message: '' }],
-              hidden: true,
-            }}
-            readOnly
-            variant='borderless'
-            formWithMessage={false}
-          />
-          <InputNumberBase
-            propsForm={{
-              name: [value, 'producto_id'],
-              rules: [{ required: true, message: '' }],
-              hidden: true,
-            }}
-            formWithMessage={false}
-          />
         </div>
       ),
     },
     {
       colId: 'descripcion',
       headerName: 'Descripción',
-      field: 'name',
       flex: 1,
       minWidth: 200,
-      cellRenderer: ({ value }: ICellRendererParams) => (
+      cellRenderer: ({ data }: ICellRendererParams<ProductoCotizacionConUnidades>) => (
         <div className='flex items-center h-full'>
-          <Tooltip
-            classNames={{ body: 'text-center!' }}
-            title={form.getFieldValue(['productos', value, 'producto_name'])}
-          >
+          <Tooltip classNames={{ body: 'text-center!' }} title={data?.producto_name}>
             <div className='overflow-hidden text-ellipsis whitespace-nowrap'>
-              {form.getFieldValue(['productos', value, 'producto_name'])}
+              {data?.producto_name}
             </div>
           </Tooltip>
-          <InputBase
-            propsForm={{
-              name: [value, 'producto_name'],
-              rules: [{ required: true, message: '' }],
-              hidden: true,
-            }}
-            readOnly
-            variant='borderless'
-            formWithMessage={false}
-          />
         </div>
       ),
     },
-      {
-          headerName: 'Imagen',
-          field: 'name',
-          colId: 'imagen',
-          width: 56,
-          minWidth: 56,
-          suppressNavigable: true,
-          sortable: false,
-          cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
-            const tipoFila = form.getFieldValue(['productos', value, '_tipo_fila'])
-            const tipo = form.getFieldValue(['productos', value, '_tipo'])
-    
-            // Paquete cabecera y vale promocional: sin imagen
-            if (tipoFila === 'paquete_cabecera' || tipoFila === 'vale_promocional') {
-              return <div className="flex items-center h-full justify-center text-slate-300 text-xs">—</div>
-            }
-    
-            // Servicio: sin imagen
-            if (tipo === 'servicio') {
-              return <div className="flex items-center h-full justify-center text-slate-300 text-xs">—</div>
-            }
-    
-            const imgPath = form.getFieldValue(['productos', value, 'img']) as string | null | undefined
-            const src = getStorageUrl(imgPath)
-            const isPaqueteProducto = tipoFila === 'paquete_producto'
-    
-            return (
-              <div className="flex items-center h-full justify-center">
-                {src ? (
-                  <Image
-                    src={src}
-                    alt={form.getFieldValue(['productos', value, 'producto_name']) || 'Producto'}
-                    width={isPaqueteProducto ? 22 : 32}
-                    height={isPaqueteProducto ? 22 : 32}
-                    className={
-                      (isPaqueteProducto ? 'h-[22px] w-[22px]' : 'h-8 w-8') +
-                      ' rounded border border-slate-200 object-cover flex-shrink-0'
-                    }
-                    preview={{ mask: 'Ver' }}
-                  />
-                ) : (
-                  <div
-                    className={
-                      (isPaqueteProducto ? 'h-[22px] w-[22px] text-[8px]' : 'h-8 w-8 text-[10px]') +
-                      ' flex items-center justify-center rounded border border-dashed border-slate-300 bg-slate-50 font-semibold text-slate-400'
-                    }
-                  >
-                    S/I
-                  </div>
-                )}
+    {
+      headerName: 'Imagen',
+      colId: 'imagen',
+      width: 56,
+      minWidth: 56,
+      suppressNavigable: true,
+      sortable: false,
+      cellRenderer: ({ data }: ICellRendererParams<ProductoCotizacionConUnidades>) => {
+        const tipoFila = data?._tipo_fila
+        const tipo = data?._tipo
+
+        if (tipoFila === 'paquete_cabecera' || tipoFila === 'vale_promocional') {
+          return <div className="flex items-center h-full justify-center text-slate-300 text-xs">—</div>
+        }
+        if (tipo === 'servicio') {
+          return <div className="flex items-center h-full justify-center text-slate-300 text-xs">—</div>
+        }
+
+        const src = getStorageUrl(data?.img as string | null | undefined)
+        const isPaqueteProducto = tipoFila === 'paquete_producto'
+
+        return (
+          <div className="flex items-center h-full justify-center">
+            {src ? (
+              <Image
+                src={src}
+                alt={data?.producto_name || 'Producto'}
+                width={isPaqueteProducto ? 22 : 32}
+                height={isPaqueteProducto ? 22 : 32}
+                className={
+                  (isPaqueteProducto ? 'h-[22px] w-[22px]' : 'h-8 w-8') +
+                  ' rounded border border-slate-200 object-cover flex-shrink-0'
+                }
+                preview={{ mask: 'Ver' }}
+              />
+            ) : (
+              <div
+                className={
+                  (isPaqueteProducto ? 'h-[22px] w-[22px] text-[8px]' : 'h-8 w-8 text-[10px]') +
+                  ' flex items-center justify-center rounded border border-dashed border-slate-300 bg-slate-50 font-semibold text-slate-400'
+                }
+              >
+                S/I
               </div>
-            )
-          },
-        },
+            )}
+          </div>
+        )
+      },
+    },
     {
       colId: 'marca',
       headerName: 'Marca',
-      field: 'name',
       width: 120,
-      cellRenderer: ({ value }: ICellRendererParams) => (
+      cellRenderer: ({ data }: ICellRendererParams<ProductoCotizacionConUnidades>) => (
         <div className='flex items-center h-full'>
-          <Tooltip
-            classNames={{ body: 'text-center!' }}
-            title={form.getFieldValue(['productos', value, 'marca_name'])}
-          >
+          <Tooltip classNames={{ body: 'text-center!' }} title={data?.marca_name}>
             <div className='overflow-hidden text-ellipsis whitespace-nowrap'>
-              {form.getFieldValue(['productos', value, 'marca_name'])}
+              {data?.marca_name}
             </div>
           </Tooltip>
-          <InputBase
-            propsForm={{
-              name: [value, 'marca_name'],
-              rules: [{ required: true, message: '' }],
-              hidden: true,
-            }}
-            readOnly
-            variant='borderless'
-            formWithMessage={false}
-          />
         </div>
       ),
     },
     {
       colId: 'unidad_medida',
       headerName: 'U.Medida',
-      field: 'name',
       width: 150,
-      cellRenderer: ({ value }: ICellRendererParams) => {
-        const productoId = form.getFieldValue(['productos', value, 'producto_id'])
-        
-        return (
+      cellRenderer: ({ data }: ICellRendererParams<ProductoCotizacionConUnidades>) =>
+        data ? (
           <div className='flex items-center h-full'>
-            <SelectUnidadDerivadaCotizacion
-              form={form}
-              fieldIndex={value}
-              productoId={productoId}
-            />
-            <InputNumberBase
-              propsForm={{
-                name: [value, 'unidad_derivada_id'],
-                rules: [{ required: true, message: '' }],
-                hidden: true,
-              }}
-              formWithMessage={false}
-            />
-            <InputNumberBase
-              propsForm={{
-                name: [value, 'unidad_derivada_factor'],
-                rules: [{ required: true, message: '' }],
-                hidden: true,
-              }}
-              formWithMessage={false}
-            />
-            <InputBase
-              propsForm={{
-                name: [value, 'unidad_derivada_name'],
-                rules: [{ required: true, message: '' }],
-                hidden: true,
-              }}
-              readOnly
-              variant='borderless'
-              formWithMessage={false}
-            />
+            <SelectUnidadDerivadaCotizacion row={data} />
           </div>
-        )
-      },
+        ) : null,
     },
     {
       colId: 'tipo_precio',
       headerName: 'Tipo Precio',
-      field: 'name',
       width: 130,
-      cellRenderer: ({ value }: ICellRendererParams) => {
-        const productoId = form.getFieldValue(['productos', value, 'producto_id'])
-
-        return (
+      cellRenderer: ({ data }: ICellRendererParams<ProductoCotizacionConUnidades>) =>
+        data ? (
           <div className='flex items-center h-full'>
-            <SelectTipoPrecioCotizacion
-              form={form}
-              fieldIndex={value}
-              productoId={productoId}
-            />
-            <InputBase
-              propsForm={{
-                name: [value, 'tipo_precio'],
-                hidden: true,
-              }}
-              readOnly
-              variant='borderless'
-              formWithMessage={false}
-            />
+            <SelectTipoPrecioCotizacion row={data} />
           </div>
-        )
-      },
+        ) : null,
     },
     {
       colId: 'cantidad',
       headerName: 'Cant.',
-      field: 'name',
       width: 120,
-      // Ver nota en columns-vender.tsx: autoHeight fuerza a AG Grid a medir
-      // cada fila contra el DOM en cada actualización — reemplazado por
-      // `rowHeight` fijo en table-cotizar.tsx.
-      cellRenderer: ({ value }: ICellRendererParams) => {
-        const cantidad = form.getFieldValue(['productos', value, 'cantidad']);
-        const unidad_derivada_factor = form.getFieldValue(['productos', value, 'unidad_derivada_factor']);
-        const stock_fraccion = form.getFieldValue(['productos', value, 'stock_fraccion']);
+      cellRenderer: ({ data }: ICellRendererParams<ProductoCotizacionConUnidades>) => {
+        const cantidad = data?.cantidad
+        const unidad_derivada_factor = data?.unidad_derivada_factor
+        const stock_fraccion = data?.stock_fraccion
 
-        const cantidadEnFraccion = Number(cantidad || 0) * Number(unidad_derivada_factor || 1);
-        const stockDisponible = Number(stock_fraccion || 0);
-        const stockEnUnidad = stockDisponible / Number(unidad_derivada_factor || 1);
-        const stockInsuficiente = cantidadEnFraccion > stockDisponible;
+        const cantidadEnFraccion = Number(cantidad || 0) * Number(unidad_derivada_factor || 1)
+        const stockDisponible = Number(stock_fraccion || 0)
+        const stockEnUnidad = stockDisponible / Number(unidad_derivada_factor || 1)
+        const stockInsuficiente = cantidadEnFraccion > stockDisponible
 
         return (
           <div className='flex flex-col justify-center w-full py-2'>
             <InputNumberBase
               size='small'
-              propsForm={{
-                name: [value, 'cantidad'],
-                rules: [{ required: true, message: '' }],
-              }}
+              value={cantidad}
               precision={2}
               min={0}
-              formWithMessage={false}
-              onChange={() => {
-                calcularSubtotalForm({ form, value })
-                autoSeleccionarMejorPrecioCotizacion({
-                  form,
-                  fieldIndex: value,
-                  productosStore: useStoreProductoAgregadoCotizacion.getState().productos,
-                })
+              onChange={(nuevaCantidad) => {
+                if (data?._row_id) handleCantidadChange(data._row_id, nuevaCantidad as number | null)
               }}
             />
             {stockInsuficiente && cantidad && (
@@ -461,26 +293,21 @@ export function useColumnsCotizar({
               </div>
             )}
           </div>
-        );
+        )
       },
     },
     {
       colId: 'precio',
       headerName: 'Precio',
-      field: 'name',
       width: 110,
-      cellRenderer: ({ value }: ICellRendererParams) => (
+      cellRenderer: ({ data }: ICellRendererParams<ProductoCotizacionConUnidades>) => (
         <div className='flex items-center h-full'>
           <InputNumberBase
             prefix='S/. '
             size='small'
-            propsForm={{
-              name: [value, 'precio_venta'],
-              rules: [{ required: true, message: '' }],
-            }}
+            value={data?.precio_venta}
             precision={4}
             min={0}
-            formWithMessage={false}
             readOnly
             variant='borderless'
           />
@@ -490,20 +317,18 @@ export function useColumnsCotizar({
     {
       colId: 'recargo',
       headerName: 'Recargo',
-      field: 'name',
       width: 110,
-      cellRenderer: ({ value }: ICellRendererParams) => (
+      cellRenderer: ({ data }: ICellRendererParams<ProductoCotizacionConUnidades>) => (
         <div className='flex items-center h-full'>
           <InputNumberBase
             prefix='S/. '
             size='small'
-            propsForm={{
-              name: [value, 'recargo'],
-            }}
+            value={data?.recargo}
             precision={4}
             min={0}
-            formWithMessage={false}
-            onChange={() => calcularSubtotalForm({ form, value })}
+            onChange={(nuevoRecargo) => {
+              if (data?._row_id) patchCarritoRow(data._row_id, { recargo: Number(nuevoRecargo ?? 0) })
+            }}
           />
         </div>
       ),
@@ -511,77 +336,53 @@ export function useColumnsCotizar({
     {
       colId: 'descuento',
       headerName: 'Descuento',
-      field: 'name',
       width: 160,
-      cellRenderer: ({ value }: ICellRendererParams) => (
-        <div className='flex items-center h-full gap-1'>
-          <SelectBase
-            size='small'
-            formWithMessage={false}
-            className='w-[60px]! min-w-[60px]! max-w-[60px]!'
-            defaultValue={'Monto' as DescuentoTipo}
-            options={[
-              { value: 'Monto', label: 'S/.' },
-              { value: 'Porcentaje', label: '%' },
-            ]}
-            propsForm={{
-              name: [value, 'descuento_tipo'],
-              hasFeedback: false,
-            }}
-            onChange={() => calcularSubtotalForm({ form, value })}
-          />
-          <Form.Item
-            noStyle
-            shouldUpdate={(prev, curr) =>
-              prev.productos?.[value]?.descuento_tipo !==
-              curr.productos?.[value]?.descuento_tipo
-            }
-          >
-            {() => {
-              const descuento_tipo = form.getFieldValue([
-                'productos',
-                value,
-                'descuento_tipo',
-              ])
-              const isPorcentaje = descuento_tipo === 'Porcentaje'
+      cellRenderer: ({ data }: ICellRendererParams<ProductoCotizacionConUnidades>) => {
+        const descuento_tipo = data?.descuento_tipo || 'Monto'
+        const isPorcentaje = descuento_tipo === 'Porcentaje'
 
-              return (
-                <InputNumberBase
-                  prefix={isPorcentaje ? undefined : 'S/. '}
-                  suffix={isPorcentaje ? '%' : undefined}
-                  size='small'
-                  className='w-full'
-                  propsForm={{
-                    name: [value, 'descuento'],
-                  }}
-                  precision={isPorcentaje ? 2 : 4}
-                  min={0}
-                  max={isPorcentaje ? 100 : undefined}
-                  formWithMessage={false}
-                  onChange={() => calcularSubtotalForm({ form, value })}
-                />
-              )
-            }}
-          </Form.Item>
-        </div>
-      ),
+        return (
+          <div className='flex items-center h-full gap-1'>
+            <SelectBase
+              size='small'
+              className='w-[60px]! min-w-[60px]! max-w-[60px]!'
+              value={descuento_tipo}
+              options={[
+                { value: 'Monto', label: 'S/.' },
+                { value: 'Porcentaje', label: '%' },
+              ]}
+              onChange={(nuevoTipo) => {
+                if (data?._row_id) patchCarritoRow(data._row_id, { descuento_tipo: nuevoTipo as DescuentoTipo })
+              }}
+            />
+            <InputNumberBase
+              prefix={isPorcentaje ? undefined : 'S/. '}
+              suffix={isPorcentaje ? '%' : undefined}
+              size='small'
+              className='w-full'
+              value={data?.descuento}
+              precision={isPorcentaje ? 2 : 4}
+              min={0}
+              max={isPorcentaje ? 100 : undefined}
+              onChange={(nuevoDescuento) => {
+                if (data?._row_id) patchCarritoRow(data._row_id, { descuento: Number(nuevoDescuento ?? 0) })
+              }}
+            />
+          </div>
+        )
+      },
     },
     {
       colId: 'subtotal',
       headerName: 'Subtotal',
-      field: 'name',
       width: 120,
-      cellRenderer: ({ value }: ICellRendererParams) => (
+      cellRenderer: ({ data }: ICellRendererParams<ProductoCotizacionConUnidades>) => (
         <div className='flex items-center h-full'>
           <InputNumberBase
             size='small'
-            propsForm={{
-              name: [value, 'subtotal'],
-              rules: [{ required: true, message: '' }],
-            }}
+            value={data?.subtotal}
             prefix='S/. '
             precision={2}
-            formWithMessage={false}
             readOnly
             variant='borderless'
           />
@@ -591,20 +392,19 @@ export function useColumnsCotizar({
     {
       colId: 'acciones',
       headerName: 'Acciones',
-      field: 'name',
       width: 100,
       pinned: 'right',
-      cellRenderer: ({ value }: ICellRendererParams) => {
-        return (
-          <button
-            type='button'
-            onClick={() => remove(value)}
-            className='text-red-600 hover:text-red-800 p-2'
-          >
-            <FaTrash />
-          </button>
-        )
-      },
+      cellRenderer: ({ data }: ICellRendererParams<ProductoCotizacionConUnidades>) => (
+        <button
+          type='button'
+          onClick={() => {
+            if (data?._row_id) removeCarritoRow(data._row_id)
+          }}
+          className='text-red-600 hover:text-red-800 p-2'
+        >
+          <FaTrash />
+        </button>
+      ),
     },
-  ], [form, remove])
+  ], [])
 }

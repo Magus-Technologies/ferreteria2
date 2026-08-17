@@ -14,6 +14,10 @@ export type TipoDocumento = string;
 export type TipoPrecio = "publico" | "especial" | "minimo" | "ultimo";
 
 export interface ProductoCotizacion {
+  // Identidad estable de la fila, independiente de Ant Design Form (ver
+  // store-producto-agregado-cotizacion.ts). Mismo patrón que crear-venta:
+  // la tabla vive en Zustand, no en el form.
+  _row_id: string;
   producto_id: number;
   producto_name: string;
   producto_codigo: string;
