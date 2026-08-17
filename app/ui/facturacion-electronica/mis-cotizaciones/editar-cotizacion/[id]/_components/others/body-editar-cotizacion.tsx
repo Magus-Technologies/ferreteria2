@@ -15,7 +15,7 @@ import {
 import { useStoreAlmacen } from "~/store/store-almacen";
 import type { FormCreateCotizacion, DescuentoTipo } from "~/app/ui/facturacion-electronica/mis-cotizaciones/crear-cotizacion/_types/cotizacion.types";
 import { useStoreProductoAgregadoCotizacion, type ProductoCotizacionConUnidades } from "~/app/ui/facturacion-electronica/mis-cotizaciones/crear-cotizacion/_store/store-producto-agregado-cotizacion";
-import { generarRowId } from "~/app/ui/facturacion-electronica/mis-ventas/crear-venta/_store/store-producto-agregado-venta";
+import { generarRowId } from "~/app/_utils/generar-row-id";
 import ModalDocCotizacion, { CotizacionResponse } from "~/app/ui/facturacion-electronica/mis-cotizaciones/_components/modals/modal-doc-cotizacion";
 import dayjs from "dayjs";
 

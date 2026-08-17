@@ -4,16 +4,10 @@ import { TipoMoneda } from '~/lib/api/venta'
 import type { Producto } from '~/app/_types/producto'
 import type { ValeCompra } from '~/lib/api/vales-compra'
 
-// Identidad estable por fila del carrito. Antes la daba Form.List (`field.key`);
-// ahora que la tabla vive en este store (no en Ant Design Form), cada fila
-// necesita la suya propia para que AG Grid (getRowId) y las funciones de
-// update/remove puedan identificarla sin ambigüedad — incluso dos filas del
-// mismo producto_id (ej. dos instancias de paquete) tienen cada una la suya.
-let rowIdCounter = 0
-export function generarRowId(): string {
-  rowIdCounter += 1
-  return `row-${Date.now()}-${rowIdCounter}`
-}
+// Re-exportado desde un util neutral: lo usan tanto venta como cotización
+// (ver body-cotizar.tsx) y antes cotización tenía que importar este store de
+// venta entero solo por esta función, acoplando sus bundles innecesariamente.
+export { generarRowId } from '~/app/_utils/generar-row-id'
 
 export type ValuesCardAgregarProductoVenta = Partial<
   FormCreateVenta['productos'][number]

@@ -13,8 +13,9 @@ interface SelectUnidadDerivadaCotizacionProps {
 
 // Análogo a select-unidad-derivada-venta.tsx: recibe la fila del carrito
 // directamente en vez de form+fieldIndex, ya que la tabla de cotización dejó
-// de vivir en Ant Design Form. No se toca el componente compartido
-// (SelectUnidadDerivadaEditable) porque nada más lo sigue usando con form.
+// de vivir en Ant Design Form. El antiguo componente compartido
+// (SelectUnidadDerivadaEditable, form+fieldIndex-based) se eliminó: venta ya
+// no lo usaba y este archivo era su último importador.
 export default function SelectUnidadDerivadaCotizacion({
   row,
 }: SelectUnidadDerivadaCotizacionProps) {

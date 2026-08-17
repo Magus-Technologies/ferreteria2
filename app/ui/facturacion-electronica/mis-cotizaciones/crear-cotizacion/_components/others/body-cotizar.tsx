@@ -18,7 +18,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import dayjs from "dayjs";
 import { useStoreProductoAgregadoCotizacion, type ProductoCotizacionConUnidades } from "../../_store/store-producto-agregado-cotizacion";
-import { generarRowId } from "~/app/ui/facturacion-electronica/mis-ventas/crear-venta/_store/store-producto-agregado-venta";
+import { generarRowId } from "~/app/_utils/generar-row-id";
 import type { Cotizacion } from "~/lib/api/cotizaciones";
 import { Spin } from "antd";
 

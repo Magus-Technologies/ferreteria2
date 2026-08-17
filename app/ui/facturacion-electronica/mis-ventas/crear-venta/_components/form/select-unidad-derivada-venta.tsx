@@ -12,11 +12,11 @@ interface SelectUnidadDerivadaVentaProps {
   row: ValuesCardAgregarProductoVenta
 }
 
-// Análogo a SelectUnidadDerivadaEditable (app/_components/form/selects/), pero
-// sin `form`+`fieldIndex`: la tabla de venta dejó de vivir en Ant Design Form
-// (ver store-producto-agregado-venta.ts), así que este wrapper lee/escribe
-// directo sobre la fila del carrito en Zustand. No se toca el componente
-// compartido porque cotización sigue usando Form.List.
+// Reemplaza al antiguo SelectUnidadDerivadaEditable (form+fieldIndex-based,
+// ya eliminado — cotización también migró a Zustand, ver
+// select-unidad-derivada-cotizacion.tsx): la tabla de venta dejó de vivir en
+// Ant Design Form (ver store-producto-agregado-venta.ts), así que este
+// wrapper lee/escribe directo sobre la fila del carrito en Zustand.
 export default function SelectUnidadDerivadaVenta({
   row,
 }: SelectUnidadDerivadaVentaProps) {
