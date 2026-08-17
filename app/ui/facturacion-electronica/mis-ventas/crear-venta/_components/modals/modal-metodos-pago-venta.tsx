@@ -224,7 +224,13 @@ export default function ModalMetodosPagoVenta({
   // Setear método por defecto SOLO si no hay selección activa.
   // Devolución con un único método permitido: preseleccionarlo directo (es
   // el mismo con el que se cobró, no tiene sentido pedir que lo elija).
-  // Si no, mismo comportamiento de siempre (preferir Efectivo).
+  // Diferencia (cobrar de más sobre una venta ya cobrada): preseleccionar el
+  // método CON EL QUE se cobró originalmente en vez de caer siempre en
+  // Efectivo — antes, si la venta se había pagado por transferencia/tarjeta/
+  // yape, el modal igual arrancaba en Efectivo y parecía que el sistema
+  // "olvidó" cómo se cobró (el usuario sigue pudiendo cambiarlo, esto solo
+  // cambia el default). Si hay más de un método original, se usa el primero
+  // como sugerencia razonable.
   useEffect(() => {
     if (open && isFetched && desplieguesFiltradosPorTipo.length > 0) {
       const currentValue = selectedDespliegueValue
@@ -232,7 +238,12 @@ export default function ModalMetodosPagoVenta({
         const unico = modo === 'devolucion' && desplieguesFiltradosPorTipo.length === 1
           ? desplieguesFiltradosPorTipo[0]
           : null
-        const efectivo = unico ?? desplieguesFiltradosPorTipo.find((d: any) =>
+        const original = modo === 'diferencia' && metodosPermitidos?.length
+          ? desplieguesFiltradosPorTipo.find((d: any) =>
+              metodosPermitidos.includes(String(extractDesplieguePagoId(d.value)))
+            )
+          : null
+        const efectivo = unico ?? original ?? desplieguesFiltradosPorTipo.find((d: any) =>
           d.tipo === 'efectivo' ||
           d.label?.toUpperCase().includes('EFECTIVO') ||
           d.label?.toUpperCase().includes('CCH')
@@ -243,7 +254,7 @@ export default function ModalMetodosPagoVenta({
         }
       }
     }
-  }, [open, isFetched, desplieguesFiltradosPorTipo, selectedDespliegueValue])
+  }, [open, isFetched, desplieguesFiltradosPorTipo, selectedDespliegueValue, modo, metodosPermitidos])
 
   // Helper para calcular el monto total a recibir (base + sobrecargo) según la config actual
   const calcularTotalARecibir = (base: number) => {

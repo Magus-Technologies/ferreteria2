@@ -656,7 +656,11 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
         }
         onSurchargeChange={setSurchargeTotal}
         modo={modoModal}
-        metodosPermitidos={modoModal === "devolucion" ? metodosYaUsados : undefined}
+        // En "devolución" además FILTRA las opciones (solo se puede devolver
+        // por un método ya usado). En "diferencia" el modal solo lo usa para
+        // PRESELECCIONAR el método original por defecto — sigue permitiendo
+        // elegir cualquier otro, ver nota en modal-metodos-pago-venta.tsx.
+        metodosPermitidos={modoModal !== "total" ? metodosYaUsados : undefined}
         onContinuar={() => {
           setModalOpen(false);
           // Misma lógica que handleCreditoClick: si EnTienda + descontar_stock=no,
