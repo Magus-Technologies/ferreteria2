@@ -156,8 +156,21 @@ export function useCuadres() {
             // invalida lo mismo (ver use-realtime.ts), pero ese broadcast es "best
             // effort": si Reverb está caído no llega nada. Invalidar acá también deja
             // el refresco garantizado sin depender del servidor de WebSockets.
-            queryClient.invalidateQueries({ queryKey: ["ganancias"] });
-            queryClient.invalidateQueries({ queryKey: ["ganancias-resumen"] });
+            // Cada tarjeta y cada modal del módulo tiene su PROPIA clave: invalidar
+            // solo 'ganancias' refrescaba la tabla de atrás y dejaba el modal de
+            // Análisis de Pérdidas con los datos viejos.
+            for (const clave of [
+                "ganancias",
+                "ganancias-resumen",
+                "analisis-perdidas-ventas",
+                "perdidas-detalle",
+                "card-analisis-perdidas",
+                "analisis-peps",
+                "pagos-compras",
+                "gastos-card-pagos-compras",
+            ]) {
+                queryClient.invalidateQueries({ queryKey: [clave] });
+            }
         } catch (error) {
             console.error("Error al anular:", error);
             throw error;

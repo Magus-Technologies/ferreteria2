@@ -35,7 +35,20 @@ const SALDOS_SUB_CAJAS_KEYS = [
  * que esperar ese rato —o recargar— para ver el efecto de borrar una entrada o
  * salida desde Cuadres.
  */
-const GANANCIAS_KEYS = ['ganancias', 'ganancias-resumen']
+const GANANCIAS_KEYS = [
+  'ganancias',
+  'ganancias-resumen',
+  // Tarjetas y modales del módulo. Cada uno tiene su propia clave y todos salen
+  // de las mismas ventas, costos y movimientos de almacén, así que invalidar solo
+  // 'ganancias' dejaba el modal de Análisis de Pérdidas mostrando datos viejos
+  // aunque la tabla de atrás ya se hubiera actualizado.
+  'analisis-perdidas-ventas',
+  'perdidas-detalle',
+  'card-analisis-perdidas',
+  'analisis-peps',
+  'pagos-compras',
+  'gastos-card-pagos-compras',
+]
 
 /**
  * Mapeo de módulo del backend → query keys del frontend a invalidar.
