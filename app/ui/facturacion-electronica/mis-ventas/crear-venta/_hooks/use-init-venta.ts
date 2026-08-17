@@ -7,7 +7,7 @@ import { FormCreateVenta } from '../_components/others/body-vender'
 import { clienteApi, TipoDireccion } from '~/lib/api/cliente'
 import { setDireccionesClienteToForm } from '~/lib/utils/cliente-direcciones-form'
 import { productosApiV2 } from '~/lib/api/producto'
-import { useStoreProductoAgregadoVenta } from '../_store/store-producto-agregado-venta'
+import { useStoreProductoAgregadoVenta, generarRowId } from '../_store/store-producto-agregado-venta'
 
 export default function useInitVenta({
   venta,
@@ -18,12 +18,16 @@ export default function useInitVenta({
 }) {
   const setAlmacenId = useStoreAlmacen((state) => state.setAlmacenId)
   const setProductos = useStoreProductoAgregadoVenta((state) => state.setProductos)
+  const setCarrito = useStoreProductoAgregadoVenta((state) => state.setCarrito)
   const setProductoAgregado = useStoreProductoAgregadoVenta((state) => state.setProductoAgregado)
 
   useEffect(() => {
     form.resetFields()
     setProductoAgregado(undefined)
     setProductos([])
+    // La tabla de productos vive en Zustand, no en el form — form.resetFields()
+    // ya no la limpia (ver store-producto-agregado-venta.ts).
+    setCarrito([])
     if (venta) {
       // Mapear datos de la primera entrega si existe
       const entrega = (venta as any).entregas_productos?.[0]
@@ -42,7 +46,67 @@ export default function useInitVenta({
         externo: 'EXTERNO',
       }
 
-      const dataFormated: FormCreateVenta = {
+      // Filas iniciales del carrito — van a Zustand (setCarrito más abajo),
+      // no al form: la tabla de productos ya no vive ahí.
+      const productosIniciales: FormCreateVenta['productos'] = [
+        // Productos normales
+        ...venta.productos_por_almacen.flatMap((ppa) =>
+          ppa.unidades_derivadas.map((ud) => ({
+            _row_id: generarRowId(),
+            _tipo: 'producto' as const,
+            cantidad: Number(ud.cantidad),
+            unidad_derivada_id: ud.unidad_derivada_normal.id,
+            recargo: Number(ud.recargo),
+            precio_venta: Number(ud.precio),
+            descuento_tipo: ud.descuento_tipo as any,
+            descuento: Number(ud.descuento ?? 0),
+            subtotal:
+              (Number(ud.precio) + Number(ud.recargo)) *
+              Number(ud.cantidad),
+            marca_name: ppa.producto_almacen.producto.marca.name,
+            producto_name: ppa.producto_almacen.producto.name,
+            producto_codigo: ppa.producto_almacen.producto.cod_producto,
+            unidad_derivada_name: ud.unidad_derivada_normal.name,
+            unidad_derivada_factor: Number(ud.factor),
+            producto_id: ppa.producto_almacen.producto_id,
+            stock_fraccion: Number((ppa.producto_almacen as any).stock_fraccion ?? 0),
+            img: ppa.producto_almacen.producto.img ?? null,
+            // marca/categoria: las usan los vales con alcance PRODUCTOS/CATEGORIAS
+            marca_id: (ppa.producto_almacen.producto as any).marca_id ?? null,
+            categoria_id: (ppa.producto_almacen.producto as any).categoria_id ?? null,
+            // costo y comision se persisten con `?? 0` en el backend al
+            // re-guardar — si no se cargan al editar, se PIERDEN.
+            costo: Number((ppa as any).costo ?? 0),
+            comision: Number((ud as any).comision ?? 0),
+            // Si la cotización origen reservó stock, esa línea ya fue descontada:
+            // el backend restará esta cantidad y descontará solo el excedente.
+            _cantidad_reservada: (venta as any).reservar_stock === true ? Number(ud.cantidad) : 0,
+            _unidad_reserva_id: (venta as any).reservar_stock === true ? ud.unidad_derivada_normal.id : undefined,
+          }))
+        ),
+        // Servicios de la venta
+        ...((venta as any).servicios_venta || []).map((sv: any) => ({
+          _row_id: generarRowId(),
+          _tipo: 'servicio' as const,
+          producto_id: -sv.servicio_id,
+          producto_name: sv.servicio?.nombre || 'Servicio',
+          producto_codigo: sv.servicio?.codigo_sunat || 'SRV',
+          marca_name: '-',
+          unidad_derivada_id: 0,
+          unidad_derivada_name: 'SERVICIO',
+          unidad_derivada_factor: 1,
+          cantidad: Number(sv.cantidad),
+          precio_venta: Number(sv.precio_unitario),
+          recargo: 0,
+          subtotal: Number(sv.subtotal),
+          servicio_id: sv.servicio_id,
+          servicio_nombre: sv.servicio?.nombre || 'Servicio',
+          servicio_codigo_sunat: sv.servicio?.codigo_sunat || null,
+          servicio_referencia: sv.referencia || undefined,
+        })),
+      ]
+
+      const dataFormated: Omit<FormCreateVenta, 'productos'> = {
         fecha: dayjs(venta.fecha),
         tipo_moneda: venta.tipo_moneda as any,
         tipo_de_cambio: Number(venta.tipo_de_cambio),
@@ -100,64 +164,10 @@ export default function useInitVenta({
         // para verificar reservar_stock directo en la BD en vez de confiar en el flag de
         // arriba (que puede perderse si algo falla en la cadena del frontend).
         cotizacion_id: (venta as any).estado_cotizacion !== undefined ? (venta as any).id : undefined,
-        productos: [
-          // Productos normales
-          ...venta.productos_por_almacen.flatMap((ppa) =>
-            ppa.unidades_derivadas.map((ud) => ({
-              _tipo: 'producto' as const,
-              cantidad: Number(ud.cantidad),
-              unidad_derivada_id: ud.unidad_derivada_normal.id,
-              recargo: Number(ud.recargo),
-              precio_venta: Number(ud.precio),
-              descuento_tipo: ud.descuento_tipo as any,
-              descuento: Number(ud.descuento ?? 0),
-              subtotal:
-                (Number(ud.precio) + Number(ud.recargo)) *
-                Number(ud.cantidad),
-              marca_name: ppa.producto_almacen.producto.marca.name,
-              producto_name: ppa.producto_almacen.producto.name,
-              producto_codigo: ppa.producto_almacen.producto.cod_producto,
-              unidad_derivada_name: ud.unidad_derivada_normal.name,
-              unidad_derivada_factor: Number(ud.factor),
-              producto_id: ppa.producto_almacen.producto_id,
-              stock_fraccion: Number((ppa.producto_almacen as any).stock_fraccion ?? 0),
-              img: ppa.producto_almacen.producto.img ?? null,
-              // marca/categoria: las usan los vales con alcance PRODUCTOS/CATEGORIAS
-              marca_id: (ppa.producto_almacen.producto as any).marca_id ?? null,
-              categoria_id: (ppa.producto_almacen.producto as any).categoria_id ?? null,
-              // costo y comision se persisten con `?? 0` en el backend al
-              // re-guardar — si no se cargan al editar, se PIERDEN.
-              costo: Number((ppa as any).costo ?? 0),
-              comision: Number((ud as any).comision ?? 0),
-              // Si la cotización origen reservó stock, esa línea ya fue descontada:
-              // el backend restará esta cantidad y descontará solo el excedente.
-              _cantidad_reservada: (venta as any).reservar_stock === true ? Number(ud.cantidad) : 0,
-              _unidad_reserva_id: (venta as any).reservar_stock === true ? ud.unidad_derivada_normal.id : undefined,
-            }))
-          ),
-          // Servicios de la venta
-          ...((venta as any).servicios_venta || []).map((sv: any) => ({
-            _tipo: 'servicio' as const,
-            producto_id: -sv.servicio_id,
-            producto_name: sv.servicio?.nombre || 'Servicio',
-            producto_codigo: sv.servicio?.codigo_sunat || 'SRV',
-            marca_name: '-',
-            unidad_derivada_id: 0,
-            unidad_derivada_name: 'SERVICIO',
-            unidad_derivada_factor: 1,
-            cantidad: Number(sv.cantidad),
-            precio_venta: Number(sv.precio_unitario),
-            recargo: 0,
-            subtotal: Number(sv.subtotal),
-            servicio_id: sv.servicio_id,
-            servicio_nombre: sv.servicio?.nombre || 'Servicio',
-            servicio_codigo_sunat: sv.servicio?.codigo_sunat || null,
-            servicio_referencia: sv.referencia || undefined,
-          })),
-        ],
       }
 
-      form.setFieldsValue(dataFormated)
+      form.setFieldsValue(dataFormated as FormCreateVenta)
+      setCarrito(productosIniciales)
       setAlmacenId(venta.almacen_id)
 
       // Poblar el store inmediatamente con las unidades que ya vienen en la cotización/venta,
@@ -198,9 +208,10 @@ export default function useInitVenta({
 
             const storeProductos: any[] = []
 
-            // Actualizar cada producto en el form con stock_fraccion real
-            const productosForm = form.getFieldValue('productos') as FormCreateVenta['productos']
-            if (!productosForm) return
+            // Actualizar cada producto del carrito con stock_fraccion real
+            const productosForm = useStoreProductoAgregadoVenta.getState()
+              .carrito as FormCreateVenta['productos']
+            if (!productosForm.length) return
 
             let updated = false
             const productosActualizados = productosForm.map((prod) => {
@@ -264,7 +275,7 @@ export default function useInitVenta({
             })
 
             if (updated) {
-              form.setFieldValue('productos', productosActualizados)
+              setCarrito(productosActualizados)
             }
 
             // Popular el store con los productos para que los selects funcionen
@@ -308,13 +319,13 @@ export default function useInitVenta({
         })
       }
     } else {
+      // El carrito ya quedó vacío por el setCarrito([]) de arriba.
       form.setFieldsValue({
         tipo_moneda: 's' as any, // Soles
         fecha: dayjs(),
         forma_de_pago: 'co' as any, // Contado
         tipo_documento: '03' as any, // Boleta (por defecto)
         tipo_de_cambio: 1,
-        productos: [], // Asegurar que la tabla esté vacía
         estado_de_venta: 'cr' as any, // Creado
         // ✅ Valores por defecto para horarios de entrega
         hora_inicio: '09:00',

@@ -33,6 +33,10 @@ import AperturaGuard from '~/app/ui/_components/apertura-auto-check'
 
 export type FormCreateVenta = ClienteDireccionFormFields & {
   productos: Array<{
+    // Identidad estable de la fila, independiente de Ant Design Form (ver
+    // store-producto-agregado-venta.ts). Reemplaza el `field.key` que antes
+    // daba Form.List — ahora la tabla vive en Zustand, no en el form.
+    _row_id: string
     _tipo?: 'producto' | 'servicio'
     _tipo_fila?: 'paquete_cabecera' | 'paquete_producto' | 'vale_promocional'
     producto_id: number
@@ -41,6 +45,14 @@ export type FormCreateVenta = ClienteDireccionFormFields & {
     marca_name: string
     // Categoría del producto, para descuentos de vale scopeados "Por Categoría".
     categoria_id?: number
+    marca_id?: number | null
+    img?: string | null
+    // Cantidad de paquetes en los que este producto participa — badge "🎁
+    // Disponible en N paquetes" en la columna Producto.
+    paquetes_count?: number
+    // Stock del producto en TODOS los almacenes — usado por el popover "Ver
+    // sucursales" de la columna Cantidad.
+    producto_en_almacenes?: any[]
     unidad_derivada_id: number
     unidad_derivada_name: string
     unidad_derivada_factor: number
@@ -197,6 +209,12 @@ function FormVentaInternal({
       className='flex flex-col xl:flex-row gap-4 xl:gap-6 w-full xl:h-full'
       onFinish={(values) => handleSubmit({
           ...values,
+          // La tabla de productos vive en Zustand, no en el form (ver
+          // store-producto-agregado-venta.ts) — no hay ningún <Form.Item
+          // name="productos"> registrado, así que onFinish nunca trae esta
+          // clave por su cuenta. Se inyecta acá explícitamente, mismo motivo
+          // que el resto de los campos de abajo.
+          productos: useStoreProductoAgregadoVenta.getState().carrito as any,
           // form.getFieldValue reads the FieldStore directly (where setFieldValue writes).
           // Campos seteados por useInitVenta vía form.setFieldsValue() pero sin ningún
           // <Form.Item name="..."> que los renderice no llegan de forma confiable en
@@ -218,7 +236,7 @@ function FormVentaInternal({
         })}
     >
       <div className='xl:flex-1 flex flex-col gap-4 xl:gap-6 min-w-0 xl:min-h-0'>
-        <AlertaPreciosActualizados form={form} />
+        <AlertaPreciosActualizados />
         <div className='xl:flex-1 xl:min-h-0 min-w-0'>
           <FormTableVender form={form} venta={venta} />
         </div>
@@ -256,6 +274,7 @@ export default function BodyVender({
   // Obtener funciones del store para limpiar
   const setProductoAgregado = useStoreProductoAgregadoVenta(state => state.setProductoAgregado)
   const setProductos = useStoreProductoAgregadoVenta(state => state.setProductos)
+  const setCarrito = useStoreProductoAgregadoVenta(state => state.setCarrito)
   const setValesAplicables = useStoreProductoAgregadoVenta(state => state.setValesAplicables)
 
   // Convertir cotización a formato de venta si existe
@@ -323,18 +342,20 @@ export default function BodyVender({
     const unsubscribe = ventaEvents.onEspera(() => {
       setProductoAgregado(undefined)
       setProductos([])
+      setCarrito([])
       setValesAplicables([])
       setFormKey(prev => prev + 1)
     })
 
     return unsubscribe
-  }, [setProductoAgregado, setProductos, setValesAplicables])
-  
+  }, [setProductoAgregado, setProductos, setCarrito, setValesAplicables])
+
   // Limpiar formulario cuando se cierra el modal
   useEffect(() => {
     if (!openDoc && ventaId) {
       setProductoAgregado(undefined)
       setProductos([])
+      setCarrito([])
       setValesAplicables([])
 
       if (venta?.id || cotizacion?.id) {
@@ -353,7 +374,7 @@ export default function BodyVender({
         setVentaCreada(undefined)
       }, 100)
     }
-  }, [openDoc, ventaId, setProductoAgregado, setProductos, setValesAplicables, venta?.id, router])
+  }, [openDoc, ventaId, setProductoAgregado, setProductos, setCarrito, setValesAplicables, venta?.id, router])
 
   return (
     <>

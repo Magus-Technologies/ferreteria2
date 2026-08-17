@@ -18,7 +18,7 @@ import type { TipoPrecio } from '~/lib/api/paquete'
 import ModalBuscarPaquete from '~/app/_components/modals/modal-buscar-paquete'
 import { useStorePaqueteSeleccionado } from '~/app/ui/facturacion-electronica/mis-ventas/store/store-paquete-seleccionado'
 import { FormCreateVenta } from '../others/body-vender'
-import { useStoreProductoAgregadoVenta } from '../../_store/store-producto-agregado-venta'
+import { useStoreProductoAgregadoVenta, generarRowId } from '../../_store/store-producto-agregado-venta'
 import SelectDescuentoTipo from '~/app/_components/form/selects/select-descuento-tipo'
 import { DescuentoTipo, TipoMoneda } from '~/lib/api/venta'
 import SelectPrecios from '~/app/_components/form/selects/select-precios'
@@ -263,6 +263,7 @@ export default function CardAgregarProductoVenta({
 
     const valuesFormated = {
       ...values,
+      _row_id: generarRowId(),
       producto_id: productoSeleccionadoSearchStore?.id,
       producto_name: productoSeleccionadoSearchStore?.name,
       producto_codigo: productoSeleccionadoSearchStore?.cod_producto,
@@ -662,6 +663,7 @@ export default function CardAgregarProductoVenta({
 
           // 1. Agregar fila cabecera del paquete
           setProductoAgregadoVenta({
+            _row_id: generarRowId(),
             _tipo_fila: 'paquete_cabecera',
             producto_id: paqueteParaAgregar.id,
             producto_name: paqueteParaAgregar.nombre,
@@ -705,6 +707,7 @@ export default function CardAgregarProductoVenta({
 
               // Crear objeto con todos los precios y descuentos de todos los tipos
               const productoData = {
+                _row_id: generarRowId(),
                 _tipo_fila: 'paquete_producto',
                 producto_id: paqueteProducto.producto_id,
                 producto_name: paqueteProducto.producto.name,

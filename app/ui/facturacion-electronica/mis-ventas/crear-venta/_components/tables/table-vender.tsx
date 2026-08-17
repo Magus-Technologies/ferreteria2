@@ -1,7 +1,5 @@
 import TableWithTitle from '~/components/tables/table-with-title'
 import { FormInstance } from 'antd/lib'
-import { FormListFieldData } from 'antd'
-import { StoreValue } from 'antd/es/form/interface'
 import { useColumnsVender } from './columns-vender'
 import { VentaConUnidadDerivadaNormal } from '../others/header-crear-venta'
 import CellFocusWithoutStyle from '~/components/tables/cell-focus-without-style'
@@ -9,10 +7,10 @@ import CellFocusWithoutStyle from '~/components/tables/cell-focus-without-style'
 import {
   useStoreProductoAgregadoVenta,
   ValuesCardAgregarProductoVenta,
+  generarRowId,
 } from '../../_store/store-producto-agregado-venta'
 import { useEffect, useMemo, useCallback, useRef } from 'react'
 import { AgGridReact } from 'ag-grid-react'
-import { FormCreateVenta } from '../others/body-vender'
 import { useConfigMode } from '~/app/ui/configuracion/permisos-visuales/_components/config-mode-context'
 import { Grid } from 'antd'
 import type { ValeCompra } from '~/lib/api/vales-compra'
@@ -40,22 +38,18 @@ function condicionEditarProductoVenta({
 
 export default function TableVender({
   form,
-  fields,
-  remove,
-  add,
   cantidad_pendiente = false,
   venta,
 }: {
   form: FormInstance
-  fields: FormListFieldData[]
-  remove: (index: number | number[]) => void
-  add: (defaultValue?: StoreValue, insertIndex?: number) => void
   cantidad_pendiente?: boolean
   venta?: VentaConUnidadDerivadaNormal
 }) {
   const productoAgregadoVentaStore = useStoreProductoAgregadoVenta(
     (store) => store.productoAgregado
   )
+  const carrito = useStoreProductoAgregadoVenta((store) => store.carrito)
+  const setCarrito = useStoreProductoAgregadoVenta((store) => store.setCarrito)
   const productosVenta = useStoreProductoAgregadoVenta(
     (store) => store.productos
   )
@@ -66,39 +60,42 @@ export default function TableVender({
     (store) => store.valesAplicables
   )
 
-  function agregarProducto({
-    producto,
-  }: {
-    producto: ValuesCardAgregarProductoVenta
-  }) {
-    const isPaqueteFila = producto._tipo_fila === 'paquete_cabecera' || producto._tipo_fila === 'paquete_producto'
-    const nuevoItem = {
-      ...producto,
-      // Paquete rows already have subtotal = (precio - descuento) × qty calculated correctly.
-      // Normal rows: recalculate gross (discount handled separately in the right panel).
-      subtotal: isPaqueteFila
-        ? Number(producto.subtotal ?? 0)
-        : Number(
-            (
-              (Number(producto.precio_venta) + Number(producto.recargo ?? 0)) *
-              Number(producto.cantidad)
-            ).toFixed(2)
-          ),
-    }
-
-    // Si ya hay filas de vale promocional, insertar este producto ANTES de la primera vale
-    // para que las filas de vales siempre queden al final (aplican a toda la compra).
-    if (producto._tipo_fila !== 'vale_promocional') {
-      const productosActuales = (form.getFieldValue('productos') || []) as any[]
-      const primerValeIdx = productosActuales.findIndex(p => p?._tipo_fila === 'vale_promocional')
-      if (primerValeIdx >= 0) {
-        add(nuevoItem, primerValeIdx)
-        return
+  // Inserta `producto` al final del carrito, salvo que ya haya filas de vale
+  // promocional: en ese caso se inserta ANTES de la primera, para que los
+  // vales siempre queden al final (aplican a toda la compra). La decisión de
+  // dónde insertar se toma DENTRO del updater con `prev`, así siempre ve el
+  // carrito más fresco (evita el mismo problema de closures obsoletas que ya
+  // resolvía `form.getFieldValue` en la versión anterior de este archivo).
+  const agregarProducto = useCallback(
+    ({ producto }: { producto: ValuesCardAgregarProductoVenta }) => {
+      const isPaqueteFila =
+        producto._tipo_fila === 'paquete_cabecera' || producto._tipo_fila === 'paquete_producto'
+      const nuevoItem = {
+        ...producto,
+        subtotal: isPaqueteFila
+          ? Number(producto.subtotal ?? 0)
+          : Number(
+              (
+                (Number(producto.precio_venta) + Number(producto.recargo ?? 0)) *
+                Number(producto.cantidad)
+              ).toFixed(2)
+            ),
       }
-    }
 
-    add(nuevoItem)
-  }
+      setCarrito((prev) => {
+        if (producto._tipo_fila !== 'vale_promocional') {
+          const primerValeIdx = prev.findIndex((p) => p._tipo_fila === 'vale_promocional')
+          if (primerValeIdx >= 0) {
+            const copia = [...prev]
+            copia.splice(primerValeIdx, 0, nuevoItem)
+            return copia
+          }
+        }
+        return [...prev, nuevoItem]
+      })
+    },
+    [setCarrito]
+  )
 
   useEffect(() => {
     const productoAgregadoVenta = { ...productoAgregadoVentaStore }
@@ -111,72 +108,68 @@ export default function TableVender({
       if (typeof window !== 'undefined') {
         console.timeLog('⏱️ agregar-producto', 'store → efecto TableVender')
       }
-      // Sub-produto de paquete → saltar si ya existe en la tabla (evita duplicar al re-agregar el mismo paquete)
-      // Usa path-based getFieldValue igual que getRowStyle, garantizado por Form.List
+
+      // Leer el carrito SIEMPRE fresco (este efecto solo depende de
+      // productoAgregadoVentaStore — igual que antes se leía con
+      // form.getFieldValue en vez de una variable cerrada sobre un render viejo).
+      const carritoActual = useStoreProductoAgregadoVenta.getState().carrito
+
+      // Sub-producto de paquete → saltar si ya existe en la tabla (evita duplicar al re-agregar el mismo paquete)
       if (productoAgregadoVenta._tipo_fila === 'paquete_producto') {
-        const paqueteId = (productoAgregadoVenta as any).paquete_id
-        const alreadyExists = fields.some((f) =>
-          form.getFieldValue(['productos', f.name, '_tipo_fila']) === 'paquete_producto' &&
-          form.getFieldValue(['productos', f.name, 'paquete_id']) === paqueteId &&
-          form.getFieldValue(['productos', f.name, 'producto_id']) === productoAgregadoVenta.producto_id
+        const paqueteId = productoAgregadoVenta.paquete_id
+        const alreadyExists = carritoActual.some(
+          (p) =>
+            p._tipo_fila === 'paquete_producto' &&
+            p.paquete_id === paqueteId &&
+            p.producto_id === productoAgregadoVenta.producto_id
         )
         if (alreadyExists) return
       }
 
       // Cabecera de paquete → si ya existe uno con el mismo paquete_id, incrementar cantidad
       if (productoAgregadoVenta._tipo_fila === 'paquete_cabecera') {
-        const paqueteId = (productoAgregadoVenta as any).paquete_id
-        const existingField = fields.find((f) =>
-          form.getFieldValue(['productos', f.name, '_tipo_fila']) === 'paquete_cabecera' &&
-          form.getFieldValue(['productos', f.name, 'paquete_id']) === paqueteId
+        const paqueteId = productoAgregadoVenta.paquete_id
+        const cabIdx = carritoActual.findIndex(
+          (p) => p._tipo_fila === 'paquete_cabecera' && p.paquete_id === paqueteId
         )
 
-        if (existingField) {
-          const cabIdx = existingField.name
-          const cabFieldsPos = fields.findIndex((f) => f.name === cabIdx)
-          // Recoger sub-products consecutivos usando path-based lookup (misma técnica que getRowStyle)
-          const subFields: number[] = []
-          for (let pos = cabFieldsPos + 1; pos < fields.length; pos++) {
-            const fIdx = fields[pos].name
-            if (form.getFieldValue(['productos', fIdx, '_tipo_fila']) !== 'paquete_producto') break
-            subFields.push(fIdx)
+        if (cabIdx >= 0) {
+          const subIdxs: number[] = []
+          for (let pos = cabIdx + 1; pos < carritoActual.length; pos++) {
+            if (carritoActual[pos]._tipo_fila !== 'paquete_producto') break
+            subIdxs.push(pos)
           }
 
-          const allProductos = (form.getFieldValue('productos') || []) as any[]
-          const updates = [...allProductos]
-          const cab = updates[cabIdx]
-          const nuevaCantPaquete = Number(form.getFieldValue(['productos', cabIdx, 'cantidad_paquete']) || 1) + 1
+          const nuevaCantPaquete = Number(carritoActual[cabIdx].cantidad_paquete || 1) + 1
 
           let precioPaqueteUnit = 0
-          for (const si of subFields) {
+          for (const si of subIdxs) {
             precioPaqueteUnit +=
-              (Number(form.getFieldValue(['productos', si, 'precio_venta']) || 0) -
-               Number(form.getFieldValue(['productos', si, 'descuento']) || 0)) *
-              Number(form.getFieldValue(['productos', si, 'cantidad_base']) || 1)
+              (Number(carritoActual[si].precio_venta || 0) - Number(carritoActual[si].descuento || 0)) *
+              Number(carritoActual[si].cantidad_base || 1)
           }
 
-          for (const si of subFields) {
-            const cantBase = Number(form.getFieldValue(['productos', si, 'cantidad_base']) || 1)
+          const updates = [...carritoActual]
+          for (const si of subIdxs) {
+            const cantBase = Number(carritoActual[si].cantidad_base || 1)
             const nuevaCantSub = cantBase * nuevaCantPaquete
             updates[si] = {
               ...updates[si],
               cantidad: nuevaCantSub,
               subtotal:
-                (Number(form.getFieldValue(['productos', si, 'precio_venta']) || 0) -
-                 Number(form.getFieldValue(['productos', si, 'descuento']) || 0)) *
+                (Number(carritoActual[si].precio_venta || 0) - Number(carritoActual[si].descuento || 0)) *
                 nuevaCantSub,
             }
           }
-
           updates[cabIdx] = {
-            ...cab,
+            ...updates[cabIdx],
             cantidad_paquete: nuevaCantPaquete,
             cantidad: nuevaCantPaquete,
             precio_venta: precioPaqueteUnit,
             subtotal: precioPaqueteUnit * nuevaCantPaquete,
           }
 
-          form.setFieldValue('productos', updates)
+          setCarrito(updates)
           return
         }
         // Sin existente → agregar normalmente (continúa el flujo)
@@ -195,11 +188,9 @@ export default function TableVender({
       )
         setProductosVenta((prev) => [...prev, productoAgregadoVenta])
 
-      const productos = (form.getFieldValue('productos') ||
-        []) as FormCreateVenta['productos']
-
-      const producto_existente = productos.find(
-        (item) => item.producto_id === productoAgregadoVenta.producto_id &&
+      const producto_existente = carritoActual.find(
+        (item) =>
+          item.producto_id === productoAgregadoVenta.producto_id &&
           item.paquete_id === productoAgregadoVenta.paquete_id
       )
       if (!producto_existente) {
@@ -207,50 +198,23 @@ export default function TableVender({
         return
       }
 
-      const producto_unidad_derivada_existente = productos.find((item) =>
+      const producto_unidad_derivada_existente = carritoActual.find((item) =>
         condicionEditarProductoVenta({
           producto: productoAgregadoVenta,
           item,
         })
       )
       if (producto_unidad_derivada_existente) {
-        const index = productos.findIndex((item) =>
-          condicionEditarProductoVenta({
-            producto: productoAgregadoVenta,
-            item,
-          })
-        )
-
-        if (index <= -1) return
-
         const nueva_cantidad =
           Number(productoAgregadoVenta.cantidad) +
           Number(producto_unidad_derivada_existente.cantidad)
-        setProductosVenta((prev) =>
-          prev.map((item) => {
-            return condicionEditarProductoVenta({
+
+        setCarrito((prev) =>
+          prev.map((item) =>
+            condicionEditarProductoVenta({
               producto: productoAgregadoVenta,
               item,
             })
-              ? {
-                  ...productoAgregadoVenta,
-                  cantidad: nueva_cantidad,
-                  subtotal: Number(
-                    (
-                      (Number(productoAgregadoVenta.precio_venta) +
-                        Number(productoAgregadoVenta.recargo ?? 0)) *
-                      Number(nueva_cantidad)
-                    ).toFixed(2)
-                  ),
-                }
-              : item
-          })
-        )
-
-        form.setFieldValue(
-          'productos',
-          productos.map((item, i) =>
-            i === index
               ? {
                   ...productoAgregadoVenta,
                   cantidad: nueva_cantidad,
@@ -290,167 +254,103 @@ export default function TableVender({
     if (valeIds === prevValeIdsRef.current) return
     prevValeIdsRef.current = valeIds
 
-    const productos = (form.getFieldValue('productos') || []) as FormCreateVenta['productos']
+    const nuevasFilasVale = valesAplicables.map((vale) => ({
+      _row_id: generarRowId(),
+      _tipo_fila: 'vale_promocional' as const,
+      producto_id: -vale.id,
+      producto_name: `${vale.nombre} (${getBeneficioVale(vale)})`,
+      producto_codigo: vale.codigo,
+      marca_name: '',
+      unidad_derivada_id: 0,
+      unidad_derivada_name: '',
+      unidad_derivada_factor: 1,
+      cantidad: 1,
+      precio_venta: 0,
+      recargo: 0,
+      descuento: 0,
+      subtotal: 0,
+    }))
 
-    // Remover filas de vales existentes
-    const indicesVales: number[] = []
-    productos.forEach((p, i) => {
-      if (p._tipo_fila === 'vale_promocional') indicesVales.push(i)
-    })
-    if (indicesVales.length > 0) {
-      remove(indicesVales.reverse())
-    }
-
-    // Agregar nuevas filas de vales
-    for (const vale of valesAplicables) {
-      add({
-        _tipo_fila: 'vale_promocional',
-        producto_id: -vale.id,
-        producto_name: `${vale.nombre} (${getBeneficioVale(vale)})`,
-        producto_codigo: vale.codigo,
-        marca_name: '',
-        unidad_derivada_id: 0,
-        unidad_derivada_name: '',
-        unidad_derivada_factor: 1,
-        cantidad: 1,
-        precio_venta: 0,
-        recargo: 0,
-        descuento: 0,
-        subtotal: 0,
-      })
-    }
+    setCarrito((prev) => [
+      ...prev.filter((p) => p._tipo_fila !== 'vale_promocional'),
+      ...nuevasFilasVale,
+    ])
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [valesAplicables])
 
   // Detectar si estamos en modo configuración
   const configMode = useConfigMode()
   const screens = Grid.useBreakpoint()
-  
-  // Datos de demostración para modo configuración - agregar al formulario
-  const demoProductos = useMemo(() => [
-    {
-      producto_id: 1,
-      producto_name: 'Cemento Portland Tipo I',
-      producto_codigo: 'CEM-001',
-      marca_name: 'Sol',
-      unidad_derivada_id: 1,
-      unidad_derivada_name: 'Bolsa',
-      unidad_derivada_factor: 1,
-      cantidad: 10,
-      precio_venta: 28.50,
-      recargo: 0,
-      subtotal: 285.00,
-    },
-    {
-      producto_id: 2,
-      producto_name: 'Fierro Corrugado 1/2"',
-      producto_codigo: 'FIE-002',
-      marca_name: 'Aceros Arequipa',
-      unidad_derivada_id: 2,
-      unidad_derivada_name: 'Varilla',
-      unidad_derivada_factor: 1,
-      cantidad: 20,
-      precio_venta: 35.00,
-      recargo: 2.00,
-      subtotal: 740.00,
-    },
-    {
-      producto_id: 3,
-      producto_name: 'Arena Gruesa',
-      producto_codigo: 'ARE-003',
-      marca_name: 'Agregados Perú',
-      unidad_derivada_id: 3,
-      unidad_derivada_name: 'M3',
-      unidad_derivada_factor: 1,
-      cantidad: 5,
-      precio_venta: 80.00,
-      recargo: 0,
-      subtotal: 400.00,
-    },
-  ], [])
-  
-  // Agregar productos de demo al formulario en modo configuración
+
+  // Datos de demostración para modo configuración
+  const demoProductos = useMemo(
+    () =>
+      [
+        {
+          producto_id: 1,
+          producto_name: 'Cemento Portland Tipo I',
+          producto_codigo: 'CEM-001',
+          marca_name: 'Sol',
+          unidad_derivada_id: 1,
+          unidad_derivada_name: 'Bolsa',
+          unidad_derivada_factor: 1,
+          cantidad: 10,
+          precio_venta: 28.5,
+          recargo: 0,
+          subtotal: 285.0,
+        },
+        {
+          producto_id: 2,
+          producto_name: 'Fierro Corrugado 1/2"',
+          producto_codigo: 'FIE-002',
+          marca_name: 'Aceros Arequipa',
+          unidad_derivada_id: 2,
+          unidad_derivada_name: 'Varilla',
+          unidad_derivada_factor: 1,
+          cantidad: 20,
+          precio_venta: 35.0,
+          recargo: 2.0,
+          subtotal: 740.0,
+        },
+        {
+          producto_id: 3,
+          producto_name: 'Arena Gruesa',
+          producto_codigo: 'ARE-003',
+          marca_name: 'Agregados Perú',
+          unidad_derivada_id: 3,
+          unidad_derivada_name: 'M3',
+          unidad_derivada_factor: 1,
+          cantidad: 5,
+          precio_venta: 80.0,
+          recargo: 0,
+          subtotal: 400.0,
+        },
+      ] as ValuesCardAgregarProductoVenta[],
+    []
+  )
+
+  // Rellenar el carrito con productos de demo en modo configuración, una
+  // sola vez (mientras esté vacío).
   useEffect(() => {
-    if (configMode?.enabled && fields.length === 0) {
-      console.log('📝 Agregando productos de demo al formulario')
-      demoProductos.forEach((producto) => {
-        add(producto)
-      })
+    if (configMode?.enabled && carrito.length === 0) {
+      setCarrito(demoProductos.map((p) => ({ ...p, _row_id: generarRowId() })))
     }
-  }, [configMode?.enabled, fields.length, demoProductos, add])
-  
-  // Datos de demostración para ag-grid (con estructura FormListFieldData)
-  const demoData = useMemo(() => [
-    {
-      key: 'demo-1',
-      name: 0,
-      fieldKey: 0,
-      producto_id: 1,
-      producto_name: 'Cemento Portland Tipo I',
-      producto_codigo: 'CEM-001',
-      marca_name: 'Sol',
-      unidad_derivada_id: 1,
-      unidad_derivada_name: 'Bolsa',
-      unidad_derivada_factor: 1,
-      cantidad: 10,
-      precio_venta: 28.50,
-      recargo: 0,
-      subtotal: 285.00,
-    },
-    {
-      key: 'demo-2',
-      name: 1,
-      fieldKey: 1,
-      producto_id: 2,
-      producto_name: 'Fierro Corrugado 1/2"',
-      producto_codigo: 'FIE-002',
-      marca_name: 'Aceros Arequipa',
-      unidad_derivada_id: 2,
-      unidad_derivada_name: 'Varilla',
-      unidad_derivada_factor: 1,
-      cantidad: 20,
-      precio_venta: 35.00,
-      recargo: 2.00,
-      subtotal: 740.00,
-    },
-    {
-      key: 'demo-3',
-      name: 2,
-      fieldKey: 2,
-      producto_id: 3,
-      producto_name: 'Arena Gruesa',
-      producto_codigo: 'ARE-003',
-      marca_name: 'Agregados Perú',
-      unidad_derivada_id: 3,
-      unidad_derivada_name: 'M3',
-      unidad_derivada_factor: 1,
-      cantidad: 5,
-      precio_venta: 80.00,
-      recargo: 0,
-      subtotal: 400.00,
-    },
-  ], [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [configMode?.enabled, carrito.length, demoProductos])
 
   // Medición de performance (ver handleOk en card-agregar-producto-venta.tsx):
   // cierra el timer recién cuando la fila nueva REALMENTE aparece en la tabla
-  // (fields.length sube), que es lo que el usuario percibe como "se agregó".
+  // (carrito.length sube), que es lo que el usuario percibe como "se agregó".
   // TODO: sacar junto con el resto de la instrumentación de ⏱️ agregar-producto.
-  const prevFieldsLengthRef = useRef(fields.length)
+  const prevCarritoLengthRef = useRef(carrito.length)
   useEffect(() => {
-    if (typeof window !== 'undefined' && fields.length > prevFieldsLengthRef.current) {
+    if (typeof window !== 'undefined' && carrito.length > prevCarritoLengthRef.current) {
       console.timeEnd('⏱️ agregar-producto')
     }
-    prevFieldsLengthRef.current = fields.length
-  }, [fields.length])
-
-  // Usar datos de demo si estamos en modo configuración y no hay fields
-  const baseRowData = configMode?.enabled && fields.length === 0 ? demoData : fields
-
-  // Mostrar todas las filas (paquete cabecera + sub-productos + productos normales)
-  const rowData = baseRowData as FormListFieldData[]
+    prevCarritoLengthRef.current = carrito.length
+  }, [carrito.length])
 
   const { columns } = useColumnsVender({
-    remove,
     form,
     cantidad_pendiente,
     venta,
@@ -466,17 +366,13 @@ export default function TableVender({
         title="Productos de Venta"
         tableRef={agGridRef}
         columnDefs={columns}
-        rowData={rowData as any}
-        // Sin esto, AG Grid identifica las filas por referencia de objeto.
-        // Form.List de Ant Design devuelve un array de `fields` con objetos
-        // NUEVOS en cada render (aunque `field.key` es estable) — así que cada
-        // producto agregado/quitado se veía como "cambió todo el dataset" y
-        // redibujaba TODAS las filas existentes, no solo la nueva. Con
-        // `getRowId` fijo por `key`, AG Grid solo toca la fila que realmente
-        // cambió. Esto explicaba que agregar tardara cada vez más a medida
-        // que crecía el carrito (medido: ~150-200ms extra por producto ya en
-        // la tabla).
-        getRowId={(params) => String(params.data?.key ?? params.data?.name)}
+        rowData={carrito as any}
+        // Identidad estable de fila independiente de índice — antes la daba
+        // `field.key` de Form.List (ver nota de performance histórica: sin
+        // esto, cada producto agregado repintaba TODAS las filas existentes,
+        // no solo la nueva). Ahora usa `_row_id`, generado una sola vez por
+        // fila en el momento en que se crea (ver store-producto-agregado-venta.ts).
+        getRowId={(params) => String(params.data?._row_id)}
         // Reemplaza wrapText+autoHeight de las columnas Producto/Cantidad (ver
         // columns-vender.tsx): altura fija con lugar para 2 líneas, en vez de
         // que AG Grid mida cada fila contra el DOM en cada actualización.
@@ -486,9 +382,7 @@ export default function TableVender({
         withNumberColumn={false}
         domLayout={configMode?.enabled ? 'normal' : screens.xl ? undefined : 'autoHeight'}
         getRowStyle={(params) => {
-          const idx = params.data?.name
-          if (idx == null) return undefined
-          const tipoFila = form.getFieldValue(['productos', idx, '_tipo_fila'])
+          const tipoFila = params.data?._tipo_fila
           if (tipoFila === 'paquete_cabecera') {
             return { background: '#fffbeb', borderLeft: '3px solid #f59e0b' }
           }

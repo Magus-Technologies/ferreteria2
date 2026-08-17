@@ -1,18 +1,18 @@
 'use client'
 
-import { Form, FormInstance } from 'antd'
 import SelectBase from '~/app/_components/form/selects/select-base'
 import { MdPriceChange } from 'react-icons/md'
 import { DescuentoTipo } from '~/lib/api/venta'
-import { useStoreProductoAgregadoVenta } from '../../_store/store-producto-agregado-venta'
+import {
+  useStoreProductoAgregadoVenta,
+  ValuesCardAgregarProductoVenta,
+} from '../../_store/store-producto-agregado-venta'
 import { calcularSubtotalVenta } from '../tables/calcular-subtotal-venta'
 
 type TipoPrecio = 'publico' | 'especial' | 'minimo' | 'ultimo'
 
 interface SelectTipoPrecioVentaProps {
-  form: FormInstance
-  fieldIndex: number
-  productoId: number
+  row: ValuesCardAgregarProductoVenta
 }
 
 const activadorMap: Record<TipoPrecio, string | null> = {
@@ -22,19 +22,20 @@ const activadorMap: Record<TipoPrecio, string | null> = {
   ultimo: 'activador_ultimo',
 }
 
-export default function SelectTipoPrecioVenta({
-  form,
-  fieldIndex,
-  productoId,
-}: SelectTipoPrecioVentaProps) {
+// Análogo a select-unidad-derivada-venta.tsx: recibe la fila del carrito
+// directamente en vez de form+fieldIndex, ya que la tabla de venta dejó de
+// vivir en Ant Design Form.
+export default function SelectTipoPrecioVenta({ row }: SelectTipoPrecioVentaProps) {
+  const productoId = row.producto_id
   const productosVenta = useStoreProductoAgregadoVenta((store) => store.productos)
+  const setCarrito = useStoreProductoAgregadoVenta((store) => store.setCarrito)
 
   const productoEnStore = productosVenta.find((p) => p.producto_id === productoId)
   const unidadesDerivadas = productoEnStore?.unidades_derivadas_disponibles || []
 
-  const unidadDerivadaId = form.getFieldValue(['productos', fieldIndex, 'unidad_derivada_id'])
-  const tipoPrecioActual = Form.useWatch(['productos', fieldIndex, 'tipo_precio'], form) || 'publico'
-  const cantidad = Number(Form.useWatch(['productos', fieldIndex, 'cantidad'], form) ?? 0)
+  const unidadDerivadaId = row.unidad_derivada_id
+  const tipoPrecioActual = (row.tipo_precio || 'publico') as TipoPrecio
+  const cantidad = Number(row.cantidad ?? 0)
 
   // Buscar la unidad derivada actual
   const unidadDerivadaActual = unidadesDerivadas.find(
@@ -86,14 +87,9 @@ export default function SelectTipoPrecioVenta({
 
     const { precio, comision } = precios[nuevoTipo]
 
-    form.setFieldValue(['productos', fieldIndex, 'tipo_precio'], nuevoTipo)
-    form.setFieldValue(['productos', fieldIndex, 'precio_venta'], precio)
-    form.setFieldValue(['productos', fieldIndex, 'comision'], comision)
-
-    // Recalcular subtotal
-    const recargo = Number(form.getFieldValue(['productos', fieldIndex, 'recargo']) ?? 0)
-    const descuento_tipo = form.getFieldValue(['productos', fieldIndex, 'descuento_tipo']) as DescuentoTipo
-    const descuento = Number(form.getFieldValue(['productos', fieldIndex, 'descuento']) ?? 0)
+    const recargo = Number(row.recargo ?? 0)
+    const descuento_tipo = row.descuento_tipo as DescuentoTipo
+    const descuento = Number(row.descuento ?? 0)
 
     const nuevoSubtotal = calcularSubtotalVenta({
       precio_venta: precio,
@@ -103,7 +99,13 @@ export default function SelectTipoPrecioVenta({
       cantidad,
     })
 
-    form.setFieldValue(['productos', fieldIndex, 'subtotal'], nuevoSubtotal)
+    setCarrito((prev) =>
+      prev.map((r) =>
+        r._row_id === row._row_id
+          ? { ...r, tipo_precio: nuevoTipo, precio_venta: precio, comision, subtotal: nuevoSubtotal }
+          : r
+      )
+    )
   }
 
   const nextHint = (() => {

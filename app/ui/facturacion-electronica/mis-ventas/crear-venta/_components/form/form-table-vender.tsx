@@ -1,4 +1,4 @@
-import { Form, FormInstance } from "antd";
+import { FormInstance } from "antd";
 import { VentaConUnidadDerivadaNormal } from "../others/header-crear-venta";
 import TableVender from "../tables/table-vender";
 import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
@@ -14,25 +14,21 @@ export default function FormTableVender({
   venta?: VentaConUnidadDerivadaNormal;
 }) {
   const configMode = useConfigMode();
-  
+
+  // La tabla de productos vive en Zustand, no en el form (ver
+  // store-producto-agregado-venta.ts) — ya no necesita el Form.List que la
+  // envolvía antes para darle `fields`/`add`/`remove`.
   return (
-    <Form.List name="productos">
-      {(fields, { add, remove }) => (
-        <ConfigurableElement
-          componentId="crear-venta.tabla-productos"
-          label="Tabla de Productos"
-          className={`flex flex-col h-full min-w-0 ${configMode?.enabled ? "min-h-[400px]" : "min-h-[300px] sm:min-h-0"}`}
-        >
-          <TableVender
-            venta={venta}
-            form={form}
-            fields={fields}
-            remove={remove}
-            add={add}
-            cantidad_pendiente={cantidad_pendiente}
-          />
-        </ConfigurableElement>
-      )}
-    </Form.List>
+    <ConfigurableElement
+      componentId="crear-venta.tabla-productos"
+      label="Tabla de Productos"
+      className={`flex flex-col h-full min-w-0 ${configMode?.enabled ? "min-h-[400px]" : "min-h-[300px] sm:min-h-0"}`}
+    >
+      <TableVender
+        venta={venta}
+        form={form}
+        cantidad_pendiente={cantidad_pendiente}
+      />
+    </ConfigurableElement>
   );
 }
