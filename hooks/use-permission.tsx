@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useMemo } from "react";
 import { useAuth } from "~/lib/auth-context";
 
 /**
@@ -37,64 +38,79 @@ export default function usePermissionHook() {
    * @param permiso - Nombre del permiso/funcionalidad
    * @returns true si tiene acceso, false si está restringido
    */
-  function can(permiso: string) {
-    if (!user) return false;
-    if (!user.all_restrictions) return true;
+  const can = useCallback(
+    (permiso: string) => {
+      if (!user) return false;
+      if (!user.all_restrictions) return true;
 
-    // Tiene acceso si NO está restringido (lista negra)
-    return !user.all_restrictions.includes(permiso);
-  }
+      // Tiene acceso si NO está restringido (lista negra)
+      return !user.all_restrictions.includes(permiso);
+    },
+    [user],
+  );
 
   /**
    * Verificar si el usuario está restringido de una funcionalidad
    * @param permiso - Nombre del permiso/funcionalidad
    * @returns true si está restringido, false si tiene acceso
    */
-  function isRestricted(permiso: string) {
-    if (!user) return true;
-    if (!user.all_restrictions) return false;
+  const isRestricted = useCallback(
+    (permiso: string) => {
+      if (!user) return true;
+      if (!user.all_restrictions) return false;
 
-    return user.all_restrictions.includes(permiso);
-  }
+      return user.all_restrictions.includes(permiso);
+    },
+    [user],
+  );
 
   /**
    * Verificar si el usuario es administrador
    * Los admins tienen pocas o ninguna restricción
    */
-  function isAdmin() {
+  const isAdmin = useCallback(() => {
     if (!user) return false;
 
     // Si no tiene restricciones o tiene muy pocas, es admin
     return !user.all_restrictions || user.all_restrictions.length === 0;
-  }
+  }, [user]);
 
   /**
    * Alias de can() para compatibilidad
    */
-  function hasPermission(permiso: string) {
-    return can(permiso);
-  }
+  const hasPermission = useCallback((permiso: string) => can(permiso), [can]);
 
   /**
    * Verificar si tiene acceso a al menos una funcionalidad
    */
-  function hasAnyPermission(permisos: string[]) {
-    return permisos.some((permiso) => can(permiso));
-  }
+  const hasAnyPermission = useCallback(
+    (permisos: string[]) => permisos.some((permiso) => can(permiso)),
+    [can],
+  );
 
   /**
    * Verificar si tiene acceso a todas las funcionalidades
    */
-  function hasAllPermissions(permisos: string[]) {
-    return permisos.every((permiso) => can(permiso));
-  }
+  const hasAllPermissions = useCallback(
+    (permisos: string[]) => permisos.every((permiso) => can(permiso)),
+    [can],
+  );
 
-  return {
-    can,
-    isAdmin,
-    isRestricted,
-    hasPermission,
-    hasAnyPermission,
-    hasAllPermissions,
-  };
+  // Objeto de retorno también estable: código como `useColumnsProductos`
+  // pone `can` (u otras funciones de este hook) en su propio array de
+  // dependencias de useMemo/useCallback. Sin useCallback arriba, `can` era
+  // una función nueva en cada render → esos memos nunca servían de nada y
+  // recalculaban columnas de grillas de miles de filas en cada re-render
+  // (ej. TableProductoSearch, con hasta 5000+ productos del catálogo).
+  return useMemo(
+    () => ({
+      can,
+      isAdmin,
+      isRestricted,
+      hasPermission,
+      hasAnyPermission,
+      hasAllPermissions,
+    }),
+    [can, isAdmin, isRestricted, hasPermission, hasAnyPermission, hasAllPermissions],
+  );
 }
