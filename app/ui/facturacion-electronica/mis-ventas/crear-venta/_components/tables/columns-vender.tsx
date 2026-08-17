@@ -3,7 +3,7 @@
 import { DescuentoTipo, TipoMoneda } from '~/lib/api/venta'
 import { ColDef, ICellRendererParams } from 'ag-grid-community'
 import { Form, FormInstance, FormListFieldData, Image, Tooltip, Popover } from 'antd'
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect, useState, useMemo } from 'react'
 import InputBase from '~/app/_components/form/inputs/input-base'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import { VentaConUnidadDerivadaNormal } from '../others/header-crear-venta'
@@ -264,7 +264,18 @@ export function useColumnsVender({
     form.setFieldValue('_refresh_paquete', Date.now())
   }
 
-  const columns: ColDef<FormListFieldData>[] = [
+  // `columns` se pasa a AG Grid como `columnDefs`. Sin useMemo, este array se
+  // recreaba en CADA render del hook (incluyendo cada vez que se agrega o
+  // elimina un producto, ya que eso re-renderiza TableVender). AG Grid trata
+  // una referencia nueva de columnDefs como "cambiaron las columnas" y
+  // redibuja TODAS las filas × TODAS las columnas desde cero (no un simple
+  // update de datos), en vez de solo insertar/quitar la fila afectada. Con
+  // pocos productos no se nota, pero el costo escala con la cantidad de
+  // filas — de ahí que se sienta lento recién a partir de ~15 productos y
+  // que agregar uno nuevo (o abrir/cerrar "más opciones") se ponga cada vez
+  // más lento. Memoizar con las dependencias reales evita ese rebuild
+  // completo salvo que algo que de verdad afecte las columnas haya cambiado.
+  const columns: ColDef<FormListFieldData>[] = useMemo(() => [
     {
       headerName: '#',
       field: 'name',
@@ -1211,7 +1222,16 @@ export function useColumnsVender({
         )
       },
     },
-  ]
+  // Los helpers de paquete (cambiarTipoPrecioPaquete, getPaquete*, etc.) y
+  // productosVentaStore quedan fuera a propósito: son funciones que se
+  // recrean en cada render pero siempre leen datos frescos vía
+  // form.getFieldValue / useStoreProductoAgregadoVenta.getState() en vez de
+  // cerrar sobre un valor de render viejo (mismo motivo que el comentario
+  // "Leer el store SIEMPRE fresco" más arriba). Incluirlas como dependencia
+  // anularía la memoización, que es justo lo que evita el rebuild completo
+  // de AG Grid en cada producto agregado/eliminado.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [form, remove, cantidad_pendiente, venta, tipo_moneda, monedaPrefix, almacen_id])
 
   return { columns }
 }
