@@ -422,8 +422,9 @@ export function useColumnsCotizar({
       headerName: 'Cant.',
       field: 'name',
       width: 120,
-      wrapText: true,
-      autoHeight: true,
+      // Ver nota en columns-vender.tsx: autoHeight fuerza a AG Grid a medir
+      // cada fila contra el DOM en cada actualización — reemplazado por
+      // `rowHeight` fijo en table-cotizar.tsx.
       cellRenderer: ({ value }: ICellRendererParams) => {
         const cantidad = form.getFieldValue(['productos', value, 'cantidad']);
         const unidad_derivada_factor = form.getFieldValue(['productos', value, 'unidad_derivada_factor']);

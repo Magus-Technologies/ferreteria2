@@ -522,8 +522,12 @@ export function useColumnsVender({
           </div>
         )
       },
-      wrapText: true,
-      autoHeight: true,
+      // Antes: wrapText + autoHeight, que obliga a AG Grid a medir la altura
+      // real de CADA fila contra el DOM cuando cambia cualquier cosa en la
+      // tabla — no solo la fila nueva. Con varios productos ya cargados eso
+      // se sumaba al costo de cada agregado (y era la causa del "salto" en
+      // las filas). Se reemplaza por una altura de fila fija más alta (ver
+      // `rowHeight` en table-vender.tsx) que ya contempla 2 líneas.
     },
     {
       headerName: 'Marca',
@@ -662,8 +666,6 @@ export function useColumnsVender({
       colId: 'cantidad',
       minWidth: 120,
       width: 120,
-      wrapText: true,
-      autoHeight: true,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
         const tipoFila = form.getFieldValue(['productos', value, '_tipo_fila'])
         const paqueteId = form.getFieldValue(['productos', value, 'paquete_id'])

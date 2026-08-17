@@ -189,7 +189,14 @@ export default function TableCotizar({
         title="Productos de Cotización"
         tableRef={agGridRef}
         className='h-full'
+        rowHeight={56}
         rowSelection={false}
+        // Ver nota de performance en table-vender.tsx: sin getRowId, AG Grid
+        // identifica filas por referencia de objeto, y Form.List de Ant
+        // Design entrega `fields` con objetos nuevos en cada render (aunque
+        // `field.key` es estable) — provocaba redibujar toda la grilla en
+        // cada producto agregado/quitado.
+        getRowId={(params) => String(params.data?.key ?? params.data?.name)}
         rowData={fields}
         columnDefs={useColumnsCotizar({ form, remove })}
         suppressCellFocus={true}

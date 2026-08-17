@@ -467,6 +467,20 @@ export default function TableVender({
         tableRef={agGridRef}
         columnDefs={columns}
         rowData={rowData as any}
+        // Sin esto, AG Grid identifica las filas por referencia de objeto.
+        // Form.List de Ant Design devuelve un array de `fields` con objetos
+        // NUEVOS en cada render (aunque `field.key` es estable) — así que cada
+        // producto agregado/quitado se veía como "cambió todo el dataset" y
+        // redibujaba TODAS las filas existentes, no solo la nueva. Con
+        // `getRowId` fijo por `key`, AG Grid solo toca la fila que realmente
+        // cambió. Esto explicaba que agregar tardara cada vez más a medida
+        // que crecía el carrito (medido: ~150-200ms extra por producto ya en
+        // la tabla).
+        getRowId={(params) => String(params.data?.key ?? params.data?.name)}
+        // Reemplaza wrapText+autoHeight de las columnas Producto/Cantidad (ver
+        // columns-vender.tsx): altura fija con lugar para 2 líneas, en vez de
+        // que AG Grid mida cada fila contra el DOM en cada actualización.
+        rowHeight={56}
         rowSelection={false}
         suppressCellFocus={true}
         withNumberColumn={false}
