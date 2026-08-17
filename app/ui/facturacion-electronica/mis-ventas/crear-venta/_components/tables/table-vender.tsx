@@ -217,6 +217,13 @@ export default function TableVender({
             })
               ? {
                   ...productoAgregadoVenta,
+                  // Fusión en el lugar: conservar la identidad de la fila
+                  // EXISTENTE. `productoAgregadoVenta` trae su propio
+                  // `_row_id` recién generado (es "el producto que se acaba
+                  // de agregar", no la fila del carrito) — sin este pin,
+                  // AG Grid ve la fila como "vieja eliminada / nueva
+                  // insertada" en vez de una actualización in-place.
+                  _row_id: item._row_id,
                   cantidad: nueva_cantidad,
                   subtotal: Number(
                     (
