@@ -237,7 +237,26 @@ export default function CardAgregarProductoVenta({
       stock_fraccion: Number(producto_en_almacen?.stock_fraccion ?? 0),
       costo: Number((producto_en_almacen as any)?.costo_con_flete ?? producto_en_almacen?.costo ?? 0),
       unidades_derivadas_disponibles: unidades_derivadas,
-      producto_en_almacenes: productoSeleccionadoSearchStore?.producto_en_almacenes,
+      // Solo lo que lee el popover "Ver sucursales" (columns-vender.tsx): nombre
+      // de almacén, stock y precio público por unidad derivada. El objeto
+      // completo de `producto_en_almacenes` trae, POR CADA almacén, su historial
+      // de compras (`compras`) y todos los tiers de precio/comisión — eso quedaba
+      // embebido tal cual en CADA fila del carrito. Con 3+ componentes que hacen
+      // `Form.useWatch('productos', form)` (cards-info-venta, input-codigo-vale,
+      // modal-detalles-entrega) y Ant Design clonando profundo ese array en cada
+      // watch, cada producto agregado repetía esa clonación pesada varias veces —
+      // en cotizaciones ni siquiera se usa este campo (ver columns-cotizar.tsx).
+      producto_en_almacenes: (productoSeleccionadoSearchStore?.producto_en_almacenes ?? []).map(
+        (pa) => ({
+          almacen_id: pa.almacen_id,
+          almacen: { name: pa.almacen?.name },
+          stock_fraccion: pa.stock_fraccion,
+          unidades_derivadas: (pa.unidades_derivadas ?? []).map((u) => ({
+            unidad_derivada_id: u.unidad_derivada_id,
+            precio_publico: u.precio_publico,
+          })),
+        })
+      ),
       paquetes_count: paquetes.length,
       img: productoSeleccionadoSearchStore?.img ?? null,
     }
