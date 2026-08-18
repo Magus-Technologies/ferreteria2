@@ -310,9 +310,13 @@
     radial-gradient(circle at calc(100% - 8px) 8px, var(--cfg-color, transparent) 0 5px, transparent 5px);
 }
 
-.cfg-el--oculto > * {
-  opacity: 0.45;
-  filter: grayscale(1);
+/* Oculto: se marca con el rojo de la leyenda (borde, punto y un velo rojo tenue).
+   Antes esto era `opacity: .45 + filter: grayscale(1)`, y ambas propiedades
+   afectan al PROPIO elemento — incluidos su outline y su ::after. El resultado
+   era que el rojo se desaturaba a gris: el campo quedaba apagado y sin marca de
+   color, indistinguible de uno sin configurar. */
+.cfg-el--oculto > *::after {
+  background-color: rgb(239 68 68 / 0.14);
 }
 
 .cfg-el--autorizacion > *::after {
