@@ -354,6 +354,16 @@
   pointer-events: none;
 }
 
+/* Red de seguridad: un hijo directo con `display: contents` no genera caja, así
+   que su ::after (position:absolute; inset:0) se posiciona contra el ancestro
+   posicionado más cercano y termina cubriendo un área enorme. El síntoma es que
+   al hacer click en zonas EN BLANCO se abre el modal de un elemento que está
+   lejos. Sin caja no hay nada que marcar, así que se anula la capa; el wrapper
+   debe ir DENTRO del div `contents`, no fuera. */
+.cfg-el > .contents::after {
+  display: none;
+}
+
 /* Elementos reemplazados (input, img, svg sueltos) no admiten pseudo-elementos:
    ahi no hay capa de click ni punto. Se marcan con un borde discontinuo para
    que se note que ese elemento necesita ir envuelto en un contenedor. */

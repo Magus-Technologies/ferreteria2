@@ -299,11 +299,17 @@ export default function HeaderCrearVenta({
               así ninguno se encoge (desbordándose sobre el vecino) ni se
               estira robando espacio. Producto incluye el selector de tipo. */}
           <div className="w-full lg:w-auto lg:shrink-0">
+            {/* El wrapper de configuración va DENTRO del div `contents`, nunca
+                fuera. `display: contents` no genera caja, así que si ese div
+                fuera el hijo directo de ConfigurableElement, su capa de click
+                (::after, position:absolute) se posicionaría contra un ancestro
+                mucho más grande y cubriría medio encabezado: al hacer click en
+                cualquier zona en blanco se abría el modal de "Buscar Producto". */}
+            <div data-select-productos="crear-venta" className="contents">
             <ConfigurableElement
               componentId="crear-venta.buscar-producto"
               label="Buscar Producto"
             >
-              <div data-select-productos="crear-venta" className="contents">
               <SelectProductos
                 ref={selectProductosRef}
                 autoFocus
@@ -329,8 +335,8 @@ export default function HeaderCrearVenta({
                   if (producto) setOpenModalAgregarProducto(true);
                 }}
               />
-              </div>
             </ConfigurableElement>
+            </div>
           </div>
 
           <div className="w-full lg:w-[210px] lg:shrink-0">
