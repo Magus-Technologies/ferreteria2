@@ -11,6 +11,7 @@ import { useQuery } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { usuariosApi } from '~/lib/api/usuarios'
 import ModalDespachadorSearch from '../../modals/modal-despachador-search'
+import { useStoreDespachadorSeleccionado } from '../../modals/store-despachador-seleccionado'
 
 interface Vehiculo {
   id: number
@@ -188,7 +189,14 @@ export default function SelectDespachadores({
       <ModalDespachadorSearch
         open={openModal}
         setOpen={setOpenModal}
-        onOk={() => {}}
+        onOk={() => {
+          // BUG: esto era un no-op — el botón "Seleccionar" (okText del
+          // modal) no hacía nada; solo funcionaba el doble-click en una
+          // fila. La fila clickeada (single click) ya se guarda en este
+          // store vía onSelectionChanged en table-despachadores-busqueda.tsx.
+          const despachador = useStoreDespachadorSeleccionado.getState().despachador
+          if (despachador) handleSelect(despachador)
+        }}
         textDefault={text}
         onRowDoubleClicked={handleSelect}
         onSuccess={(despachador) => {

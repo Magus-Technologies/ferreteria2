@@ -388,8 +388,20 @@ setClienteSeleccionadoStore(undefined)
           }
           props.onSearch?.(val)
         }}
-        onSelect={() => {
+        onSelect={(value: any) => {
+          // BUG: esto solo prendía `isSelecting` — nunca llamaba a
+          // handleSelect con el cliente elegido, así que hacer click en un
+          // resultado del dropdown no seleccionaba nada. La única selección
+          // que funcionaba era el auto-select por match exacto/único
+          // resultado (useEffect de abajo). Ahora busca el cliente por id
+          // entre todas las fuentes que alimentan `options` y lo selecciona.
           setIsSelecting(true)
+          const cliente =
+            response?.find(c => c.id === value) ??
+            clienteOptionsDefault.find(c => c.id === value) ??
+            (clienteCreado?.id === value ? clienteCreado : undefined) ??
+            (clienteSeleccionado?.id === value ? clienteSeleccionado : undefined)
+          if (cliente) handleSelect({ data: cliente })
           setTimeout(() => setIsSelecting(false), 150)
         }}
         searchValue={text}
