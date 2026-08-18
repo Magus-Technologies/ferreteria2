@@ -96,6 +96,10 @@ export interface NotaDebito {
 
 export interface ComprobanteElectronico {
   id: number;
+  // Siempre ausente acá — solo lo usa VentaSinComprobanteAlerta (ver más
+  // abajo). Declarado igual para que el `.sin_generar` del union en
+  // campanita-autorizaciones.tsx tipe sin castear.
+  sin_generar?: boolean;
   tipo_comprobante: string;
   tipo_comprobante_nombre?: string;
   serie: string;
@@ -141,6 +145,33 @@ export interface ComprobanteElectronico {
   venta_id?: number;
   created_at: string;
   updated_at: string;
+}
+
+/**
+ * Item de la lista de alertas SUNAT (getPendientesAlerta) para una venta
+ * facturable (01/03) que NUNCA llegó a tener fila en comprobantes_electronicos
+ * — no es un comprobante real, así que no comparte el shape completo de
+ * ComprobanteElectronico (id numérico de esa tabla, xml, etc.).
+ */
+export interface VentaSinComprobanteAlerta {
+  id: string; // `venta-{id}` — evita chocar con ids numéricos de comprobantes reales
+  venta_id: string;
+  tipo_comprobante: string;
+  tipo_comprobante_nombre?: string;
+  serie: string;
+  numero: number;
+  correlativo: number;
+  serie_numero: string;
+  fecha_emision: string;
+  cliente_razon_social?: string;
+  // Siempre ausente acá (esta fila no viene del ComprobanteElectronicoResource,
+  // que es quien arma este shape) — declarado igual que en ComprobanteElectronico
+  // para que `doc.cliente?.nombre` tipe sin castear en el union.
+  cliente?: { nombre: string };
+  total: number;
+  importe_total: number;
+  estado_sunat: string;
+  sin_generar: true;
 }
 
 export interface DetalleComprobanteElectronico {
@@ -260,7 +291,7 @@ export const facturacionElectronicaApi = {
   },
 
   async getPendientesAlerta() {
-    return apiRequest<{ data: ComprobanteElectronico[] }>(
+    return apiRequest<{ data: (ComprobanteElectronico | VentaSinComprobanteAlerta)[] }>(
       `/facturacion-electronica/comprobantes/pendientes-alerta`
     );
   },

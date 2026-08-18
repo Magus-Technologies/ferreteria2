@@ -12,7 +12,7 @@ import { configuracionNotificacionesApi } from '~/lib/api/configuracion-notifica
 import { ventaApi } from '~/lib/api/venta'
 import { compraApi } from '~/lib/api/compra'
 import { prestamoVendedorApi, type SolicitudEfectivo } from '~/lib/api/prestamo-vendedor'
-import { facturacionElectronicaApi, type ComprobanteElectronico } from '~/lib/api/facturacion-electronica'
+import { facturacionElectronicaApi, type ComprobanteElectronico, type VentaSinComprobanteAlerta } from '~/lib/api/facturacion-electronica'
 import { requerimientoInternoApi, type RequerimientoInterno } from '~/lib/api/requerimiento-interno'
 import { comisionApi, type ComisionVendedor } from '~/lib/api/comision'
 import { getPeriodoComisiones } from '~/app/_lib/periodo-comisiones'
@@ -272,7 +272,7 @@ export default function CampanitaAutorizaciones() {
   })
 
   const alertasSunat = useMemo(
-    () => (Array.isArray((sunatData?.data as any)?.data) ? (sunatData?.data as any).data : []) as ComprobanteElectronico[],
+    () => (Array.isArray((sunatData?.data as any)?.data) ? (sunatData?.data as any).data : []) as (ComprobanteElectronico | VentaSinComprobanteAlerta)[],
     [sunatData]
   )
   const sunatCount = alertasSunat.length
@@ -531,7 +531,7 @@ export default function CampanitaAutorizaciones() {
   const tabSunat = (
     <div className="max-h-[280px] overflow-y-auto p-2 space-y-2">
       <div className="bg-amber-50 border border-amber-200 p-2 rounded text-xs text-amber-800">
-        Documentos próximos a vencer que deben enviarse pronto.
+        Documentos generados próximos a vencer, y ventas cuyo comprobante nunca llegó a generarse.
       </div>
       {alertasSunat.length === 0 ? (
         <div className="py-6">
@@ -541,7 +541,11 @@ export default function CampanitaAutorizaciones() {
         alertasSunat.map((doc) => (
           <div
             key={doc.id}
-            className="border border-red-100 rounded-lg p-3 space-y-1 hover:bg-red-50 transition-colors cursor-pointer"
+            className={`border rounded-lg p-3 space-y-1 transition-colors cursor-pointer ${
+              doc.sin_generar
+                ? 'border-orange-200 hover:bg-orange-50'
+                : 'border-red-100 hover:bg-red-50'
+            }`}
             onClick={() => {
               setDropdownOpen(false)
               router.push('/ui/facturacion-electronica/mis-ventas')
@@ -549,7 +553,7 @@ export default function CampanitaAutorizaciones() {
           >
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm font-bold text-red-600">
+                <p className={`text-sm font-bold ${doc.sin_generar ? 'text-orange-600' : 'text-red-600'}`}>
                   {doc.tipo_comprobante === '01' ? 'Factura' : 'Boleta'} {doc.serie}-{doc.correlativo}
                 </p>
                 <p className="text-xs text-gray-700">
@@ -558,20 +562,26 @@ export default function CampanitaAutorizaciones() {
               </div>
               <div className="text-right">
                 <p className="text-xs font-bold">S/ {Number(doc.total).toFixed(2)}</p>
-                {(() => {
-                  const limit = doc.tipo_comprobante === '01' ? 3 : 7
-                  const diff = dayjs().startOf('day').diff(dayjs(doc.fecha_emision).startOf('day'), 'day')
-                  const remaining = limit - diff
-                  let text = ''
-                  if (remaining <= 0) text = 'Vence Hoy'
-                  else if (remaining === 1) text = 'Vence Mañana'
-                  else text = `Vence en ${remaining} días`
-                  return <p className="text-[10px] text-red-500 font-bold uppercase">{text}</p>
-                })()}
+                {doc.sin_generar ? (
+                  <p className="text-[10px] text-orange-600 font-bold uppercase">Sin Comprobante</p>
+                ) : (
+                  (() => {
+                    const limit = doc.tipo_comprobante === '01' ? 3 : 7
+                    const diff = dayjs().startOf('day').diff(dayjs(doc.fecha_emision).startOf('day'), 'day')
+                    const remaining = limit - diff
+                    let text = ''
+                    if (remaining <= 0) text = 'Vence Hoy'
+                    else if (remaining === 1) text = 'Vence Mañana'
+                    else text = `Vence en ${remaining} días`
+                    return <p className="text-[10px] text-red-500 font-bold uppercase">{text}</p>
+                  })()
+                )}
               </div>
             </div>
             <div className="text-[10px] text-gray-400">
-              Emitido: {dayjs(doc.fecha_emision).format('DD/MM/YYYY')}
+              {doc.sin_generar
+                ? 'No se generó el XML al guardar la venta — abrila y usá "Ver XML" para reintentar.'
+                : `Emitido: ${dayjs(doc.fecha_emision).format('DD/MM/YYYY')}`}
             </div>
           </div>
         ))
