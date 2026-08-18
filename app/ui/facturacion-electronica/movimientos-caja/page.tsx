@@ -66,11 +66,11 @@ export default function MovimientosCajaPage() {
       label: (
         <span className="flex items-center gap-2">
           <DollarOutlined />
-          Traslado de Efectivo
+          Traslado de Dinero
         </span>
       ),
       children: (
-        <ConfigurableElement componentId="movimientos-caja.traslado-efectivo" label="Tab Traslado de Efectivo">
+        <ConfigurableElement componentId="movimientos-caja.traslado-efectivo" label="Tab Traslado de Dinero">
           <HistorialMovimientosInternos />
         </ConfigurableElement>
       ),
