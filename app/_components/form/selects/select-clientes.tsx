@@ -144,12 +144,15 @@ export default function SelectClientes({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialCliente])
 
-  // Notificar al componente padre del cambio de texto
+  // Notificar al componente padre del cambio de texto — incluido cuando
+  // queda VACÍO (limpiar selección/borrar texto). Antes solo notificaba
+  // con `if (text)`, así que al limpiar el cliente el padre se quedaba con
+  // el último texto buscado en su propio estado (ej. store-filtros-mis-ventas
+  // guarda `clienteSearchText` aparte del form) y lo seguía mandando como
+  // filtro `search` al apretar "Buscar" — la lista no volvía a mostrar todo.
   useEffect(() => {
-    if (text) {
-      setTextDefault(text)
-      onSearchChange?.(text)
-    }
+    setTextDefault(text)
+    onSearchChange?.(text)
   }, [text, onSearchChange])
 
   // Detectar cuando el usuario modifica manualmente el texto y limpiar campos relacionados

@@ -1,4 +1,4 @@
-import { Modal, Tooltip, Input, Spin, message as antdMessage, Select, Checkbox } from 'antd'
+import { App, Modal, Tooltip, Input, Spin, Select, Checkbox } from 'antd'
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react'
 import { FaDownload, FaPrint } from 'react-icons/fa6'
 import { FaWhatsapp } from 'react-icons/fa'
@@ -120,6 +120,12 @@ export default function ModalShowDoc({
   emailConfig,
   descargaConfig,
 }: ModalEntradaStockProps) {
+  // App.useApp() en vez del `message` estático de antd: el estático usa un
+  // z-index fijo que puede quedar DETRÁS de los modales anidados de acá
+  // adentro (email/whatsapp usan zIndex={2000} explícito) — el toast de
+  // error se disparaba pero no se veía, como si no hubiera pasado nada.
+  // App.useApp() respeta el contexto de z-index del árbol de modales.
+  const { message: antdMessage } = App.useApp()
   const title = `Documento Nro: ${nro_doc}`
   const [openConfigModal, setOpenConfigModal] = useState(false)
   const [emailModalOpen, setEmailModalOpen] = useState(false)
