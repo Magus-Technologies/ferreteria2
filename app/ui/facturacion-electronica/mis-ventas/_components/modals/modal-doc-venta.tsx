@@ -69,13 +69,16 @@ export default function ModalDocVenta({
       }
     }
 
-    // Total con IGV
-    const igv = subtotalGeneral * 0.18
-    const totalConIgv = subtotalGeneral + igv
-    // Si hay comprobante electrónico, usar ese total (es más preciso)
+    // Los precios ya incluyen IGV (igual que en toda la app — ver
+    // cards-info-cotizacion.tsx, que EXTRAE el IGV dividiendo, nunca lo
+    // suma). Sumar un 18% acá lo contaba dos veces: un total de S/ 587
+    // salía como S/ 692.66 (587 × 1.18) en el mensaje, mientras el PDF
+    // (que usa el total real del backend) mostraba el correcto.
+    // Preferir el comprobante electrónico cuando esté disponible (más
+    // preciso: incluye redondeos de SUNAT), si no, el subtotal calculado.
     const totalFinal = ventaInfo.comprobante_electronico?.importe_total
       ? Number(ventaInfo.comprobante_electronico.importe_total)
-      : totalConIgv
+      : subtotalGeneral
     const empresaNombre = empresa?.razon_social || ''
 
     let msg = `Hola!\n\nHemos generado tu ${tipoDoc} desde ${empresaNombre}\n\n`
