@@ -325,6 +325,18 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
     [subTotal, totalDescuento, descuentoVale, surchargeTotal],
   );
 
+  // Redondeo a los 10 céntimos más cercanos SOLO para lo que se muestra —
+  // el manejo de efectivo no tiene moneditas más chicas (26.25→26.30,
+  // 26.24→26.20). `totalCobrado` (sin redondear) sigue siendo la base real
+  // de `diferencia` más abajo: el backend valida el cobro de una diferencia
+  // contra el total exacto con tolerancia de apenas 0.01, así que ese
+  // cálculo no puede arrastrar el redondeo (ver mismo criterio en
+  // modal-metodos-pago-venta.tsx).
+  const totalCobradoRedondeado = useMemo(
+    () => Math.round(totalCobrado * 10) / 10,
+    [totalCobrado],
+  );
+
   // Diferencia entre el nuevo total (con los cambios actuales del form) y lo
   // YA cobrado en esta venta. Solo aplica editando una venta con cobro
   // previo — en creación / venta sin cobro previo, totalPagadoPrevio es 0.
@@ -494,7 +506,7 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
         >
           <CardInfoVenta
             title="Total Cobrado"
-            value={totalCobrado}
+            value={totalCobradoRedondeado}
             moneda={tipo_moneda}
             className="border-rose-500 border-2"
           />

@@ -101,8 +101,15 @@ export default function ModalMetodosPagoVenta({
   // baseAmount llega como subtotal bruto; descuentoVale se aplica acá para no confundir
   // al usuario en el card "Total a Cobrar" (que sigue mostrando baseAmount bruto).
   const baseNeto = useMemo(() => {
-    return roundMoney(Math.max(0, baseAmount - descuentoVale))
-  }, [baseAmount, descuentoVale])
+    const neto = Math.max(0, baseAmount - descuentoVale)
+    // Redondeo a los 10 céntimos más cercanos (26.25→26.30, 26.24→26.20):
+    // conviene para el manejo de efectivo, no hay moneditas más chicas.
+    // Solo en modo 'total' (cobro inicial completo de una venta nueva) — en
+    // 'diferencia'/'devolución' el backend valida el monto contra el total
+    // exacto con tolerancia de apenas 0.01 (VentaController::procesoPostVenta
+    // / cobrar-diferencia), así que ahí debe quedar sin redondear.
+    return modo === 'total' ? Math.round(neto * 10) / 10 : roundMoney(neto)
+  }, [baseAmount, descuentoVale, modo])
 
   // Saldo BASE: lo que queda por cubrir del baseNeto (sin sobrecargo).
   // Se calcula primero porque sobrecargoActual lo necesita para capear el principal.
