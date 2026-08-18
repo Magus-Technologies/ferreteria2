@@ -275,6 +275,7 @@ export default function CampanitaAutorizaciones() {
     () => (Array.isArray((sunatData?.data as any)?.data) ? (sunatData?.data as any).data : []) as (ComprobanteElectronico | VentaSinComprobanteAlerta)[],
     [sunatData]
   )
+
   const sunatCount = alertasSunat.length
 
   // === REQUERIMIENTOS INTERNOS ===
