@@ -10,6 +10,7 @@ import SelectDespliegueDePago from '~/app/_components/form/selects/select-despli
 import SelectClientes from '~/app/_components/form/selects/select-clientes'
 import ModalShowDoc from '~/app/_components/modals/modal-show-doc'
 import { extractDesplieguePagoId } from '~/lib/utils/despliegue-pago-utils'
+import { calcularTotalVenta } from '~/lib/utils/venta-total'
 import LabelBase from '~/components/form/label-base'
 import { FaMoneyBillWave } from 'react-icons/fa'
 import TableWithTitle from '~/components/tables/table-with-title'
@@ -37,19 +38,8 @@ function round2(n: number): number {
   return Math.round((n + Number.EPSILON) * 100) / 100
 }
 
-function calcularTotalVenta(venta: VentaCompleta): number {
-  const total = (venta.productos_por_almacen || []).reduce((acc, item: any) => {
-    for (const u of item.unidades_derivadas ?? []) {
-      const precio = Number(u.precio ?? 0)
-      const cantidad = Number(u.cantidad ?? 0)
-      const descuento = Number(u.descuento ?? 0)
-      const bonificacion = Boolean(u.bonificacion)
-      acc += bonificacion ? 0 : (precio * cantidad) - descuento
-    }
-    return acc
-  }, 0)
-  return round2(total)
-}
+// El cálculo vive en lib/utils/venta-total.ts (ver el porqué allá: esta copia
+// local, como las otras seis, se había quedado sin el recargo).
 
 export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultipleProps) {
   const [form] = Form.useForm()

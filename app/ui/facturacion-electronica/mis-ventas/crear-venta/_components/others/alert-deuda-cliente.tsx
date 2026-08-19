@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { ventaApi, type VentaCompleta } from '~/lib/api/venta'
+import { calcularTotalVenta } from '~/lib/utils/venta-total'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { App } from 'antd'
 import dayjs from 'dayjs'
@@ -10,19 +11,6 @@ import { useMemo, useEffect, useRef } from 'react'
 interface AlertDeudaClienteProps {
   clienteId: number | undefined
   onDeudaChange?: (tieneDeuda: boolean) => void
-}
-
-const calcularTotalVenta = (venta: VentaCompleta) => {
-  return (venta.productos_por_almacen || []).reduce((acc, item: any) => {
-    for (const u of item.unidades_derivadas ?? []) {
-      const precio = Number(u.precio ?? 0)
-      const cantidad = Number(u.cantidad ?? 0)
-      const descuento = Number(u.descuento ?? 0)
-      const bonificacion = Boolean(u.bonificacion)
-      acc += bonificacion ? 0 : (precio * cantidad) - descuento
-    }
-    return acc
-  }, 0)
 }
 
 export default function AlertDeudaCliente({ clienteId, onDeudaChange }: AlertDeudaClienteProps) {

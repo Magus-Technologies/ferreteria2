@@ -1,6 +1,7 @@
 'use client'
 
 import { type VentaCompleta } from '~/lib/api/venta'
+import { calcularTotalVenta } from '~/lib/utils/venta-total'
 import { useStoreVentasFiltradas } from '../tables/table-ventas-por-cobrar'
 import { useMemo } from 'react'
 import dayjs from 'dayjs'
@@ -11,21 +12,6 @@ export default function CardsInfoVentasPorCobrar() {
   // de pago, tipo de documento, búsqueda y rango de mora) sin duplicar la query.
   const ventas = useStoreVentasFiltradas(state => state.ventas)
   const isLoading = useStoreVentasFiltradas(state => state.loading)
-
-  // Función para calcular el total de una venta
-  const calcularTotalVenta = (venta: VentaCompleta) => {
-    return (venta.productos_por_almacen || []).reduce((acc, item: any) => {
-      for (const u of item.unidades_derivadas ?? []) {
-        const precio = Number(u.precio ?? 0)
-        const cantidad = Number(u.cantidad ?? 0)
-        const descuento = Number(u.descuento ?? 0)
-        const bonificacion = Boolean(u.bonificacion)
-        const montoLinea = bonificacion ? 0 : (precio * cantidad) - descuento
-        acc += montoLinea
-      }
-      return acc
-    }, 0)
-  }
 
   // Calcular estadísticas de las ventas por cobrar
   const estadisticas = useMemo(() => {

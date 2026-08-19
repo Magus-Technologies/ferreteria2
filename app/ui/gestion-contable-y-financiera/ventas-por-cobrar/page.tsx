@@ -18,6 +18,7 @@ import ModalCobroMultiple from './_components/modals/modal-cobro-multiple'
 import ModalImprimirTicketsMasivos from './_components/modals/modal-imprimir-tickets-masivos'
 import ModalShowDoc from '~/app/_components/modals/modal-show-doc'
 import { getAuthToken } from '~/lib/api'
+import { calcularTotalVenta } from '~/lib/utils/venta-total'
 import dayjs from 'dayjs'
 
 export default function VentasPorCobrarPage() {
@@ -45,19 +46,7 @@ export default function VentasPorCobrarPage() {
   }
 
   // Función para calcular el total de una venta
-  const calcularTotalVenta = useCallback((venta: any) => {
-    return (venta.productos_por_almacen || []).reduce((acc: number, item: any) => {
-      for (const u of item.unidades_derivadas ?? []) {
-        const precio = Number(u.precio ?? 0)
-        const cantidad = Number(u.cantidad ?? 0)
-        const descuento = Number(u.descuento ?? 0)
-        const bonificacion = Boolean(u.bonificacion)
-        const montoLinea = bonificacion ? 0 : (precio * cantidad) - descuento
-        acc += montoLinea
-      }
-      return acc
-    }, 0)
-  }, [])
+  // Ver lib/utils/venta-total.ts: la copia que había acá no sumaba el recargo.
 
   // Función para calcular días de mora
   const calcularMora = useCallback((venta: any): number => {

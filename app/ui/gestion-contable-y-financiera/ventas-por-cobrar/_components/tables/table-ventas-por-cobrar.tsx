@@ -16,6 +16,7 @@ import { create } from 'zustand'
 import { FaFilePdf } from 'react-icons/fa'
 import ModalShowDoc from '~/app/_components/modals/modal-show-doc'
 import { getAuthToken } from '~/lib/api'
+import { calcularTotalVenta } from '~/lib/utils/venta-total'
 
 // Store para la venta seleccionada
 type UseStoreVentaSeleccionada = {
@@ -191,20 +192,6 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [esTicketFormato])
 
-  // Función para calcular el total de una venta
-  const calcularTotalVenta = useCallback((venta: VentaCompleta) => {
-    return (venta.productos_por_almacen || []).reduce((acc, item: any) => {
-      for (const u of item.unidades_derivadas ?? []) {
-        const precio = Number(u.precio ?? 0)
-        const cantidad = Number(u.cantidad ?? 0)
-        const descuento = Number(u.descuento ?? 0)
-        const bonificacion = Boolean(u.bonificacion)
-        const montoLinea = bonificacion ? 0 : (precio * cantidad) - descuento
-        acc += montoLinea
-      }
-      return acc
-    }, 0)
-  }, [])
 
   // Definir columnas específicas para ventas por cobrar
   const columns: ColDef<VentaCompleta>[] = useMemo(() => [
@@ -369,16 +356,9 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
       valueGetter: (params: any) => {
         const venta = params.data as VentaCompleta
         if (!venta) return ''
-        const total = (venta.productos_por_almacen || []).reduce((acc: number, item: any) => {
-          for (const u of item.unidades_derivadas ?? []) {
-            const precio = Number(u.precio ?? 0)
-            const cantidad = Number(u.cantidad ?? 0)
-            const descuento = Number(u.descuento ?? 0)
-            const bonificacion = Boolean(u.bonificacion)
-            acc += bonificacion ? 0 : (precio * cantidad) - descuento
-          }
-          return acc
-        }, 0)
+        // Octava copia de la cuenta, también sin recargo: una venta quedaba en
+        // "Pendiente" para siempre por el monto del recargo.
+        const total = calcularTotalVenta(venta)
         const totalPagado = Number(venta.total_cobrado || 0)
         return (total - totalPagado) <= 0.01 ? 'Pagado' : 'Pendiente'
       },

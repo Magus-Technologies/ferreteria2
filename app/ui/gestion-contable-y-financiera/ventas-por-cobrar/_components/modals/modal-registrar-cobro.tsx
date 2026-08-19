@@ -11,6 +11,7 @@ import { formatFechaPeru, ulidToDate } from '~/utils/fechas'
 import { useMemo, useCallback, useState, useEffect, useRef } from 'react'
 import SelectDespliegueDePago from '~/app/_components/form/selects/select-despliegue-de-pago'
 import { extractDesplieguePagoId } from '~/lib/utils/despliegue-pago-utils'
+import { calcularTotalVenta } from '~/lib/utils/venta-total'
 import LabelBase from '~/components/form/label-base'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { ColDef } from 'ag-grid-community'
@@ -49,21 +50,11 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
     }
   }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Calcular total de la venta
-  const totalVenta = useMemo(() => {
-    if (!localVenta) return 0
-    return (localVenta.productos_por_almacen || []).reduce((acc, item: any) => {
-      for (const u of item.unidades_derivadas ?? []) {
-        const precio = Number(u.precio ?? 0)
-        const cantidad = Number(u.cantidad ?? 0)
-        const descuento = Number(u.descuento ?? 0)
-        const bonificacion = Boolean(u.bonificacion)
-        const montoLinea = bonificacion ? 0 : (precio * cantidad) - descuento
-        acc += montoLinea
-      }
-      return acc
-    }, 0)
-  }, [localVenta])
+  // Total de la venta (incluye el recargo por línea; ver lib/utils/venta-total.ts)
+  const totalVenta = useMemo(
+    () => (localVenta ? calcularTotalVenta(localVenta) : 0),
+    [localVenta]
+  )
 
   // Obtener cobros previos
   const { data: cobrosData, isFetched: cobrosFetched } = useQuery({
