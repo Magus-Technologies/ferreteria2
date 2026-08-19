@@ -179,7 +179,11 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
     )
   }, [])
 
-  // Calcular sobrecargo cuando cambia el método de pago
+  // Monto que se está por cobrar, para calcular el recargo sobre él y no sobre
+  // la deuda entera (en un cobro parcial el recargo mostrado salía inflado).
+  const montoACobrar = Form.useWatch('monto', form)
+
+  // Calcular sobrecargo cuando cambia el método de pago o el monto
   useEffect(() => {
     if (!metodoPagoSeleccionado) {
       setSobrecargoCalculado(0)
@@ -189,16 +193,20 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
     const tipoSobrecargo = metodoPagoSeleccionado.tipo_sobrecargo || 'ninguno'
     const porcentajeSobrecargo = Number(metodoPagoSeleccionado.sobrecargo_porcentaje || 0)
     const adicional = Number(metodoPagoSeleccionado.adicional || 0)
+    const base = Number(montoACobrar || 0) || saldoPendiente
 
-    if (tipoSobrecargo === 'ninguno') {
-      setSobrecargoCalculado(0)
-    } else if (tipoSobrecargo === 'porcentaje') {
-      const sobrecargo = saldoPendiente * (porcentajeSobrecargo / 100)
-      setSobrecargoCalculado(sobrecargo)
-    } else if (tipoSobrecargo === 'fijo') {
+    if (tipoSobrecargo === 'porcentaje') {
+      setSobrecargoCalculado(base * (porcentajeSobrecargo / 100))
+    } else if (tipoSobrecargo === 'monto_fijo') {
+      // Acá decía 'fijo', que no es un valor que exista: el backend guarda
+      // 'monto_fijo' (y así lo compara crear-venta y NumeroOperacionPago::
+      // calcularSobrecargo). Con el valor viejo, todo método de recargo fijo
+      // mostraba 0 en este modal.
       setSobrecargoCalculado(adicional)
+    } else {
+      setSobrecargoCalculado(0)
     }
-  }, [metodoPagoSeleccionado, saldoPendiente])
+  }, [metodoPagoSeleccionado, montoACobrar, saldoPendiente])
 
   // Ver ticket de un cobro en modal
   const handleVerTicket = useCallback(async (cobroId: string) => {
@@ -502,8 +510,13 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
           </div>
           <div className='flex flex-col justify-center gap-2 pl-2'>
             <div className='flex justify-between items-center bg-white/50 px-3 py-1 rounded border border-blue-100'>
-              <span className='text-[10px] text-gray-500 font-bold uppercase'>Total a Cobrar</span>
-              <span className='text-gray-800 font-bold text-lg'>S/. {(saldoPendiente + sobrecargoCalculado).toFixed(2)}</span>
+              {/* Lo que el cajero cobra AHORA: el monto tipeado más el recargo del
+                  método. Antes era `saldoPendiente + sobrecargo`, que en un cobro
+                  parcial mezclaba la deuda entera con el recargo del abono. */}
+              <span className='text-[10px] text-gray-500 font-bold uppercase'>A Cobrar Ahora</span>
+              <span className='text-gray-800 font-bold text-lg'>
+                S/. {((Number(montoACobrar || 0) || saldoPendiente) + sobrecargoCalculado).toFixed(2)}
+              </span>
             </div>
             <div className='flex justify-between items-center bg-white/50 px-3 py-1 rounded border border-green-100'>
               <span className='text-[10px] text-gray-500 font-bold uppercase'>Total Pagado</span>
