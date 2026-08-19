@@ -107,20 +107,40 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
     enabled: open,
   })
 
+  // Solo los métodos cuya caja acepta el comprobante de ESTA venta, igual que el
+  // select. El "Efectivo por defecto" de abajo elige de acá y no de la lista
+  // completa: en una nota de venta preseleccionaba "efectivo" (Caja Chica, que
+  // solo acepta 01/03), el backend no podía registrar el ingreso y el cobro se
+  // perdía sin aviso.
+  const desplieguesValidos = useMemo(() => {
+    if (!desplieguesData) return []
+    const tipo = localVenta?.tipo_documento
+    if (!tipo) return desplieguesData
+    return desplieguesData.filter((d: any) => d.tipos_comprobante?.includes(tipo))
+  }, [desplieguesData, localVenta?.tipo_documento])
+
+  const buscarEfectivo = useCallback(
+    (lista: any[]) =>
+      lista.find((d: any) =>
+        d.tipo?.toLowerCase() === 'efectivo' ||
+        d.label?.toUpperCase().includes('EFECTIVO') ||
+        d.label?.toUpperCase().includes('CCH')
+      ),
+    []
+  )
+
   // Setear Efectivo por defecto cuando se abre el modal
   useEffect(() => {
-    if (open && desplieguesData && desplieguesData.length > 0) {
-      const efectivo = desplieguesData.find((d: any) =>
-        d.tipo?.toLowerCase() === 'efectivo' || 
-        d.label?.toUpperCase().includes('EFECTIVO') || 
-        d.label?.toUpperCase().includes('CCH')
-      )
-      if (efectivo) {
-        form.setFieldsValue({ despliegue_de_pago_id: efectivo.value })
-        setMetodoPagoSeleccionado(efectivo)
+    if (open && desplieguesValidos.length > 0) {
+      // Si no hay efectivo válido para este comprobante, se toma el primero que
+      // sí sirva en vez de dejar el campo con un método que el select ya no lista.
+      const porDefecto = buscarEfectivo(desplieguesValidos) ?? desplieguesValidos[0]
+      if (porDefecto) {
+        form.setFieldsValue({ despliegue_de_pago_id: porDefecto.value })
+        setMetodoPagoSeleccionado(porDefecto)
       }
     }
-  }, [open, desplieguesData, form])
+  }, [open, desplieguesValidos, buscarEfectivo, form])
 
   // Estado para modal de ticket de cobro
   const [ticketModalOpen, setTicketModalOpen] = useState(false)
@@ -412,15 +432,11 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
 
       // Resetear formulario y setear valores por defecto
       form.resetFields()
-      if (desplieguesData && desplieguesData.length > 0) {
-        const efectivo = desplieguesData.find((d: any) =>
-          d.tipo?.toLowerCase() === 'efectivo' || 
-          d.label?.toUpperCase().includes('EFECTIVO') || 
-          d.label?.toUpperCase().includes('CCH')
-        )
-        if (efectivo) {
-          form.setFieldsValue({ despliegue_de_pago_id: efectivo.value })
-          setMetodoPagoSeleccionado(efectivo)
+      if (desplieguesValidos.length > 0) {
+        const porDefecto = buscarEfectivo(desplieguesValidos) ?? desplieguesValidos[0]
+        if (porDefecto) {
+          form.setFieldsValue({ despliegue_de_pago_id: porDefecto.value })
+          setMetodoPagoSeleccionado(porDefecto)
         }
       }
 
@@ -514,6 +530,7 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
             <SelectDespliegueDePago
               propsForm={{ name: 'despliegue_de_pago_id', rules: [{ required: true, message: 'Requerido' }] }}
               placeholder='Seleccione método de pago'
+              tipoComprobante={localVenta?.tipo_documento}
               onChange={(value: any) => {
                 // Buscar el método seleccionado en los datos
                 const metodo = desplieguesData?.find((d: any) => d.value === value)

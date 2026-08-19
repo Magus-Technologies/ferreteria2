@@ -80,6 +80,11 @@ export default function ModalMetodosPagoCompra({
 
   const recibe_efectivo = Form.useWatch('recibe_efectivo', modalForm)
 
+  // Tipo de comprobante de la compra que se está registrando: acota los métodos
+  // a los que su caja realmente acepta. Sin esto se podía pagar con un método
+  // cuya caja no maneja ese comprobante y el egreso no llegaba a registrarse.
+  const tipoComprobanteCompra = Form.useWatch('tipo_documento', compraForm)
+
   const isEfectivo = useMemo(
     () => despliegueName.toUpperCase().includes('EFECTIVO'),
     [despliegueName]
@@ -438,6 +443,7 @@ export default function ModalMetodosPagoCompra({
                 <SelectDespliegueDePago
                   classNameIcon='text-emerald-700 mx-1'
                   className='w-full'
+                  tipoComprobante={tipoComprobanteCompra}
                   propsForm={{
                     name: 'despliegue_de_pago_id',
                     rules: [{ required: true, message: 'Requerido' }],

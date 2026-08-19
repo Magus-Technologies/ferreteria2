@@ -379,6 +379,7 @@ export default function ModalPagoMultiple({ open, setOpen }: ModalPagoMultiplePr
           <div className="py-1">
             <SelectDespliegueDePago
               placeholder={necesitaPago ? '⚠ Requerido' : 'Modo pago'}
+              tipoComprobante={params.data.tipo_documento}
               value={params.data._desplieguePagoId}
               onChange={(val: any) => handlePagoRow(params.data!.id, val || undefined)}
               disabled={!params.data._seleccionada || params.data._montoAPagar <= 0}
@@ -393,6 +394,22 @@ export default function ModalPagoMultiple({ open, setOpen }: ModalPagoMultiplePr
   ], [])
 
   const filasConMonto = comprasDistribucion.filter(c => c._montoAPagar > 0)
+
+  // El "Modo Pago (todos)" se aplica a TODAS las filas, así que solo pueden
+  // ofrecerse los métodos cuya caja acepte el comprobante de cada una.
+  //
+  // Se mira `_seleccionada` y NO `_montoAPagar > 0`: el monto recién se reparte
+  // cuando el usuario lo escribe, y este select está ARRIBA del campo de monto.
+  // Con `_montoAPagar` la lista salía sin filtrar al abrir, el usuario elegía un
+  // método, y al tipear el monto se recortaba dejándolo con una opción muerta.
+  const comprobantesAPagar = useMemo(
+    () => Array.from(new Set(
+      comprasDistribucion
+        .filter(c => c._seleccionada && c.tipo_documento)
+        .map(c => c.tipo_documento as string)
+    )),
+    [comprasDistribucion]
+  )
   const faltaPago = filasConMonto.some(c => !c._desplieguePagoId)
   const okDisabled = totalDistribuido <= 0 || Math.abs(montoSinDistribuir) > 0.01 || faltaPago
 
@@ -441,6 +458,7 @@ export default function ModalPagoMultiple({ open, setOpen }: ModalPagoMultiplePr
             <SelectDespliegueDePago
               propsForm={{ name: 'despliegue_de_pago_id' }}
               placeholder='Aplica a todas'
+              tipoComprobante={comprobantesAPagar}
               onChange={(val: any) => handleGlobalPagoChange(val || undefined)}
             />
           </LabelBase>

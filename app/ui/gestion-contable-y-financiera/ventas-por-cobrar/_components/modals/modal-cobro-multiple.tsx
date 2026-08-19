@@ -206,6 +206,39 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
   // La visibilidad de la columna N° Operación ahora se maneja directamente en columnDefs
 
 
+  // El método de pago es uno solo para TODAS las ventas, así que solo sirven los
+  // métodos cuya caja acepte el comprobante de cada una. Sin esto se podía elegir
+  // "efectivo" para un lote con notas de venta y esos cobros no entraban a caja.
+  //
+  // Se mira `_seleccionada` y NO `_montoAPagar > 0`: el monto recién se reparte
+  // cuando el usuario lo escribe, y el select de método está ARRIBA del campo de
+  // monto. Con `_montoAPagar` la lista salía sin filtrar al abrir, el usuario
+  // elegía un método, y al tipear el monto la lista se recortaba dejándolo con
+  // una opción que ya no existía.
+  const comprobantesACobrar = useMemo(
+    () => Array.from(new Set(
+      ventasDistribucion
+        .filter(v => v._seleccionada && v.tipo_documento)
+        .map(v => v.tipo_documento as string)
+    )),
+    [ventasDistribucion]
+  )
+
+  // Métodos que sirven para TODOS los comprobantes del lote (mismo criterio que
+  // usa el select por dentro), para poder avisar cuando no queda ninguno.
+  const desplieguesComunes = useMemo(
+    () => (desplieguesData || []).filter((d: any) =>
+      comprobantesACobrar.every((tipo) => d.tipos_comprobante?.includes(tipo))
+    ),
+    [desplieguesData, comprobantesACobrar]
+  )
+
+  // Lote con comprobantes de distinto tipo que no comparten ningún método: no es
+  // un error del usuario, es que no hay una caja configurada que reciba ambos.
+  // Sin este aviso el desplegable quedaba vacío sin explicar por qué.
+  const hayMezclaSinMetodoComun =
+    comprobantesACobrar.length > 1 && desplieguesData !== undefined && desplieguesComunes.length === 0
+
   const totalDeudaCliente = useMemo(() =>
     round2(ventasDistribucion.filter(v => v._seleccionada).reduce((sum, v) => sum + v._saldoPendiente, 0)), [ventasDistribucion])
 
@@ -498,6 +531,13 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
       destroyOnHidden
     >
       <Form form={form} layout="vertical">
+        {hayMezclaSinMetodoComun && (
+          <div className='mb-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800'>
+            Las ventas marcadas son de distinto tipo de comprobante y ninguna caja recibe
+            ambos, así que no hay un método de pago que sirva para todas. Destilde las de un
+            tipo y cóbralas en dos pasos.
+          </div>
+        )}
         {/* Cabecera: cliente, modo pago global, fecha, operación */}
         <div className='grid grid-cols-5 gap-3 mb-4'>
           <div className='col-span-2'>
@@ -522,7 +562,8 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
           <LabelBase label='Modo Pago (todos):' orientation='column'>
             <SelectDespliegueDePago
               propsForm={{ name: 'despliegue_de_pago_id' }}
-              placeholder='Aplica a todas'
+              placeholder={hayMezclaSinMetodoComun ? 'Sin método común' : 'Aplica a todas'}
+              tipoComprobante={comprobantesACobrar}
               onChange={(val: any) => handleGlobalPagoChange(val || undefined)}
             />
           </LabelBase>

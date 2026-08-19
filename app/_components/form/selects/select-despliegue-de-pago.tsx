@@ -11,7 +11,13 @@ import { useEffect } from 'react'
 interface SelectDespliegueDePagoProps extends SelectBaseProps {
   classNameIcon?: string
   sizeIcon?: number
-  tipoComprobante?: string // '01' = Factura, '03' = Boleta, 'nv' = Nota de Venta
+  /**
+   * '01' = Factura, '03' = Boleta, 'nv' = Nota de Venta.
+   * Si se pasa un array (pantallas que cobran/pagan varios documentos de una),
+   * solo quedan los métodos que sirven para TODOS: es un único método aplicado
+   * a todas las filas, así que tiene que ser válido en todas.
+   */
+  tipoComprobante?: string | string[]
   filterByTipo?: 'efectivo' | 'banco' | 'billetera' | string[] // Filtrar por tipo de método de pago (puede ser array)
   subCajaId?: number // Filtrar por sub-caja específica
 }
@@ -35,9 +41,19 @@ export default function SelectDespliegueDePago({
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
 
-  // Filtrar métodos por tipo de comprobante si se proporciona
-  let metodosFiltrados = tipoComprobante
-    ? data?.filter((metodo: any) => metodo.tipos_comprobante.includes(tipoComprobante))
+  // Filtrar métodos por tipo de comprobante si se proporciona.
+  // Cada sub-caja declara qué comprobantes maneja; si el método elegido cae en una
+  // que no acepta el comprobante del documento, el backend rechaza el cobro/pago
+  // (antes se lo tragaba en silencio y el dinero no entraba a ninguna caja). Por
+  // eso conviene no ofrecerlo siquiera.
+  const comprobantesRequeridos = tipoComprobante
+    ? (Array.isArray(tipoComprobante) ? tipoComprobante : [tipoComprobante]).filter(Boolean)
+    : []
+
+  let metodosFiltrados = comprobantesRequeridos.length
+    ? data?.filter((metodo: any) =>
+        comprobantesRequeridos.every((tipo) => metodo.tipos_comprobante?.includes(tipo))
+      )
     : data
 
   // Filtrar por sub-caja si se proporciona
