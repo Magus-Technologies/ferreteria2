@@ -80,10 +80,13 @@ export default function ModalMetodosPagoCompra({
 
   const recibe_efectivo = Form.useWatch('recibe_efectivo', modalForm)
 
-  // Tipo de comprobante de la compra que se está registrando: acota los métodos
-  // a los que su caja realmente acepta. Sin esto se podía pagar con un método
-  // cuya caja no maneja ese comprobante y el egreso no llegaba a registrarse.
-  const tipoComprobanteCompra = Form.useWatch('tipo_documento', compraForm)
+  // A propósito NO se filtran los métodos por el tipo de documento de la compra.
+  // `tipos_comprobante` de las sub-cajas dice qué comprobantes RECIBE cada caja
+  // al vender; en una compra el dinero SALE y el comprobante es del proveedor.
+  // El backend lo trata así: resuelve la sub-caja solo por el método de pago, sin
+  // mirar el comprobante. Filtrar acá bloqueaba pagos legítimos — una nota de
+  // venta del proveedor pagada en efectivo desde Caja Chica dejaba el select sin
+  // opciones válidas y mostrando el ID crudo del método.
 
   const isEfectivo = useMemo(
     () => despliegueName.toUpperCase().includes('EFECTIVO'),
@@ -443,7 +446,6 @@ export default function ModalMetodosPagoCompra({
                 <SelectDespliegueDePago
                   classNameIcon='text-emerald-700 mx-1'
                   className='w-full'
-                  tipoComprobante={tipoComprobanteCompra}
                   propsForm={{
                     name: 'despliegue_de_pago_id',
                     rules: [{ required: true, message: 'Requerido' }],

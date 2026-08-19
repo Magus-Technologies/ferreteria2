@@ -96,16 +96,33 @@ export default function SelectDespliegueDePago({
   } catch { formInstance = null }
 
   useEffect(() => {
-    if (!watchedValue || !metodosFiltrados?.length || !fieldName || !formInstance) return
+    // Sin data todavía no se puede juzgar el valor: si se limpiara acá, se
+    // borraría un valor legítimo preseleccionado antes de que cargue la query.
+    if (!watchedValue || !data || !fieldName || !formInstance) return
 
-    const isAlreadyComposite = metodosFiltrados.some((m: any) => m.value === watchedValue)
+    const isAlreadyComposite = metodosFiltrados?.some((m: any) => m.value === watchedValue)
     if (isAlreadyComposite) return
 
-    const found = metodosFiltrados.find((m: any) => m.despliegue_pago_id === watchedValue)
+    const found = metodosFiltrados?.find((m: any) => m.despliegue_pago_id === watchedValue)
     if (found) {
       formInstance.setFieldValue(fieldName, found.value)
+      return
     }
-  }, [watchedValue, metodosFiltrados, fieldName, formInstance])
+
+    // El valor guardado no está entre las opciones válidas: pasa cuando el
+    // método se eligió (o se preseleccionó) antes de conocerse el tipo de
+    // comprobante, o cuando el usuario cambia el comprobante después. Ant Design
+    // no descarta el valor solo — lo pinta crudo, y en pantalla se veía el ID
+    // "68-01M049PZQN..." en vez del nombre del método. Se limpia para que el
+    // usuario elija uno que sí sirva, en vez de confirmar un pago con un método
+    // que el backend va a rechazar.
+    //
+    // Solo cuando hay filtro por comprobante: los selects de FILTRO (Mis Ventas,
+    // Mis Ganancias) no lo usan y ahí borrar el valor sería una regresión.
+    if (comprobantesRequeridos.length) {
+      formInstance.setFieldValue(fieldName, undefined)
+    }
+  }, [watchedValue, data, metodosFiltrados, comprobantesRequeridos.length, fieldName, formInstance])
 
   return (
     <SelectBase

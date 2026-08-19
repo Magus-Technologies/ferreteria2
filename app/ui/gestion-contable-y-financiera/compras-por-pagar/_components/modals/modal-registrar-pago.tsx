@@ -548,7 +548,6 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
             <SelectDespliegueDePago
               propsForm={{ name: 'despliegue_de_pago_id', rules: [{ required: true, message: 'Requerido' }] }}
               placeholder='Seleccione método de pago'
-              tipoComprobante={localCompra?.tipo_documento}
               onChange={(value: any) => {
                 const metodo = desplieguesData?.find((d: any) => d.value === value)
                 setMetodoPagoSeleccionado(metodo)
