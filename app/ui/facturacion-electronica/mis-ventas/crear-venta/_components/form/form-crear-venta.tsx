@@ -95,8 +95,14 @@ export default function FormCrearVenta({
   // documento: la serie/número ya están asociados a su serie documental y
   // cambiar el tipo implicaría reemitir el comprobante. La nota de venta (nv)
   // sí puede convertirse a boleta o factura.
+  //
+  // Excepción: una venta "en espera" (ee) ya tiene serie/número reservados
+  // desde que se guardó, pero todavía NO se emitió ningún comprobante a
+  // SUNAT — recién se emite al cobrarla. Bloquear el cambio acá impedía
+  // corregir boleta↔factura en una venta que ni siquiera se facturó.
   const tipoDocumentoBloqueado =
     esEdicion &&
+    venta?.estado_de_venta !== "ee" &&
     (venta?.tipo_documento === "01" || venta?.tipo_documento === "03");
 
   const cargarSiguienteNumero = useCallback(() => {

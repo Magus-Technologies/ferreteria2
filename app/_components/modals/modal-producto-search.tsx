@@ -189,6 +189,12 @@ export default function ModalProductoSearch({
           onChange={(e) => setText(e.target.value)}
           className="w-full sm:max-w-[500px]"
           onPressEnter={handleSearchEnter}
+          // Sin esto el teclado móvil muestra "Siguiente" en vez de la lupa:
+          // los otros buscadores de la app son Select/AutoComplete de antd,
+          // que marcan el input como role="combobox" y el navegador infiere
+          // solo el ícono de búsqueda. Este es un InputBase plano, así que
+          // hay que pedirlo explícito.
+          enterKeyHint="search"
         />
         {stockFilterMode === 'venta' && (
           <SelectBase
