@@ -31,7 +31,10 @@ export default function useItemsFinanzas({
     canCerrarCaja ? {
       key: '2',
       label: 'Cerrar Caja',
-      onClick: () => router.push('/ui/facturacion-electronica/cierre-caja'),
+      // Misma razón que en historial-cierres: la copia de facturacion-electronica
+      // no tiene ConfigurableElement, así que desde ahí no se ven el supervisor ni
+      // los botones configurables. La canónica es la de gestion-contable.
+      onClick: () => router.push('/ui/gestion-contable-y-financiera/cierre-caja'),
     } : null,
     {
       key: '3',

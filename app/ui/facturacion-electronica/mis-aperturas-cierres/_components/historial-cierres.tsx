@@ -270,8 +270,14 @@ export default function HistorialCierres() {
 
         // CORREGIDO: Pasar supervisor validado en la URL para que no se pida nuevamente
         const redirectId = (cierreParaReCerrar as any)?.apertura_id || cierreParaReCerrar.id;
+        // Apunta a gestion-contable-y-financiera, NO a facturacion-electronica.
+        // Existen dos copias de esta pantalla; la de facturacion no tiene ni un
+        // solo ConfigurableElement, así que al re-cerrar por ahí no aparecían el
+        // supervisor ni los botones de finalizar, re-cerrar, ticket, ventas y
+        // ganancias. La de gestion-contable es la registrada en el mapa de
+        // permisos-visuales, o sea la canónica.
         router.push(
-          `/ui/facturacion-electronica/cierre-caja?cierre_id=${redirectId}&re_cierre=true&supervisor_id=${supervisorId}&supervisor_validado=true`
+          `/ui/gestion-contable-y-financiera/cierre-caja?cierre_id=${redirectId}&re_cierre=true&supervisor_id=${supervisorId}&supervisor_validado=true`
         );
       } else {
         message.error(response?.data?.message || response?.error || 'Contraseña de supervisor incorrecta');
