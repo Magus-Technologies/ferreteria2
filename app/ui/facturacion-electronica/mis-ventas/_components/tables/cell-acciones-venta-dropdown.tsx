@@ -84,6 +84,26 @@ export default function CellAccionesVentaDropdown(
   // El backend revierte los cobros activos al anular.
   const canAnular = estadoVenta !== 'an';
 
+  // Comprobante electrónico: solo boletas (03) y facturas (01) YA confirmadas.
+  //
+  // - Nota de venta: no es comprobante electrónico, no se declara a SUNAT.
+  // - En espera (ee): todavía no tiene serie asignada ni comprobante generado;
+  //   la serie se asigna al confirmarla.
+  //
+  // En ninguno de los dos casos existe XML, CDR ni nada que enviar, así que las
+  // tres acciones quedan deshabilitadas. Antes estaban siempre activas: al
+  // usarlas en una nota de venta el backend respondía "Solo facturas (01) y
+  // boletas (03) son válidas", y en una venta en espera se disparaba una
+  // generación de comprobante que no correspondía.
+  const esComprobanteElectronico = tipoDocumento === '01' || tipoDocumento === '03';
+  const puedeFacturarse = esComprobanteElectronico && estadoVenta !== 'ee';
+
+  const motivoNoFacturable = !esComprobanteElectronico
+    ? 'Las notas de venta no se declaran a SUNAT.'
+    : estadoVenta === 'ee'
+      ? 'La venta está En Espera: confírmala para generar su comprobante.'
+      : null;
+
   const handleAnular = () => {
     modal.confirm({
       title: '¿Anular esta venta?',
@@ -358,23 +378,35 @@ export default function CellAccionesVentaDropdown(
     },
     {
       key: 'ver-xml',
-      label: <span className="flex items-center gap-2"><FaFileCode className="text-green-600" /> Ver XML</span>,
+      label: (
+        <span className="flex items-center gap-2" title={motivoNoFacturable ?? undefined}>
+          <FaFileCode className="text-green-600" /> Ver XML
+        </span>
+      ),
       onClick: handleVerXML,
+      disabled: !puedeFacturarse,
     },
     {
       key: 'enviar-sunat',
       label: isAceptado ? (
         <span className="flex items-center gap-2"><FaCheckCircle className="text-green-600" /> Enviado</span>
       ) : (
-        <span className="flex items-center gap-2"><FaPaperPlane className="text-purple-600" /> Enviar a SUNAT</span>
+        <span className="flex items-center gap-2" title={motivoNoFacturable ?? undefined}>
+          <FaPaperPlane className="text-purple-600" /> Enviar a SUNAT
+        </span>
       ),
       onClick: handleEnviarSunat,
-      disabled: isAceptado,
+      disabled: isAceptado || !puedeFacturarse,
     },
     {
       key: 'descargar-cdr',
-      label: <span className="flex items-center gap-2"><FaDownload className="text-orange-600" /> Descargar CDR</span>,
+      label: (
+        <span className="flex items-center gap-2" title={motivoNoFacturable ?? undefined}>
+          <FaDownload className="text-orange-600" /> Descargar CDR
+        </span>
+      ),
       onClick: handleDescargarCDR,
+      disabled: !puedeFacturarse,
     },
   ];
 
