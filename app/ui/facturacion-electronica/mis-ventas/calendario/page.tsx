@@ -253,6 +253,9 @@ export default function CalendarioEntregasPage() {
   const canAccess = usePermission(permissions.FACTURACION_ELECTRONICA_CALENDARIO_ENTREGAS_INDEX)
   const [eventoSeleccionado, setEventoSeleccionado] = useState<EntregaEvent | null>(null)
   const [vehiculoIds, setVehiculoIds] = useState<number[]>([])
+  // Las canceladas arrancan ocultas: ocupan franjas que en realidad están libres
+  // y hacen leer la agenda como si el día estuviera más lleno de lo que está.
+  const [mostrarCancelados, setMostrarCancelados] = useState(false)
   const { data: vehiculos = [], isLoading: cargandoVehiculos } = useQuery({
     queryKey: [QueryKeys.VEHICULOS, 'calendario-filtro'],
     queryFn: async () => {
@@ -307,10 +310,19 @@ export default function CalendarioEntregasPage() {
                   <div className="w-4 h-4 rounded border border-gray-300 bg-emerald-500" />
                   <span className="text-gray-600">Entregado</span>
                 </div>
-                <div className="flex items-center gap-1.5">
+                <label className="flex cursor-pointer items-center gap-1.5 select-none">
+                  <input
+                    type="checkbox"
+                    className="accent-red-500"
+                    checked={mostrarCancelados}
+                    onChange={(e) => {
+                      setMostrarCancelados(e.target.checked)
+                      setEventoSeleccionado(null)
+                    }}
+                  />
                   <div className="w-4 h-4 rounded border border-gray-300 bg-red-500" />
                   <span className="text-gray-600">Cancelado</span>
-                </div>
+                </label>
               </div>
               <Select
                 mode="multiple"
@@ -346,6 +358,7 @@ export default function CalendarioEntregasPage() {
                   }}
                   onSelectSlot={() => setEventoSeleccionado(null)}
                   soloProgramadasActivas={false}
+                  ocultarCancelados={!mostrarCancelados}
                   vehiculo_ids={vehiculoIds}
                 />
               </Suspense>
