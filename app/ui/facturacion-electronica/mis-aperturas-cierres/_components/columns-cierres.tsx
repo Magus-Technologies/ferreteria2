@@ -93,16 +93,20 @@ export const useColumnsCierres = ({
       ),
     },
     {
-      // Lo que el cajero tipeó como efectivo al cerrar. `M. Cierre` no sirve para
-      // esto porque mezcla efectivo y cuentas.
-      colId: 'monto_cierre_efectivo',
-      headerName: 'Efectivo Declarado',
-      field: 'monto_cierre_efectivo',
-      width: 150,
-      minWidth: 130,
+      // Lo que el sistema esperaba en caja. Es lo único que faltaba para que la
+      // tabla se lea sola: M. Cierre (lo declarado) − Esperado = Diferencia.
+      //
+      // Se reconstruye de la diferencia guardada, no se recalcula: así muestra lo
+      // que el cajero tenía en pantalla al cerrar. Si se recalculara, cambiaría
+      // cada vez que el libro se toca después del cierre.
+      colId: 'monto_esperado',
+      headerName: 'Esperado',
+      field: 'monto_esperado',
+      width: 140,
+      minWidth: 120,
       cellStyle: centerCell,
       cellRenderer: (params: any) => (
-        <span className='font-semibold text-slate-800'>
+        <span className='text-slate-600'>
           {params.value === null || params.value === undefined
             ? '-'
             : formatCurrency(parseFloat(params.value))}
