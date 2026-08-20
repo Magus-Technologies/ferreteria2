@@ -223,10 +223,16 @@ export default function FiltersMisVentas() {
     }
 
     // Cuando el usuario busca una venta específica (por Serie-N° exacto o
-    // por search/cliente_search_text), las fechas no deben filtrar — la
-    // venta puede ser de cualquier día. Caso contrario, aplicar el rango
-    // de fechas (default = HOY) como antes.
-    const ignorarFechas = !!(serie && numero) || !!globalSearch;
+    // por texto libre), las fechas no deben filtrar — la venta puede ser de
+    // cualquier día. Caso contrario, aplicar el rango de fechas (default = HOY).
+    //
+    // El texto solo cuenta si de verdad se va a mandar como `search`, o sea
+    // cuando NO hay cliente_id (misma condición que abajo). Antes bastaba con
+    // que quedara un resto de texto en el buscador de clientes para que las
+    // fechas se cayeran en silencio: se elegía un cliente y el listado traía
+    // sus ventas de cualquier fecha, aunque el filtro dijera otra cosa.
+    // Elegir un cliente es un filtro más, no la búsqueda de una venta puntual.
+    const ignorarFechas = !!(serie && numero) || (!cliente_id && !!globalSearch);
 
     // Construir objeto de filtros solo con valores definidos
     const data: any = {
