@@ -436,6 +436,81 @@ export function useColumnsMisVentas() {
       },
     },
     {
+      // Estado del comprobante frente a SUNAT. Sale de
+      // `comprobantes_electronicos.estado_sunat`, que la venta ya trae en
+      // `comprobante_electronico` — no hace falta pedir nada extra.
+      //
+      // Las notas de venta (nv) no son comprobantes electrónicos: no se declaran
+      // a SUNAT, así que muestran "No aplica" y no un estado vacío que se lea
+      // como un pendiente más.
+      headerName: "SUNAT",
+      colId: "estado_sunat",
+      width: 150,
+      valueGetter: (params: any) =>
+        params.data?.comprobante_electronico?.estado_sunat ?? null,
+      cellRenderer: (params: any) => {
+        const tipoDoc = params.data?.tipo_documento;
+        const estado = params.value as string | null;
+
+        if (tipoDoc !== "01" && tipoDoc !== "03") {
+          return (
+            <div className="flex items-center h-full">
+              <span className="text-[11px] text-slate-400">No aplica</span>
+            </div>
+          );
+        }
+
+        if (!estado) {
+          return (
+            <div className="flex items-center h-full">
+              <span
+                style={{
+                  background: "#fee2e2",
+                  color: "#dc2626",
+                  fontWeight: "bold",
+                  fontSize: "11px",
+                  padding: "2px 8px",
+                  borderRadius: "9999px",
+                }}
+              >
+                Sin emitir
+              </span>
+            </div>
+          );
+        }
+
+        const config: Record<string, { label: string; bg: string; text: string }> = {
+          PENDIENTE: { label: "No enviado", bg: "#fef9c3", text: "#854d0e" },
+          PROCESANDO: { label: "Procesando", bg: "#e0f2fe", text: "#0369a1" },
+          ACEPTADO: { label: "Aceptado", bg: "#dcfce7", text: "#16a34a" },
+          ACEPTADO_CON_OBSERVACIONES: { label: "Aceptado c/obs", bg: "#dcfce7", text: "#15803d" },
+          RECHAZADO: { label: "Rechazado", bg: "#fee2e2", text: "#dc2626" },
+          ANULADO: { label: "Anulado", bg: "#f1f5f9", text: "#475569" },
+          BAJA_PENDIENTE: { label: "Baja pendiente", bg: "#ffedd5", text: "#c2410c" },
+          BAJA_ACEPTADA: { label: "Baja aceptada", bg: "#f1f5f9", text: "#475569" },
+        };
+
+        const base = config[estado] ?? { label: estado, bg: "#f1f5f9", text: "#475569" };
+
+        return (
+          <div className="flex items-center h-full">
+            <span
+              style={{
+                background: base.bg,
+                color: base.text,
+                fontWeight: "bold",
+                fontSize: "11px",
+                padding: "2px 8px",
+                borderRadius: "9999px",
+              }}
+            >
+              {base.label}
+            </span>
+          </div>
+        );
+      },
+    },
+    {
       headerName: "Anul. por NC",
       colId: "anulado_por_nota_credito",
       field: "anulado_por_nota_credito",
