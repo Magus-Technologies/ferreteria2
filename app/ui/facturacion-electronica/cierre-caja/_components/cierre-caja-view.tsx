@@ -308,6 +308,15 @@ export default function CierreCajaView() {
   const faltante = diferencia < 0 ? Math.abs(diferencia) : 0
   const sobrante = diferencia > 0 ? diferencia : 0
 
+  // Señal de que se tipeó el monto trasladado a bóveda en vez del remanente.
+  // Solo tiene sentido avisarlo si además sobra plata: si el traslado fue de
+  // S/50 y el remanente da S/50, la coincidencia es casual y no es un error.
+  const totalTrasladosBoveda = Number(resumen?.total_traslados_boveda || 0)
+  const coincideConTrasladoBoveda =
+    totalTrasladosBoveda > 0 &&
+    sobrante > 0 &&
+    Math.abs(totalEfectivo - totalTrasladosBoveda) < 0.01
+
   // Otros ingresos de la sesión (incluye TRASLADOS DE EFECTIVO recibidos) y
   // gastos (pagos de compra, etc., sin los traslados a bóveda que tienen su
   // propia línea). El backend no envía total_otros_ingresos/total_gastos, por
@@ -843,10 +852,32 @@ export default function CierreCajaView() {
                           </div>
                           <div className='flex justify-between items-center'>
                             <span className='text-sm font-medium text-slate-700'>Sobrante</span>
-                            <span className='text-lg font-bold text-slate-800'>
+                            <span className={`text-lg font-bold ${sobrante > 0 ? 'text-amber-600' : 'text-slate-800'}`}>
                               {sobrante.toFixed(2)}
                             </span>
                           </div>
+
+                          {/* El error que motivó esto: se cerró tipeando el monto que
+                              acababa de trasladarse a la bóveda (plata que YA NO está
+                              en el cajón) en vez del remanente, y quedó grabado un
+                              sobrante de S/10,100.80 que nunca existió. */}
+                          {coincideConTrasladoBoveda && (
+                            <div className='rounded border border-red-300 bg-red-50 px-3 py-2 text-xs text-red-800'>
+                              <strong>Revisa el monto.</strong> Lo que ingresaste coincide con
+                              lo que trasladaste a la bóveda en esta sesión
+                              (S/ {totalTrasladosBoveda.toFixed(2)}). Esa plata ya salió del
+                              cajón: acá va solo el efectivo que te queda, que según el sistema
+                              es S/ {montoEsperado.toFixed(2)}.
+                            </div>
+                          )}
+
+                          {sobrante > 0 && !coincideConTrasladoBoveda && (
+                            <div className='rounded border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800'>
+                              Vas a cerrar con S/ {sobrante.toFixed(2)} de más sobre lo esperado
+                              (S/ {montoEsperado.toFixed(2)}). Si no es correcto, revisa el conteo
+                              antes de finalizar.
+                            </div>
+                          )}
                         </div>
                       )}
 

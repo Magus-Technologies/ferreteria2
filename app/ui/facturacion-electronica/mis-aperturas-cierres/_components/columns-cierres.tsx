@@ -93,6 +93,23 @@ export const useColumnsCierres = ({
       ),
     },
     {
+      // Lo que el cajero tipeó como efectivo al cerrar. `M. Cierre` no sirve para
+      // esto porque mezcla efectivo y cuentas.
+      colId: 'monto_cierre_efectivo',
+      headerName: 'Efectivo Declarado',
+      field: 'monto_cierre_efectivo',
+      width: 150,
+      minWidth: 130,
+      cellStyle: centerCell,
+      cellRenderer: (params: any) => (
+        <span className='font-semibold text-slate-800'>
+          {params.value === null || params.value === undefined
+            ? '-'
+            : formatCurrency(parseFloat(params.value))}
+        </span>
+      ),
+    },
+    {
       colId: 'monto_cierre',
       headerName: 'M. Cierre',
       field: 'monto_cierre',
