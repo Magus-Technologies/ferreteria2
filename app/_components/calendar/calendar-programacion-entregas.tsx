@@ -230,13 +230,13 @@ interface CalendarProgramacionEntregasProps {
   /** true: oculta entregadas/canceladas. false: muestra histórico programado también. */
   soloProgramadasActivas?: boolean
   /**
-   * Oculta las entregas CANCELADAS (estado_entrega 'ca'). Es distinto de
-   * `soloProgramadasActivas`, que además se lleva las entregadas: acá se quieren
-   * ver pendientes, en camino y entregadas, pero no las canceladas, que solo
-   * ensucian la grilla ocupando franjas que en realidad están libres.
-   * Por defecto false, para no cambiarle el comportamiento a los otros usos.
+   * Estados de entrega a mostrar ('pe' pendiente, 'ec' en camino, 'en' entregado,
+   * 'ca' cancelado). Es un filtro de la vista, distinto de
+   * `soloProgramadasActivas`, que decide qué trae el backend.
+   * `undefined` = mostrar todos, para no cambiarle el comportamiento a los
+   * otros usos del calendario.
    */
-  ocultarCancelados?: boolean
+  estadosVisibles?: string[]
 }
 
 export default function CalendarProgramacionEntregas({
@@ -251,7 +251,7 @@ export default function CalendarProgramacionEntregas({
   vehiculo_ids,
   soloSeleccion = false,
   soloProgramadasActivas = true,
-  ocultarCancelados = false,
+  estadosVisibles,
 }: CalendarProgramacionEntregasProps) {
   const [view, setView] = useState<View>('day')
   const [date, setDate] = useState(selectedDate || new Date())
@@ -289,7 +289,7 @@ export default function CalendarProgramacionEntregas({
       // Defensa extra: filtrar cualquier entrega sin fecha_programada o sin hora_inicio/fin
       // (el backend con solo_programadas=true ya filtra, pero evita duplicados si se reusa).
       .filter((e: any) => e.fecha_programada && e.hora_inicio && e.hora_fin)
-      .filter((e: any) => !ocultarCancelados || e.estado_entrega !== 'ca')
+      .filter((e: any) => !estadosVisibles || estadosVisibles.includes(e.estado_entrega ?? 'pe'))
       .map((entrega: any) => {
       const color =
         ESTADO_EVENT_COLORS[
@@ -379,7 +379,7 @@ export default function CalendarProgramacionEntregas({
     }
 
     return entregasEvents
-  }, [entregas, selectedSlot, ocultarCancelados])
+  }, [entregas, selectedSlot, estadosVisibles])
 
   // Formatos de fecha en español
   const formats = {

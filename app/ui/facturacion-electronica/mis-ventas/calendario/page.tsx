@@ -248,14 +248,31 @@ function PanelDetalleEntrega({ entregaId, evento }: { entregaId: number; evento:
   )
 }
 
+// Los 4 estados de entrega, en el mismo orden y con los mismos colores que usa
+// el calendario (ESTADO_EVENT_COLORS en calendar-programacion-entregas).
+const ESTADOS_ENTREGA = [
+  { codigo: 'pe', label: 'Pendiente', color: 'bg-amber-400', accent: 'accent-amber-400' },
+  { codigo: 'ec', label: 'En Camino', color: 'bg-blue-500', accent: 'accent-blue-500' },
+  { codigo: 'en', label: 'Entregado', color: 'bg-emerald-500', accent: 'accent-emerald-500' },
+  { codigo: 'ca', label: 'Cancelado', color: 'bg-red-500', accent: 'accent-red-500' },
+] as const
+
 export default function CalendarioEntregasPage() {
   const router = useRouter()
   const canAccess = usePermission(permissions.FACTURACION_ELECTRONICA_CALENDARIO_ENTREGAS_INDEX)
   const [eventoSeleccionado, setEventoSeleccionado] = useState<EntregaEvent | null>(null)
   const [vehiculoIds, setVehiculoIds] = useState<number[]>([])
-  // Las canceladas arrancan ocultas: ocupan franjas que en realidad están libres
-  // y hacen leer la agenda como si el día estuviera más lleno de lo que está.
-  const [mostrarCancelados, setMostrarCancelados] = useState(false)
+  // Filtro por estado. Cancelado arranca APAGADO: esas entregas ocupan franjas
+  // que en realidad están libres y hacen leer la agenda como si el día estuviera
+  // más lleno de lo que está.
+  const [estadosVisibles, setEstadosVisibles] = useState<string[]>(['pe', 'ec', 'en'])
+
+  const toggleEstado = (codigo: string) => {
+    setEstadosVisibles((prev) =>
+      prev.includes(codigo) ? prev.filter((e) => e !== codigo) : [...prev, codigo]
+    )
+    setEventoSeleccionado(null)
+  }
   const { data: vehiculos = [], isLoading: cargandoVehiculos } = useQuery({
     queryKey: [QueryKeys.VEHICULOS, 'calendario-filtro'],
     queryFn: async () => {
@@ -297,32 +314,27 @@ export default function CalendarioEntregasPage() {
           <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 overflow-hidden">
             <div className="mb-4 flex flex-col gap-3 border-b border-slate-100 pb-3 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex flex-wrap items-center gap-5 text-xs">
-                <span className="font-semibold text-slate-700">Leyenda:</span>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-4 h-4 rounded border border-gray-300 bg-amber-400" />
-                  <span className="text-gray-600">Pendiente</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-4 h-4 rounded border border-gray-300 bg-blue-500" />
-                  <span className="text-gray-600">En Camino</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-4 h-4 rounded border border-gray-300 bg-emerald-500" />
-                  <span className="text-gray-600">Entregado</span>
-                </div>
-                <label className="flex cursor-pointer items-center gap-1.5 select-none">
-                  <input
-                    type="checkbox"
-                    className="accent-red-500"
-                    checked={mostrarCancelados}
-                    onChange={(e) => {
-                      setMostrarCancelados(e.target.checked)
-                      setEventoSeleccionado(null)
-                    }}
-                  />
-                  <div className="w-4 h-4 rounded border border-gray-300 bg-red-500" />
-                  <span className="text-gray-600">Cancelado</span>
-                </label>
+                <span className="font-semibold text-slate-700">Mostrar:</span>
+                {ESTADOS_ENTREGA.map(({ codigo, label, color, accent }) => {
+                  const activo = estadosVisibles.includes(codigo)
+                  return (
+                    <label
+                      key={codigo}
+                      className="flex cursor-pointer items-center gap-1.5 select-none"
+                    >
+                      <input
+                        type="checkbox"
+                        className={accent}
+                        checked={activo}
+                        onChange={() => toggleEstado(codigo)}
+                      />
+                      <div className={`w-4 h-4 rounded border border-gray-300 ${color}`} />
+                      <span className={activo ? 'text-gray-600' : 'text-gray-400 line-through'}>
+                        {label}
+                      </span>
+                    </label>
+                  )
+                })}
               </div>
               <Select
                 mode="multiple"
@@ -358,7 +370,7 @@ export default function CalendarioEntregasPage() {
                   }}
                   onSelectSlot={() => setEventoSeleccionado(null)}
                   soloProgramadasActivas={false}
-                  ocultarCancelados={!mostrarCancelados}
+                  estadosVisibles={estadosVisibles}
                   vehiculo_ids={vehiculoIds}
                 />
               </Suspense>
