@@ -49,6 +49,27 @@ import { useQueryClient } from "@tanstack/react-query";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 import FilterDateRangeFields from "~/app/_components/filters/filter-date-range-fields";
 
+/**
+ * Estados del comprobante frente a SUNAT, con las MISMAS etiquetas que usa la
+ * columna "SUNAT" de la tabla (columns-mis-ventas). Si cambian allá, cambiar acá.
+ *
+ * 'sin_emitir' y 'no_aplica' no son estados de la tabla `comprobantes_electronicos`:
+ * el backend los traduce a "boleta/factura sin comprobante generado" y "nota de
+ * venta", que no se declara.
+ */
+const OPCIONES_ESTADO_SUNAT = [
+  { value: "PENDIENTE", label: "No enviado" },
+  { value: "PROCESANDO", label: "Procesando" },
+  { value: "ACEPTADO", label: "Aceptado" },
+  { value: "ACEPTADO_CON_OBSERVACIONES", label: "Aceptado c/obs" },
+  { value: "RECHAZADO", label: "Rechazado" },
+  { value: "BAJA_PENDIENTE", label: "Baja pendiente" },
+  { value: "BAJA_ACEPTADA", label: "Baja aceptada" },
+  { value: "ANULADO", label: "Anulado" },
+  { value: "sin_emitir", label: "Sin emitir" },
+  { value: "no_aplica", label: "No aplica (nota de venta)" },
+];
+
 interface ValuesFiltersMisVentas {
   almacen_id: number;
   cliente_id?: number;
@@ -60,6 +81,7 @@ interface ValuesFiltersMisVentas {
   tipo_documento?: TipoDocumento;
   user_id?: string;
   estado_de_venta?: EstadoDeVenta;
+  estado_sunat?: string;
   estado_cuenta?: 'pagado' | 'deuda';
   serie_numero?: string;
   entrega?: 'pendiente' | 'completa';
@@ -146,6 +168,7 @@ export default function FiltersMisVentas() {
     if (values.forma_de_pago) count++;
     if (values.despliegue_de_pago_id) count++;
     if (values.estado_de_venta) count++;
+    if (values.estado_sunat) count++;
     if (values.estado_cuenta) count++;
     if (values.user_id) count++;
     if (values.serie_numero) count++;
@@ -497,6 +520,21 @@ export default function FiltersMisVentas() {
           </div>
           <div className="col-span-2 flex items-center gap-1">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
+              SUNAT:
+            </label>
+            <ConfigurableElement componentId="field-estado-sunat" label="Campo Estado SUNAT">
+              <Form.Item name="estado_sunat" noStyle>
+                <Select
+                  allowClear
+                  placeholder="Todos"
+                  className="w-full"
+                  options={OPCIONES_ESTADO_SUNAT}
+                />
+              </Form.Item>
+            </ConfigurableElement>
+          </div>
+          <div className="col-span-2 flex items-center gap-1">
+            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
               Entrega:
             </label>
             <ConfigurableElement componentId="field-entrega" label="Campo Entrega">
@@ -703,6 +741,19 @@ export default function FiltersMisVentas() {
               allowClear
               placeholder="Todos"
             />
+          </div>
+          <div>
+            <label className="text-sm font-semibold text-gray-700 block mb-2">
+              SUNAT:
+            </label>
+            <Form.Item name="estado_sunat" noStyle>
+              <Select
+                allowClear
+                placeholder="Todos"
+                className="w-full"
+                options={OPCIONES_ESTADO_SUNAT}
+              />
+            </Form.Item>
           </div>
           <div>
             <label className="text-sm font-semibold text-gray-700 block mb-2">
