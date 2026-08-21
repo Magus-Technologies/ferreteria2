@@ -154,7 +154,22 @@ export default function useInitVenta({
         cargo_destino: entrega?.cargo_destino || undefined,
         vehiculo_id: entrega?.vehiculo_id ? Number(entrega.vehiculo_id) : undefined,
         // Si es venta editada con stock no aplicado, no descontar de nuevo.
-        descontar_stock: (venta as any).stock_aplicado === false ? 'no' : 'si',
+        //
+        // EXCEPCIÓN: una venta EN ESPERA siempre tiene `stock_aplicado = false`,
+        // pero por un motivo distinto — todavía no se confirmó, no porque el
+        // cliente ya se haya llevado la mercadería. Tratarla como 'no' rompía dos
+        // cosas al recuperarla:
+        //
+        //   1. El paso de entrega no aparecía. La condición de cards-info-venta
+        //      (`EnTienda` + `descontar_stock === 'no'`) se cumplía siempre, así
+        //      que al terminar de cobrar hacía form.submit() directo y nunca
+        //      preguntaba quién entrega ni dejaba programar la entrega.
+        //   2. El stock no se descontaba al confirmar: el backend calcula
+        //      `$noDescontarStockUpdate` con este mismo flag.
+        descontar_stock:
+          (venta as any).estado_de_venta !== 'ee' && (venta as any).stock_aplicado === false
+            ? 'no'
+            : 'si',
         // Si la cotización origen ya reservó stock, no descontar pero sí marcar como aplicado.
         // Se manda como fallback: el backend prioriza `cotizacion_id` (abajo) y verifica
         // reservar_stock directo en la BD, así que este flag ya no es el único freno.

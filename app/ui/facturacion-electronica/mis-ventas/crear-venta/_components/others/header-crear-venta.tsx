@@ -283,9 +283,20 @@ export default function HeaderCrearVenta({
     });
   };
 
+  // Una venta EN ESPERA no se está editando: se está recuperando el borrador para
+  // confirmarlo, y recién ahí se le asigna serie y número. Decir "Editar Venta"
+  // confunde — el vendedor cree que está modificando una venta ya emitida.
+  const esEnEspera = (venta as any)?.estado_de_venta === "ee";
+
   return (
     <TituloModulos
-      title={`${venta ? "Editar" : "Crear"} Venta`}
+      title={
+        !venta
+          ? "Crear Venta"
+          : esEnEspera
+            ? "Confirmar Venta en Espera"
+            : "Editar Venta"
+      }
       icon={
         venta ? (
           <MdOutlineSell className="text-orange-600" />
