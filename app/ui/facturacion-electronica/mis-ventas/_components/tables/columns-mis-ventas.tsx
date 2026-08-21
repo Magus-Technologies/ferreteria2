@@ -18,7 +18,8 @@ export function calcularTotalesVentaConVales(data: any) {
       const precio = Number(unidad.precio || 0);
       const recargo = Number(unidad.recargo || 0);
       const descuento = Number(unidad.descuento || 0);
-      const subtotalConRecargo = precio * cantidad + recargo;
+      // Recargo POR UNIDAD (ver lib/utils/venta-total.ts).
+      const subtotalConRecargo = (precio + recargo) * cantidad;
       const montoDescuento =
         unidad.descuento_tipo === "%"
           ? (subtotalConRecargo * descuento) / 100

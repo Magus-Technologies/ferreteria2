@@ -14,8 +14,10 @@
  * otro, o vuelve el mismo desfase.
  *
  * Reglas:
- * - El recargo es POR LÍNEA de producto: se suma una vez, no se multiplica por
- *   la cantidad. Con 3 productos distintos se suman los 3 recargos.
+ * - El recargo es POR UNIDAD: se suma al precio y recién ahí se multiplica por
+ *   la cantidad. Antes se sumaba una sola vez por línea, y eso hacía que esta
+ *   pantalla mostrara menos que Mis Ventas — la diferencia era exactamente
+ *   `recargo × (cantidad − 1)`.
  * - El descuento se aplica DESPUÉS del recargo, sobre el subtotal ya recargado.
  * - `descuento_tipo === 'porcentaje'` lo trata como %; cualquier otro valor lo
  *   trata como monto fijo.
@@ -31,7 +33,7 @@ export function calcularTotalVenta(venta: any): number {
       const recargo = Number(u?.recargo ?? 0)
       const descuento = Number(u?.descuento ?? 0)
 
-      const subtotalConRecargo = precio * cantidad + recargo
+      const subtotalConRecargo = (precio + recargo) * cantidad
 
       acc += u?.descuento_tipo === 'porcentaje'
         ? subtotalConRecargo - (subtotalConRecargo * descuento) / 100
