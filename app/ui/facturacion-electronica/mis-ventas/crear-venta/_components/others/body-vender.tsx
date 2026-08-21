@@ -344,11 +344,28 @@ export default function BodyVender({
       setProductos([])
       setCarrito([])
       setValesAplicables([])
+
+      // Si se estaba EDITANDO una venta (o cargando una cotización), vaciar el
+      // carrito no alcanza: `venta` sigue en las props, y el remount por formKey
+      // hace que useInitVenta la vuelva a cargar entera — el formulario quedaba
+      // con los mismos datos que se acababan de poner en espera, como si no
+      // hubiera pasado nada.
+      //
+      // Mismo tratamiento que al cerrar el modal de documento: formCleaned deja
+      // el form vacío en el acto y la navegación limpia la URL, así la pantalla
+      // queda lista para una venta nueva.
+      if (venta?.id || cotizacion?.id) {
+        setFormCleaned(true)
+        setFormKey(prev => prev + 1)
+        router.push('/ui/facturacion-electronica/mis-ventas/crear-venta')
+        return
+      }
+
       setFormKey(prev => prev + 1)
     })
 
     return unsubscribe
-  }, [setProductoAgregado, setProductos, setCarrito, setValesAplicables])
+  }, [setProductoAgregado, setProductos, setCarrito, setValesAplicables, venta?.id, cotizacion?.id, router])
 
   // Limpiar formulario cuando se cierra el modal
   useEffect(() => {
