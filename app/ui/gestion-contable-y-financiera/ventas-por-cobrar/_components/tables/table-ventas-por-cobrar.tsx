@@ -513,6 +513,24 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
     ? `${ventaSeleccionadaPdf.serie}-${ventaSeleccionadaPdf.numero}` 
     : ''
 
+  // Teléfonos del cliente, para que el modal de WhatsApp los precargue. Sin esto
+  // el campo salía vacío y había que tipear el número a mano cada vez.
+  const clienteTelefonos = (() => {
+    const cliente: any = ventaSeleccionadaPdf?.cliente
+    if (!cliente) return undefined
+    const tels: string[] = []
+    if (cliente.telefono) tels.push(cliente.telefono)
+    if (cliente.celular) tels.push(cliente.celular)
+    return tels.length > 0 ? tels : undefined
+  })()
+
+  // URL pública del PDF que se adjunta al mensaje de WhatsApp. Siempre A4: es el
+  // formato legible para el cliente que abre el link desde el celular.
+  // Sin esta prop el mensaje salía solo con el texto y sin el enlace.
+  const pdfPublicUrl = ventaSeleccionadaPdf
+    ? `${process.env.NEXT_PUBLIC_API_URL}/pdf/venta/${ventaSeleccionadaPdf.id}?formato=a4`
+    : undefined
+
   return (
     <>
       <TableWithTitle<VentaCompleta>
@@ -549,6 +567,8 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
         tipoDocumento='venta'
         backendPdfUrl={pdfUrl}
         backendPdfLoading={pdfLoading}
+        clienteTelefonos={clienteTelefonos}
+        pdfPublicUrl={pdfPublicUrl}
       >
         <></>
       </ModalShowDoc>
