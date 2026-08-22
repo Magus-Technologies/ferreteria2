@@ -13,6 +13,7 @@ import { greenColors } from '~/lib/colors'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { kardexApi, type MovimientoKardex, type TipoMovimientoInventario } from '~/lib/api/kardex'
 import SelectProductos from '~/app/_components/form/selects/select-productos'
+import { coincideProducto, palabrasBusqueda } from '~/lib/utils/filtro-texto-producto'
 import SelectProveedores from '~/app/_components/form/selects/select-proveedores'
 import ButtonBase from '~/components/buttons/button-base'
 import { useStoreAlmacen } from '~/store/store-almacen'
@@ -125,13 +126,18 @@ export default function KardexInventarioView() {
     return t.includes('anulad') || mov.includes('ANULA')
   }
 
-  // Filtro client-side por Estado (Activos / Anulados)
+  // Filtro client-side por Estado (Activos / Anulados) y por el texto escrito
+  // en el buscador de producto mientras no se eligió uno (solo mira el
+  // producto, no toda la fila — ver el helper). Con producto elegido el
+  // servidor ya filtró por id y el texto no aplica.
   const movimientosFiltrados = useMemo(() => {
     const rows = data?.data || []
-    if (!estado) return rows
-    return rows.filter((m) => (estado === 'anulados' ? esAnulado(m) : !esAnulado(m)))
+    const palabras = productoId ? [] : palabrasBusqueda(debouncedSearchText)
+    return rows
+      .filter((m) => !estado || (estado === 'anulados' ? esAnulado(m) : !esAnulado(m)))
+      .filter((m) => coincideProducto(m as any, palabras))
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, estado])
+  }, [data, estado, productoId, debouncedSearchText])
 
   const columns: ColDef<MovimientoKardex>[] = [
     {
@@ -506,7 +512,6 @@ export default function KardexInventarioView() {
           rowData={movimientosFiltrados}
           pagination={false}
           persistColumnState={false}
-          quickFilterText={debouncedSearchText}
           optionsSelectColumns={[
             {
               label: 'Default',

@@ -21,6 +21,7 @@ import type { Producto } from '~/app/_types/producto'
 import type { Proveedor } from '~/lib/api/proveedor'
 import type { Cliente } from '~/lib/api/cliente'
 import { GetStock } from '~/app/_utils/get-stock'
+import { coincideProducto, palabrasBusqueda } from '~/lib/utils/filtro-texto-producto'
 
 const { RangePicker } = DatePicker
 
@@ -247,8 +248,14 @@ export default function KardexCombinadoView() {
 
   // Combinar ambas fuentes + aplicar filtros client-side (Estado Inventario, Tipo/Estado Facturación)
   const movimientos: MovimientoCombinado[] = useMemo(() => {
+    // Texto escrito en el buscador de producto, mientras todavía no se eligió
+    // uno: filtra SOLO por producto (no por toda la fila, ver el helper). Con
+    // producto elegido el servidor ya filtró por id y el texto no aplica.
+    const palabras = productoId ? [] : palabrasBusqueda(debouncedSearchText)
+
     const rowsInventario = (dataInventario?.data || [])
       .filter((m) => !estadoInventario || (estadoInventario === 'anulados' ? esAnuladoInventario(m) : !esAnuladoInventario(m)))
+      .filter((m) => coincideProducto(m as any, palabras))
       .map((m) => ({ ...m, _origen: 'inventario' as const, _fechaEfectiva: fechaEfectiva(m) }))
 
     const rowsFacturacion = (dataFacturacion?.data || [])
@@ -259,6 +266,7 @@ export default function KardexCombinadoView() {
         const okEstado = estadosFacturacion.length === 0 || estadosFacturacion.includes(estado)
         return okTipo && okEstado
       })
+      .filter((m) => coincideProducto(m as any, palabras))
       .map((m) => ({ ...m, _origen: 'facturacion' as const, _fechaEfectiva: fechaEfectiva(m) }))
 
     return [...rowsInventario, ...rowsFacturacion].sort((a, b) => {
@@ -266,7 +274,7 @@ export default function KardexCombinadoView() {
       const fb = dayjs(b._fechaEfectiva).valueOf()
       return fb - fa
     })
-  }, [dataInventario, dataFacturacion, estadoInventario, tiposFacturacion, estadosFacturacion])
+  }, [dataInventario, dataFacturacion, estadoInventario, tiposFacturacion, estadosFacturacion, productoId, debouncedSearchText])
 
   const columns: ColDef<MovimientoCombinado>[] = [
     {
@@ -696,7 +704,6 @@ export default function KardexCombinadoView() {
           rowData={movimientos}
           pagination={false}
           persistColumnState={false}
-          quickFilterText={debouncedSearchText}
           optionsSelectColumns={[
             {
               label: 'Default',

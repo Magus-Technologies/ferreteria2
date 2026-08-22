@@ -2,6 +2,7 @@ import type { Producto } from "~/app/_types/producto";
 import { useColumnsProductos } from "~/app/ui/gestion-comercial-e-inventario/mi-almacen/_components/tables/columns-productos";
 import TableWithTitle from "~/components/tables/table-with-title";
 import { TipoBusquedaProducto } from "../form/selects/select-tipo-busqueda-producto";
+import { coincideInicioDePalabra, coincideProductoBusqueda, palabrasBusqueda } from "~/lib/utils/filtro-texto-producto";
 import { ProductoCreateInputSchema } from "~/types/zod-schemas";
 import { useStoreProductoSeleccionadoSearch } from "~/app/ui/gestion-comercial-e-inventario/mi-almacen/_store/store-producto-seleccionado-search";
 import { useStoreAlmacen } from "~/store/store-almacen";
@@ -219,24 +220,26 @@ export default function TableProductoSearch({
       });
     }
 
-    // 4) Búsqueda por texto (disparada por Enter, value.length >= 2)
+    // 4) Búsqueda por texto (disparada por Enter, value.length >= 2).
+    //
+    // Por PALABRAS, no por frase completa: `TUBO PVC DSG"` tiene que encontrar
+    // `TUBO PVC DSG 4" X 3M` aunque entre DSG y la comilla haya un " 4". Cada
+    // palabra debe aparecer en alguno de los campos (AND, en cualquier orden);
+    // comillas y comas se ignoran. Mismo criterio que el backend
+    // (ProductoRepository::applyFilters), que es quien decide si el Enter
+    // abre el modal o selecciona directo.
     const searchTerm = value?.trim().toLowerCase();
     if (searchTerm && searchTerm.length >= 2) {
+      const palabras = palabrasBusqueda(searchTerm);
       productos = productos.filter((p) => {
         switch (tipoBusqueda) {
           case TipoBusquedaProducto.CODIGO_BARRAS:
             return (p.cod_barra ?? '').toLowerCase().includes(searchTerm);
           case TipoBusquedaProducto.ACCION_TECNICA:
-            return (p.accion_tecnica ?? '').toLowerCase().includes(searchTerm);
+            return palabras.every((w) => coincideInicioDePalabra(p.accion_tecnica, w));
           case TipoBusquedaProducto.CODIGO_DESCRIPCION:
           default:
-            return (
-              p.name.toLowerCase().includes(searchTerm) ||
-
-              p.cod_producto.toLowerCase().includes(searchTerm) ||
-              (p.cod_barra ?? '').toLowerCase().includes(searchTerm) ||
-              (p.name_ticket ?? '').toLowerCase().includes(searchTerm)
-            );
+            return coincideProductoBusqueda(p, palabras);
         }
       });
     }

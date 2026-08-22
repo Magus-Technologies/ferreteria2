@@ -179,6 +179,10 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
     if (!open) {
       setText('')
       setTextDefault('')
+      // El input quedó vacío: avisar a quien espeja el texto (kardex, mis
+      // ganancias) para que no siga filtrando por algo que ya no se ve. Sin
+      // esto, cerrar el modal sin elegir dejaba la tabla filtrada "a ciegas".
+      onSearch?.('')
       setTimeout(() => {
         selectProductoRef.current?.focus()
       }, 300)

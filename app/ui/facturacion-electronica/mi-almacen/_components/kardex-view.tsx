@@ -13,6 +13,7 @@ import { orangeColors } from '~/lib/colors'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { kardexApi, type MovimientoKardex } from '~/lib/api/kardex'
 import SelectProductos from '~/app/_components/form/selects/select-productos'
+import { coincideProducto, palabrasBusqueda } from '~/lib/utils/filtro-texto-producto'
 import SelectClientes from '~/app/_components/form/selects/select-clientes'
 import ButtonBase from '~/components/buttons/button-base'
 import { useStoreAlmacen } from '~/store/store-almacen'
@@ -157,17 +158,23 @@ export default function KardexView() {
     return { tipoOptions: toOptions(tipos), estadoOptions: toOptions(estados) }
   }, [data])
 
-  // Filtro client-side por Tipo y Estado (los datos ya están cargados)
+  // Filtro client-side por Tipo y Estado (los datos ya están cargados) y por
+  // el texto escrito en el buscador de producto mientras no se eligió uno
+  // (solo mira el producto, no toda la fila — ver el helper). Con producto
+  // elegido el servidor ya filtró por id y el texto no aplica.
   const movimientosFiltrados = useMemo(() => {
     const rows = data?.data || []
-    if (tiposFiltro.length === 0 && estadosFiltro.length === 0) return rows
-    return rows.filter((m) => {
-      const { tipo, estado } = parseMovimiento(m.movimiento || '', Number(m.cantidad_reservada ?? 0))
-      const okTipo = tiposFiltro.length === 0 || tiposFiltro.includes(tipo)
-      const okEstado = estadosFiltro.length === 0 || estadosFiltro.includes(estado)
-      return okTipo && okEstado
-    })
-  }, [data, tiposFiltro, estadosFiltro])
+    const palabras = productoId ? [] : palabrasBusqueda(debouncedSearchText)
+    return rows
+      .filter((m) => {
+        if (tiposFiltro.length === 0 && estadosFiltro.length === 0) return true
+        const { tipo, estado } = parseMovimiento(m.movimiento || '', Number(m.cantidad_reservada ?? 0))
+        const okTipo = tiposFiltro.length === 0 || tiposFiltro.includes(tipo)
+        const okEstado = estadosFiltro.length === 0 || estadosFiltro.includes(estado)
+        return okTipo && okEstado
+      })
+      .filter((m) => coincideProducto(m as any, palabras))
+  }, [data, tiposFiltro, estadosFiltro, productoId, debouncedSearchText])
 
   const columns: ColDef<MovimientoKardex>[] = [
     {
@@ -603,7 +610,6 @@ export default function KardexView() {
           rowData={movimientosFiltrados}
           pagination={false}
           persistColumnState={false}
-          quickFilterText={debouncedSearchText}
           getRowStyle={(params) => {
             const mov = (params.data as MovimientoKardex)?.movimiento
             const { estado } = parseMovimiento(mov || '')
