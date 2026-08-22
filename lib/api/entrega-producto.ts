@@ -75,26 +75,33 @@ export interface CreateEntregaProductoRequest {
   productos_entregados: ProductoEntregadoRequest[];
 }
 
+/**
+ * Los campos que admiten `null` se pueden LIMPIAR: el backend solo escribe las
+ * claves que llegan en el request y `JSON.stringify` descarta los `undefined`,
+ * así que para quitar el chofer, el vehículo o la referencia de una entrega
+ * ya guardada hay que mandar `null` explícito — con `undefined` se queda el
+ * valor viejo.
+ */
 export interface UpdateEntregaProductoRequest {
   grupo_entrega_id?: number;
   tipo_entrega?: TipoEntrega;
   tipo_despacho?: TipoDespacho;
   estado_entrega?: EstadoEntrega;
   fecha_entrega?: string;
-  fecha_programada?: string;
-  hora_inicio?: string;
-  hora_fin?: string;
-  direccion_entrega?: string;
-  referencia_entrega?: string;
-  latitud?: number;
-  longitud?: number;
-  observaciones?: string;
+  fecha_programada?: string | null;
+  hora_inicio?: string | null;
+  hora_fin?: string | null;
+  direccion_entrega?: string | null;
+  referencia_entrega?: string | null;
+  latitud?: number | null;
+  longitud?: number | null;
+  observaciones?: string | null;
   almacen_salida_id?: number;
-  chofer_id?: string;
+  chofer_id?: string | null;
   quien_entrega?: QuienEntrega;
-  vehiculo_id?: number;
+  vehiculo_id?: number | null;
   tipo_pedido?: TipoPedido;
-  cargo_destino?: string;
+  cargo_destino?: string | null;
   productos_entregados?: ProductoEntregadoRequest[];
 }
 

@@ -29,8 +29,19 @@ export default function useInitVenta({
     // ya no la limpia (ver store-producto-agregado-venta.ts).
     setCarrito([])
     if (venta) {
-      // Mapear datos de la primera entrega si existe
-      const entrega = (venta as any).entregas_productos?.[0]
+      // Precargar el form con la entrega que todavía se puede reprogramar
+      // (pendiente o en camino). Antes se tomaba la primera del arreglo sin
+      // mirar el estado: si la venta tenía una entrega cancelada y después
+      // otra activa, el modal de "Editar Entrega" mostraba los datos de la
+      // cancelada — chofer, vehículo y horario que ya no corrían.
+      const entregasVenta: any[] = (venta as any).entregas_productos ?? []
+      const entrega =
+        entregasVenta.find((e) => e.estado_entrega === 'pe' || e.estado_entrega === 'ec') ??
+        entregasVenta[0]
+      // La hora viene de una columna TIME ("19:30:00"); el backend la valida
+      // como "H:i" al reprogramar, y los pickers del modal también trabajan
+      // con "HH:mm".
+      const horaHHmm = (v: unknown) => (v ? String(v).slice(0, 5) : undefined)
       const tipoEntregaMap: Record<string, 'EnTienda' | 'Domicilio' | 'Parcial'> = {
         rt: 'EnTienda',
         de: 'Domicilio',
@@ -41,9 +52,13 @@ export default function useInitVenta({
         do: 'Domicilio',
         pa: 'Parcial',
       }
+      // `tipo_pedido` se guarda y se valida en minúsculas ('interno'/'externo')
+      // y el select del modal usa esos mismos valores (`TipoPedido.INTERNO`).
+      // Antes se mapeaba a 'INTERNO'/'EXTERNO': el select no encontraba la
+      // opción y, al reprogramar, el backend rechazaba el valor.
       const tipoPedidoMap: Record<string, string> = {
-        interno: 'INTERNO',
-        externo: 'EXTERNO',
+        interno: 'interno',
+        externo: 'externo',
       }
 
       // Filas iniciales del carrito — van a Zustand (setCarrito más abajo),
@@ -137,8 +152,8 @@ export default function useInitVenta({
           (entrega ? tipoEntregaMap[entrega.tipo_entrega] : 'EnTienda'),
         despachador_id: entrega?.chofer_id || undefined,
         fecha_programada: entrega?.fecha_programada ? dayjs(entrega.fecha_programada).format('YYYY-MM-DD') : undefined,
-        hora_inicio: entrega?.hora_inicio || undefined,
-        hora_fin: entrega?.hora_fin || undefined,
+        hora_inicio: horaHHmm(entrega?.hora_inicio),
+        hora_fin: horaHHmm(entrega?.hora_fin),
         direccion_entrega: entrega?.direccion_entrega || undefined,
         referencia_entrega: entrega?.referencia_entrega || undefined,
         latitud: entrega?.latitud ? Number(entrega.latitud) : undefined,

@@ -24,8 +24,11 @@ import {
   EstadoEntrega,
   QuienEntrega,
   TipoPedido,
-  type CreateEntregaProductoRequest
+  type CreateEntregaProductoRequest,
+  type UpdateEntregaProductoRequest,
+  type ProductoEntregadoRequest,
 } from '~/lib/api/entrega-producto'
+import { entregasNuevasApi, type EntregaNueva } from '~/lib/api/entregas'
 import { fcmApi } from '~/lib/api/fcm'
 import { clienteApi, TipoDireccion, TipoCliente } from '~/lib/api/cliente'
 import { LEGACY_CLIENTE_DIRECCION_ID_FIELDS } from '~/lib/utils/cliente-direcciones-form'
@@ -91,10 +94,96 @@ export function agruparProductos({
   return Array.from(mapa.values())
 }
 
-export default function useCreateVenta({ 
+/**
+ * Claves que el modal de entrega deja listas (store-entrega-pendiente) y que el
+ * submit toma de ahí. Todo lo demás —pago, cliente, productos, estado— sale
+ * del form vivo, nunca de la foto que tomó el modal.
+ */
+const CLAVES_ENTREGA_PENDIENTE = [
+  'tipo_despacho',
+  'despachador_id',
+  'fecha_programada',
+  'hora_inicio',
+  'hora_fin',
+  'direccion_entrega',
+  'referencia_entrega',
+  'latitud',
+  'longitud',
+  'observaciones',
+  'quien_entrega',
+  'cantidades_parciales',
+  'parcial_resto_programado',
+  'tipo_pedido',
+  'cargo_destino',
+  'vehiculo_id',
+] as const
+
+/**
+ * Entrega de la venta que todavía se puede reprogramar.
+ *
+ * Toda venta nace con una entrega —"recojo en tienda" por defecto, o la que se
+ * programó al crearla— y esa entrega ya tiene asignadas todas las unidades. Al
+ * editar el despacho hay que MODIFICAR esa misma; crear una segunda por las
+ * mismas cantidades la rechaza el backend ("la cantidad entregada no puede ser
+ * mayor a la cantidad pendiente (0)"). Eso era lo que pasaba al editar: la
+ * venta se guardaba, la advertencia pasaba desapercibida y el chofer, el
+ * vehículo y el horario recién cargados nunca llegaban a la base.
+ *
+ * Solo cuenta la que sigue PENDIENTE: una entrega en camino o entregada ya no
+ * se reprograma desde acá. Si hay varias pendientes (ventas parciales) se
+ * prefiere la que ya es a domicilio.
+ */
+async function buscarEntregaReprogramable(ventaId: string): Promise<EntregaNueva | null> {
+  const resp = await entregasNuevasApi.porVenta(ventaId)
+  const lista = ((resp.data as any)?.data ?? resp.data) as EntregaNueva[] | undefined
+  if (!Array.isArray(lista)) return null
+  const pendientes = lista.filter((e) => e.estado_entrega_codigo === 'pe')
+  return pendientes.find((e) => e.tipo_entrega_codigo === 'de') ?? pendientes[0] ?? null
+}
+
+/** "19:30:00" (columna TIME) → "19:30", que es lo que valida el backend. */
+const horaHHmm = (v?: string | null) => (v ? String(v).slice(0, 5) : null)
+
+/**
+ * Convierte el payload de creación en el de reprogramación de la entrega que
+ * ya existe. Lo que en la creación simplemente se omite acá va como `null` a
+ * propósito: el backend solo escribe las claves que llegan, así que sin el
+ * null quitar el chofer o la referencia dejaría el valor viejo.
+ *
+ * No lleva `estado_entrega`: la entrega sigue pendiente. Sí lleva las
+ * cantidades de TODAS las unidades de la venta, incluidas las que van en 0:
+ * en un split ("de estas 4, 2 van a domicilio") el backend reescribe el
+ * detalle con lo nuevo comprometido y el resto vuelve a quedar pendiente
+ * para otra entrega, igual que cuando la venta se crea con ese split.
+ */
+function aPayloadReprogramacion(
+  d: CreateEntregaProductoRequest,
+  productos: ProductoEntregadoRequest[],
+): UpdateEntregaProductoRequest {
+  return {
+    productos_entregados: productos,
+    tipo_entrega: d.tipo_entrega,
+    tipo_despacho: d.tipo_despacho,
+    quien_entrega: d.quien_entrega,
+    chofer_id: d.chofer_id ?? null,
+    vehiculo_id: d.vehiculo_id ?? null,
+    fecha_programada: d.fecha_programada ?? null,
+    hora_inicio: horaHHmm(d.hora_inicio),
+    hora_fin: horaHHmm(d.hora_fin),
+    direccion_entrega: d.direccion_entrega ?? null,
+    referencia_entrega: d.referencia_entrega ?? null,
+    latitud: d.latitud ?? null,
+    longitud: d.longitud ?? null,
+    observaciones: d.observaciones ?? null,
+    tipo_pedido: d.tipo_pedido ? (String(d.tipo_pedido).toLowerCase() as TipoPedido) : undefined,
+    cargo_destino: d.cargo_destino ?? null,
+  }
+}
+
+export default function useCreateVenta({
   ventaId,
   onMissingApertura,
-}: { 
+}: {
   ventaId?: string
   onMissingApertura?: () => void
 } = {}) {
@@ -112,14 +201,25 @@ export default function useCreateVenta({
     if (submittingRef.current) return
 
     // Entrega programada desde el modal en modo "solo registrar" (edición de una
-    // venta existente): el modal no guardó, dejó el payload esperando acá. Se
-    // fusiona encima de los valores del form — trae `cantidades_parciales` y la
-    // configuración de la entrega, que es lo que más abajo decide si la entrega
-    // se toca o se deja intacta. Ver store-entrega-pendiente.ts.
+    // venta existente): el modal no guardó, dejó el payload esperando acá. Trae
+    // `cantidades_parciales` y la configuración de la entrega, que es lo que más
+    // abajo decide si la entrega se toca o se deja intacta. Ver
+    // store-entrega-pendiente.ts.
+    //
+    // Se copian SOLO las claves de la entrega, y solo las que traen valor. El
+    // modal toma su foto del form al confirmarse; si se confirmó ANTES de
+    // cambiar el método de pago, esa foto trae `diferencia_pago: undefined`, y
+    // fusionarla entera encima de los valores del form pisaba con undefined el
+    // cambio de método que el vendedor acababa de hacer: el pago nunca llegaba
+    // al backend.
     const entregaPendiente = useStoreEntregaPendiente.getState().valores
     const entregaProgramadaExplicita = !!entregaPendiente
     if (entregaPendiente) {
-      values = { ...values, ...entregaPendiente } as FormCreateVenta
+      const fusionado: Record<string, any> = { ...values }
+      for (const clave of CLAVES_ENTREGA_PENDIENTE) {
+        if (entregaPendiente[clave] !== undefined) fusionado[clave] = entregaPendiente[clave]
+      }
+      values = fusionado as FormCreateVenta
     }
     if (!user_id)
       return notification.error({ message: 'No hay un usuario seleccionado' })
@@ -605,6 +705,11 @@ export default function useCreateVenta({
             }
           }
 
+          // Para la REPROGRAMACIÓN (edición) van todas las unidades, también
+          // las que quedan en 0 — así el detalle de la entrega refleja
+          // exactamente lo que mostró el modal. Para la creación solo las > 0.
+          const cantidadesPorUnidad: ProductoEntregadoRequest[] = []
+
           productosVenta.forEach((productoAlmacen: any) => {
             if (productoAlmacen.unidades_derivadas) {
               const prodName = productoAlmacen.producto_almacen?.producto?.name ?? ''
@@ -614,6 +719,10 @@ export default function useCreateVenta({
                 const cantidadAEntregar = cantidades_parciales
                   ? Number(parcial?.entregar_programado ?? 0)
                   : Number(unidad.cantidad)
+                cantidadesPorUnidad.push({
+                  unidad_derivada_venta_id: unidad.id,
+                  cantidad_entregada: cantidadAEntregar,
+                })
                 if (cantidadAEntregar > 0) {
                   unidadesDerivadas.push({
                     unidad_derivada_venta_id: unidad.id,
@@ -656,23 +765,41 @@ export default function useCreateVenta({
           }
 
 
-          // Crear la entrega
-          const entregaResponse = await entregaProductoApi.create(entregaData)
+          // En edición la venta ya tiene su entrega: se reprograma esa. Crear
+          // una nueva es el camino de la venta recién creada (ver
+          // buscarEntregaReprogramable).
+          const entregaExistente = isEditing ? await buscarEntregaReprogramable(ventaCreada.id) : null
+          const entregaResponse = entregaExistente
+            ? await entregaProductoApi.update(
+                entregaExistente.id,
+                aPayloadReprogramacion(entregaData, cantidadesPorUnidad),
+              )
+            : await entregaProductoApi.create(entregaData)
 
           if (entregaResponse.error) {
-            console.error('❌ Error al crear entrega:', entregaResponse.error)
+            console.error('❌ Error al registrar entrega:', entregaResponse.error)
             notification.warning({
-              message: 'Venta creada pero entrega no pudo ser registrada',
-              description: 'La venta se creó correctamente pero hubo un error al registrar la entrega. Puedes crearla manualmente desde "Mis Ventas".',
+              message: entregaExistente
+                ? 'Venta guardada, pero la entrega NO se pudo reprogramar'
+                : 'Venta creada pero entrega no pudo ser registrada',
+              // El motivo del backend va visible. Antes se reemplazaba por un
+              // texto genérico y un rechazo de validación pasaba por un aviso
+              // de cortesía que nadie leía.
+              description: entregaResponse.error.message || 'Puedes corregirla desde "Mis Entregas".',
+              duration: 8,
             })
           } else {
-            message.success(despachador_id
-              ? 'Entrega programada exitosamente para el despachador'
-              : 'Entrega programada exitosamente (sin despachador asignado)')
+            message.success(
+              entregaExistente
+                ? 'Entrega reprogramada exitosamente'
+                : despachador_id
+                  ? 'Entrega programada exitosamente para el despachador'
+                  : 'Entrega programada exitosamente (sin despachador asignado)')
 
-            // Invalidar cache de entregas para que mis-ventas muestre el historial
+            // Invalidar cache de entregas: la raíz cubre 'por-venta' (historial
+            // en mis-ventas) y los listados de Mis Entregas y el calendario.
             queryClient.invalidateQueries({
-              queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, 'por-venta', ventaCreada.id],
+              queryKey: [QueryKeys.ENTREGAS_PRODUCTOS],
             })
 
             // 🔔 Enviar notificación push al despachador (solo si hay uno asignado)
