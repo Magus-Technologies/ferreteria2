@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useDebounce } from 'use-debounce'
 import { DatePicker, Select, Tag } from 'antd'
-import { FaClipboardList, FaBoxOpen, FaSearch } from 'react-icons/fa'
+import { FaClipboardList, FaSearch } from 'react-icons/fa'
 import { ColDef } from 'ag-grid-community'
 import dayjs from 'dayjs'
 import { formatFechaPeru } from '~/utils/fechas'
@@ -184,22 +184,20 @@ export default function KardexView() {
       minWidth: 180,
       valueFormatter: (params) => formatFechaPeru(params.value, 'DD/MM/YYYY hh:mm:ss A') || '-',
     },
-    // Mostrar columnas de producto solo cuando no hay producto seleccionado
-    ...(!productoId ? [
-      {
-        headerName: 'Código',
-        field: 'producto_codigo' as keyof MovimientoKardex,
-        width: 120,
-        minWidth: 100,
-        cellStyle: { color: '#f97316', fontWeight: 'bold' },
-      },
-      {
-        headerName: 'Producto',
-        field: 'producto_nombre' as keyof MovimientoKardex,
-        flex: 1,
-        minWidth: 200,
-      },
-    ] : []),
+    // Código y Producto siempre visibles — también con un producto elegido.
+    {
+      headerName: 'Código',
+      field: 'producto_codigo' as keyof MovimientoKardex,
+      width: 120,
+      minWidth: 100,
+      cellStyle: { color: '#f97316', fontWeight: 'bold' },
+    },
+    {
+      headerName: 'Producto',
+      field: 'producto_nombre' as keyof MovimientoKardex,
+      flex: 1,
+      minWidth: 200,
+    },
     {
       headerName: 'Cliente',
       field: 'cliente_nombre',
@@ -555,48 +553,9 @@ export default function KardexView() {
           </ButtonBase>
         </div>
 
-        {/* Aviso cuando no hay producto seleccionado */}
-        {!productoSeleccionado && (
-          <div className='flex items-center gap-2 bg-blue-50 rounded-lg px-4 py-2 border border-blue-200 text-sm text-blue-700'>
-            <FaBoxOpen className='text-blue-400 flex-shrink-0' />
-            <span>Selecciona un <strong>producto</strong> para ver el seguimiento de stock (Stock Anterior / Stock Actual) y el saldo acumulado.</span>
-          </div>
-        )}
-
-        {/* Info del producto seleccionado */}
-        {productoSeleccionado && (
-          <div className='flex items-center gap-4 bg-orange-50 rounded-lg px-4 py-2 border border-orange-200'>
-            <FaBoxOpen className='text-orange-500' />
-            <div className='flex-1 min-w-0'>
-              <span className='font-semibold text-gray-800 truncate'>{productoSeleccionado.name}</span>
-              <span className='text-gray-500 ml-2 text-sm'>({productoSeleccionado.cod_producto})</span>
-            </div>
-            {data && (
-              <div className='flex items-center gap-4 text-sm flex-shrink-0'>
-                <div className='text-center'>
-                  <div className='text-xs text-gray-500'>Total Ingresó</div>
-                  <div className='font-bold text-lg text-emerald-600'>
-                    {data.data.reduce((sum, m) => sum + Number(m.entrada ?? 0), 0).toFixed(2)}
-                  </div>
-                </div>
-                <div className='text-center'>
-                  <div className='text-xs text-gray-500'>Total Salió</div>
-                  <div className='font-bold text-lg text-red-500'>
-                    {data.data.reduce((sum, m) => sum + Number(m.salida ?? 0), 0).toFixed(2)}
-                  </div>
-                </div>
-                <div className='text-center'>
-                  <div className='text-xs text-gray-500'>Stock Actual</div>
-                  <div className='font-bold text-lg text-orange-600'>{data.stock_actual.toFixed(2)}</div>
-                </div>
-                <div className='text-center'>
-                  <div className='text-xs text-gray-500'>Movimientos</div>
-                  <div className='font-bold text-lg text-gray-700'>{data.total}</div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+        {/* Sin barra de resumen al elegir producto: sumaba los campos crudos
+            `entrada`/`salida` (en entregas y ventas con reserva vienen en 0
+            aunque haya salida real) y no cuadraba con la tabla. */}
       </div>
 
       {/* Tabla */}
@@ -623,9 +582,7 @@ export default function KardexView() {
           optionsSelectColumns={[
             {
               label: 'Default',
-              columns: productoId
-                ? ['Fecha', 'Cliente', 'Tipo', 'Estado', 'Documento', 'Unidad', 'Cantidades', 'P. Venta', 'Costo Anterior', 'Costo Actual', 'Stock Anterior', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual']
-                : ['Fecha', 'Código', 'Producto', 'Cliente', 'Tipo', 'Estado', 'Documento', 'Unidad', 'Cantidades', 'P. Venta', 'Costo Anterior', 'Costo Actual', 'Stock Anterior', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual'],
+              columns: ['Fecha', 'Código', 'Producto', 'Cliente', 'Tipo', 'Estado', 'Documento', 'Unidad', 'Cantidades', 'P. Venta', 'Costo Anterior', 'Costo Actual', 'Stock Anterior', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual'],
             },
           ]}
         />
