@@ -11,6 +11,7 @@ import KardexInventarioView from '~/app/ui/gestion-comercial-e-inventario/kardex
 import KardexCombinadoView from '~/app/ui/gestion-comercial-e-inventario/kardex/_components/kardex-combinado-view'
 import KardexFinanzasView from '~/app/ui/gestion-contable-y-financiera/kardex-finanzas/_components/kardex-finanzas-view'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
+import { orangeColors } from '~/lib/colors'
 
 type KardexTipo = 'facturacion' | 'inventario' | 'finanzas'
 
@@ -58,12 +59,14 @@ export default function KardexPage() {
 
         {tieneFinanzas && <KardexFinanzasView />}
 
+        {/* Las vistas de Inventario traen su propio color (azul / verde); acá
+            estamos en Facturación, así que la selección va en naranja. */}
         {combinarInventarioYFacturacion ? (
-          <KardexCombinadoView />
+          <KardexCombinadoView selectionColor={orangeColors[10]} />
         ) : tieneFacturacion ? (
           <KardexView />
         ) : tieneInventario ? (
-          <KardexInventarioView />
+          <KardexInventarioView selectionColor={orangeColors[10]} />
         ) : null}
       </div>
     </ContenedorGeneral>

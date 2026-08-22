@@ -174,7 +174,17 @@ function fechaEfectiva(m: MovimientoKardex): string {
   return (!f || esMedianoche) ? (createdAt || f) : f
 }
 
-export default function KardexCombinadoView() {
+/**
+ * `selectionColor`: color de la fila seleccionada (tabla y modal de búsqueda).
+ * Esta vista se renderiza desde dos módulos: Inventario (azul, el default) y
+ * el Kardex de Facturación (naranja). Sin el parámetro, Facturación mostraba
+ * el azul marino de Inventario.
+ */
+export default function KardexCombinadoView({
+  selectionColor = blueColors[10],
+}: {
+  selectionColor?: string
+} = {}) {
   const almacenId = useStoreAlmacen((s) => s.almacen_id)
 
   const [productoSeleccionado, setProductoSeleccionado] = useState<Producto>()
@@ -561,7 +571,7 @@ export default function KardexCombinadoView() {
               className='!min-w-[250px] !w-[250px] !max-w-[250px]'
               allowClear
               showUltimasCompras={false}
-              selectionColor={blueColors[10]}
+              selectionColor={selectionColor}
               onChange={(_id, producto) => {
                 setProductoSeleccionado(producto ?? undefined)
                 if (!producto) setSearchText('')
@@ -698,7 +708,7 @@ export default function KardexCombinadoView() {
         <TableWithTitle<MovimientoCombinado>
           id='kardex.combinado.movimientos.v1'
           title={productoId ? 'Movimientos Combinados' : 'Todos los Movimientos de Hoy'}
-          selectionColor={blueColors[10]}
+          selectionColor={selectionColor}
           loading={isFetching || isSearching}
           columnDefs={columns}
           rowData={movimientos}

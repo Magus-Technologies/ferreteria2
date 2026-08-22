@@ -85,7 +85,16 @@ const movimientoLabels: Record<string, string> = {
   'SALIDA POR TRANSFERENCIA ANULADO': 'Salida Transf. Anul.',
 }
 
-export default function KardexInventarioView() {
+/**
+ * `selectionColor`: color de la fila seleccionada (tabla y modal de búsqueda).
+ * Esta vista se renderiza desde Inventario (verde, el default) y desde el
+ * Kardex de Facturación (naranja).
+ */
+export default function KardexInventarioView({
+  selectionColor = greenColors[10],
+}: {
+  selectionColor?: string
+} = {}) {
   const almacenId = useStoreAlmacen((s) => s.almacen_id)
 
   const [productoSeleccionado, setProductoSeleccionado] = useState<Producto>()
@@ -394,7 +403,7 @@ export default function KardexInventarioView() {
                 className='!min-w-[250px] !w-[250px] !max-w-[250px]'
                 allowClear
                 showUltimasCompras={false}
-                selectionColor={greenColors[10]}
+                selectionColor={selectionColor}
                 onChange={(_id, producto) => {
                   setProductoSeleccionado(producto ?? undefined)
                   if (!producto) setSearchText('')
@@ -506,7 +515,7 @@ export default function KardexInventarioView() {
         <TableWithTitle<MovimientoKardex>
           id='kardex.inventario.movimientos.v2'
           title={productoId ? 'Movimientos de Inventario' : 'Todos los Movimientos de Hoy'}
-          selectionColor={greenColors[10]}
+          selectionColor={selectionColor}
           loading={isFetching || isSearching}
           columnDefs={columns}
           rowData={movimientosFiltrados}
