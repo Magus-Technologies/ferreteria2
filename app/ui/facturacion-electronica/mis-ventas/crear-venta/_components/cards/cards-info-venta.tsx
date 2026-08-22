@@ -9,7 +9,7 @@ import useApp from "antd/es/app/useApp";
 import ButtonBase from "~/components/buttons/button-base";
 import { FormCreateVenta } from "../others/body-vender";
 import CardInfoVenta from "./card-info-venta";
-import { FaMoneyBillWave } from "react-icons/fa";
+import { FaMoneyBillWave, FaTruck } from "react-icons/fa";
 import dynamic from "next/dynamic";
 import InputBase from "~/app/_components/form/inputs/input-base";
 import { MdSell } from "react-icons/md";
@@ -76,6 +76,11 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
   };
 
   const [modalOpen, setModalOpen] = useState(false);
+  // Se marca al confirmar el modal de entrega en modo edición. El modal escribe
+  // en el form con setFieldsValue, que en AntD NO marca los campos como
+  // "touched", así que no hay forma de detectar ese cambio sin este flag.
+  const [entregaEditada, setEntregaEditada] = useState(false);
+
   const [modalDetallesEntregaOpen, setModalDetallesEntregaOpen] =
     useState(false);
   const [modalEditarClienteOpen, setModalEditarClienteOpen] = useState(false);
@@ -83,7 +88,7 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
   // 'total' = flujo normal (crear venta / primer cobro). 'diferencia' /
   // 'devolucion' = al editar una venta ya cobrada, solo se cobra/devuelve
   // la diferencia contra lo ya cobrado (modelo cobro diferencial).
-  const [modoModal, setModoModal] = useState<"total" | "diferencia" | "devolucion">("total");
+  const [modoModal, setModoModal] = useState<"total" | "diferencia" | "devolucion" | "cambio_metodo">("total");
 
   // Datos de la venta ya persistidos (solo en edición) — de acá sale lo YA
   // cobrado. Mismo queryKey que editar-venta/[id]/page.tsx, así reusa la
@@ -99,6 +104,11 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
   });
 
   const totalPagadoPrevio = Number(ventaOriginal?.total_pagado ?? 0);
+
+  // (Se removió la detección de cambios que apagaba "Guardar Cambios": daba
+  // falsos negativos y bloqueaba guardados reales. Si se retoma, hay que
+  // verificarla contra la app corriendo, no solo por lectura de código.)
+
   const metodosYaUsados: string[] = useMemo(() => {
     const filas = ventaOriginal?.despliegue_de_pago_ventas ?? [];
     const ids = filas
@@ -128,8 +138,40 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
 
   const requiereCliente = tipo_despacho === "Domicilio" || tipo_despacho === "Parcial";
 
+  // Solo las notas de venta pueden quedar en espera (ver el botón más abajo).
+  const esNotaDeVenta = tipo_documento === "nv";
+
   // handleCobrarClick se define más abajo (línea ~340), después de calcular
   // `diferencia` — necesita saber si esta edición ya tenía cobro previo.
+
+  /**
+   * ¿Este despacho necesita que el usuario configure la entrega?
+   *
+   * No la necesita cuando no hay nada que entregar ni stock que mover: despacho
+   * omitido, o en tienda con el cliente ya llevándose la mercadería
+   * (descontar_stock='no'). En esos casos el backend decide todo solo.
+   *
+   * En cualquier otro caso hay que abrir el modal — incluye "a domicilio", donde
+   * se define chofer, vehículo, fecha y horario.
+   *
+   * Vive en un solo lugar porque estaba copiada en dos, y al agregarse un tercer
+   * camino (el "Guardar Cambios" de una venta ya cobrada) se olvidaron de ponerla:
+   * ese botón guardaba directo y no dejaba tocar la entrega.
+   */
+  const requiereConfigurarEntrega = () =>
+    !(
+      tipo_despacho === 'Omitir' ||
+      tipo_despacho === 'OmitirConStock' ||
+      (tipo_despacho === 'EnTienda' && descontarStockWatch === 'no')
+    );
+
+  const continuarSegunEntrega = () => {
+    if (requiereConfigurarEntrega()) {
+      setModalDetallesEntregaOpen(true);
+    } else {
+      form.submit();
+    }
+  };
 
   const handleCreditoClick = () => {
     if (requiereCliente && !clienteId) {
@@ -137,14 +179,7 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
       return;
     }
     form.setFieldValue("estado_de_venta", EstadoDeVenta.CREADO);
-    // Si es despacho en tienda Y el cliente ya tiene la mercadería (descontar_stock=no),
-    // el backend ya decide todo (quien_entrega=vendedor, estado=en). No hay nada
-    // que configurar → submit directo sin abrir el modal.
-    if (tipo_despacho === 'Omitir' || tipo_despacho === 'OmitirConStock' || (tipo_despacho === 'EnTienda' && descontarStockWatch === 'no')) {
-      form.submit();
-    } else {
-      setModalDetallesEntregaOpen(true);
-    }
+    continuarSegunEntrega();
   };
 
   // Crédito requiere N° de días — sin días no se puede saber el vencimiento.
@@ -346,6 +381,25 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
   );
   const tieneCobroPrevio = !!ventaId && totalPagadoPrevio > 0.01;
 
+  /**
+   * Editar SOLO el método de pago de una venta ya cobrada, sin tocar el monto.
+   * El modal escribe `diferencia_pago` con tipo 'cambio_metodo' y el backend
+   * anula el pago anterior y registra el nuevo (ver VentaController::update).
+   */
+  const handleCambiarMetodoPago = () => {
+    setModoModal("cambio_metodo");
+    setModalOpen(true);
+  };
+
+  /** Abrir el modal de entrega sin pasar por el cobro. */
+  const handleEditarEntrega = () => {
+    if (requiereCliente && !clienteId) {
+      message.warning("Por favor seleccione un cliente para despacho a domicilio");
+      return;
+    }
+    setModalDetallesEntregaOpen(true);
+  };
+
   const handleCobrarClick = () => {
     if (requiereCliente && !clienteId) {
       message.warning("Por favor seleccione un cliente para despacho a domicilio");
@@ -355,9 +409,20 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
     if (tieneCobroPrevio) {
       // Venta ya cobrada: nunca se vuelve a pedir el total completo.
       if (Math.abs(diferencia) <= 0.01) {
-        // Sin diferencia: solo guardar la edición, no hay nada que cobrar/devolver.
+        // Sin diferencia: no hay nada que cobrar ni devolver. Guarda tal cual.
+        // Para cambiar el método o la entrega hay botones propios.
         form.setFieldValue("metodos_de_pago", undefined);
-        form.setFieldValue("diferencia_pago", undefined);
+
+        // OJO: no borrar `diferencia_pago` si trae un cambio de método pendiente.
+        // El botón "Cambiar Método de Pago" lo deja ahí esperando a que se
+        // guarde; limpiarlo acá descartaba en silencio el cambio que el usuario
+        // acababa de hacer. Los otros tipos (diferencia/devolución) no llegan a
+        // esta rama, porque implican monto distinto.
+        const pagoPendiente = form.getFieldValue("diferencia_pago");
+        if (pagoPendiente?.tipo !== "cambio_metodo") {
+          form.setFieldValue("diferencia_pago", undefined);
+        }
+
         form.setFieldValue("estado_de_venta", EstadoDeVenta.CREADO);
         form.submit();
         return;
@@ -529,6 +594,11 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
         >
           <ButtonBase
             onClick={handleCobrarClick}
+            // Nota: se intentó apagar este botón cuando no hay cambios, pero la
+            // detección daba falsos negativos y dejaba al usuario sin poder
+            // guardar cambios reales (método de pago y entrega ya editados).
+            // Bloquear de más es peor que guardar de más, así que queda siempre
+            // habilitado hasta poder verificar la detección contra la app real.
             disabled={forma_de_pago === "cr" || submitting}
             loading={submitting}
             color="info"
@@ -544,6 +614,57 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
               : "Cobrar"}
           </ButtonBase>
         </ConfigurableElement>
+
+        {/* Acciones propias de la EDICIÓN de una venta existente. El botón de
+            arriba solo guarda; estas dos son decisiones distintas —corregir con
+            qué se cobró, y corregir cómo o dónde se entrega— y antes ninguna era
+            accesible desde la edición.
+            
+            Aparecen SIEMPRE que se esté editando, sin depender de que se haya
+            cambiado algo: el objetivo justamente es entrar a corregir el método
+            o la dirección de entrega de una venta que quedó mal cargada. */}
+        {!!ventaId && (
+          <>
+            {/* Cambiar método solo tiene sentido si hay un pago que reemplazar y
+                el monto no cambió — si cambió, el botón de arriba pasa a ser
+                "Cobrar/Devolver Diferencia" y el backend rechaza el cambio. */}
+            {tieneCobroPrevio && Math.abs(diferencia) <= 0.01 && (
+            <ConfigurableElement
+              componentId="crear-venta.boton-cambiar-metodo-pago"
+              label="Botón Cambiar Método de Pago"
+            >
+              <ButtonBase
+                onClick={handleCambiarMetodoPago}
+                disabled={submitting}
+                loading={submitting}
+                color="warning"
+                className="flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance"
+              >
+                <FaMoneyBillWave className="min-w-fit" size={30} />
+                Cambiar Método de Pago
+              </ButtonBase>
+            </ConfigurableElement>
+            )}
+
+            {requiereConfigurarEntrega() && (
+              <ConfigurableElement
+                componentId="crear-venta.boton-editar-entrega"
+                label="Botón Editar Entrega"
+              >
+                <ButtonBase
+                  onClick={handleEditarEntrega}
+                  disabled={submitting}
+                  loading={submitting}
+                  color="info"
+                  className="flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance"
+                >
+                  <FaTruck className="min-w-fit" size={30} />
+                  Editar Entrega
+                </ButtonBase>
+              </ConfigurableElement>
+            )}
+          </>
+        )}
 
         {/* Botón para crear venta a crédito */}
         {forma_de_pago === "cr" && (
@@ -568,6 +689,17 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
         {/* {(compra?._count?.recepciones_almacen ?? 0) > 0 ||
               (compra?._count?.pagos_de_compras ?? 0) > 0 ||
               compra?.estado_de_compra === EstadoDeCompra.Creado ? null : ( */}
+        {/* Poner en espera solo al CREAR, y solo en NOTAS DE VENTA.
+        
+            Boleta (03) y factura (01) quedan fuera porque una venta en espera no
+            tiene serie ni número —se asignan al confirmarla—, y dejar
+            comprobantes electrónicos a medio emitir en ese limbo no corresponde.
+        
+            Y al EDITAR tampoco aparece: devolver a espera una venta ya guardada
+            es de donde salieron los problemas de hoy (se limpiaba y recargaba
+            sola, quedaba marcada como editada, el stock no se descontaba). Si ya
+            se creó, se corrige o se anula, no se manda de vuelta al limbo. */}
+        {esNotaDeVenta && !ventaId && (
         <ConfigurableElement
           componentId="crear-venta.boton-espera"
           label="Botón Poner en Espera"
@@ -593,6 +725,7 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
             <FaPause className="min-w-fit" size={30} /> Poner en Espera
           </ButtonBase>
         </ConfigurableElement>
+        )}
 
         <ConfigurableElement
           componentId="crear-venta.boton-traslado-boveda"
@@ -628,9 +761,15 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
         // `estado_entrega = 'en'`. Ocultamos el campo "¿Quién entrega?"
         // porque sería ruido: el sistema ya decidió por el usuario.
         ocultar={descontarStockWatch === 'no' ? ['quien-entrega'] : []}
+        // Al EDITAR una venta existente, confirmar la entrega no guarda: solo
+        // deja los datos listos para "Guardar Cambios". Al crear sí guarda,
+        // porque ahí confirmar la entrega es el paso que crea la venta.
+        soloRegistrar={!!ventaId}
         onConfirmar={() => {
-          // El tipo de despacho ya está guardado en el formulario
-          console.log("Entrega configurada");
+          // En edición el modal solo deja los datos en el form (soloRegistrar),
+          // así que hay que avisar acá que hay algo pendiente de guardar —
+          // setFieldsValue no marca los campos como "touched".
+          if (ventaId) setEntregaEditada(true);
         }}
         onEditarCliente={() => {
           // Abrir el modal de editar cliente encima del modal de detalles
@@ -652,7 +791,14 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
         tipo_moneda={tipo_moneda}
         tipo_documento={tipo_documento}
         baseAmount={
-          modoModal === "total" ? subTotal - totalDescuento : Math.abs(diferencia)
+          modoModal === "total"
+            ? subTotal - totalDescuento
+            : modoModal === "cambio_metodo"
+              // En cambio de método el monto NO es la diferencia (que es ~0):
+              // se vuelve a cobrar el total que ya estaba pagado, solo que por
+              // otro método. El backend valida que coincida.
+              ? totalPagadoPrevio
+              : Math.abs(diferencia)
         }
         descuentoVale={modoModal === "total" ? descuentoVale : 0}
         valesInfo={
@@ -675,13 +821,19 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
         metodosPermitidos={modoModal !== "total" ? metodosYaUsados : undefined}
         onContinuar={() => {
           setModalOpen(false);
-          // Misma lógica que handleCreditoClick: si EnTienda + descontar_stock=no,
-          // el backend ya decide todo, no abrir modal de entrega.
-          if (tipo_despacho === 'Omitir' || tipo_despacho === 'OmitirConStock' || (tipo_despacho === 'EnTienda' && descontarStockWatch === 'no')) {
-            form.submit();
-          } else {
-            setModalDetallesEntregaOpen(true);
+          // Cambio de método: el modal SOLO deja registrado el nuevo método en
+          // `diferencia_pago`. No guarda ni abre la entrega — guardar es una
+          // decisión aparte, del botón "Guardar Cambios", igual que editar la
+          // entrega tiene el suyo. Antes esto hacía form.submit() y la venta se
+          // guardaba sola apenas se confirmaba el método.
+          if (modoModal === "cambio_metodo") {
+            setModoModal("total");
+            message.info(
+              'Método de pago actualizado. Presiona "Guardar Cambios" para aplicarlo.',
+            );
+            return;
           }
+          continuarSegunEntrega();
         }}
       />
 

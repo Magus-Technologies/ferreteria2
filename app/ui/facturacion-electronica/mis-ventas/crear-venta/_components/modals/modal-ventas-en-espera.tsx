@@ -1,7 +1,7 @@
 'use client'
 
 import { Modal, DatePicker, Input } from 'antd'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { ventaApi, EstadoDeVenta, type getVentaResponseProps } from '~/lib/api/venta'
 import { useStoreAlmacen } from '~/store/store-almacen'
@@ -25,7 +25,30 @@ export default function ModalVentasEnEspera({
   setOpen: (open: boolean) => void
 }) {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const almacen_id = useStoreAlmacen(state => state.almacen_id)
+
+  /**
+   * Empieza a traer la venta apenas se selecciona la fila, sin esperar al doble
+   * clic. Para cuando el usuario hace doble clic, la respuesta suele estar en
+   * caché y la pantalla de edición abre sin espera.
+   *
+   * Usa la MISMA queryKey que editar-venta/[id], que es lo que hace que el
+   * resultado se reutilice en vez de volver a pedirse.
+   */
+  const precargarVenta = (ventaId?: string) => {
+    if (!ventaId) return
+    queryClient.prefetchQuery({
+      queryKey: ['venta', ventaId],
+      queryFn: async () => {
+        const result = await ventaApi.getById(ventaId)
+        if (result.error || !result.data?.data) {
+          throw new Error(result.error?.message || 'Error al cargar la venta')
+        }
+        return result.data.data
+      },
+    })
+  }
   const ventaSeleccionada = useStoreVentasEnEspera(state => state.ventaSeleccionada)
   const setVentaSeleccionada = useStoreVentasEnEspera(state => state.setVentaSeleccionada)
 
@@ -193,6 +216,7 @@ export default function ModalVentasEnEspera({
             onSelectionChanged={({ selectedNodes }) => {
               const selected = selectedNodes?.[0]?.data as getVentaResponseProps
               setVentaSeleccionada(selected)
+              precargarVenta(selected?.id)
             }}
             onRowDoubleClicked={({ data }) => handleDoubleClick(data)}
           />

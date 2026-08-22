@@ -91,6 +91,12 @@ export interface ModalDetallesEntregaProps {
   setOpen: (open: boolean) => void
   form: FormInstance
   ventaId?: string
+  /**
+   * `true` = confirmar el modal SOLO deja los datos en el formulario, sin
+   * guardar. Se usa al editar una venta ya creada desde "Editar Entrega":
+   * guardar es decisión del botón "Guardar Cambios".
+   */
+  soloRegistrar?: boolean
   tipoDespacho: TipoDespachoUI
   onConfirmar: () => void
   onEditarCliente: () => void

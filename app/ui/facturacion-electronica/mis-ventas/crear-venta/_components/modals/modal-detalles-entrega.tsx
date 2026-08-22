@@ -80,6 +80,7 @@ function ModalDetallesEntregaInner({
   setOpen,
   form,
   ventaId,
+  soloRegistrar = false,
   tipoDespacho,
   onConfirmar,
   onEditarCliente,
@@ -203,6 +204,7 @@ function ModalDetallesEntregaInner({
     mode: resolvedMode,
     form,
     tipoDespacho: tipoDespachoConfirmacion,
+    soloRegistrar,
     onSuccess: () => {
       setOpen(false)
       onConfirmar()

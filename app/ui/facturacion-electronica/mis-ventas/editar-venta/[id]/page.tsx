@@ -34,7 +34,15 @@ export default function EditarVenta() {
     enabled: !!id && canAccess,
   })
 
-  // Cargar las unidades derivadas desde la API
+  // Cargar las unidades derivadas desde la API.
+  //
+  // Antes tenía `enabled: !!ventaData`, así que esperaba a que terminara la
+  // consulta de la venta para recién empezar: las dos iban EN SERIE y la
+  // pantalla tardaba la suma de ambas. Este catálogo no depende de la venta
+  // para nada, así que arranca en paralelo.
+  //
+  // `staleTime` de 10 min porque son unidades de medida: cambian casi nunca, y
+  // sin esto se volvía a bajar entero en cada venta que se abría.
   const { data: unidadesData, isLoading: isLoadingUnidades } = useQuery({
     queryKey: ['unidades-derivadas-all'],
     queryFn: async () => {
@@ -44,7 +52,9 @@ export default function EditarVenta() {
       }
       return result.data.data
     },
-    enabled: !!ventaData,
+    enabled: canAccess,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   })
 
   if (!canAccess) return <NoAutorizado />

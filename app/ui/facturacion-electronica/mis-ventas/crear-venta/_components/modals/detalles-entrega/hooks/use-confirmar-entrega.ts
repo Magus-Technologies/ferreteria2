@@ -18,6 +18,7 @@ import useCreateVenta from '../../../../_hooks/use-create-venta'
 import { useDetallesEntrega } from '../context'
 import type { TipoDespachoUI } from '../types'
 import { useStoreProductoAgregadoVenta } from '../../../../_store/store-producto-agregado-venta'
+import { useStoreEntregaPendiente } from '../../../../_store/store-entrega-pendiente'
 
 /**
  * Valores del formulario de venta listos para enviar al backend.
@@ -90,6 +91,16 @@ interface UseConfirmarEntregaParams {
   onSuccess: () => void
   /** Callback que se invoca cuando se omite la entrega (botón "Omitir"). */
   onOmitir?: () => void
+  /**
+   * `true` = NO guardar: solo dejar los datos de la entrega en el formulario y
+   * cerrar. El guardado queda a cargo del botón "Guardar Cambios".
+   *
+   * Se usa al EDITAR una venta ya creada desde el botón "Editar Entrega": ahí
+   * confirmar el modal no debe persistir nada por su cuenta — el usuario espera
+   * revisar y recién después guardar. En el flujo de CREAR venta sigue en false,
+   * porque ahí confirmar la entrega ES el paso que crea la venta.
+   */
+  soloRegistrar?: boolean
 }
 
 /**
@@ -104,9 +115,11 @@ export function useConfirmarEntrega({
   tipoDespacho,
   onSuccess,
   onOmitir,
+  soloRegistrar = false,
 }: UseConfirmarEntregaParams) {
   // Hook que crea/edita la venta — solo aplica al modo `crear-venta`.
   // En `actualizar-entrega` `ventaId` queda undefined y este hook no se usa.
+  const setEntregaPendiente = useStoreEntregaPendiente(st => st.setValores)
   const ventaId = mode.kind === 'crear-venta' ? mode.ventaId : undefined
   const { handleSubmit: crearVenta, loading: creandoVenta } = useCreateVenta({ ventaId })
   // Invalidación explícita post-evento para que el botón principal y la tabla
@@ -207,9 +220,21 @@ export function useConfirmarEntrega({
       }
     }
 
+    if (soloRegistrar) {
+      // No guardar: dejar el payload listo para que lo use "Guardar Cambios".
+      // Va por un store aparte y NO por el formulario: `ventaValues` trae claves
+      // calculadas (entre ellas `cantidades_parciales`, con la que el submit
+      // decide si toca la entrega en una edición) que no sobreviven el viaje de
+      // ida y vuelta por `setFieldsValue`. Ver store-entrega-pendiente.ts.
+      setEntregaPendiente(ventaValues)
+      onSuccess()
+      return
+    }
+
     await crearVenta(ventaValues)
     onSuccess()
   }, [
+    soloRegistrar,
     form,
     tipoDespacho,
     productosEntrega,

@@ -114,6 +114,12 @@ export interface CobroMovimientoItem {
   despliegue_de_pago_id: string;
   monto: number | string;
   tipo: 'inicial' | 'diferencia' | 'devolucion';
+  /**
+   * Calculado por el backend, no es una columna de la tabla: un cobro queda
+   * 'anulado' cuando existe una devolución que lo cancela por el mismo método y
+   * monto (ver VentaController::getHistorial).
+   */
+  estado?: 'activo' | 'anulado';
   referencia?: string | null;
   recibe_efectivo?: number | string | null;
   fecha?: string | null;

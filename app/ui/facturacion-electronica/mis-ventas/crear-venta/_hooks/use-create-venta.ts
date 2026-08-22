@@ -34,6 +34,7 @@ import dayjs from 'dayjs'
 import { fechaSubmit } from '~/utils/fechas'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useStoreProductoAgregadoVenta } from '../_store/store-producto-agregado-venta'
+import { useStoreEntregaPendiente } from '../_store/store-entrega-pendiente'
 
 type ProductoAgrupado = Pick<
   FormCreateVenta['productos'][number],
@@ -109,6 +110,17 @@ export default function useCreateVenta({
 
   const handleSubmit = useCallback(async (values: FormCreateVenta) => {
     if (submittingRef.current) return
+
+    // Entrega programada desde el modal en modo "solo registrar" (edición de una
+    // venta existente): el modal no guardó, dejó el payload esperando acá. Se
+    // fusiona encima de los valores del form — trae `cantidades_parciales` y la
+    // configuración de la entrega, que es lo que más abajo decide si la entrega
+    // se toca o se deja intacta. Ver store-entrega-pendiente.ts.
+    const entregaPendiente = useStoreEntregaPendiente.getState().valores
+    const entregaProgramadaExplicita = !!entregaPendiente
+    if (entregaPendiente) {
+      values = { ...values, ...entregaPendiente } as FormCreateVenta
+    }
     if (!user_id)
       return notification.error({ message: 'No hay un usuario seleccionado' })
     if (!almacen_id)
@@ -550,8 +562,17 @@ export default function useCreateVenta({
       // detalles preservando lo entregado).
       const tieneSplitDomicilio =
         cantidades_parciales && cantidades_parciales.some((c) => Number(c.entregar_programado || 0) > 0)
+      // `entregaProgramadaExplicita`: el usuario abrió el modal de entrega y lo
+      // confirmó (botón "Editar Entrega" en una venta ya creada). Esa es una
+      // señal directa de intención, así que alcanza por sí sola.
+      //
+      // Antes en edición se exigía `tieneSplitDomicilio`, o sea deducir la
+      // intención a partir de que llegaran `cantidades_parciales`. Cuando esa
+      // clave no llegaba —y no llegaba— la venta se guardaba y la entrega
+      // quedaba intacta: el vendedor perdía en silencio el chofer, el vehículo y
+      // el horario que acababa de programar.
       const ejecutarBloqueDomicilio = ventaCreada && tipo_despacho === 'Domicilio' && !_omitir_entrega &&
-        (!isEditing || tieneSplitDomicilio)
+        (!isEditing || tieneSplitDomicilio || entregaProgramadaExplicita)
       if (ejecutarBloqueDomicilio) {
         try {
           // Obtener los IDs de unidades derivadas de venta desde la respuesta
@@ -688,8 +709,12 @@ export default function useCreateVenta({
         // entregas — las viejas quedan preservadas por el backend.
         (
           (!isEditing && tipo_despacho === 'Parcial') ||
-          (isEditing && tipo_despacho === 'Parcial' && cantidades_parciales &&
-            cantidades_parciales.some((c) => Number(c.entregar || 0) > 0 || Number(c.entregar_programado || 0) > 0))
+          // Mismo criterio que el bloque de Domicilio: confirmar el modal en una
+          // venta ya creada es señal suficiente, sin depender de deducirla desde
+          // `cantidades_parciales`.
+          (isEditing && tipo_despacho === 'Parcial' && (entregaProgramadaExplicita ||
+            (cantidades_parciales &&
+              cantidades_parciales.some((c) => Number(c.entregar || 0) > 0 || Number(c.entregar_programado || 0) > 0))))
         )
         && ventaCreada && !_omitir_entrega
       ) {
@@ -946,6 +971,8 @@ export default function useCreateVenta({
       })
     }
     } finally {
+      // Consumido: no debe arrastrarse a la próxima edición.
+      useStoreEntregaPendiente.getState().setValores(null)
       submittingRef.current = false
       setLoading(false)
     }

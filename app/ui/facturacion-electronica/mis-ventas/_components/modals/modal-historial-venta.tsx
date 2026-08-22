@@ -6,6 +6,9 @@ import { QueryKeys } from '~/app/_lib/queryKeys'
 import { ventaApi, type VentaHistorialItem, type CobroMovimientoItem } from '~/lib/api/venta'
 import dayjs from 'dayjs'
 import { formatFechaPeru } from '~/utils/fechas'
+import TableWithTitle from '~/components/tables/table-with-title'
+import type { ColDef } from 'ag-grid-community'
+import { greenColors } from '~/lib/colors'
 
 // Mapa de labels para campos
 const FIELD_LABELS: Record<string, string> = {
@@ -217,38 +220,94 @@ function TablaCobros({ cobros }: { cobros: CobroMovimientoItem[] }) {
     return <Empty description='No hay cobros registrados' />
   }
 
+  const columnas: ColDef<CobroMovimientoItem>[] = [
+    {
+      headerName: 'Fecha',
+      colId: 'fecha',
+      field: 'fecha' as any,
+      width: 165,
+      valueFormatter: p => (p.value ? formatFechaPeru(p.value) : '-'),
+    },
+    {
+      headerName: 'Usuario',
+      colId: 'usuario',
+      width: 190,
+      valueGetter: p => p.data?.user?.name || '-',
+    },
+    {
+      headerName: 'Tipo',
+      colId: 'tipo',
+      field: 'tipo' as any,
+      width: 150,
+      cellRenderer: (p: any) => {
+        const config = TIPO_COBRO_CONFIG[p.value] ?? { label: p.value, color: 'default' }
+        return (
+          <div className='flex items-center h-full'>
+            <Tag color={config.color}>{config.label}</Tag>
+          </div>
+        )
+      },
+    },
+    {
+      // El estado no está en la tabla: lo calcula el backend emparejando cada
+      // devolución con el cobro que cancela (ver VentaController::getHistorial).
+      headerName: 'Estado',
+      colId: 'estado',
+      field: 'estado' as any,
+      width: 120,
+      cellRenderer: (p: any) => {
+        const anulado = p.value === 'anulado'
+        return (
+          <div className='flex items-center h-full'>
+            <Tag color={anulado ? 'red' : 'green'}>{anulado ? 'Anulado' : 'Activo'}</Tag>
+          </div>
+        )
+      },
+    },
+    {
+      headerName: 'Método',
+      colId: 'metodo',
+      width: 170,
+      valueGetter: p => p.data?.despliegue_de_pago?.name || '-',
+    },
+    {
+      headerName: 'Monto',
+      colId: 'monto',
+      field: 'monto' as any,
+      width: 130,
+      type: 'rightAligned',
+      cellRenderer: (p: any) => {
+        const monto = Number(p.value)
+        return (
+          <span className={`font-semibold ${monto < 0 ? 'text-red-600' : 'text-green-600'}`}>
+            {monto < 0 ? '-' : '+'}S/ {Math.abs(monto).toFixed(2)}
+          </span>
+        )
+      },
+    },
+    {
+      headerName: 'Referencia',
+      colId: 'referencia',
+      field: 'referencia' as any,
+      flex: 1,
+      minWidth: 140,
+      valueFormatter: p => p.value || '-',
+    },
+  ]
+
+  const activos = cobros.filter(c => c.estado !== 'anulado').length
+
   return (
-    <div className='max-h-[60vh] overflow-y-auto'>
-      <table className='w-full text-sm'>
-        <thead className='sticky top-0 bg-white'>
-          <tr className='border-b border-slate-200'>
-            <th className='text-left px-2 py-2 font-semibold text-slate-600'>Fecha</th>
-            <th className='text-left px-2 py-2 font-semibold text-slate-600'>Usuario</th>
-            <th className='text-left px-2 py-2 font-semibold text-slate-600'>Tipo</th>
-            <th className='text-left px-2 py-2 font-semibold text-slate-600'>Método</th>
-            <th className='text-right px-2 py-2 font-semibold text-slate-600'>Monto</th>
-            <th className='text-left px-2 py-2 font-semibold text-slate-600'>Referencia</th>
-          </tr>
-        </thead>
-        <tbody>
-          {cobros.map((c) => {
-            const config = TIPO_COBRO_CONFIG[c.tipo] ?? { label: c.tipo, color: 'default' }
-            const monto = Number(c.monto)
-            return (
-              <tr key={c.id} className='border-b border-slate-100'>
-                <td className='px-2 py-2 text-xs text-slate-500'>{c.fecha ? formatFechaPeru(c.fecha) : '-'}</td>
-                <td className='px-2 py-2'>{c.user?.name || '-'}</td>
-                <td className='px-2 py-2'><Tag color={config.color}>{config.label}</Tag></td>
-                <td className='px-2 py-2'>{c.despliegue_de_pago?.name || '-'}</td>
-                <td className={`px-2 py-2 text-right font-semibold ${monto < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                  {monto < 0 ? '-' : '+'}S/ {Math.abs(monto).toFixed(2)}
-                </td>
-                <td className='px-2 py-2 text-xs text-slate-500'>{c.referencia || '-'}</td>
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
+    <div className='h-[60vh]'>
+      <TableWithTitle<CobroMovimientoItem>
+        id='table-historial-cobros'
+        title={`Cobros: ${cobros.length} (${activos} activo${activos === 1 ? '' : 's'})`}
+        columnDefs={columnas}
+        rowData={cobros}
+        selectionColor={greenColors[1]}
+        suppressRowTransform
+        withNumberColumn
+      />
     </div>
   )
 }

@@ -66,7 +66,13 @@ export default function ModalMetodosPagoVenta({
    * llamar un endpoint aparte — así la edición y el cobro/devolución de la
    * diferencia son atómicos: si se cancela este modal, no se guarda nada.
    */
-  modo?: 'total' | 'diferencia' | 'devolucion'
+  /**
+   * 'cambio_metodo': la venta ya está cobrada y solo se corrige CON QUÉ se cobró
+   * (se puso efectivo y fue yape, por ejemplo). El monto no cambia: el backend
+   * anula el pago anterior y registra el nuevo, moviendo el dinero de una caja a
+   * la otra. Se comporta igual que 'diferencia' salvo por el título y el rótulo.
+   */
+  modo?: 'total' | 'diferencia' | 'devolucion' | 'cambio_metodo'
   /** En modo 'devolucion': solo se puede devolver por estos despliegue_de_pago_id (ya usados en la venta). */
   metodosPermitidos?: string[]
 }) {
@@ -408,13 +414,17 @@ export default function ModalMetodosPagoVenta({
     ? 'Cobrar Diferencia'
     : modo === 'devolucion'
       ? 'Devolver Diferencia'
-      : 'Cobrar - Métodos de Pago'
+      : modo === 'cambio_metodo'
+        ? 'Cambiar Método de Pago'
+        : 'Cobrar - Métodos de Pago'
 
   const labelTotalCard = modo === 'diferencia'
     ? 'Diferencia a Cobrar'
     : modo === 'devolucion'
       ? 'Monto a Devolver'
-      : 'Total a Cobrar'
+      : modo === 'cambio_metodo'
+        ? 'Monto a Recobrar'
+        : 'Total a Cobrar'
 
   // Suppress unused warning — vuelto is used only if we add a vuelto display below the form
   void vuelto
