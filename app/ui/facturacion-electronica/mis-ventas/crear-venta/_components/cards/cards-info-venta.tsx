@@ -37,7 +37,20 @@ const ModalDetallesEntrega = dynamic(() => import("../modals/modal-detalles-entr
 const ModalCreateCliente = dynamic(() => import("~/app/ui/facturacion-electronica/mis-ventas/_components/modals/modal-create-cliente"), { ssr: false });
 const ModalTrasladoBoveda = dynamic(() => import("~/app/ui/facturacion-electronica/mis-aperturas-cierres/_components/modals/modal-traslado-boveda"), { ssr: false });
 
-export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submitting }: { form: FormInstance; ventaId?: string; onMissingApertura?: () => void; submitting?: boolean }) {
+export default function CardsInfoVenta({
+  form,
+  ventaId,
+  esVentaEnEspera = false,
+  onMissingApertura,
+  submitting,
+}: {
+  form: FormInstance;
+  ventaId?: string;
+  /** La venta cargada es un borrador en espera (se está confirmando, no editando). */
+  esVentaEnEspera?: boolean;
+  onMissingApertura?: () => void;
+  submitting?: boolean;
+}) {
   const tipo_moneda = Form.useWatch("tipo_moneda", form);
   const forma_de_pago = Form.useWatch("forma_de_pago", form);
   const numero_dias = Form.useWatch("numero_dias", form);
@@ -139,7 +152,6 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
   const requiereCliente = tipo_despacho === "Domicilio" || tipo_despacho === "Parcial";
 
   // Solo las notas de venta pueden quedar en espera (ver el botón más abajo).
-  const esNotaDeVenta = tipo_documento === "nv";
 
   // handleCobrarClick se define más abajo (línea ~340), después de calcular
   // `diferencia` — necesita saber si esta edición ya tenía cobro previo.
@@ -689,17 +701,17 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
         {/* {(compra?._count?.recepciones_almacen ?? 0) > 0 ||
               (compra?._count?.pagos_de_compras ?? 0) > 0 ||
               compra?.estado_de_compra === EstadoDeCompra.Creado ? null : ( */}
-        {/* Poner en espera solo al CREAR, y solo en NOTAS DE VENTA.
-        
-            Boleta (03) y factura (01) quedan fuera porque una venta en espera no
-            tiene serie ni número —se asignan al confirmarla—, y dejar
-            comprobantes electrónicos a medio emitir en ese limbo no corresponde.
-        
-            Y al EDITAR tampoco aparece: devolver a espera una venta ya guardada
-            es de donde salieron los problemas de hoy (se limpiaba y recargaba
-            sola, quedaba marcada como editada, el stock no se descontaba). Si ya
-            se creó, se corrige o se anula, no se manda de vuelta al limbo. */}
-        {esNotaDeVenta && !ventaId && (
+        {/* Poner en espera: al CREAR (cualquier tipo de documento — la serie y
+            el número recién se asignan al confirmar, así que no hay comprobante
+            a medias) y al RECUPERAR un borrador en espera (volver a guardarlo
+            actualiza el mismo borrador).
+
+            Lo que NO se permite es al EDITAR un documento ya creado — boleta,
+            factura o nota de venta: devolver a espera una venta ya guardada es
+            de donde salieron los problemas (se limpiaba y recargaba sola,
+            quedaba marcada como editada, el stock no se descontaba). Si ya se
+            creó, se corrige o se anula, no se manda de vuelta al limbo. */}
+        {(!ventaId || esVentaEnEspera) && (
         <ConfigurableElement
           componentId="crear-venta.boton-espera"
           label="Botón Poner en Espera"

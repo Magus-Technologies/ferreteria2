@@ -243,7 +243,13 @@ function FormVentaInternal({
         <FormCrearVenta form={form} venta={venta} />
       </div>
       <div className='w-full xl:w-auto'>
-        <CardsInfoVenta form={form} ventaId={isEditingVenta ? venta?.id : undefined} onMissingApertura={onMissingApertura} submitting={submitting} />
+        <CardsInfoVenta
+          form={form}
+          ventaId={isEditingVenta ? venta?.id : undefined}
+          esVentaEnEspera={(venta as any)?.estado_de_venta === 'ee'}
+          onMissingApertura={onMissingApertura}
+          submitting={submitting}
+        />
       </div>
     </FormBase>
   )
