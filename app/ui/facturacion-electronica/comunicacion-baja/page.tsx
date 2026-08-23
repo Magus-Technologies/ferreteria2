@@ -30,7 +30,7 @@ export default function ComunicacionBajaPage() {
 
   const [form] = Form.useForm<ValuesFiltros>();
   const [rango, setRango] = useState<{ desde?: Dayjs; hasta?: Dayjs }>({
-    desde: dayjs().subtract(30, "day").startOf("day"),
+    desde: dayjs().startOf("day"),
     hasta: dayjs().endOf("day"),
   });
   const MOTIVO_DEFAULT = "Venta anulada";
@@ -175,7 +175,7 @@ export default function ComunicacionBajaPage() {
       >
         <TituloModulos title="Comunicación de Baja" icon={<FaBan className="text-red-600" />}>
           <div className="flex items-center gap-3 flex-wrap">
-            <FilterDateRangeFields fromName="desde" toName="hasta" />
+            <FilterDateRangeFields fromName="desde" toName="hasta" fromLabel="Desde:" />
           </div>
         </TituloModulos>
       </FormBase>
