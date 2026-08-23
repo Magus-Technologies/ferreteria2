@@ -84,6 +84,16 @@ export default function ComunicacionBajaPage() {
       width: 110,
       valueFormatter: (p) => `S/. ${Number(p.value ?? 0).toFixed(2)}`,
     },
+    {
+      headerName: "Estado Venta",
+      field: "estado_venta_nombre",
+      width: 130,
+      cellRenderer: (p: { data: PendienteBaja }) => (
+        <Tag color={p.data.estado_venta === "an" ? "red" : "default"}>
+          {p.data.estado_venta_nombre ?? "—"}
+        </Tag>
+      ),
+    },
     { headerName: "Estado SUNAT", field: "estado_sunat", width: 150 },
     {
       headerName: "Plazo Baja",

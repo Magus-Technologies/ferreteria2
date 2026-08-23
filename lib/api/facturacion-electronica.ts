@@ -222,6 +222,8 @@ export interface PendienteBaja {
   cliente_razon_social?: string;
   importe_total: number;
   estado_sunat: string;
+  estado_venta?: string;
+  estado_venta_nombre?: string;
   dias_desde_emision: number;
   plazo_maximo_dias: number;
   dentro_de_plazo_baja: boolean;
