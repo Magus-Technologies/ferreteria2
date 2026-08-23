@@ -405,12 +405,10 @@ export default function CellAccionesVentaDropdown(
       key: 'enviar-sunat',
       // Venta anulada: "Enviar a SUNAT" ya no aplica (lo bloquea el backend).
       // En vez de mostrarlo deshabilitado sin salida, redirige directo a
-      // Comunicación de Baja con esta venta preseleccionada — pero SUNAT
-      // solo admite ese mecanismo para facturas (01). Las boletas se anulan
-      // corrigiendo el Resumen Diario, que no está implementado acá, así
-      // que para una boleta anulada corresponde Nota de Crédito en su lugar
-      // (ya disponible como item aparte del menú).
-      label: (estadoVenta === 'an' && puedeFacturarse && tipoDocumento === '01') ? (
+      // Comunicación de Baja con esta venta preseleccionada. El backend
+      // elige el mecanismo correcto según el tipo (VoidedDocuments para
+      // facturas, Resumen Diario corrector para boletas).
+      label: (estadoVenta === 'an' && puedeFacturarse) ? (
         <span className="flex items-center gap-2">
           <FaBan className="text-red-600" /> Ir a Comunicación de Baja
         </span>
@@ -421,10 +419,10 @@ export default function CellAccionesVentaDropdown(
           <FaPaperPlane className="text-purple-600" /> Enviar a SUNAT
         </span>
       ),
-      onClick: (estadoVenta === 'an' && puedeFacturarse && tipoDocumento === '01')
+      onClick: (estadoVenta === 'an' && puedeFacturarse)
         ? () => router.push(`/ui/facturacion-electronica/comunicacion-baja?venta_id=${ventaId}`)
         : handleEnviarSunat,
-      disabled: estadoVenta === 'an' ? !(puedeFacturarse && tipoDocumento === '01') : (isAceptado || !puedeFacturarse),
+      disabled: estadoVenta === 'an' ? !puedeFacturarse : (isAceptado || !puedeFacturarse),
     },
     // El CDR (constancia de recepción de SUNAT) solo existe una vez que
     // SUNAT aceptó el comprobante — antes de eso no hay nada que descargar,

@@ -102,13 +102,6 @@ export default function ComunicacionBajaPage() {
       width: 220,
       cellRenderer: (p: { data: PendienteBaja }) => {
         const d = p.data;
-        // SUNAT solo permite Comunicación de Baja (VoidedDocuments) para
-        // facturas — rechaza boletas con "DocumentTypeCode inválido". Las
-        // boletas se anulan corrigiendo el Resumen Diario, que este sistema
-        // todavía no implementa, así que acá van directo a Nota de Crédito.
-        if (d.tipo_comprobante !== "01") {
-          return <Tag color="red">Boleta — usar Nota de Crédito</Tag>;
-        }
         return d.dentro_de_plazo_baja ? (
           <Tag color="green">
             Dentro de plazo ({d.dias_desde_emision}/{d.plazo_maximo_dias} días)
@@ -123,10 +116,6 @@ export default function ComunicacionBajaPage() {
   const handleEnviarBaja = () => {
     if (!seleccionado) {
       message.warning("Selecciona un comprobante");
-      return;
-    }
-    if (seleccionado.tipo_comprobante !== "01") {
-      message.error("SUNAT no permite Comunicación de Baja para boletas — corresponde Nota de Crédito.");
       return;
     }
     if (!seleccionado.dentro_de_plazo_baja) {
