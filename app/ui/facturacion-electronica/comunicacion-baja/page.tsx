@@ -33,8 +33,9 @@ export default function ComunicacionBajaPage() {
     desde: dayjs().subtract(30, "day").startOf("day"),
     hasta: dayjs().endOf("day"),
   });
+  const MOTIVO_DEFAULT = "Venta anulada";
   const [seleccionado, setSeleccionado] = useState<PendienteBaja | null>(null);
-  const [motivo, setMotivo] = useState("");
+  const [motivo, setMotivo] = useState(MOTIVO_DEFAULT);
   const [enviando, setEnviando] = useState(false);
   const tableRef = useRef<AgGridReact<PendienteBaja>>(null);
 
@@ -150,7 +151,7 @@ export default function ComunicacionBajaPage() {
           if (result.data?.success) {
             message.success(`Comunicación de baja enviada. Código: ${result.data.codigo_sunat || "0"}`);
             setSeleccionado(null);
-            setMotivo("");
+            setMotivo(MOTIVO_DEFAULT);
             refetch();
           } else {
             message.error(result.data?.message || "Error al enviar comunicación de baja");
