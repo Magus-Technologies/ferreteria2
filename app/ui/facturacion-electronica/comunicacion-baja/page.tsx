@@ -1,97 +1,147 @@
 "use client";
 
-import { useState } from "react";
-import { Table, Tag, Button, message, Modal, Input, Space, Spin } from "antd";
-import type { ColumnsType } from "antd/es/table";
-import { facturacionElectronicaApi, ComprobanteElectronico, DetalleComunicacionBaja } from "~/lib/api/facturacion-electronica";
-import useApp from "antd/es/app/useApp";
-import CardDashboard from "~/app/_components/cards/card-dashboard";
-import { FaFileAlt, FaPaperPlane, FaClock } from "react-icons/fa";
+import { Form, Tag, App } from "antd";
+import { ColDef } from "ag-grid-community";
+import { AgGridReact } from "ag-grid-react";
+import { useQuery } from "@tanstack/react-query";
+import { useMemo, useRef, useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import dayjs, { Dayjs } from "dayjs";
+import { FaPaperPlane } from "react-icons/fa";
+import TituloModulos from "~/app/_components/others/titulo-modulos";
+import ButtonBase from "~/components/buttons/button-base";
+import FormBase from "~/components/form/form-base";
+import TableWithTitle from "~/components/tables/table-with-title";
+import InputBase from "~/app/_components/form/inputs/input-base";
+import FilterDateRangeFields from "~/app/_components/filters/filter-date-range-fields";
+import { facturacionElectronicaApi, DetalleComunicacionBaja, PendienteBaja } from "~/lib/api/facturacion-electronica";
+import { redColors, greenColors } from "~/lib/colors";
+import { FaBan } from "react-icons/fa6";
 
-export default function Page() {
-  const { modal } = useApp();
-  const [loading, setLoading] = useState(false);
+interface ValuesFiltros {
+  desde?: Dayjs;
+  hasta?: Dayjs;
+}
+
+export default function ComunicacionBajaPage() {
+  const { message, modal } = App.useApp();
+  const searchParams = useSearchParams();
+  const ventaIdParaSeleccionar = searchParams.get("venta_id");
+
+  const [form] = Form.useForm<ValuesFiltros>();
+  const [rango, setRango] = useState<{ desde?: Dayjs; hasta?: Dayjs }>({
+    desde: dayjs().subtract(30, "day").startOf("day"),
+    hasta: dayjs().endOf("day"),
+  });
+  const [seleccionado, setSeleccionado] = useState<PendienteBaja | null>(null);
+  const [motivo, setMotivo] = useState("");
   const [enviando, setEnviando] = useState(false);
-  const [comprobantes, setComprobantes] = useState<ComprobanteElectronico[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [motivoGlobal, setMotivoGlobal] = useState("");
+  const tableRef = useRef<AgGridReact<PendienteBaja>>(null);
 
-  const loadComprobantes = async () => {
-    setLoading(true);
-    try {
-      const result = await facturacionElectronicaApi.buscarComprobantes({
-        query: searchQuery || ".",
-        limit: 50,
-      });
+  // Carga automática al entrar — antes esta pantalla arrancaba en blanco y
+  // había que tipear "." y apretar "Buscar Pendientes" para ver algo.
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ["comunicacion-baja", "pendientes"],
+    queryFn: async () => {
+      const response = await facturacionElectronicaApi.getPendientesBaja();
+      if (response.error) throw new Error(response.error.message);
+      return response.data?.data || [];
+    },
+  });
 
-      if (result.error) {
-        message.error("Error al cargar comprobantes: " + result.error.message);
-        return;
-      }
+  const filas = useMemo(() => {
+    const lista = data || [];
+    if (!rango.desde && !rango.hasta) return lista;
+    return lista.filter((f) => {
+      const fecha = dayjs(f.fecha_emision);
+      if (rango.desde && fecha.isBefore(rango.desde, "day")) return false;
+      if (rango.hasta && fecha.isAfter(rango.hasta, "day")) return false;
+      return true;
+    });
+  }, [data, rango]);
 
-      if (result.data?.data) {
-        const pendientes = result.data.data.filter(
-          (c: ComprobanteElectronico) =>
-            c.estado_sunat === "PENDIENTE" &&
-            (c.tipo_comprobante === "01" || c.tipo_comprobante === "03")
+  // Si venimos desde "Mis Ventas" con ?venta_id=..., preseleccionar esa fila
+  // apenas cargan los datos, en vez de obligar a buscarla a mano.
+  useEffect(() => {
+    if (!ventaIdParaSeleccionar || !data) return;
+    const fila = data.find((f) => f.venta_id === ventaIdParaSeleccionar);
+    if (fila) setSeleccionado(fila);
+  }, [ventaIdParaSeleccionar, data]);
+
+  const columns: ColDef<PendienteBaja>[] = [
+    { headerName: "Tipo", field: "tipo_comprobante_nombre", width: 100 },
+    { headerName: "Serie-Número", field: "serie_numero", width: 140 },
+    {
+      headerName: "Fecha Emisión",
+      field: "fecha_emision",
+      width: 140,
+      valueFormatter: (p) => dayjs(p.value).format("DD/MM/YYYY"),
+    },
+    { headerName: "Cliente", field: "cliente_razon_social", flex: 1 },
+    {
+      headerName: "Total",
+      field: "importe_total",
+      width: 110,
+      valueFormatter: (p) => `S/. ${Number(p.value ?? 0).toFixed(2)}`,
+    },
+    { headerName: "Estado SUNAT", field: "estado_sunat", width: 150 },
+    {
+      headerName: "Plazo Baja",
+      field: "dentro_de_plazo_baja",
+      width: 190,
+      cellRenderer: (p: { data: PendienteBaja }) => {
+        const d = p.data;
+        return d.dentro_de_plazo_baja ? (
+          <Tag color="green">
+            Dentro de plazo ({d.dias_desde_emision}/{d.plazo_maximo_dias} días)
+          </Tag>
+        ) : (
+          <Tag color="red">Vencido — usar Nota de Crédito</Tag>
         );
-        setComprobantes(pendientes);
-      }
-    } catch (error: any) {
-      message.error("Error al cargar comprobantes: " + error?.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+      },
+    },
+  ];
 
-  const handleEnviarBaja = async () => {
-    if (selectedRowKeys.length === 0) {
-      message.warning("Selecciona al menos un comprobante");
+  const handleEnviarBaja = () => {
+    if (!seleccionado) {
+      message.warning("Selecciona un comprobante");
       return;
     }
-
-    if (!motivoGlobal.trim()) {
+    if (!seleccionado.dentro_de_plazo_baja) {
+      message.error("Este comprobante ya venció su plazo de baja — corresponde Nota de Crédito.");
+      return;
+    }
+    if (!motivo.trim()) {
       message.warning("Ingresa un motivo para la comunicación de baja");
       return;
     }
 
-    const detalles: DetalleComunicacionBaja[] = selectedRowKeys.map((key) => {
-      const comp = comprobantes.find((c) => c.id === key);
-      return {
-        tipo_doc: comp?.tipo_comprobante as "01" | "03",
-        serie: comp?.serie || "",
-        correlativo: String(comp?.correlativo || ""),
-        motivo: motivoGlobal,
-      };
-    });
+    const detalle: DetalleComunicacionBaja = {
+      tipo_doc: seleccionado.tipo_comprobante,
+      serie: seleccionado.serie,
+      correlativo: String(seleccionado.correlativo),
+      motivo,
+    };
 
     modal.confirm({
       title: "Enviar Comunicación de Baja",
-      content: `¿Estás seguro de enviar la comunicación de baja para ${selectedRowKeys.length} comprobante(s)? Esta acción no se puede deshacer.`,
+      content: `¿Confirmás dar de baja ${seleccionado.serie_numero}? Esta acción no se puede deshacer.`,
       okText: "Sí, enviar",
       cancelText: "Cancelar",
       okButtonProps: { danger: true },
       onOk: async () => {
         setEnviando(true);
         try {
-          const result = await facturacionElectronicaApi.enviarBajaSunat(detalles);
-
+          const result = await facturacionElectronicaApi.enviarBajaSunat([detalle]);
           if (result.error) {
             message.error(result.error.message || "Error al enviar comunicación de baja");
             return;
           }
-
           if (result.data?.success) {
-            message.success({
-              content: `Comunicación de baja enviada exitosamente. Código: ${result.data.codigo_sunat || "0"}`,
-              duration: 5,
-            });
-            setModalOpen(false);
-            setSelectedRowKeys([]);
-            setMotivoGlobal("");
-            loadComprobantes();
+            message.success(`Comunicación de baja enviada. Código: ${result.data.codigo_sunat || "0"}`);
+            setSeleccionado(null);
+            setMotivo("");
+            refetch();
           } else {
             message.error(result.data?.message || "Error al enviar comunicación de baja");
           }
@@ -104,156 +154,64 @@ export default function Page() {
     });
   };
 
-  const columns: ColumnsType<ComprobanteElectronico> = [
-    {
-      title: "Tipo",
-      dataIndex: "tipo_comprobante",
-      width: 100,
-      render: (tipo: string) => (
-        <Tag color={tipo === "01" ? "blue" : "green"}>
-          {tipo === "01" ? "Factura" : "Boleta"}
-        </Tag>
-      ),
-    },
-    {
-      title: "Serie-Número",
-      dataIndex: "serie_numero",
-      render: (_, record) => `${record.serie}-${String(record.correlativo).padStart(8, "0")}`,
-    },
-    {
-      title: "Fecha",
-      dataIndex: "fecha_emision",
-      width: 120,
-    },
-    {
-      title: "Cliente",
-      dataIndex: "cliente_razon_social",
-      ellipsis: true,
-    },
-    {
-      title: "Total",
-      dataIndex: "total",
-      width: 120,
-      render: (total: number) => `S/. ${total?.toFixed(2) || "0.00"}`,
-    },
-    {
-      title: "Estado SUNAT",
-      dataIndex: "estado_sunat",
-      width: 130,
-      render: (estado: string) => (
-        <Tag color={estado === "PENDIENTE" ? "orange" : "default"}>
-          {estado}
-        </Tag>
-      ),
-    },
-  ];
-
-  const rowSelection = {
-    selectedRowKeys,
-    onChange: (keys: React.Key[]) => setSelectedRowKeys(keys),
-  };
-
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Comunicación de Baja - SUNAT</h2>
-        <Space>
-          <Input
-            placeholder="Buscar comprobante..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            style={{ width: 250 }}
-            onPressEnter={() => loadComprobantes()}
-          />
-          <Button icon={<FaFileAlt />} onClick={loadComprobantes} loading={loading}>
-            Buscar Pendientes
-          </Button>
-          <Button
-            type="primary"
-            danger
-            icon={<FaPaperPlane />}
-            onClick={() => setModalOpen(true)}
-            disabled={selectedRowKeys.length === 0}
-          >
-            Enviar Baja ({selectedRowKeys.length})
-          </Button>
-        </Space>
-      </div>
+    <div className="w-full flex flex-col gap-4">
+      <FormBase
+        form={form}
+        name="filtros-comunicacion-baja"
+        initialValues={{ desde: rango.desde, hasta: rango.hasta }}
+        onValuesChange={(_, values) => setRango({ desde: values.desde, hasta: values.hasta })}
+      >
+        <TituloModulos title="Comunicación de Baja" icon={<FaBan className="text-red-600" />}>
+          <div className="flex items-center gap-3 flex-wrap">
+            <FilterDateRangeFields fromName="desde" toName="hasta" />
+          </div>
+        </TituloModulos>
+      </FormBase>
 
-      <div className="grid grid-cols-4 gap-4">
-        <CardDashboard
-          title="Pendientes"
-          value={comprobantes.length}
-          icon={<FaClock className="text-orange-500" />}
+      <div className="h-[420px]">
+        <TableWithTitle<PendienteBaja>
+          id="comunicacion-baja-pendientes"
+          title="VENTAS ANULADAS PENDIENTES DE BAJA (SUNAT sigue con el comprobante vigente)"
+          loading={isLoading}
+          columnDefs={columns}
+          rowData={filas}
+          tableRef={tableRef}
+          selectionColor={redColors[10]}
+          onRowClicked={(event) => event.node.setSelected(true)}
+          onSelectionChanged={({ selectedNodes }) => {
+            setSeleccionado((selectedNodes?.[0]?.data as PendienteBaja) ?? null);
+          }}
         />
       </div>
 
-      <Table
-        columns={columns}
-        dataSource={comprobantes.map((c) => ({ ...c, key: c.id }))}
-        rowSelection={rowSelection}
-        loading={loading}
-        pagination={{ pageSize: 10 }}
-        scroll={{ x: 800 }}
-      />
-
-      <Modal
-        title="Enviar Comunicación de Baja"
-        open={modalOpen}
-        onCancel={() => setModalOpen(false)}
-        footer={[
-          <Button key="cancel" onClick={() => setModalOpen(false)}>
-            Cancelar
-          </Button>,
-          <Button
-            key="send"
-            type="primary"
-            danger
-            loading={enviando}
-            onClick={handleEnviarBaja}
-          >
-            Enviar a SUNAT
-          </Button>,
-        ]}
-      >
-        <div className="flex flex-col gap-4 py-4">
-          <div>
-            <label className="block mb-2 font-medium">
-              Motivo de la comunicación de baja:
-            </label>
-            <Input.TextArea
-              value={motivoGlobal}
-              onChange={(e) => setMotivoGlobal(e.target.value)}
-              placeholder="Ej: Documento anulado por error del usuario"
-              rows={3}
-            />
-          </div>
-
-          <div>
-            <p className="font-medium mb-2">
-              Comprobantes seleccionados ({selectedRowKeys.length}):
-            </p>
-            <ul className="list-disc pl-5 max-h-40 overflow-y-auto">
-              {selectedRowKeys.map((key) => {
-                const comp = comprobantes.find((c) => c.id === key);
-                return (
-                  <li key={key}>
-                    {comp?.serie}-{String(comp?.correlativo).padStart(8, "0")} -{" "}
-                    {comp?.cliente_razon_social || "Sin cliente"}
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-
-          {enviando && (
-            <div className="flex items-center gap-2 text-blue-600">
-              <Spin size="small" />
-              <span>Enviando comunicación de baja a SUNAT...</span>
-            </div>
-          )}
+      <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3 border-t border-gray-100 pt-4">
+        <div className="flex-1 w-full">
+          <label className="text-sm font-semibold text-gray-700 block mb-1">
+            Motivo de la comunicación de baja
+            {seleccionado && (
+              <span className="ml-2 font-normal text-gray-500">— {seleccionado.serie_numero}</span>
+            )}
+          </label>
+          <InputBase
+            value={motivo}
+            onChange={(e) => setMotivo(e.target.value)}
+            placeholder="Ej: Venta anulada por devolución del cliente"
+            uppercase={false}
+          />
         </div>
-      </Modal>
+        <ButtonBase
+          color="danger"
+          size="md"
+          onClick={handleEnviarBaja}
+          disabled={!seleccionado}
+          loading={enviando}
+          className="flex items-center gap-2 whitespace-nowrap"
+        >
+          <FaPaperPlane />
+          Enviar a SUNAT
+        </ButtonBase>
+      </div>
     </div>
   );
 }

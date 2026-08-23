@@ -3,6 +3,7 @@ import {
 } from 'react-icons/bi'
 import {
   FaBalanceScale,
+  FaBan,
   FaBoxOpen,
   FaBuilding,
   FaCalendarAlt,
@@ -54,6 +55,7 @@ import { HistoryOutlined, SwapOutlined } from '@ant-design/icons'
 export const NAV_ICON_MAP: Record<string, React.ComponentType<any>> = {
   BiTransferAlt,
   FaBalanceScale,
+  FaBan,
   FaBoxOpen,
   FaBuilding,
   FaCalculator,

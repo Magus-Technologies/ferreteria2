@@ -403,15 +403,24 @@ export default function CellAccionesVentaDropdown(
     },
     {
       key: 'enviar-sunat',
-      label: isAceptado ? (
+      // Venta anulada: "Enviar a SUNAT" ya no aplica (lo bloquea el backend).
+      // En vez de mostrarlo deshabilitado sin salida, redirige directo a
+      // Comunicación de Baja con esta venta preseleccionada.
+      label: (estadoVenta === 'an' && puedeFacturarse) ? (
+        <span className="flex items-center gap-2">
+          <FaBan className="text-red-600" /> Ir a Comunicación de Baja
+        </span>
+      ) : isAceptado ? (
         <span className="flex items-center gap-2"><FaCheckCircle className="text-green-600" /> Enviado</span>
       ) : (
         <span className="flex items-center gap-2" title={motivoNoFacturable ?? undefined}>
           <FaPaperPlane className="text-purple-600" /> Enviar a SUNAT
         </span>
       ),
-      onClick: handleEnviarSunat,
-      disabled: isAceptado || !puedeFacturarse,
+      onClick: (estadoVenta === 'an' && puedeFacturarse)
+        ? () => router.push(`/ui/facturacion-electronica/comunicacion-baja?venta_id=${ventaId}`)
+        : handleEnviarSunat,
+      disabled: estadoVenta === 'an' ? !puedeFacturarse : (isAceptado || !puedeFacturarse),
     },
     // El CDR (constancia de recepción de SUNAT) solo existe una vez que
     // SUNAT aceptó el comprobante — antes de eso no hay nada que descargar,

@@ -155,6 +155,13 @@
         "icon": "FaGift",
         "route": "/ui/facturacion-electronica/vales-compra",
         "permission": "facturacion-electronica.mis-vales.index"
+      },
+      {
+        "id": "comunicacion-baja",
+        "label": "Comunicación de Baja",
+        "icon": "FaBan",
+        "route": "/ui/facturacion-electronica/comunicacion-baja",
+        "permission": "facturacion-electronica.comunicacion-baja.index"
       }
     ]
   }

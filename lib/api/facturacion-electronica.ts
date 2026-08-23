@@ -205,6 +205,28 @@ export interface DetalleComunicacionBaja {
   motivo: string;
 }
 
+/**
+ * Item de /comprobantes/pendientes-baja: venta ANULADA internamente cuyo
+ * comprobante SUNAT sigue ACEPTADO/PENDIENTE — pendiente de Comunicación de
+ * Baja (o de Nota de Crédito si ya venció el plazo).
+ */
+export interface PendienteBaja {
+  id: number;
+  venta_id: string;
+  tipo_comprobante: "01" | "03";
+  tipo_comprobante_nombre: string;
+  serie: string;
+  correlativo: number;
+  serie_numero: string;
+  fecha_emision: string;
+  cliente_razon_social?: string;
+  importe_total: number;
+  estado_sunat: string;
+  dias_desde_emision: number;
+  plazo_maximo_dias: number;
+  dentro_de_plazo_baja: boolean;
+}
+
 export interface ComunicacionBajaResult {
   success: boolean;
   message: string;
@@ -450,6 +472,12 @@ export const facturacionElectronicaApi = {
   },
 
   // Comunicaciones de Baja
+  async getPendientesBaja() {
+    return apiRequest<{ data: PendienteBaja[] }>(
+      `/facturacion-electronica/comprobantes/pendientes-baja`
+    );
+  },
+
   async generarXmlBaja(detalles: DetalleComunicacionBaja[]) {
     return apiRequest<{ success: boolean; xml: string }>(
       "/facturacion-electronica/comunicacion-baja/generar-xml",
