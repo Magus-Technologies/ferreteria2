@@ -203,6 +203,10 @@ export default function useCreateCompra({
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: [QueryKeys.COMPRAS] })
+      // Mismo bug que en Ventas: la tabla de "Compras en Espera" usa su
+      // propia query key, separada de COMPRAS — sin esto quedaba mostrando
+      // datos viejos tras editar/volver a poner una compra en espera.
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.COMPRAS_EN_ESPERA] })
       const esEnEspera = variables.estado_de_compra === EstadoDeCompra.EnEspera
       message.success(
         esEnEspera

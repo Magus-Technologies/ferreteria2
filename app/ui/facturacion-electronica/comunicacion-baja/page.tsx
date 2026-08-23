@@ -15,7 +15,7 @@ import TableWithTitle from "~/components/tables/table-with-title";
 import InputBase from "~/app/_components/form/inputs/input-base";
 import FilterDateRangeFields from "~/app/_components/filters/filter-date-range-fields";
 import { facturacionElectronicaApi, DetalleComunicacionBaja, PendienteBaja } from "~/lib/api/facturacion-electronica";
-import { redColors, greenColors } from "~/lib/colors";
+import {  orangeColors } from "~/lib/colors";
 import { FaBan } from "react-icons/fa6";
 
 interface ValuesFiltros {
@@ -177,7 +177,7 @@ export default function ComunicacionBajaPage() {
           columnDefs={columns}
           rowData={filas}
           tableRef={tableRef}
-          selectionColor={redColors[10]}
+          selectionColor={orangeColors[0]}
           onRowClicked={(event) => event.node.setSelected(true)}
           onSelectionChanged={({ selectedNodes }) => {
             setSeleccionado((selectedNodes?.[0]?.data as PendienteBaja) ?? null);

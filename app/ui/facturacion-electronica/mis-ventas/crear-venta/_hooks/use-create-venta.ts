@@ -599,12 +599,19 @@ export default function useCreateVenta({
         message.success('Venta actualizada exitosamente')
         queryClient.invalidateQueries({ queryKey: ['venta', ventaId] })
         queryClient.invalidateQueries({ queryKey: ['ventas'] })
+        // Editar una venta en espera y volver a guardarla como 'ee' la deja
+        // en la lista de "Ventas en Espera" — pero ese modal usa su PROPIA
+        // query key (QueryKeys.VENTAS_EN_ESPERA), separada de 'ventas'.
+        // Sin esto, el modal seguía mostrando los datos de antes de editar
+        // hasta que el socket la refrescara solo (con latencia perceptible).
+        queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS_EN_ESPERA] })
       }
 
       // Si es venta en espera: mensaje específico, limpiar formulario y NO abrir modal de documento
       if (estadoVenta === EstadoDeVenta.EN_ESPERA) {
         message.success('Venta puesta en espera correctamente')
         queryClient.invalidateQueries({ queryKey: ['ventas'] })
+        queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS_EN_ESPERA] })
         ventaEvents.emitEspera()
         return
       }
