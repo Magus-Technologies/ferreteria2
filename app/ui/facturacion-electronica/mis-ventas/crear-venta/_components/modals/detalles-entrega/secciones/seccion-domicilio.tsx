@@ -219,7 +219,7 @@ export function SeccionDomicilio({
                     ? '1 producto excluido de esta entrega:'
                     : `${productosEntrega.filter(p => p.excluido).length} productos excluidos de esta entrega:`}
                 </span>
-                <div className="flex flex-col gap-0.5">
+                <div className="flex flex-col gap-0.5 max-h-32 overflow-y-auto pr-1">
                   {productosEntrega.filter(p => p.excluido).map(p => (
                     <div key={p.id} className="flex items-center justify-between gap-2">
                       <span className="text-xs text-amber-800 truncate">{p.producto}</span>

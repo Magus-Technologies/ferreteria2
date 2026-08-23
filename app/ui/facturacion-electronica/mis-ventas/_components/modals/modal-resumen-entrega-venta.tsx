@@ -357,18 +357,20 @@ export default function ModalResumenEntregaVenta({
                       ? '1 producto excluido de esta entrega:'
                       : `${filas.filter(f => f.cantAProgramar === 0 && f.pendiente > 0).length} productos excluidos de esta entrega:`}
                   </span>
-                  {filas.filter(f => f.cantAProgramar === 0 && f.pendiente > 0).map(f => (
-                    <div key={f.key} className="flex items-center justify-between gap-2">
-                      <span className="text-xs text-amber-800 truncate">{f.nombre}</span>
-                      <button
-                        type="button"
-                        onClick={() => onCommit(f.key, f.pendiente)}
-                        className="shrink-0 text-xs font-medium text-amber-700 underline hover:text-amber-900"
-                      >
-                        Restaurar
-                      </button>
-                    </div>
-                  ))}
+                  <div className="flex flex-col gap-0.5 max-h-24 overflow-y-auto pr-1">
+                    {filas.filter(f => f.cantAProgramar === 0 && f.pendiente > 0).map(f => (
+                      <div key={f.key} className="flex items-center justify-between gap-2">
+                        <span className="text-xs text-amber-800 truncate">{f.nombre}</span>
+                        <button
+                          type="button"
+                          onClick={() => onCommit(f.key, f.pendiente)}
+                          className="shrink-0 text-xs font-medium text-amber-700 underline hover:text-amber-900"
+                        >
+                          Restaurar
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
