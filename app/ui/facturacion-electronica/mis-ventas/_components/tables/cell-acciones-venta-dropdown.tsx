@@ -80,9 +80,20 @@ export default function CellAccionesVentaDropdown(
   else if (isAceptado) editLockReason = 'SUNAT ya aceptó el comprobante. Usa Nota de Crédito para hacer cambios.';
   const canEdit = editLockReason === null;
 
-  // Verificar si se puede anular (cualquier estado excepto anulado).
-  // El backend revierte los cobros activos al anular.
-  const canAnular = estadoVenta !== 'an';
+  // Verificar si se puede anular. Bloqueado si:
+  //  1. Ya está anulada (no se puede re-anular).
+  //  2. SUNAT ya aceptó el comprobante: "Anular Venta" solo cambia el estado
+  //     interno, no le avisa nada a SUNAT (revisar comprobantes_electronicos
+  //     confirma que nadie lo toca ahí) — dejarla anular igual generaba un
+  //     desfase donde el sistema muestra "anulada" pero SUNAT sigue teniendo
+  //     el comprobante vigente. Corresponde Nota de Crédito o Comunicación
+  //     de Baja en su lugar.
+  const canAnular = estadoVenta !== 'an' && !isAceptado;
+  const anularLockReason = estadoVenta === 'an'
+    ? 'La venta ya está anulada.'
+    : isAceptado
+      ? 'SUNAT ya aceptó el comprobante. Usa Nota de Crédito o Comunicación de Baja.'
+      : null;
 
   // Comprobante electrónico: solo boletas (03) y facturas (01) YA confirmadas.
   //
@@ -328,7 +339,11 @@ export default function CellAccionesVentaDropdown(
     },
     {
       key: 'anular',
-      label: <span className="flex items-center gap-2"><FaBan className="text-red-600" /> Anular Venta</span>,
+      label: (
+        <span className="flex items-center gap-2" title={anularLockReason ?? undefined}>
+          <FaBan className="text-red-600" /> Anular Venta
+        </span>
+      ),
       onClick: handleAnular,
       disabled: !canAnular,
       danger: true,
@@ -398,16 +413,20 @@ export default function CellAccionesVentaDropdown(
       onClick: handleEnviarSunat,
       disabled: isAceptado || !puedeFacturarse,
     },
-    {
-      key: 'descargar-cdr',
-      label: (
-        <span className="flex items-center gap-2" title={motivoNoFacturable ?? undefined}>
-          <FaDownload className="text-orange-600" /> Descargar CDR
-        </span>
-      ),
-      onClick: handleDescargarCDR,
-      disabled: !puedeFacturarse,
-    },
+    // El CDR (constancia de recepción de SUNAT) solo existe una vez que
+    // SUNAT aceptó el comprobante — antes de eso no hay nada que descargar,
+    // así que la opción ni aparece en vez de quedar deshabilitada para siempre.
+    ...(isAceptado
+      ? [{
+          key: 'descargar-cdr',
+          label: (
+            <span className="flex items-center gap-2">
+              <FaDownload className="text-orange-600" /> Descargar CDR
+            </span>
+          ),
+          onClick: handleDescargarCDR,
+        } as const]
+      : []),
   ];
 
   return (
