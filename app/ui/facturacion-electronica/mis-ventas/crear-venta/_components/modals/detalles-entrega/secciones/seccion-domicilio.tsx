@@ -221,12 +221,12 @@ export function SeccionDomicilio({
                 </span>
                 <div className="flex flex-col gap-0.5">
                   {productosEntrega.filter(p => p.excluido).map(p => (
-                    <div key={p.unidad_derivada_venta_id} className="flex items-center justify-between gap-2">
+                    <div key={p.id} className="flex items-center justify-between gap-2">
                       <span className="text-xs text-amber-800 truncate">{p.producto}</span>
                       <button
                         type="button"
-                        onClick={() => setProductosEntrega(
-                          productosEntrega.map(x =>
+                        onClick={() => setProductosEntrega(prev =>
+                          prev.map(x =>
                             x.id === p.id ? { ...x, excluido: false, entregar_programado: x.total } : x
                           )
                         )}

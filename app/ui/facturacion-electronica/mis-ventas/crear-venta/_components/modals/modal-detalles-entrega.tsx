@@ -2,7 +2,7 @@
 
 import { Modal, Form } from 'antd'
 import useApp from 'antd/es/app/useApp'
-import { useEffect, useCallback, useMemo } from 'react'
+import { useEffect, useCallback, useMemo, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import ButtonBase from '~/components/buttons/button-base'
 import TitleForm from '~/components/form/title-form'
@@ -538,14 +538,36 @@ function ModalDetallesEntregaInner({
     }
   }, [open, tipoDespacho, form])
 
+  // Marca para qué `tipoDespacho` ya se construyó `productosEntrega` en esta
+  // apertura del modal. Sin esto, el efecto de abajo (que depende de
+  // `datosEntregaPorUnidad`, derivado de un useQuery) se re-disparaba cada
+  // vez que ese query se revalidaba en segundo plano (socket, invalidación
+  // de ['ventas'], etc.) — React Query devuelve un objeto `data` nuevo en
+  // cada refetch aunque el contenido sea igual, así que reconstruía TODA la
+  // lista desde cero y borraba los "excluido" que el usuario ya había
+  // marcado. Eso era el parpadeo, y la fuente real de la duplicación al
+  // "Restaurar" (mezclaba estado de antes/después de una reconstrucción a
+  // mitad de camino).
+  const productosEntregaConstruidoParaRef = useRef<string | null>(null)
+
   useEffect(() => {
-    if (!open) return
+    if (!open) {
+      productosEntregaConstruidoParaRef.current = null
+      return
+    }
     // Modo `actualizar-entrega` (mis-entregas): los productos vienen ya
     // pre-armados desde fuera (de la entrega existente), no del form.
     if (productosIniciales && productosIniciales.length > 0) {
       setProductosEntrega(productosIniciales)
       return
     }
+    // En edición (venta existente), esperar a que la consulta de la venta
+    // resuelva antes de construir — si no, "entregado" saldría en 0 y luego
+    // el guard de abajo ya no dejaría corregirlo.
+    if (ventaIdParaConsulta && !ventaResponse) return
+
+    if (productosEntregaConstruidoParaRef.current === tipoDespacho) return
+
     // Modo `crear-venta`: derivar productos del form de la venta.
     const productosEntregables = productos?.filter(esProductoEntregable) ?? []
 
@@ -597,8 +619,9 @@ function ModalDetallesEntregaInner({
         }
       })
       setProductosEntrega(items)
+      productosEntregaConstruidoParaRef.current = tipoDespacho
     }
-  }, [open, tipoDespacho, productos, productosIniciales, datosEntregaPorUnidad])
+  }, [open, tipoDespacho, productos, productosIniciales, datosEntregaPorUnidad, ventaIdParaConsulta, ventaResponse])
 
   const handleEditarCliente = () => {
     onEditarCliente()
