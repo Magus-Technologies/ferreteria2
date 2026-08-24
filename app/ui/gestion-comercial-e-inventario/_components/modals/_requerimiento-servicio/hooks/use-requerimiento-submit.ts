@@ -22,16 +22,24 @@ export function useRequerimientoSubmit() {
                 vehiculo_id: form.vehiculoId ? Number(form.vehiculoId) : undefined,
                 afecta_calendario: form.afectaCalendario ?? undefined,
                 servicios: servicios.map(s => {
-                    // Duración = hora fin − hora inicio (no la hora de inicio
-                    // en minutos desde medianoche, que era el bug: 14:00 → 840)
-                    let duracionHoras = 0
+                    // Duración = hora fin − hora inicio. El backend y la BD exigen un
+                    // ENTERO: 02:00–03:30 daba 1.5 horas y el envío rebotaba con
+                    // "duracion_cantidad must be an integer". Horas exactas van en horas;
+                    // con minutos sueltos, todo en minutos (los consumidores ya los soportan).
+                    let duracionCantidad = 0
+                    let duracionUnidad: 'horas' | 'minutos' = 'horas'
                     if (s.unidadDuracion === 'dias') {
-                        duracionHoras = (parseInt(s.cantidadDias) || 0) * 24
+                        duracionCantidad = (parseInt(s.cantidadDias) || 0) * 24
                     } else if (s.horaInicio && s.horaFin) {
                         const [hi, mi] = s.horaInicio.split(':').map(Number)
                         const [hf, mf] = s.horaFin.split(':').map(Number)
-                        const total = ((hf || 0) * 60 + (mf || 0)) - ((hi || 0) * 60 + (mi || 0))
-                        duracionHoras = total > 0 ? total / 60 : 0
+                        const totalMin = ((hf || 0) * 60 + (mf || 0)) - ((hi || 0) * 60 + (mi || 0))
+                        if (totalMin > 0 && totalMin % 60 === 0) {
+                            duracionCantidad = totalMin / 60
+                        } else if (totalMin > 0) {
+                            duracionCantidad = totalMin
+                            duracionUnidad = 'minutos'
+                        }
                     }
 
                     return {
@@ -42,8 +50,8 @@ export function useRequerimientoSubmit() {
                         hora_inicio: s.horaInicio || undefined,
                         hora_fin: s.horaFin || undefined,
                         cantidad_dias: s.cantidadDias || undefined,
-                        duracion_cantidad: duracionHoras || undefined,
-                        duracion_unidad: 'horas',
+                        duracion_cantidad: duracionCantidad || undefined,
+                        duracion_unidad: duracionUnidad,
                         presupuesto_referencial: s.presupuestoReferencial ? Number(s.presupuestoReferencial) : undefined,
                         detalles: s.detalles || undefined,
                     }
