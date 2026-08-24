@@ -2,7 +2,7 @@
 
 import { DescuentoTipo, EstadoDeVenta, ventaApi } from "~/lib/api/venta";
 import { Form, FormInstance } from "antd";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { clienteApi } from "~/lib/api/cliente";
 import useApp from "antd/es/app/useApp";
@@ -96,6 +96,19 @@ export default function CardsInfoVenta({
 
   const [modalDetallesEntregaOpen, setModalDetallesEntregaOpen] =
     useState(false);
+  // Marca que "Configurar Entrega" se abrió como parte de la cadena de cobro
+  // (Cobrar/Devolver Diferencia → Continuar → Configurar Entrega). En ese
+  // flujo, para una venta ya confirmada, "Entregar Ahora" solo DEJA los
+  // datos listos (soloRegistrar) pero no persiste nada por su cuenta — sin
+  // este flag, el guardado quedaba pendiente para siempre: no hay ningún
+  // botón "Guardar Cambios" mientras exista una diferencia de cobro (el
+  // botón principal vuelve a abrir el MISMO modal de pago), así que
+  // "Entregar Ahora" era, en la práctica, el punto final del flujo y tenía
+  // que disparar el guardado. Si el modal se abre suelto desde "Editar
+  // Entrega" (sin diferencia pendiente), esto se resetea a false y se
+  // mantiene el comportamiento histórico: solo dejar los datos listos para
+  // que el usuario guarde después con "Guardar Cambios".
+  const entregaAutoSubmitRef = useRef(false);
   const [modalEditarClienteOpen, setModalEditarClienteOpen] = useState(false);
   const [surchargeTotal, setSurchargeTotal] = useState(0);
   // 'total' = flujo normal (crear venta / primer cobro). 'diferencia' /
@@ -179,6 +192,14 @@ export default function CardsInfoVenta({
 
   const continuarSegunEntrega = () => {
     if (requiereConfigurarEntrega()) {
+      // Esta función solo se llama al terminar el paso de cobro (o al pasar
+      // a crédito) — si hace falta configurar entrega, ese modal es el
+      // último paso del flujo y tiene que terminar guardando. Para una
+      // venta ya confirmada (soloRegistrar en el modal), "Entregar Ahora"
+      // no guarda por su cuenta, así que hay que pedírselo explícitamente.
+      if (ventaId && !esVentaEnEspera) {
+        entregaAutoSubmitRef.current = true;
+      }
       setModalDetallesEntregaOpen(true);
     } else {
       form.submit();
@@ -419,6 +440,10 @@ export default function CardsInfoVenta({
       message.warning("Por favor seleccione un cliente para despacho a domicilio");
       return;
     }
+    // Abierto suelto (no como parte de la cadena de cobro): mantiene el
+    // comportamiento histórico de solo dejar los datos listos para
+    // "Guardar Cambios".
+    entregaAutoSubmitRef.current = false;
     setModalDetallesEntregaOpen(true);
   };
 
@@ -799,6 +824,15 @@ export default function CardsInfoVenta({
           // así que hay que avisar acá que hay algo pendiente de guardar —
           // setFieldsValue no marca los campos como "touched".
           if (ventaId) setEntregaEditada(true);
+          // Si este modal se abrió como parte de la cadena de cobro
+          // (Cobrar/Devolver Diferencia), acá termina el flujo: hay que
+          // guardar. `form.submit()` toma la entrega recién dejada en
+          // store-entrega-pendiente (ver use-create-venta.ts) junto con
+          // `diferencia_pago` que ya está en el form.
+          if (entregaAutoSubmitRef.current) {
+            entregaAutoSubmitRef.current = false;
+            form.submit();
+          }
         }}
         onEditarCliente={() => {
           // Abrir el modal de editar cliente encima del modal de detalles
