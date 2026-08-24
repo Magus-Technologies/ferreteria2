@@ -198,7 +198,18 @@ export default function useCreateVenta({
   const isEditing = !!ventaId
 
   const handleSubmit = useCallback(async (values: FormCreateVenta) => {
-    if (submittingRef.current) return
+    if (submittingRef.current) {
+      // Este guard era 100% silencioso: si un intento anterior se quedaba
+      // "colgado" (submittingRef nunca se resetea, ej. un throw fuera del
+      // try/catch de más abajo), CADA click siguiente no hacía nada visible
+      // — exactamente el síntoma reportado ("le doy a todo y no pasa nada").
+      // Con este aviso, al menos queda claro que hay un envío trabado en vez
+      // de silencio total.
+      notification.warning({
+        message: 'Ya hay un envío en curso, esperá a que termine',
+      })
+      return
+    }
 
     // Entrega programada desde el modal en modo "solo registrar" (edición de una
     // venta existente): el modal no guardó, dejó el payload esperando acá. Trae
@@ -242,12 +253,30 @@ export default function useCreateVenta({
         const cajaActiva = cajaResponse.data?.data
 
         if (!cajaActiva) {
-          onMissingApertura?.()
+          // `onMissingApertura` es opcional — en el flujo de "Configurar
+          // Entrega" (useConfirmarEntrega) llama a useCreateVenta SIN pasar
+          // este callback, así que sin el fallback de abajo esto no hacía
+          // NADA visible: ni petición, ni mensaje. Exactamente "le doy a
+          // todo y no pasa nada" cuando no hay caja abierta.
+          if (onMissingApertura) {
+            onMissingApertura()
+          } else {
+            notification.error({
+              message: 'No hay una caja abierta',
+              description: 'Abrí una caja antes de cobrar esta venta.',
+            })
+          }
           return
         }
       } catch (error) {
         console.error('Error al validar apertura:', error)
-        onMissingApertura?.()
+        if (onMissingApertura) {
+          onMissingApertura()
+        } else {
+          notification.error({
+            message: 'No se pudo verificar la apertura de caja',
+          })
+        }
         return
       }
     }

@@ -391,7 +391,17 @@ export default function CardsInfoVenta({
     () => Math.round((totalCobrado - totalPagadoPrevio) * 100) / 100,
     [totalCobrado, totalPagadoPrevio],
   );
-  const tieneCobroPrevio = !!ventaId && totalPagadoPrevio > 0.01;
+  // Una venta en espera NUNCA debe tratarse como "ya cobrada", aunque
+  // `totalPagadoPrevio` venga en > 0 por una fila de pago huérfana (ej. una
+  // venta que estuvo cobrada, se devolvió a espera, y por algún camino viejo
+  // la fila de despliegue_de_pago_ventas no se limpió). Sin este guard,
+  // "Cobrar" entraba en la rama de "sin diferencia" y guardaba en silencio
+  // sin pedir método de pago — exactamente el síntoma de "le doy a todo y
+  // no pasa nada".
+  const tieneCobroPrevio =
+    !!ventaId &&
+    totalPagadoPrevio > 0.01 &&
+    ventaOriginal?.estado_de_venta !== EstadoDeVenta.EN_ESPERA;
 
   /**
    * Editar SOLO el método de pago de una venta ya cobrada, sin tocar el monto.
@@ -773,10 +783,17 @@ export default function CardsInfoVenta({
         // `estado_entrega = 'en'`. Ocultamos el campo "¿Quién entrega?"
         // porque sería ruido: el sistema ya decidió por el usuario.
         ocultar={descontarStockWatch === 'no' ? ['quien-entrega'] : []}
-        // Al EDITAR una venta existente, confirmar la entrega no guarda: solo
-        // deja los datos listos para "Guardar Cambios". Al crear sí guarda,
-        // porque ahí confirmar la entrega es el paso que crea la venta.
-        soloRegistrar={!!ventaId}
+        // Al EDITAR una venta YA CONFIRMADA, confirmar la entrega no guarda:
+        // solo deja los datos listos para "Guardar Cambios". Al crear sí
+        // guarda, porque ahí confirmar la entrega es el paso que crea la
+        // venta — y una venta EN ESPERA cuenta como "crear": ya tiene
+        // `ventaId`, pero todavía no fue cobrada ni confirmada, así que este
+        // paso (Cobrar → Configurar Entrega → Entregar Ahora) tiene que ser
+        // el que la termina de guardar. Con `soloRegistrar` en true acá,
+        // "Entregar Ahora" solo dejaba los datos en un store (para "Guardar
+        // Cambios") y no había ningún botón visible que hiciera ese guardado,
+        // así que la venta en espera quedaba en el limbo sin ningún error.
+        soloRegistrar={!!ventaId && !esVentaEnEspera}
         onConfirmar={() => {
           // En edición el modal solo deja los datos en el form (soloRegistrar),
           // así que hay que avisar acá que hay algo pendiente de guardar —
