@@ -185,9 +185,11 @@ export default function CrearOrdenCompraPage() {
   // Limpiar el store de producto agregado cuando se monta el componente en modo edición
   const clearProductoAgregado = useStoreProductoAgregadoCompra(s => s.clearProductoAgregado)
   useEffect(() => {
-    if (isEditMode || isDuplicateMode) {
-      clearProductoAgregado()
-    } else {
+    // Limpiar SIEMPRE el producto pendiente del store global (compartido con Crear
+    // Compra): si quedo uno de una visita anterior, el efecto de mas abajo lo
+    // volveria a agregar a la tabla nada mas montar la pagina.
+    clearProductoAgregado()
+    if (!isEditMode && !isDuplicateMode) {
       // Valores por defecto para nueva orden
       form.setFieldsValue({
         fecha: dayjs(),
@@ -199,6 +201,10 @@ export default function CrearOrdenCompraPage() {
       })
     }
   }, [isEditMode, isDuplicateMode, clearProductoAgregado, form])
+
+  // Al desmontar, no dejar nada en el store para la proxima visita (mismo
+  // comportamiento que Crear Compra, que comparte este store).
+  useEffect(() => () => clearProductoAgregado(), [clearProductoAgregado])
 
   const handleRemoveProducto = useCallback((index: number) => {
     setProductos(prev => prev.filter((_, i) => i !== index))
@@ -250,7 +256,9 @@ export default function CrearOrdenCompraPage() {
       }
       return [...prev, newProduct]
     })
-  }, [productoAgregadoCompra])
+    // Consumido: limpiarlo para que un remontaje de la pagina no lo re-agregue.
+    clearProductoAgregado()
+  }, [productoAgregadoCompra, clearProductoAgregado])
 
   const subTotal = useMemo(() => productos.reduce((acc, p) => acc + (p.cantidad * p.precio_compra), 0), [productos])
 
@@ -306,6 +314,14 @@ export default function CrearOrdenCompraPage() {
         ordenCompraCodigo = response.data?.data?.codigo
       }
 
+      // apiRequest no lanza excepciones: si el backend fallo hay que cortar aca.
+      // Sin este check, un error de creacion mostraba "creada exitosamente" y
+      // borraba el formulario con la orden sin crear.
+      if (response.error) {
+        message.error(response.error.message || 'No se pudo guardar la orden de compra')
+        return
+      }
+
       // Actualizar cantidad_ordenada para cada producto de la solicitud (solo en creación)
       if (!isEditMode && reqSeleccionado?.productos && ordenCompraId) {
         const updatePromises = reqSeleccionado.productos.map(productoSolicitud => {
@@ -345,6 +361,9 @@ export default function CrearOrdenCompraPage() {
         setProductosPendientesCrear([])
         setCurrentProductoIndex(0)
         setProductoManualActual(null)
+        clearProductoAgregado()
+        setProveedorDefault([])
+        setProveedorRucInicial('')
         
         form.resetFields()
         form.setFieldsValue({
