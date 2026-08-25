@@ -532,7 +532,7 @@ export default function CampanitaAutorizaciones() {
   const tabSunat = (
     <div className="max-h-[280px] overflow-y-auto p-2 space-y-2">
       <div className="bg-amber-50 border border-amber-200 p-2 rounded text-xs text-amber-800">
-        Documentos generados próximos a vencer, y ventas cuyo comprobante nunca llegó a generarse.
+        Comprobantes que ya vencieron el plazo SUNAT (factura +3 días, boleta +7) y siguen sin enviarse.
       </div>
       {alertasSunat.length === 0 ? (
         <div className="py-6">
@@ -567,14 +567,17 @@ export default function CampanitaAutorizaciones() {
                   <p className="text-[10px] text-orange-600 font-bold uppercase">Sin Comprobante</p>
                 ) : (
                   (() => {
+                    // Acá solo llegan comprobantes YA vencidos (el backend
+                    // filtra por eso), así que esto siempre es un número
+                    // positivo — no hace falta la rama "Vence en X días".
                     const limit = doc.tipo_comprobante === '01' ? 3 : 7
-                    const diff = dayjs().startOf('day').diff(dayjs(doc.fecha_emision).startOf('day'), 'day')
-                    const remaining = limit - diff
-                    let text = ''
-                    if (remaining <= 0) text = 'Vence Hoy'
-                    else if (remaining === 1) text = 'Vence Mañana'
-                    else text = `Vence en ${remaining} días`
-                    return <p className="text-[10px] text-red-500 font-bold uppercase">{text}</p>
+                    const diasVencido =
+                      dayjs().startOf('day').diff(dayjs(doc.fecha_emision).startOf('day'), 'day') - limit
+                    return (
+                      <p className="text-[10px] text-red-500 font-bold uppercase">
+                        Vencido hace {diasVencido} día{diasVencido === 1 ? '' : 's'}
+                      </p>
+                    )
                   })()
                 )}
               </div>
