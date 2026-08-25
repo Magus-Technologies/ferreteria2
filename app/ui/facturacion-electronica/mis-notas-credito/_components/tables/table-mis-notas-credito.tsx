@@ -16,6 +16,8 @@ import { useStoreModalPdfNotaCredito } from "../../_store/store-modal-pdf-nota-c
 import { create } from "zustand";
 import { orangeColors } from "~/lib/colors";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 // Store de la nota seleccionada — lo lee TableDetalleNotaCredito para mostrar
 // los items del comprobante afectado (master-detail, igual que ventas/cotiz.).
 type UseStoreNotaCreditoSeleccionada = {
@@ -80,7 +82,10 @@ export default function TableMisNotasCredito() {
       },
       {
         headerName: "Fecha Emisión",
-        field: "fecha",
+        // El backend (NotaCreditoResource) serializa el campo `fecha` del
+        // modelo bajo la key `fecha_emision` — leer "fecha" acá siempre
+        // daba undefined y la columna salía vacía.
+        field: "fecha_emision",
         width: 180,
         valueFormatter: (params) =>
           params.value ? formatFechaPeru(params.value, "DD/MM/YYYY hh:mm:ss A") : "",
@@ -151,7 +156,7 @@ export default function TableMisNotasCredito() {
                     // Llamar al endpoint para obtener el XML
                     const token = localStorage.getItem('auth_token');
                     const response = await fetch(
-                      `http://localhost:8000/api/facturacion-electronica/notas-credito/${params.data.id}/xml`,
+                      `${API_URL}/facturacion-electronica/notas-credito/${params.data.id}/xml`,
                       {
                         headers: {
                           'Authorization': `Bearer ${token}`,
@@ -209,7 +214,7 @@ export default function TableMisNotasCredito() {
                     try {
                       const token = localStorage.getItem('auth_token');
                       const response = await fetch(
-                        `http://localhost:8000/api/facturacion-electronica/notas-credito/${params.data.id}/cdr`,
+                        `${API_URL}/facturacion-electronica/notas-credito/${params.data.id}/cdr`,
                         {
                           headers: {
                             'Authorization': `Bearer ${token}`,
