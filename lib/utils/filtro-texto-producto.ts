@@ -13,17 +13,15 @@
  * columnas (un "4" suelto traía filas por la hora o el número de documento).
  *
  * Reglas:
- * - Sin acentos ni mayúsculas/minúsculas. Comillas y comas en los bordes de
- *   cada palabra se ignoran: `4"` y `4` encuentran lo mismo.
- * - Todas las palabras tienen que coincidir (AND), en cualquier orden.
- * - En el NOMBRE la palabra tiene que estar al INICIO de una palabra (inicio
- *   del texto o después de espacio, /, -, paréntesis, etc.): "TUBO" no debe
- *   traer "EUROTUBO". Y es prefijo: "TUB" sí encuentra "TUBO".
- * - EXCEPCIÓN: las palabras "técnicas" (con algún dígito y de 2+ caracteres,
- *   ej. 25A, 110, 1/2) van por CONTENIDO en el nombre: "25A" debe encontrar
- *   "2X25A" y "125A", igual que el buscador de Mi Almacén (que usa el quick
- *   filter de AG Grid, por contenido). Con inicio-de-palabra el modal daba 6
- *   resultados donde Mi Almacén daba 13.
+ * - Sin acentos ni mayúsculas/minúsculas. Comillas y comas en los bordes se
+ *   ignoran, y los espacios repetidos se colapsan a uno.
+ * - El texto se busca como FRASE COMPLETA, contenida en cualquier parte del
+ *   nombre / ticket / código: "VADO E" encuentra "ELE(VADO E)UROTUBO" pero NO
+ *   "ACTIVADOR" ni "LAVADORA" (que solo tienen las palabras sueltas); "25A"
+ *   encuentra "2X25A" y "125A". Es el criterio del buscador de Mi Almacén,
+ *   que es la referencia del usuario (24/08/2026: por-palabras traía 38
+ *   resultados "con vado y una e en cualquier lado" cuando el usuario
+ *   esperaba los 9 tanques ELEVADO EUROTUBO).
  * - En el CÓDIGO basta con que esté contenida (el kardex, que solo tiene el
  *   código del producto, usa prefijo para que un "4" suelto no traiga 17348).
  */
@@ -33,22 +31,21 @@ const normalizar = (valor: unknown): string =>
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
 
-const escaparRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-
+/** Devuelve la FRASE de búsqueda normalizada como único término (o [] si está
+ *  vacía). Se mantiene el retorno en array por compatibilidad con los matchers. */
 export function palabrasBusqueda(texto: string | undefined | null): string[] {
-  return normalizar(texto)
-    .split(/\s+/)
-    .map((w) => w.replace(/^["',;]+|["',;]+$/g, ''))
-    .filter(Boolean)
+  const frase = normalizar(texto)
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/^["',;]+|["',;]+$/g, '')
+  return frase ? [frase] : []
 }
 
-/** ¿`palabra` (ya normalizada) aparece al inicio de alguna palabra de `texto`?
- *  Palabras con dígitos (2+ chars) van por contenido — ver las reglas de arriba. */
+/** ¿`palabra` (ya normalizada) aparece en `texto`? Por CONTENIDO, en cualquier
+ *  parte — mismo criterio que el buscador de Mi Almacén (ver reglas de arriba). */
 export function coincideInicioDePalabra(texto: unknown, palabra: string): boolean {
   if (!palabra) return true
-  const t = normalizar(texto)
-  if (/\d/.test(palabra) && palabra.length >= 2) return t.includes(palabra)
-  return new RegExp(`(^|[^\\p{L}\\p{N}])${escaparRegex(palabra)}`, 'u').test(t)
+  return normalizar(texto).includes(palabra)
 }
 
 /** Filtro de las tablas de kardex: solo mira el producto de la fila. */
