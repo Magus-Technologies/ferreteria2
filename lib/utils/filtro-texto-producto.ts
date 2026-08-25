@@ -19,6 +19,11 @@
  * - En el NOMBRE la palabra tiene que estar al INICIO de una palabra (inicio
  *   del texto o después de espacio, /, -, paréntesis, etc.): "TUBO" no debe
  *   traer "EUROTUBO". Y es prefijo: "TUB" sí encuentra "TUBO".
+ * - EXCEPCIÓN: las palabras "técnicas" (con algún dígito y de 2+ caracteres,
+ *   ej. 25A, 110, 1/2) van por CONTENIDO en el nombre: "25A" debe encontrar
+ *   "2X25A" y "125A", igual que el buscador de Mi Almacén (que usa el quick
+ *   filter de AG Grid, por contenido). Con inicio-de-palabra el modal daba 6
+ *   resultados donde Mi Almacén daba 13.
  * - En el CÓDIGO basta con que esté contenida (el kardex, que solo tiene el
  *   código del producto, usa prefijo para que un "4" suelto no traiga 17348).
  */
@@ -37,10 +42,13 @@ export function palabrasBusqueda(texto: string | undefined | null): string[] {
     .filter(Boolean)
 }
 
-/** ¿`palabra` (ya normalizada) aparece al inicio de alguna palabra de `texto`? */
+/** ¿`palabra` (ya normalizada) aparece al inicio de alguna palabra de `texto`?
+ *  Palabras con dígitos (2+ chars) van por contenido — ver las reglas de arriba. */
 export function coincideInicioDePalabra(texto: unknown, palabra: string): boolean {
   if (!palabra) return true
-  return new RegExp(`(^|[^\\p{L}\\p{N}])${escaparRegex(palabra)}`, 'u').test(normalizar(texto))
+  const t = normalizar(texto)
+  if (/\d/.test(palabra) && palabra.length >= 2) return t.includes(palabra)
+  return new RegExp(`(^|[^\\p{L}\\p{N}])${escaparRegex(palabra)}`, 'u').test(t)
 }
 
 /** Filtro de las tablas de kardex: solo mira el producto de la fila. */
