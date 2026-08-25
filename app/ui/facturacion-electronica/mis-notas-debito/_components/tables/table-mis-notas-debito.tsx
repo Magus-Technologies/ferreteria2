@@ -16,6 +16,8 @@ import TableWithTitle from "~/components/tables/table-with-title";
 import { create } from "zustand";
 import { orangeColors } from "~/lib/colors";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 // Store de la nota seleccionada — lo lee TableDetalleNotaDebito (master-detail).
 type UseStoreNotaDebitoSeleccionada = {
   nota?: any;
@@ -151,7 +153,7 @@ export default function TableMisNotasDebito() {
                     // Llamar al endpoint para obtener el XML
                     const token = localStorage.getItem('auth_token');
                     const response = await fetch(
-                      `http://localhost:8000/api/facturacion-electronica/notas-debito/${params.data.id}/xml`,
+                      `${API_URL}/facturacion-electronica/notas-debito/${params.data.id}/xml`,
                       {
                         headers: {
                           'Authorization': `Bearer ${token}`,
@@ -209,7 +211,7 @@ export default function TableMisNotasDebito() {
                     try {
                       const token = localStorage.getItem('auth_token');
                       const response = await fetch(
-                        `http://localhost:8000/api/facturacion-electronica/notas-debito/${params.data.id}/cdr`,
+                        `${API_URL}/facturacion-electronica/notas-debito/${params.data.id}/cdr`,
                         {
                           headers: {
                             'Authorization': `Bearer ${token}`,
