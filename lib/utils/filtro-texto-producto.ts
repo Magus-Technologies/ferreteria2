@@ -16,14 +16,12 @@
  * - Sin acentos ni mayúsculas/minúsculas. Comillas y comas en los bordes de
  *   cada palabra se ignoran: `4"` y `4` encuentran lo mismo.
  * - Todas las palabras tienen que coincidir (AND), en cualquier orden.
- * - En el NOMBRE la palabra tiene que estar al INICIO de una palabra (inicio
- *   del texto o después de espacio, /, -, paréntesis, etc.): "TUBO" no debe
- *   traer "EUROTUBO". Y es prefijo: "TUB" sí encuentra "TUBO".
- * - EXCEPCIÓN: las palabras "técnicas" (con algún dígito y de 2+ caracteres,
- *   ej. 25A, 110, 1/2) van por CONTENIDO en el nombre: "25A" debe encontrar
- *   "2X25A" y "125A", igual que el buscador de Mi Almacén (que usa el quick
- *   filter de AG Grid, por contenido). Con inicio-de-palabra el modal daba 6
- *   resultados donde Mi Almacén daba 13.
+ * - En el NOMBRE cada palabra busca por CONTENIDO, en cualquier parte: "25A"
+ *   encuentra "2X25A" y "125A"; "VADO" encuentra "ELEVADO". Es el mismo
+ *   criterio del buscador de Mi Almacén (quick filter de AG Grid), que es la
+ *   referencia para el usuario: con inicio-de-palabra el modal daba 6
+ *   resultados donde Mi Almacén daba 13, y "VADO E" no encontraba los
+ *   tanques ELEVADOS.
  * - En el CÓDIGO basta con que esté contenida (el kardex, que solo tiene el
  *   código del producto, usa prefijo para que un "4" suelto no traiga 17348).
  */
@@ -33,8 +31,6 @@ const normalizar = (valor: unknown): string =>
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
 
-const escaparRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-
 export function palabrasBusqueda(texto: string | undefined | null): string[] {
   return normalizar(texto)
     .split(/\s+/)
@@ -42,13 +38,11 @@ export function palabrasBusqueda(texto: string | undefined | null): string[] {
     .filter(Boolean)
 }
 
-/** ¿`palabra` (ya normalizada) aparece al inicio de alguna palabra de `texto`?
- *  Palabras con dígitos (2+ chars) van por contenido — ver las reglas de arriba. */
+/** ¿`palabra` (ya normalizada) aparece en `texto`? Por CONTENIDO, en cualquier
+ *  parte — mismo criterio que el buscador de Mi Almacén (ver reglas de arriba). */
 export function coincideInicioDePalabra(texto: unknown, palabra: string): boolean {
   if (!palabra) return true
-  const t = normalizar(texto)
-  if (/\d/.test(palabra) && palabra.length >= 2) return t.includes(palabra)
-  return new RegExp(`(^|[^\\p{L}\\p{N}])${escaparRegex(palabra)}`, 'u').test(t)
+  return normalizar(texto).includes(palabra)
 }
 
 /** Filtro de las tablas de kardex: solo mira el producto de la fila. */
