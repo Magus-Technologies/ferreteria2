@@ -237,6 +237,7 @@ export interface GuiaRemision {
   sunat_codigo_qr?: string;
   sunat_fecha_envio?: string;
   sunat_estado?: EstadoSunat;
+  sunat_ticket?: string;
   sunat_mensaje?: string;
   user_id: string;
   created_at: string;
@@ -374,6 +375,17 @@ export const guiaRemisionApi = {
    */
   async enviarSunat(id: string): Promise<ApiResponse<{ data: { success: boolean; mensaje: string; modo: string; codigo_sunat?: string; mensaje_sunat?: string }; message: string }>> {
     return apiRequest(`/guias-remision/${id}/enviar-sunat`, {
+      method: 'POST',
+    });
+  },
+
+  /**
+   * Consultar en SUNAT el estado del ticket de una guía ya enviada
+   * (GRE-API es asíncrona: enviar solo entrega un ticket, hay que
+   * consultarlo después para saber si SUNAT la aceptó).
+   */
+  async consultarEstado(id: string): Promise<ApiResponse<{ data: { success: boolean; estado: string; mensaje: string }; message: string }>> {
+    return apiRequest(`/guias-remision/${id}/consultar-estado`, {
       method: 'POST',
     });
   },

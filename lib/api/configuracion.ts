@@ -8,6 +8,8 @@ export interface AutoSendConfig {
 export interface AutoSendStatus {
   factura: AutoSendConfig;
   boleta: AutoSendConfig;
+  nota_credito: AutoSendConfig;
+  guia: AutoSendConfig;
 }
 
 export const configuracionApi = {
@@ -24,7 +26,7 @@ export const configuracionApi = {
    * Actualizar el estado del envío automático a SUNAT
    */
   updateAutoSendStatus: async (data: {
-    type: 'factura' | 'boleta' | 'guia' | 'all';
+    type: 'factura' | 'boleta' | 'nota_credito' | 'guia' | 'all';
     config?: AutoSendConfig;
     configs?: AutoSendStatus;
   }): Promise<ApiResponse<{ message: string }>> => {
