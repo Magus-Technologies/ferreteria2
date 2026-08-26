@@ -171,10 +171,12 @@ export default function FiltersMisVentas() {
     if (values.estado_sunat) count++;
     if (values.estado_cuenta) count++;
     if (values.user_id) count++;
-    if (values.serie_numero) count++;
+    // Igual que en handleFinish: el input desktop no es un Form.Item, así que
+    // no aparece en getFieldsValue(); hay que mirar también el estado local.
+    if (serieNumeroInput || values.serie_numero) count++;
     if (values.entrega) count++;
     return count;
-  }, [form]);
+  }, [form, serieNumeroInput]);
 
   // Función para buscar venta por serie-número
   const handleBuscarVentaPorSerieNumero = async (serieNumero: string) => {
@@ -233,15 +235,23 @@ export default function FiltersMisVentas() {
     let numero: number | undefined;
     let globalSearch = clienteSearchText;
 
-    if (serie_numero) {
-      const parts = serie_numero.split("-");
+    // El input de Serie-N° del layout DESKTOP no está envuelto en un Form.Item:
+    // se maneja con estado propio + `form.setFieldValue`. antd sólo entrega en
+    // `onFinish` los campos REGISTRADOS, así que `values.serie_numero` llegaba
+    // SIEMPRE undefined y el filtro no se aplicaba nunca — buscar "FT01-203"
+    // seguía trayendo todas las ventas. Se lee el estado local, y se cae al
+    // valor del form porque el input del drawer móvil sí es un Form.Item.
+    const serieNumero = (serieNumeroInput || serie_numero || "").trim();
+
+    if (serieNumero) {
+      const parts = serieNumero.split("-");
       if (parts.length === 2 && parts[0].trim() && parts[1].trim()) {
         // Only split if it looks like a complete SSS-NNNN
         serie = parts[0].trim();
         numero = parseInt(parts[1].trim());
       } else {
         // Use as general search if it's partial
-        globalSearch = serie_numero;
+        globalSearch = serieNumero;
       }
     }
 
@@ -255,7 +265,10 @@ export default function FiltersMisVentas() {
     // fechas se cayeran en silencio: se elegía un cliente y el listado traía
     // sus ventas de cualquier fecha, aunque el filtro dijera otra cosa.
     // Elegir un cliente es un filtro más, no la búsqueda de una venta puntual.
-    const ignorarFechas = !!(serie && numero) || (!cliente_id && !!globalSearch);
+    // Búsqueda de UN comprobante puntual por Serie-N° exacto.
+    const busquedaExacta = !!(serie && numero);
+
+    const ignorarFechas = busquedaExacta || (!cliente_id && !!globalSearch);
 
     // Construir objeto de filtros solo con valores definidos
     const data: any = {
@@ -272,7 +285,11 @@ export default function FiltersMisVentas() {
       // Laravel API espera campos simples, no objetos anidados
       ...(serie ? { serie } : {}),
       ...(numero ? { numero } : {}),
-      ...(estado_de_venta ? { estado_de_venta } : {}),
+      // Mismo criterio que las fechas: buscando un comprobante EXACTO, el
+      // estado tampoco debe filtrar. Si no, buscar una venta anulada con el
+      // filtro por defecto ("Creado") no devuelve nada y parece que el
+      // documento no existiera.
+      ...(estado_de_venta && !busquedaExacta ? { estado_de_venta } : {}),
       ...(entrega ? { entrega } : {}),
     };
 
