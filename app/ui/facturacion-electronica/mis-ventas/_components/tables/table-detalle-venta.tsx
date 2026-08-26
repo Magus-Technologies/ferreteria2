@@ -119,28 +119,6 @@ export default function TableDetalleVenta() {
 
   return (
     <div className='w-full'>
-      {/* Info del cliente */}
-      {ventaSeleccionada && (
-        <div className='flex items-center gap-4 mb-3'>
-          <div className='text-sm'>
-            <span className='font-semibold'>Cliente: </span>
-            <span>
-              {ventaSeleccionada?.cliente?.razon_social ||
-                `${ventaSeleccionada?.cliente?.nombres || ''} ${
-                  ventaSeleccionada?.cliente?.apellidos || ''
-                }`.trim() ||
-                'CLIENTES VARIOS'}
-            </span>
-          </div>
-          {ventaSeleccionada?.cliente?.email && (
-            <div className='text-sm'>
-              <span className='font-semibold'>Email: </span>
-              <span>{ventaSeleccionada.cliente.email}</span>
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Tabla de detalle de venta */}
       <div className='w-full min-h-[230px] h-[calc(100vh-600px)] max-h-[300px]'>
         <TableWithTitle<DetalleProducto>

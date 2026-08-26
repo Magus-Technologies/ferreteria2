@@ -216,6 +216,8 @@ export interface VentaFilters {
   estado_cuenta?: 'pagado' | 'deuda';
   cliente_id?: number;
   tipo_documento?: TipoDocumento;
+  serie?: string;
+  numero?: number;
   despliegue_de_pago_id?: string;
   search?: string;
   entrega?: 'pendiente' | 'completa';

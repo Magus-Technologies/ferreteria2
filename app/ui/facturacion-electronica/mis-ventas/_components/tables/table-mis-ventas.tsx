@@ -126,6 +126,36 @@ export default function TableMisVentas() {
     abrirPdf('venta', ventaId)
   };
 
+  const leyendaEstados = (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-normal">
+      <span className="font-semibold text-slate-500">Leyenda:</span>
+      <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-slate-600">
+        <span
+          aria-hidden="true"
+          className="h-3 w-3 rounded border border-gray-300"
+          style={{ backgroundColor: redColors[2] }}
+        />
+        Crédito Pendiente
+      </span>
+      <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-slate-600">
+        <span
+          aria-hidden="true"
+          className="h-3 w-3 rounded border border-gray-300"
+          style={{ backgroundColor: orangeColors[2] }}
+        />
+        Contado / En Espera / Anulado
+      </span>
+      <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-slate-600">
+        <span
+          aria-hidden="true"
+          className="h-3 w-3 rounded border border-gray-300"
+          style={{ backgroundColor: greenColors[2] }}
+        />
+        Crédito Pagado
+      </span>
+    </div>
+  );
+
   // Agregar event listeners para los botones de PDF
   React.useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -149,6 +179,7 @@ export default function TableMisVentas() {
       <TableWithTitle<getVentaResponseProps>
         id="mis-ventas-v2"
         title="N° DE CLIENTES/VENTAS"
+        extraTitle={leyendaEstados}
         loading={loading}
         columnDefs={columnDefs}
         rowData={response || []}

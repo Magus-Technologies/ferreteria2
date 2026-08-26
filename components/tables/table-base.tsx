@@ -521,6 +521,13 @@ export default function TableBase<T>({
   const shouldSuppressRowVirtualisation =
     props.suppressRowVirtualisation ?? rowCount <= 300;
 
+  // Altura real de fila. Se usa en DOS lados que tienen que coincidir sí o sí:
+  // la prop `rowHeight` de AG Grid y el `line-height` de las celdas (ver el
+  // bloque <style>). AG Grid deriva su line-height interno del TEMA, no de
+  // esta prop: al bajar la fila a 28px el line-height quedaba más corto que la
+  // celda, el texto se apoyaba arriba y sobraba espacio abajo.
+  const rowHeightPx = props.rowHeight ?? 28;
+
   return (
     <>
       <style>
@@ -542,6 +549,43 @@ export default function TableBase<T>({
         width: 0 !important;
         min-width: 0 !important;
         max-width: 0 !important;
+      }
+
+      /*
+       * Centrado vertical del contenido de las celdas.
+       *
+       * AG Grid define '.ag-cell { display: inline-block }' y centra el TEXTO
+       * PLANO con line-height, pero lo que devuelve un cellRenderer es un
+       * bloque: se apoya contra el borde de arriba y queda desalineado
+       * respecto de las columnas de texto.
+       *
+       * NO se convierte '.ag-cell' en flex, que seria lo inmediato: en esta
+       * version el texto va como nodo suelto DENTRO del propio .ag-cell (la
+       * clase 'ag-cell-value' esta en el mismo div), asi que pasarlo a flex
+       * romperia el 'text-overflow: ellipsis' del texto largo y dejaria sin
+       * efecto el 'text-align' de las ~400 columnas que lo usan.
+       *
+       * En su lugar se toca solo el hijo directo del renderer: 'inline-flex'
+       * lo mantiene inline (el text-align de la celda lo sigue posicionando
+       * en horizontal) y 'height: 100%' + 'align-items: center' lo centran
+       * en vertical.
+       */
+      #${tableId} .ag-cell > div,
+      #${tableId} .ag-cell > span:not(.ag-cell-value) {
+        height: 100%;
+        display: inline-flex;
+        align-items: center;
+      }
+
+      /*
+       * El texto plano se centra por line-height, pero AG Grid calcula el suyo
+       * a partir del TEMA y no de la prop 'rowHeight'. Al bajar la fila a 28px
+       * ese line-height quedaba mas corto que la celda: el texto se apoyaba
+       * arriba y sobraba espacio abajo. Se ata al alto real de la fila para
+       * que la caja de linea ocupe toda la celda y el texto quede centrado.
+       */
+      #${tableId} .ag-cell {
+        line-height: ${rowHeightPx}px;
       }
 
       #${tableId} .ag-cell-focus,
@@ -715,7 +759,17 @@ export default function TableBase<T>({
           // con virtualización + scroll rápido las filas no se reposicionan a
           // tiempo y se ve la tabla en blanco.
           suppressRowTransform={false}
-          rowHeight={props.rowHeight ?? 42}
+          // Filas compactas: el espacio vacío arriba/abajo del texto no venía
+          // del padding de la celda (ese ya es 0 vertical, ver table-theme)
+          // sino de la ALTURA de la fila — el contenido se centra en esa caja.
+          // 28px es el PISO práctico: lo marca el contenido más alto de una
+          // celda de acciones (botones `sm` = py-1 + text-sm ≈ 28px). Por
+          // debajo, la celda los recorta — AG Grid hace overflow:hidden. Ojo
+          // al agregar botones nuevos en celdas: si son `md` (~32px) hay que
+          // neutralizarles el padding vertical (`!py-0`), como en
+          // cell-acciones-venta-dropdown. Las tablas que necesitan más alto
+          // pasan su propio `rowHeight` (48/56) y no se ven afectadas.
+          rowHeight={rowHeightPx}
           suppressScrollOnNewData={true}
           onGridReady={onGridReady}
           onFirstDataRendered={onFirstDataRendered}

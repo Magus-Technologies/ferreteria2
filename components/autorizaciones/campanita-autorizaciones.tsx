@@ -556,7 +556,11 @@ export default function CampanitaAutorizaciones() {
             }`}
             onClick={() => {
               setDropdownOpen(false)
-              router.push('/ui/facturacion-electronica/mis-ventas')
+              const params = new URLSearchParams({
+                tipo_documento: doc.tipo_comprobante,
+                serie_numero: `${doc.serie}-${doc.correlativo}`,
+              })
+              router.push(`/ui/facturacion-electronica/mis-ventas?${params.toString()}`)
             }}
           >
             <div className="flex items-start justify-between">

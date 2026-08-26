@@ -463,7 +463,11 @@ export default function CellAccionesVentaDropdown(
           <ButtonBase
             color="info"
             size="md"
-            className="flex items-center justify-center !px-2"
+            // `size="md"` trae `py-1` y con `text-base` el botón mide ~32px,
+            // más alto que la fila compacta (28px, ver table-base) — se
+            // recortaba dentro de la celda. Con `!py-0` queda en ~24px y entra
+            // holgado sin achicar el ícono.
+            className="flex items-center justify-center !px-2 !py-0"
             title="Acciones"
             disabled={loading}
           >
