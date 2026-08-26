@@ -2,7 +2,7 @@
 
 import { ColDef, ICellRendererParams } from 'ag-grid-community'
 import { Tag, Tooltip } from 'antd'
-import { FaEye, FaCheck, FaArrowUp, FaExchangeAlt } from 'react-icons/fa'
+import { FaEye, FaCheck, FaArrowUp, FaExchangeAlt, FaUndo } from 'react-icons/fa'
 import { FilePdfFilled } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { formatFechaPeru } from '~/utils/fechas'
@@ -26,6 +26,7 @@ export function useColumnsMisOS({
   onView,
   onViewPdf,
   onAprobar,
+  onDesaprobar,
   onEscalar,
   onReasignar,
   userCargoId,
@@ -34,6 +35,7 @@ export function useColumnsMisOS({
   onView: (row: RequerimientoInterno) => void
   onViewPdf: (row: RequerimientoInterno) => void
   onAprobar?: (row: RequerimientoInterno) => void
+  onDesaprobar?: (row: RequerimientoInterno) => void
   onEscalar?: (row: RequerimientoInterno) => void
   onReasignar?: (row: RequerimientoInterno) => void
   userCargoId?: string
@@ -170,6 +172,7 @@ export function useColumnsMisOS({
         // El usuario puede aprobar si su cargo coincide con el cargo requerido en la OS (case-insensitive)
         const canApprove = esRootCargo || (userCargoId && data?.cargo && userCargoId.toLowerCase() === data.cargo.toLowerCase())
         const isApprovalPending = data?.approval_state === 'pendiente' || data?.approval_state === 'en_revision'
+        const isAprobado = data?.approval_state === 'aprobado'
 
         return (
           <div className="flex items-center gap-3 h-full">
@@ -200,6 +203,21 @@ export function useColumnsMisOS({
                     : 'cursor-not-allowed text-gray-300'
                 }`}
                 size={16}
+              />
+            </Tooltip>
+            <Tooltip title={
+              isAprobado
+                ? (canApprove ? 'Desaprobar (vuelve a pendiente)' : 'No tienes autoridad para desaprobar')
+                : 'Solo se puede desaprobar una OS aprobada'
+            }>
+              <FaUndo
+                onClick={() => isAprobado && canApprove && data && onDesaprobar?.(data)}
+                className={`transition-all ${
+                  isAprobado && canApprove
+                    ? 'cursor-pointer hover:scale-110 text-rose-600'
+                    : 'cursor-not-allowed text-gray-300'
+                }`}
+                size={15}
               />
             </Tooltip>
             <Tooltip title={

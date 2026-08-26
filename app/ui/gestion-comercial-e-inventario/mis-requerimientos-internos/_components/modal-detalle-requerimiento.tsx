@@ -155,6 +155,26 @@ export default function ModalDetalleRequerimiento({
     }
   }
 
+  const handleDesaprobar = async () => {
+    if (!requerimiento) return
+
+    setApprovalLoading(true)
+    try {
+      const res = await requerimientoInternoApi.desaprobar(requerimiento.id)
+      if (res.error) {
+        message.error(res.error.message || 'Error al desaprobar el requerimiento')
+        return
+      }
+      message.success('Requerimiento desaprobado: volvió a pendiente')
+      onClose()
+    } catch (error) {
+      message.error('Error al desaprobar el requerimiento')
+      console.error(error)
+    } finally {
+      setApprovalLoading(false)
+    }
+  }
+
   const handleEscalar = async () => {
     if (!requerimiento || !selectedCargo) {
       message.warning('Selecciona un cargo para escalar')
@@ -180,9 +200,14 @@ export default function ModalDetalleRequerimiento({
   }
 
   // Verificar si el usuario actual puede aprobar
-  const canApprove = requerimiento && 
+  const canApprove = requerimiento &&
     requerimiento.approval_state === 'en_revision' &&
     requerimiento.assigned_cargo_id &&
+    user?.cargo === requerimiento.cargo
+
+  // Desaprobar: espejo de aprobar — solo sobre un requerimiento ya aprobado
+  const canDesaprobar = requerimiento &&
+    requerimiento.approval_state === 'aprobado' &&
     user?.cargo === requerimiento.cargo
 
   if (!requerimiento) return null
@@ -284,6 +309,18 @@ export default function ModalDetalleRequerimiento({
                       </Button>
                     </Tooltip>
                   </>
+                )}
+                {canDesaprobar && (
+                  <Tooltip title="Desaprobar: vuelve a pendiente y deshace el bloqueo de calendario">
+                    <Button
+                      danger
+                      onClick={handleDesaprobar}
+                      loading={approvalLoading}
+                      className="!rounded-lg"
+                    >
+                      Desaprobar
+                    </Button>
+                  </Tooltip>
                 )}
                 <Button
                   icon={<FilePdfOutlined />}

@@ -284,10 +284,13 @@ export default function CampanitaAutorizaciones() {
     queryFn: async () => await requerimientoInternoApi.getAll({ estado: 'pendiente', per_page: 20 }),
   })
 
-  const requerimientos = useMemo(
-    () => (Array.isArray(reqData?.data?.data) ? reqData.data.data : []) as RequerimientoInterno[],
-    [reqData]
-  )
+  const requerimientos = useMemo(() => {
+    const rows = (Array.isArray(reqData?.data?.data) ? reqData.data.data : []) as RequerimientoInterno[]
+    // `estado` es el estado de ATENCIÓN (sigue 'pendiente' aunque ya se aprobó);
+    // lo que decide si aún necesita acción es `approval_state`. Sin este filtro,
+    // las OS/OC ya aprobadas o rechazadas seguían apareciendo en la campanita.
+    return rows.filter((r) => r.approval_state !== 'aprobado' && r.approval_state !== 'rechazado')
+  }, [reqData])
   const requerimientosCount = requerimientos.length
 
   // === COMISIONES POR PAGAR ===

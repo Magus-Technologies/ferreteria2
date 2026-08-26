@@ -97,6 +97,36 @@ export default function MisOrdenesDeServicio() {
     })
   }, [modal, message, queryClient])
 
+  const handleDesaprobar = useCallback((row: RequerimientoInterno) => {
+    modal.confirm({
+      title: '¿Desaprobar Orden de Servicio?',
+      icon: <ExclamationCircleFilled />,
+      content: (
+        <div>
+          <p>¿Estás seguro de desaprobar <strong>{row.codigo}</strong>?</p>
+          <p className='text-sm text-slate-500 mt-1'>{row.titulo}</p>
+          <p className='text-xs text-slate-500 mt-1'>
+            Volverá a estado pendiente y, si bloqueaba un vehículo en el calendario, el bloqueo se elimina.
+          </p>
+        </div>
+      ),
+      okText: 'Sí, Desaprobar',
+      okType: 'danger',
+      cancelText: 'Cancelar',
+      async onOk() {
+        try {
+          await requerimientoInternoApi.desaprobar(row.id)
+          message.success(`${row.codigo} desaprobado: volvió a pendiente`)
+          queryClient.invalidateQueries({ queryKey: [QueryKeys.ORDENES_DE_SERVICIO] })
+        } catch (error: any) {
+          const errorMsg = error?.response?.data?.message || 'Error al desaprobar la orden de servicio'
+          message.error(errorMsg)
+          console.error(error)
+        }
+      },
+    })
+  }, [modal, message, queryClient])
+
   const handleEscalar = useCallback((row: RequerimientoInterno) => {
     setSeleccionado(row)
     setModalEscalarOpen(true)
@@ -112,6 +142,7 @@ export default function MisOrdenesDeServicio() {
     onView: handleView,
     onViewPdf: handleViewPdf,
     onAprobar: handleAprobar,
+    onDesaprobar: handleDesaprobar,
     onEscalar: handleEscalar,
     onReasignar: handleReasignar,
     userCargoId,

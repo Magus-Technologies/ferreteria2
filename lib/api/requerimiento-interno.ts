@@ -251,6 +251,17 @@ export const requerimientoInternoApi = {
     },
 
     /**
+     * Desaprobar requerimiento: lo devuelve a pendiente y deshace el bloqueo
+     * de calendario que creó la aprobación (espejo de aprobar)
+     */
+    desaprobar: async (id: number, data?: { reason?: string }): Promise<ApiResponse<RequerimientoResponse>> => {
+        return apiRequest<RequerimientoResponse>(`/requerimientos-internos/${id}/desaprobar`, {
+            method: 'POST',
+            body: JSON.stringify(data || {}),
+        });
+    },
+
+    /**
      * Escalar requerimiento a otro cargo
      */
     pasarAprobacion: async (id: number, data: { to_cargo_id: number; reason?: string }): Promise<ApiResponse<RequerimientoResponse>> => {
