@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { FaFilePdf, FaEdit, FaCheckCircle, FaBan, FaTrash, FaCloudUploadAlt, FaFileCode, FaDownload } from 'react-icons/fa'
+import { FaFilePdf, FaEdit, FaCheckCircle, FaBan, FaTrash, FaCloudUploadAlt, FaFileCode, FaDownload, FaSyncAlt } from 'react-icons/fa'
 import { Button, Space, Modal } from 'antd'
 import useApp from 'antd/es/app/useApp'
 import { guiaRemisionApi } from '~/lib/api/guia-remision'
@@ -61,6 +61,36 @@ export default function CellAccionesGuia({ guia, onRefetch }: CellAccionesGuiaPr
         }
       },
     })
+  }
+
+  const handleConsultarEstado = async () => {
+    setLoading(true)
+    try {
+      const response = await guiaRemisionApi.consultarEstado(guia.id)
+
+      if (response.error) {
+        message.error(response.error.message || 'Error al consultar el estado en SUNAT')
+        return
+      }
+
+      const estado = response.data?.data?.estado
+      if (estado === 'ACEPTADO') {
+        message.success('SUNAT confirmó la guía: ACEPTADA')
+      } else {
+        message.info(response.data?.data?.mensaje || 'SUNAT todavía está procesando el ticket')
+      }
+
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.GUIAS_REMISION] })
+
+      if (onRefetch) {
+        onRefetch()
+      }
+    } catch (error) {
+      console.error('Error al consultar estado en SUNAT:', error)
+      message.error('Error al consultar el estado en SUNAT')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleEditar = () => {
@@ -378,7 +408,7 @@ export default function CellAccionesGuia({ guia, onRefetch }: CellAccionesGuiaPr
               />
             </ConfigurableElement>
           )}
-          {guia.tipo_guia !== 'FISICA' && guia.sunat_estado !== 'ACEPTADO' && (
+          {guia.tipo_guia !== 'FISICA' && (!guia.sunat_estado || guia.sunat_estado === 'RECHAZADO' || guia.sunat_estado === 'OBSERVADO') && (
             <ConfigurableElement
               componentId="mis-guias.boton-enviar-sunat"
               label="Boton Enviar SUNAT"
@@ -391,6 +421,23 @@ export default function CellAccionesGuia({ guia, onRefetch }: CellAccionesGuiaPr
                 onClick={handleEnviarSunat}
                 loading={loading}
                 title="Enviar a SUNAT"
+                className="text-purple-600"
+              />
+            </ConfigurableElement>
+          )}
+          {guia.tipo_guia !== 'FISICA' && guia.sunat_estado === 'PENDIENTE' && (
+            <ConfigurableElement
+              componentId="mis-guias.boton-consultar-sunat"
+              label="Boton Consultar SUNAT"
+              noFullWidth
+            >
+              <Button
+                type="link"
+                size="small"
+                icon={<FaSyncAlt />}
+                onClick={handleConsultarEstado}
+                loading={loading}
+                title="Consultar estado en SUNAT (ticket pendiente)"
                 className="text-purple-600"
               />
             </ConfigurableElement>

@@ -47,6 +47,8 @@ export default function FormEnvioSunat({ empresaId }: FormEnvioSunatProps) {
 
     const [facturaConfig, setFacturaConfig] = useState<AutoSendConfig>({ enabled: false, after_days: 3 });
     const [boletaConfig, setBoletaConfig] = useState<AutoSendConfig>({ enabled: false, after_days: 0 });
+    const [notaCreditoConfig, setNotaCreditoConfig] = useState<AutoSendConfig>({ enabled: false, after_days: 0 });
+    const [guiaConfig, setGuiaConfig] = useState<AutoSendConfig>({ enabled: false, after_days: 0 });
 
     const [solUser, setSolUser] = useState("");
     const [solPass, setSolPass] = useState("");
@@ -70,6 +72,8 @@ export default function FormEnvioSunat({ empresaId }: FormEnvioSunatProps) {
             if (response.data) {
                 setFacturaConfig(response.data.factura);
                 setBoletaConfig(response.data.boleta);
+                setNotaCreditoConfig(response.data.nota_credito);
+                setGuiaConfig(response.data.guia);
             }
             return response;
         },
@@ -89,7 +93,7 @@ export default function FormEnvioSunat({ empresaId }: FormEnvioSunatProps) {
     }, [empresaData]);
 
     const updateMutation = useMutation({
-        mutationFn: (data: { type: 'factura' | 'boleta', config: AutoSendConfig }) =>
+        mutationFn: (data: { type: 'factura' | 'boleta' | 'nota_credito' | 'guia', config: AutoSendConfig }) =>
             configuracionApi.updateAutoSendStatus({
                 type: data.type as any,
                 config: data.config
@@ -151,8 +155,11 @@ export default function FormEnvioSunat({ empresaId }: FormEnvioSunatProps) {
         },
     })
 
-    const handleSave = (type: 'factura' | 'boleta') => {
-        const config = type === 'factura' ? facturaConfig : boletaConfig;
+    const handleSave = (type: 'factura' | 'boleta' | 'nota_credito' | 'guia') => {
+        const config = type === 'factura' ? facturaConfig
+            : type === 'boleta' ? boletaConfig
+            : type === 'nota_credito' ? notaCreditoConfig
+            : guiaConfig;
         updateMutation.mutate({ type, config });
     };
 
@@ -419,6 +426,98 @@ export default function FormEnvioSunat({ empresaId }: FormEnvioSunatProps) {
                             loading={updateMutation.isPending && updateMutation.variables?.type === 'boleta'}
                         >
                             Guardar Boletas
+                        </Button>
+                    </div>
+                </Card>
+
+                <Card
+                    title="Notas de Crédito (Doc. 07)"
+                    extra={
+                        <Switch
+                            checked={notaCreditoConfig.enabled}
+                            onChange={(val) => setNotaCreditoConfig((prev: AutoSendConfig) => ({ ...prev, enabled: val }))}
+                            checkedChildren="ACTIVO"
+                            unCheckedChildren="INACTIVO"
+                        />
+                    }
+                    className="shadow-sm"
+                >
+                    <div className="space-y-4">
+                        <Alert
+                            message={<Text strong>Plazo SUNAT Máximo: 3 días calendario</Text>}
+                            description="Mismo plazo que factura: corrige un comprobante ya emitido y SUNAT la rechaza fuera de este plazo."
+                            type="error"
+                            showIcon
+                            icon={<WarningOutlined />}
+                        />
+                        <div className={`p-4 bg-gray-50 rounded-lg transition-opacity ${!notaCreditoConfig.enabled ? 'opacity-40 pointer-events-none' : ''}`}>
+                            <Text strong className="block mb-2">Enviar después de (días):</Text>
+                            <InputNumber
+                                min={0}
+                                max={3}
+                                value={notaCreditoConfig.after_days}
+                                onChange={(val) => setNotaCreditoConfig((prev: AutoSendConfig) => ({ ...prev, after_days: val || 0 }))}
+                                className="w-full"
+                                addonAfter="días"
+                            />
+                            <Text type="secondary" className="text-xs mt-2 block">
+                                Rango permitido: 0 a 3 días.
+                            </Text>
+                        </div>
+                        <Button
+                            type="primary"
+                            icon={<SaveOutlined />}
+                            block
+                            onClick={() => handleSave('nota_credito')}
+                            loading={updateMutation.isPending && updateMutation.variables?.type === 'nota_credito'}
+                        >
+                            Guardar Notas de Crédito
+                        </Button>
+                    </div>
+                </Card>
+
+                <Card
+                    title="Guías de Remisión (09/31)"
+                    extra={
+                        <Switch
+                            checked={guiaConfig.enabled}
+                            onChange={(val) => setGuiaConfig((prev: AutoSendConfig) => ({ ...prev, enabled: val }))}
+                            checkedChildren="ACTIVO"
+                            unCheckedChildren="INACTIVO"
+                        />
+                    }
+                    className="shadow-sm"
+                >
+                    <div className="space-y-4">
+                        <Alert
+                            message={<Text strong>Envío + Consulta automáticos</Text>}
+                            description="SUNAT procesa las guías de forma asíncrona: se envían (queda un ticket) y este mismo proceso consulta ese ticket en cada corrida hasta que SUNAT confirme."
+                            type="info"
+                            showIcon
+                            icon={<InfoCircleOutlined />}
+                        />
+                        <div className={`p-4 bg-gray-50 rounded-lg transition-opacity ${!guiaConfig.enabled ? 'opacity-40 pointer-events-none' : ''}`}>
+                            <Text strong className="block mb-2">Enviar después de (días):</Text>
+                            <InputNumber
+                                min={0}
+                                max={15}
+                                value={guiaConfig.after_days}
+                                onChange={(val) => setGuiaConfig((prev: AutoSendConfig) => ({ ...prev, after_days: val || 0 }))}
+                                className="w-full"
+                                addonAfter="días"
+                            />
+                            <Text type="secondary" className="text-xs mt-2 block">
+                                Normalmente 0: las guías deben salir el mismo día del traslado.
+                            </Text>
+                        </div>
+                        <Button
+                            type="primary"
+                            icon={<SaveOutlined />}
+                            block
+                            onClick={() => handleSave('guia')}
+                            loading={updateMutation.isPending && updateMutation.variables?.type === 'guia'}
+                        >
+                            Guardar Guías
                         </Button>
                     </div>
                 </Card>
