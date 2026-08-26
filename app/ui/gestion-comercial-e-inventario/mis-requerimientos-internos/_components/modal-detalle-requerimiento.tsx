@@ -199,16 +199,12 @@ export default function ModalDetalleRequerimiento({
     }
   }
 
-  // Verificar si el usuario actual puede aprobar
+  // Aprobar/Desaprobar es un interruptor libre: sin condición de estado,
+  // solo autoridad del cargo. Ida y vuelta las veces que haga falta.
   const canApprove = requerimiento &&
-    requerimiento.approval_state === 'en_revision' &&
-    requerimiento.assigned_cargo_id &&
     user?.cargo === requerimiento.cargo
 
-  // Desaprobar: espejo de aprobar — solo sobre un requerimiento ya aprobado
-  const canDesaprobar = requerimiento &&
-    requerimiento.approval_state === 'aprobado' &&
-    user?.cargo === requerimiento.cargo
+  const canDesaprobar = canApprove
 
   if (!requerimiento) return null
 
