@@ -172,6 +172,7 @@ export function useColumnsMisOS({
         // El usuario puede aprobar si su cargo coincide con el cargo requerido en la OS (case-insensitive)
         const canApprove = esRootCargo || (userCargoId && data?.cargo && userCargoId.toLowerCase() === data.cargo.toLowerCase())
         const isApprovalPending = data?.approval_state === 'pendiente' || data?.approval_state === 'en_revision'
+        const isAprobado = data?.approval_state === 'aprobado'
 
         return (
           <div className="flex items-center gap-3 h-full">
@@ -189,24 +190,32 @@ export function useColumnsMisOS({
                 style={{ fontSize: 16, color: '#dc2626' }}
               />
             </Tooltip>
-            {/* Aprobar/Desaprobar es un interruptor libre: sin bloqueo por estado,
-                solo por autoridad del cargo. */}
-            <Tooltip title={canApprove ? 'Aprobar' : 'No tienes autoridad para aprobar'}>
+            {/* Aprobar/Desaprobar es un toggle: se apaga el botón del estado
+                actual — aprobada → check gris y desaprobar activo, y viceversa. */}
+            <Tooltip title={
+              isAprobado
+                ? 'Ya está aprobada'
+                : (canApprove ? 'Aprobar' : 'No tienes autoridad para aprobar')
+            }>
               <FaCheck
-                onClick={() => canApprove && data && onAprobar?.(data)}
+                onClick={() => canApprove && !isAprobado && data && onAprobar?.(data)}
                 className={`transition-all ${
-                  canApprove
+                  canApprove && !isAprobado
                     ? 'cursor-pointer hover:scale-110 text-green-600'
                     : 'cursor-not-allowed text-gray-300'
                 }`}
                 size={16}
               />
             </Tooltip>
-            <Tooltip title={canApprove ? 'Desaprobar (vuelve a pendiente)' : 'No tienes autoridad para desaprobar'}>
+            <Tooltip title={
+              !isAprobado
+                ? 'Aún no está aprobada'
+                : (canApprove ? 'Desaprobar (vuelve a pendiente)' : 'No tienes autoridad para desaprobar')
+            }>
               <FaUndo
-                onClick={() => canApprove && data && onDesaprobar?.(data)}
+                onClick={() => canApprove && isAprobado && data && onDesaprobar?.(data)}
                 className={`transition-all ${
-                  canApprove
+                  canApprove && isAprobado
                     ? 'cursor-pointer hover:scale-110 text-rose-600'
                     : 'cursor-not-allowed text-gray-300'
                 }`}

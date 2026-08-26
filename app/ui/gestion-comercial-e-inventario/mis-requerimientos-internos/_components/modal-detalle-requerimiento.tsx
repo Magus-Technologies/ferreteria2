@@ -199,12 +199,15 @@ export default function ModalDetalleRequerimiento({
     }
   }
 
-  // Aprobar/Desaprobar es un interruptor libre: sin condición de estado,
-  // solo autoridad del cargo. Ida y vuelta las veces que haga falta.
+  // Aprobar/Desaprobar es un toggle: se muestra el botón del estado contrario —
+  // aprobado → solo Desaprobar; no aprobado → solo Aprobar.
   const canApprove = requerimiento &&
-    user?.cargo === requerimiento.cargo
+    user?.cargo === requerimiento.cargo &&
+    requerimiento.approval_state !== 'aprobado'
 
-  const canDesaprobar = canApprove
+  const canDesaprobar = requerimiento &&
+    user?.cargo === requerimiento.cargo &&
+    requerimiento.approval_state === 'aprobado'
 
   if (!requerimiento) return null
 
