@@ -276,6 +276,9 @@ export default function CampanitaAutorizaciones() {
     [sunatData]
   )
 
+  const diasFacturaSunat = sunatData?.data?.configuracion?.factura_after_days ?? 3
+  const diasBoletaSunat = sunatData?.data?.configuracion?.boleta_after_days ?? 0
+
   const sunatCount = alertasSunat.length
 
   // === REQUERIMIENTOS INTERNOS ===
@@ -535,7 +538,8 @@ export default function CampanitaAutorizaciones() {
   const tabSunat = (
     <div className="max-h-[280px] overflow-y-auto p-2 space-y-2">
       <div className="bg-amber-50 border border-amber-200 p-2 rounded text-xs text-amber-800">
-        Comprobantes que ya vencieron el plazo SUNAT (factura +3 días, boleta +7) y siguen sin enviarse.
+        Comprobantes que alcanzaron los días configurados y siguen sin enviarse
+        (factura +{diasFacturaSunat}, boleta +{diasBoletaSunat}).
       </div>
       {alertasSunat.length === 0 ? (
         <div className="py-6">
@@ -573,7 +577,7 @@ export default function CampanitaAutorizaciones() {
                     // Acá solo llegan comprobantes YA vencidos (el backend
                     // filtra por eso), así que esto siempre es un número
                     // positivo — no hace falta la rama "Vence en X días".
-                    const limit = doc.tipo_comprobante === '01' ? 3 : 7
+                    const limit = doc.dias_alerta ?? (doc.tipo_comprobante === '01' ? diasFacturaSunat : diasBoletaSunat)
                     const diasVencido =
                       dayjs().startOf('day').diff(dayjs(doc.fecha_emision).startOf('day'), 'day') - limit
                     return (

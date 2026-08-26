@@ -114,6 +114,8 @@ export interface ComprobanteElectronico {
   igv?: number;
   total?: number;
   estado_sunat: string;
+  /** Días configurados para que este comprobante aparezca en la alerta SUNAT. */
+  dias_alerta?: number;
   xml_path?: string;
   cdr_path?: string;
   pdf_path?: string;
@@ -171,7 +173,16 @@ export interface VentaSinComprobanteAlerta {
   total: number;
   importe_total: number;
   estado_sunat: string;
+  dias_alerta?: number;
   sin_generar: true;
+}
+
+export interface PendientesAlertaResponse {
+  data: (ComprobanteElectronico | VentaSinComprobanteAlerta)[];
+  configuracion: {
+    factura_after_days: number;
+    boleta_after_days: number;
+  };
 }
 
 export interface DetalleComprobanteElectronico {
@@ -315,7 +326,7 @@ export const facturacionElectronicaApi = {
   },
 
   async getPendientesAlerta() {
-    return apiRequest<{ data: (ComprobanteElectronico | VentaSinComprobanteAlerta)[] }>(
+    return apiRequest<PendientesAlertaResponse>(
       `/facturacion-electronica/comprobantes/pendientes-alerta`
     );
   },
