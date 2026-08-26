@@ -1,6 +1,6 @@
 'use client'
 
-import { Tag, Spin, Button, Modal, Tooltip, message, Tabs } from 'antd'
+import { Tag, Spin, Button, Modal, Tooltip, message, Tabs, Input } from 'antd'
 import { FilePdfOutlined, CalendarOutlined, UserOutlined, ClockCircleOutlined, CheckCircleOutlined, QuestionCircleOutlined } from '@ant-design/icons'
 import { FaShoppingCart, FaWrench, FaMapMarkerAlt, FaMoneyBillWave, FaRegBuilding, FaDownload, FaPrint, FaCar, FaCalendarTimes, FaHourglassHalf } from 'react-icons/fa'
 import ModalForm from '~/components/modals/modal-form'
@@ -175,6 +175,38 @@ export default function ModalDetalleRequerimiento({
     }
   }
 
+  const handleRechazar = () => {
+    if (!requerimiento) return
+    // El backend exige motivo (reason) para rechazar
+    let motivo = ''
+    Modal.confirm({
+      title: `¿Rechazar ${requerimiento.codigo}?`,
+      content: (
+        <Input.TextArea
+          rows={2}
+          placeholder='Motivo del rechazo (obligatorio)'
+          onChange={(e) => { motivo = e.target.value }}
+        />
+      ),
+      okText: 'Sí, Rechazar',
+      okType: 'danger',
+      cancelText: 'Cancelar',
+      async onOk() {
+        if (!motivo.trim()) {
+          message.warning('Ingresa el motivo del rechazo')
+          return Promise.reject()
+        }
+        const res = await requerimientoInternoApi.rechazar(requerimiento.id, { reason: motivo.trim() })
+        if (res.error) {
+          message.error(res.error.message || 'Error al rechazar el requerimiento')
+          return Promise.reject()
+        }
+        message.success('Requerimiento rechazado')
+        onClose()
+      },
+    })
+  }
+
   const handleEscalar = async () => {
     if (!requerimiento || !selectedCargo) {
       message.warning('Selecciona un cargo para escalar')
@@ -208,6 +240,12 @@ export default function ModalDetalleRequerimiento({
   const canDesaprobar = requerimiento &&
     user?.cargo === requerimiento.cargo &&
     requerimiento.approval_state === 'aprobado'
+
+  // Rechazar disponible mientras no esté ya rechazado (en pendiente salen
+  // Aprobar y Rechazar juntos)
+  const canRechazar = requerimiento &&
+    user?.cargo === requerimiento.cargo &&
+    requerimiento.approval_state !== 'rechazado'
 
   if (!requerimiento) return null
 
@@ -318,6 +356,17 @@ export default function ModalDetalleRequerimiento({
                       className="!rounded-lg"
                     >
                       Desaprobar
+                    </Button>
+                  </Tooltip>
+                )}
+                {canRechazar && (
+                  <Tooltip title="Rechazar este requerimiento (requiere motivo)">
+                    <Button
+                      danger
+                      onClick={handleRechazar}
+                      className="!rounded-lg"
+                    >
+                      Rechazar
                     </Button>
                   </Tooltip>
                 )}

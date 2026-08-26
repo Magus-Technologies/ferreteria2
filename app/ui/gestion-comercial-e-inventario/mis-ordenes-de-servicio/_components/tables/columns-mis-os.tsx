@@ -2,7 +2,7 @@
 
 import { ColDef, ICellRendererParams } from 'ag-grid-community'
 import { Tag, Tooltip } from 'antd'
-import { FaEye, FaCheck, FaArrowUp, FaExchangeAlt, FaUndo } from 'react-icons/fa'
+import { FaEye, FaCheck, FaArrowUp, FaExchangeAlt, FaUndo, FaTimes } from 'react-icons/fa'
 import { FilePdfFilled } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { formatFechaPeru } from '~/utils/fechas'
@@ -27,6 +27,7 @@ export function useColumnsMisOS({
   onViewPdf,
   onAprobar,
   onDesaprobar,
+  onRechazar,
   onEscalar,
   onReasignar,
   userCargoId,
@@ -36,6 +37,7 @@ export function useColumnsMisOS({
   onViewPdf: (row: RequerimientoInterno) => void
   onAprobar?: (row: RequerimientoInterno) => void
   onDesaprobar?: (row: RequerimientoInterno) => void
+  onRechazar?: (row: RequerimientoInterno) => void
   onEscalar?: (row: RequerimientoInterno) => void
   onReasignar?: (row: RequerimientoInterno) => void
   userCargoId?: string
@@ -165,14 +167,15 @@ export function useColumnsMisOS({
       colId: 'acciones',
       headerName: 'Acciones',
       field: 'id',
-      width: 150,
-      minWidth: 150,
+      width: 185,
+      minWidth: 185,
       cellRenderer: ({ data }: ICellRendererParams<RequerimientoInterno>) => {
         // Verificar si el usuario tiene autoridad para aprobar
         // El usuario puede aprobar si su cargo coincide con el cargo requerido en la OS (case-insensitive)
         const canApprove = esRootCargo || (userCargoId && data?.cargo && userCargoId.toLowerCase() === data.cargo.toLowerCase())
         const isApprovalPending = data?.approval_state === 'pendiente' || data?.approval_state === 'en_revision'
         const isAprobado = data?.approval_state === 'aprobado'
+        const isRechazado = data?.approval_state === 'rechazado'
 
         return (
           <div className="flex items-center gap-3 h-full">
@@ -220,6 +223,21 @@ export function useColumnsMisOS({
                     : 'cursor-not-allowed text-gray-300'
                 }`}
                 size={15}
+              />
+            </Tooltip>
+            <Tooltip title={
+              isRechazado
+                ? 'Ya está rechazada'
+                : (canApprove ? 'Rechazar (requiere motivo)' : 'No tienes autoridad para rechazar')
+            }>
+              <FaTimes
+                onClick={() => canApprove && !isRechazado && data && onRechazar?.(data)}
+                className={`transition-all ${
+                  canApprove && !isRechazado
+                    ? 'cursor-pointer hover:scale-110 text-red-600'
+                    : 'cursor-not-allowed text-gray-300'
+                }`}
+                size={16}
               />
             </Tooltip>
             <Tooltip title={

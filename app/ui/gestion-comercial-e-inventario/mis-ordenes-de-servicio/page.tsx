@@ -1,7 +1,7 @@
 'use client'
 
 import { Suspense, lazy, useCallback, useMemo, useState } from 'react'
-import { Spin, App, Tag, Tooltip } from 'antd'
+import { Spin, App, Tag, Tooltip, Input } from 'antd'
 import { formatFechaPeru } from '~/utils/fechas'
 import { ExclamationCircleFilled } from '@ant-design/icons'
 import { ColDef, ICellRendererParams, SelectionChangedEvent } from 'ag-grid-community'
@@ -127,6 +127,43 @@ export default function MisOrdenesDeServicio() {
     })
   }, [modal, message, queryClient])
 
+  const handleRechazar = useCallback((row: RequerimientoInterno) => {
+    // El backend exige motivo (reason) para rechazar
+    let motivo = ''
+    modal.confirm({
+      title: '¿Rechazar Orden de Servicio?',
+      icon: <ExclamationCircleFilled />,
+      content: (
+        <div>
+          <p>¿Estás seguro de rechazar <strong>{row.codigo}</strong>?</p>
+          <p className='text-sm text-slate-500 mt-1'>{row.titulo}</p>
+          <Input.TextArea
+            rows={2}
+            placeholder='Motivo del rechazo (obligatorio)'
+            className='mt-2'
+            onChange={(e) => { motivo = e.target.value }}
+          />
+        </div>
+      ),
+      okText: 'Sí, Rechazar',
+      okType: 'danger',
+      cancelText: 'Cancelar',
+      async onOk() {
+        if (!motivo.trim()) {
+          message.warning('Ingresa el motivo del rechazo')
+          return Promise.reject()
+        }
+        const res = await requerimientoInternoApi.rechazar(row.id, { reason: motivo.trim() })
+        if (res.error) {
+          message.error(res.error.message || 'Error al rechazar la orden de servicio')
+          return Promise.reject()
+        }
+        message.success(`${row.codigo} rechazada`)
+        queryClient.invalidateQueries({ queryKey: [QueryKeys.ORDENES_DE_SERVICIO] })
+      },
+    })
+  }, [modal, message, queryClient])
+
   const handleEscalar = useCallback((row: RequerimientoInterno) => {
     setSeleccionado(row)
     setModalEscalarOpen(true)
@@ -143,6 +180,7 @@ export default function MisOrdenesDeServicio() {
     onViewPdf: handleViewPdf,
     onAprobar: handleAprobar,
     onDesaprobar: handleDesaprobar,
+    onRechazar: handleRechazar,
     onEscalar: handleEscalar,
     onReasignar: handleReasignar,
     userCargoId,
