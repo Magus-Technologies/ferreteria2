@@ -75,7 +75,7 @@ export default function MisCompras() {
           </div>
 
           {/* Columna lateral - Cards informativos (Solo Desktop) */}
-          <div className="hidden lg:flex flex-col items-start gap-1.5 flex-nowrap w-[190px] flex-shrink-0">
+          <div className="hidden lg:flex flex-col items-start gap-1.5 flex-nowrap w-[200px] flex-shrink-0">
             <Suspense fallback={<Spin />}>
               <CardsInfoCompras />
             </Suspense>

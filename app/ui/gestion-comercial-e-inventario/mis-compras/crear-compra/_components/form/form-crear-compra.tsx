@@ -1,18 +1,18 @@
-import { FaCalendar } from 'react-icons/fa6'
-import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
-import LabelBase from '~/components/form/label-base'
-import SelectTipoMoneda from '~/app/_components/form/selects/select-tipo-moneda'
-import { FormInstance, Form } from 'antd'
-import dayjs from 'dayjs'
-import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
-import SelectProveedores from '~/app/_components/form/selects/select-proveedores'
-import SelectTipoDocumento from '~/app/_components/form/selects/select-tipo-documento'
-import InputBase from '~/app/_components/form/inputs/input-base'
-import { IoIosDocument } from 'react-icons/io'
-import { IoDocumentAttach } from 'react-icons/io5'
-import FormFormaDePagoCompra from './form-forma-de-pago-compra'
-import { CompraConUnidadDerivadaNormal } from '../others/header'
-import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
+import { FaCalendar } from "react-icons/fa6";
+import DatePickerBase from "~/app/_components/form/fechas/date-picker-base";
+import LabelBase from "~/components/form/label-base";
+import SelectTipoMoneda from "~/app/_components/form/selects/select-tipo-moneda";
+import { FormInstance, Form } from "antd";
+import dayjs from "dayjs";
+import InputNumberBase from "~/app/_components/form/inputs/input-number-base";
+import SelectProveedores from "~/app/_components/form/selects/select-proveedores";
+import SelectTipoDocumento from "~/app/_components/form/selects/select-tipo-documento";
+import InputBase from "~/app/_components/form/inputs/input-base";
+import { IoIosDocument } from "react-icons/io";
+import { IoDocumentAttach } from "react-icons/io5";
+import FormFormaDePagoCompra from "./form-forma-de-pago-compra";
+import { CompraConUnidadDerivadaNormal } from "../others/header";
+import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
 
 export default function FormCrearCompra({
   form,
@@ -21,236 +21,292 @@ export default function FormCrearCompra({
   initialSearchTextProveedor,
   onProveedorChange,
 }: {
-  form: FormInstance
-  compra?: CompraConUnidadDerivadaNormal
-  proveedorOptionsDefault?: { id: number; ruc: string; razon_social: string }[]
-  initialSearchTextProveedor?: string
-  onProveedorChange?: (proveedorId: number | undefined) => void
+  form: FormInstance;
+  compra?: CompraConUnidadDerivadaNormal;
+  proveedorOptionsDefault?: { id: number; ruc: string; razon_social: string }[];
+  initialSearchTextProveedor?: string;
+  onProveedorChange?: (proveedorId: number | undefined) => void;
 }) {
   // Fecha de la compra: para traer el tipo de cambio de ese día.
-  const fechaWatch = Form.useWatch('fecha', form)
-  const fechaTipoCambio = fechaWatch ? dayjs(fechaWatch).format('YYYY-MM-DD') : undefined
+  const fechaWatch = Form.useWatch("fecha", form);
+  const fechaTipoCambio = fechaWatch
+    ? dayjs(fechaWatch).format("YYYY-MM-DD")
+    : undefined;
   // Moneda real del form: necesaria para que el tipo de cambio se refresque al
   // cambiar la fecha incluso cuando la moneda se fijó programáticamente.
-  const tipoMonedaWatch = Form.useWatch('tipo_moneda', form)
+  const tipoMonedaWatch = Form.useWatch("tipo_moneda", form);
   return (
-    <div className='flex flex-col'>
-      <ConfigurableElement componentId='gestion-comercial.crear-compra.campos-fecha-moneda-proveedor' label='Campos Fecha, Moneda y Proveedor'>
-        <div className='flex gap-6'>
-          <LabelBase label='Fecha:' classNames={{ labelParent: 'mb-6' }}>
+    <div className="flex flex-col">
+      <ConfigurableElement
+        componentId="gestion-comercial.crear-compra.campos-fecha-moneda-proveedor"
+        label="Campos Fecha, Moneda y Proveedor"
+      >
+        <div className="flex gap-4 flex-wrap -mb-6">
+          <LabelBase label="Fecha:" classNames={{ labelParent: "mb-6" }}>
             <DatePickerBase
               propsForm={{
-                name: 'fecha',
+                name: "fecha",
                 rules: [
                   {
                     required: true,
-                    message: 'Por favor, ingresa la fecha',
+                    message: "Por favor, ingresa la fecha",
                   },
                 ],
               }}
-              placeholder='Fecha'
-              className='!w-[160px] !min-w-[160px] !max-w-[160px]'
-              prefix={<FaCalendar size={15} className='text-rose-700 mx-1' />}
+              placeholder="Fecha"
+              className="!w-[160px] !min-w-[160px] !max-w-[160px]"
+              prefix={<FaCalendar size={15} className="text-rose-700 mx-1" />}
             />
           </LabelBase>
-          <LabelBase label='Tipo Moneda:' classNames={{ labelParent: 'mb-6' }}>
+          <LabelBase label="Tipo Moneda:" classNames={{ labelParent: "mb-6" }}>
             <SelectTipoMoneda
-              classNameIcon='text-rose-700 mx-1'
-              className='!w-[120px] !min-w-[120px] !max-w-[120px]'
+              classNameIcon="text-rose-700 mx-1"
+              className="!w-[120px] !min-w-[120px] !max-w-[120px]"
               propsForm={{
-                name: 'tipo_moneda',
+                name: "tipo_moneda",
                 rules: [
                   {
                     required: true,
-                    message: 'Por favor, selecciona el tipo de moneda',
+                    message: "Por favor, selecciona el tipo de moneda",
                   },
                 ],
               }}
               fecha={fechaTipoCambio}
               monedaActual={tipoMonedaWatch}
-              onChangeTipoDeCambio={value =>
-                form.setFieldValue('tipo_de_cambio', value)
+              onChangeTipoDeCambio={(value) =>
+                form.setFieldValue("tipo_de_cambio", value)
               }
             />
           </LabelBase>
-          <LabelBase label='Tipo de Cambio:' classNames={{ labelParent: 'mb-6' }}>
+          <LabelBase
+            label="Tipo de Cambio:"
+            classNames={{ labelParent: "mb-6" }}
+          >
             <InputNumberBase
               propsForm={{
-                name: 'tipo_de_cambio',
+                name: "tipo_de_cambio",
                 rules: [
                   {
                     required: true,
-                    message: 'Por favor, ingresa el tipo de cambio',
+                    message: "Por favor, ingresa el tipo de cambio",
                   },
                 ],
               }}
-              prefix={<span className='text-rose-700 font-bold'>S/. </span>}
+              prefix={<span className="text-rose-700 font-bold">S/. </span>}
               precision={4}
               min={1}
-              className='!w-[100px] !min-w-[100px] !max-w-[100px]'
-            />
-          </LabelBase>
-          <LabelBase label='RUC:' classNames={{ labelParent: 'mb-6' }}>
-            <SelectProveedores
-              form={form}
-              showOnlyDocument={true}
-              propsForm={{
-                name: 'proveedor_id',
-                hasFeedback: false,
-                className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
-              }}
-              className='w-full'
-              classNameIcon='text-cyan-600 mx-1'
-              classIconSearch='!mb-7'
-              placeholder='RUC'
-              proveedorOptionsDefault={
-                proveedorOptionsDefault?.length ? proveedorOptionsDefault : compra?.proveedor ? [compra.proveedor] : []
-              }
-              initialSearchText={initialSearchTextProveedor}
-              onChange={(_, proveedor) => {
-                if (proveedor) {
-                  if (proveedor.ruc) {
-                    form.setFieldValue('proveedor_ruc', proveedor.ruc)
-                  }
-                  form.setFieldValue('proveedor_razon_social', proveedor.razon_social || '')
-                  onProveedorChange?.(proveedor.id)
-                } else {
-                  form.setFieldValue('proveedor_ruc', '')
-                  form.setFieldValue('proveedor_razon_social', '')
-                  onProveedorChange?.(undefined)
-                }
-              }}
-            />
-          </LabelBase>
-          <LabelBase label='Proveedor:' classNames={{ labelParent: 'mb-6' }}>
-            <InputBase
-              propsForm={{
-                name: 'proveedor_razon_social',
-                hasFeedback: false,
-                className: '!min-w-[250px] !w-[250px] !max-w-[250px]',
-              }}
-              placeholder='Razón Social del proveedor'
-              className='w-full'
-              readOnly
-              uppercase={false}
+              className="!w-[100px] !min-w-[100px] !max-w-[100px]"
             />
           </LabelBase>
         </div>
       </ConfigurableElement>
 
       {/* Hidden field for orden_compra_id */}
-      <Form.Item name='orden_compra_id' hidden>
-        <input type='hidden' />
+      <Form.Item name="orden_compra_id" hidden>
+        <input type="hidden" />
       </Form.Item>
 
-      <div className='flex gap-6'>
-        <ConfigurableElement componentId='gestion-comercial.crear-compra.campo-tipo-documento' label='Campo Tipo Documento'>
-          <LabelBase label='Tipo Documento:' classNames={{ labelParent: 'mb-6' }}>
-            <SelectTipoDocumento
-              propsForm={{
-                name: 'tipo_documento',
-                hasFeedback: false,
-                className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
-                rules: [
-                  {
-                    required: true,
-                    message: 'Selecciona el tipo de documento',
-                  },
-                ],
-              }}
-              className='w-full'
-              classNameIcon='text-rose-700 mx-1'
-            />
-          </LabelBase>
-        </ConfigurableElement>
-        <ConfigurableElement componentId='gestion-comercial.crear-compra.campo-serie' label='Campo Serie'>
-          <LabelBase label='Serie:' classNames={{ labelParent: 'mb-6' }}>
-            <InputBase
-              prefix={<IoIosDocument className='text-rose-700 mr-1' size={20} />}
-              className='!w-[120px] !min-w-[120px] !max-w-[120px]'
-              placeholder='Serie'
-              propsForm={{
-                name: 'serie',
-                rules: [
-                  {
-                    validator: async (_, value) => {
-                      const numero = form.getFieldValue('numero')
-                      if (value === '0' && (numero === 0 || numero === '0')) {
-                        return Promise.reject(new Error('Serie y número no pueden ser ambos 0'))
-                      }
-                      return Promise.resolve()
-                    },
-                  },
-                ],
-              }}
-              onChange={() => {
-                // Revalidar el campo número cuando cambia la serie
-                form.validateFields(['numero']).catch(() => {})
-              }}
-            />
-          </LabelBase>
-        </ConfigurableElement>
-        <ConfigurableElement componentId='gestion-comercial.crear-compra.campo-numero' label='Campo Número'>
-          <LabelBase label='N°:' classNames={{ labelParent: 'mb-6' }}>
-            <InputBase
-              prefix={<IoIosDocument className='text-rose-700 mr-1' size={20} />}
-              className='!w-[120px] !min-w-[120px] !max-w-[120px]'
-              placeholder='Número'
-              propsForm={{
-                name: 'numero',
-                rules: [
-                  {
-                    validator: async (_, value) => {
-                      const serie = form.getFieldValue('serie')
-                      if ((value === '0' || value === 0) && serie === '0') {
-                        return Promise.reject(new Error('Serie y número no pueden ser ambos 0'))
-                      }
-                      return Promise.resolve()
-                    },
-                  },
-                ],
-              }}
-              onChange={() => {
-                form.validateFields(['serie']).catch(() => {})
-              }}
-            />
-          </LabelBase>
-        </ConfigurableElement>
-        <ConfigurableElement componentId='gestion-comercial.crear-compra.campo-guia' label='Campo Guía'>
-          <LabelBase label='Guía:' classNames={{ labelParent: 'mb-6' }}>
+      <div className="flex gap-4 flex-wrap -mb-6">
+        <ConfigurableElement
+          componentId="gestion-comercial.crear-compra.campos-fecha-moneda-proveedor"
+          label="Campos factura"
+        >
+          <div className="flex gap-4 flex-wrap">
+            <ConfigurableElement
+              componentId="gestion-comercial.crear-compra.campo-tipo-documento"
+              label="Campo Tipo Documento"
+            >
+              <LabelBase label="Tipo Doc:" classNames={{ labelParent: "mb-6" }}>
+                <SelectTipoDocumento
+                  propsForm={{
+                    name: "tipo_documento",
+                    hasFeedback: false,
+                    className: "!min-w-[130px] !w-[130px] !max-w-[130px]",
+                    rules: [
+                      {
+                        required: true,
+                        message: "Selecciona el tipo de documento",
+                      },
+                    ],
+                  }}
+                  className="w-full"
+                  classNameIcon="text-rose-700 mx-1"
+                />
+              </LabelBase>
+            </ConfigurableElement>
+            <ConfigurableElement
+              componentId="gestion-comercial.crear-compra.campo-serie"
+              label="Campo Serie"
+            >
+              <LabelBase label="Serie:" classNames={{ labelParent: "mb-6" }}>
+                <InputBase
+                  prefix={
+                    <IoIosDocument className="text-rose-700 mr-1" size={20} />
+                  }
+                  className="!w-[120px] !min-w-[120px] !max-w-[120px]"
+                  placeholder="Serie"
+                  propsForm={{
+                    name: "serie",
+                    rules: [
+                      {
+                        validator: async (_, value) => {
+                          const numero = form.getFieldValue("numero");
+                          if (
+                            value === "0" &&
+                            (numero === 0 || numero === "0")
+                          ) {
+                            return Promise.reject(
+                              new Error("Serie y número no pueden ser ambos 0"),
+                            );
+                          }
+                          return Promise.resolve();
+                        },
+                      },
+                    ],
+                  }}
+                  onChange={() => {
+                    // Revalidar el campo número cuando cambia la serie
+                    form.validateFields(["numero"]).catch(() => {});
+                  }}
+                />
+              </LabelBase>
+            </ConfigurableElement>
+            <ConfigurableElement
+              componentId="gestion-comercial.crear-compra.campo-numero"
+              label="Campo Número"
+            >
+              <LabelBase label="N°:" classNames={{ labelParent: "mb-6" }}>
+                <InputBase
+                  prefix={
+                    <IoIosDocument className="text-rose-700 mr-1" size={20} />
+                  }
+                  className="!w-[120px] !min-w-[120px] !max-w-[120px]"
+                  placeholder="Número"
+                  propsForm={{
+                    name: "numero",
+                    rules: [
+                      {
+                        validator: async (_, value) => {
+                          const serie = form.getFieldValue("serie");
+                          if ((value === "0" || value === 0) && serie === "0") {
+                            return Promise.reject(
+                              new Error("Serie y número no pueden ser ambos 0"),
+                            );
+                          }
+                          return Promise.resolve();
+                        },
+                      },
+                    ],
+                  }}
+                  onChange={() => {
+                    form.validateFields(["serie"]).catch(() => {});
+                  }}
+                />
+              </LabelBase>
+            </ConfigurableElement>
+            <ConfigurableElement
+          componentId="gestion-comercial.crear-compra.campo-guia"
+          label="Campo Guía"
+        >
+          <LabelBase label="Guía:" classNames={{ labelParent: "mb-6" }}>
             <InputBase
               prefix={
-                <IoDocumentAttach className='text-cyan-600 mr-1' size={20} />
+                <IoDocumentAttach className="text-cyan-600 mr-1" size={20} />
               }
-              className='!w-[120px] !min-w-[120px] !max-w-[120px]'
-              placeholder='Guía'
+              className="!w-[120px] !min-w-[120px] !max-w-[120px]"
+              placeholder="Guía"
               propsForm={{
-                name: 'guia',
+                name: "guia",
               }}
             />
           </LabelBase>
         </ConfigurableElement>
-        <ConfigurableElement componentId='gestion-comercial.crear-compra.campo-percepcion' label='Campo Percepción'>
-          <LabelBase label='Percepción:' classNames={{ labelParent: 'mb-6' }}>
+        <ConfigurableElement
+          componentId="gestion-comercial.crear-compra.campo-percepcion"
+          label="Campo Percepción"
+        >
+          <LabelBase label="Percepción:" classNames={{ labelParent: "mb-6" }}>
             <InputNumberBase
-              prefix={<IoIosDocument className='text-cyan-600 mr-1' size={20} />}
-              className='!w-[120px] !min-w-[120px] !max-w-[120px]'
-              placeholder='Percepción'
+              prefix={
+                <IoIosDocument className="text-cyan-600 mr-1" size={20} />
+              }
+              className="!w-[120px] !min-w-[120px] !max-w-[120px]"
+              placeholder="Percepción"
               propsForm={{
-                name: 'percepcion',
+                name: "percepcion",
               }}
               precision={2}
               min={0}
             />
           </LabelBase>
         </ConfigurableElement>
+          </div>
+        </ConfigurableElement>
+      </div>
+      <div className="flex gap-6 -mb-6">
+        <LabelBase label="RUC:" classNames={{ labelParent: "mb-6" }}>
+          <SelectProveedores
+            form={form}
+            showOnlyDocument={true}
+            propsForm={{
+              name: "proveedor_id",
+              hasFeedback: false,
+              className: "!min-w-[150px] !w-[150px] !max-w-[150px]",
+            }}
+            className="w-full"
+            classNameIcon="text-cyan-600 mx-1"
+            classIconSearch="!mb-7"
+            placeholder="RUC"
+            proveedorOptionsDefault={
+              proveedorOptionsDefault?.length
+                ? proveedorOptionsDefault
+                : compra?.proveedor
+                  ? [compra.proveedor]
+                  : []
+            }
+            initialSearchText={initialSearchTextProveedor}
+            onChange={(_, proveedor) => {
+              if (proveedor) {
+                if (proveedor.ruc) {
+                  form.setFieldValue("proveedor_ruc", proveedor.ruc);
+                }
+                form.setFieldValue(
+                  "proveedor_razon_social",
+                  proveedor.razon_social || "",
+                );
+                onProveedorChange?.(proveedor.id);
+              } else {
+                form.setFieldValue("proveedor_ruc", "");
+                form.setFieldValue("proveedor_razon_social", "");
+                onProveedorChange?.(undefined);
+              }
+            }}
+          />
+        </LabelBase>
+        <LabelBase label="Proveedor:" classNames={{ labelParent: "mb-6" }}>
+          <InputBase
+            propsForm={{
+              name: "proveedor_razon_social",
+              hasFeedback: false,
+              className: "!min-w-[350px] !w-[350px] !max-w-[350px]",
+            }}
+            placeholder="Razón Social del proveedor"
+            className="w-full"
+            readOnly
+            uppercase={false}
+          />
+        </LabelBase>
+        
       </div>
 
-      <ConfigurableElement componentId='gestion-comercial.crear-compra.forma-pago' label='Forma de Pago'>
-        <div className='flex flex-wrap gap-6'>
+      <div className="flex gap-4 flex-wrap -mb-6">
+        <ConfigurableElement
+          componentId="gestion-comercial.crear-compra.forma-pago"
+          label="Forma de Pago"
+        >
           <FormFormaDePagoCompra form={form} />
-        </div>
-      </ConfigurableElement>
+        </ConfigurableElement>
+      </div>
     </div>
-  )
+  );
 }

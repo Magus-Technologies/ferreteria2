@@ -65,28 +65,29 @@ export default function HeaderCrearCompra({
             componentId="gestion-comercial.crear-compra.agregar-producto"
             label="Selector Agregar Producto"
           >
-            <div className="pl-8 flex items-center gap-4">
+            <div className="pl-8 flex w-max max-w-none flex-nowrap items-center gap-4">
               <SelectProductos
-            autoFocus
-              allowClear
-              size="large"
-              className="!min-w-[400px] !w-[400px] !max-w-[400px] font-normal!"
-              classNameIcon="text-cyan-600 mx-1"
-              classIconSearch="!mb-0"
-              classIconPlus="mb-0!"
-              showButtonCreate={can(permissions.PRODUCTO_CREATE)}
-              withSearch
-              withTipoBusqueda
-              showCardAgregarProducto
-              handleOnlyOneResult={(producto) => {
-                setProductoSeleccionadoSearchStore(producto);
-                if (producto) setOpenModalAgregarProducto(true);
-              }}
-              onChange={(_, producto) => {
-                setProductoSeleccionadoSearchStore(producto);
-                if (producto) setOpenModalAgregarProducto(true);
-              }}
-            />
+                autoFocus
+                allowClear
+                size="large"
+                className="!min-w-[400px] !w-[400px] !max-w-[400px] font-normal!"
+                classNameIcon="text-cyan-600 mx-1"
+                classIconSearch="!mb-0"
+                classIconPlus="mb-0!"
+                showButtonCreate={can(permissions.PRODUCTO_CREATE)}
+                withSearch
+                withTipoBusqueda
+                showCardAgregarProducto
+                handleOnlyOneResult={(producto) => {
+                  setProductoSeleccionadoSearchStore(producto);
+                  if (producto) setOpenModalAgregarProducto(true);
+                }}
+                onChange={(_, producto) => {
+                  setProductoSeleccionadoSearchStore(producto);
+                  if (producto) setOpenModalAgregarProducto(true);
+                }}
+              />
+              <div id="crear-compra-poner-en-espera" className="flex shrink-0 items-center" />
             </div>
           </ConfigurableElement>
         )

@@ -7,7 +7,8 @@ import { TbShoppingCartCog, TbShoppingCartPlus } from 'react-icons/tb'
 import { Form, FormInstance } from 'antd'
 import { FormCreateCompra } from './body-comprar'
 import { IGV } from '~/lib/constantes'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useQuery } from '@tanstack/react-query'
 import { apiRequest } from '~/lib/api'
 import type { GastoExtraDisponible } from '~/app/_components/form/selects/select-egresos-dinero'
@@ -38,6 +39,11 @@ export default function CardsInfoCompra({
 }) {
   const { message } = useApp()
   const [modalPagoOpen, setModalPagoOpen] = useState(false)
+  const [ponerEnEsperaTarget, setPonerEnEsperaTarget] = useState<HTMLElement | null>(null)
+
+  useEffect(() => {
+    setPonerEnEsperaTarget(document.getElementById('crear-compra-poner-en-espera'))
+  }, [])
 
   const tipo_moneda = Form.useWatch('tipo_moneda', form) as TipoMoneda
   const tipo_de_cambio = Form.useWatch('tipo_de_cambio', form)
@@ -79,6 +85,10 @@ export default function CardsInfoCompra({
   const totalAPagar = subTotal + flete + (percepcion ?? 0)
   const esContado = forma_de_pago === FormaDePago.Contado
   const esRecepcionada = (compra?.recepciones_almacen_count ?? 0) > 0
+  const mostrarBotonPonerEnEspera =
+    !esRecepcionada &&
+    (compra?.pagos_de_compras_count ?? 0) === 0 &&
+    compra?.estado_de_compra !== EstadoDeCompra.Creado
 
   const handleCrearCompra = async () => {
     if (!esRecepcionada) {
@@ -138,7 +148,8 @@ export default function CardsInfoCompra({
   }
 
   return (
-    <div className='flex flex-col gap-4 w-full xl:w-64'>
+    <>
+      <div className='flex flex-col gap-4 w-full xl:w-64'>
       <ConfigurableElement componentId='gestion-comercial.crear-compra.boton-recuperar-orden' label='Botón Recuperar Orden de Compra'>
         <ButtonRecuperarOrdenCompra form={form} onOrdenLoaded={onOrdenLoaded} />
       </ConfigurableElement>
@@ -177,27 +188,6 @@ export default function CardsInfoCompra({
         </>
       )}
       <InputBase propsForm={{ name: 'estado_de_compra', hidden: true }} hidden />
-      {(compra?.recepciones_almacen_count ?? 0) > 0 ||
-      (compra?.pagos_de_compras_count ?? 0) > 0 ||
-      compra?.estado_de_compra === EstadoDeCompra.Creado ? null : (
-        <ConfigurableElement componentId='gestion-comercial.crear-compra.boton-poner-espera' label='Botón Poner en Espera'>
-          <ButtonBase
-            onClick={() => {
-              const productos = form.getFieldValue('productos')
-              if (!productos || productos.length === 0) {
-                message.warning('Agrega al menos un producto')
-                return
-              }
-              onPonerEnEspera?.()
-            }}
-            disabled={loading}
-            color='warning'
-            className='flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance'
-          >
-            <BsFillCartDashFill className='min-w-fit' size={30} /> Poner en Espera
-          </ButtonBase>
-        </ConfigurableElement>
-      )}
       <ConfigurableElement componentId='gestion-comercial.crear-compra.boton-crear-compra' label='Botón Crear/Editar Compra'>
         <ButtonBase
           onClick={handleCrearCompra}
@@ -227,6 +217,27 @@ export default function CardsInfoCompra({
           form.submit()
         }}
       />
-    </div>
+      </div>
+      {ponerEnEsperaTarget && mostrarBotonPonerEnEspera && createPortal(
+      <ConfigurableElement componentId='gestion-comercial.crear-compra.boton-poner-espera' label='Botón Poner en Espera'>
+        <ButtonBase
+          onClick={() => {
+            const productos = form.getFieldValue('productos')
+            if (!productos || productos.length === 0) {
+              message.warning('Agrega al menos un producto')
+              return
+            }
+            onPonerEnEspera?.()
+          }}
+          disabled={loading}
+          color='warning'
+          className='flex shrink-0 items-center justify-center gap-2 !rounded-md whitespace-nowrap'
+        >
+          <BsFillCartDashFill size={22} /> Poner en Espera
+        </ButtonBase>
+      </ConfigurableElement>,
+      ponerEnEsperaTarget
+      )}
+    </>
   )
 }

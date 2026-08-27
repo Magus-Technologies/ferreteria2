@@ -12,6 +12,7 @@ import { EstadoDeCompra, FormaDePago, TipoDocumento, type CompraWhereInput } fro
 import { useStoreFiltrosMisCompras } from '../../_store/store-filtros-mis-compras'
 import { FaCalendar, FaCartShopping } from 'react-icons/fa6'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
+import FilterDateRangeFields from '~/app/_components/filters/filter-date-range-fields'
 import SelectFormaDePago from '~/app/_components/form/selects/select-forma-de-pago'
 import SelectProveedores from '~/app/_components/form/selects/select-proveedores'
 import SelectTipoDocumento from '~/app/_components/form/selects/select-tipo-documento'
@@ -143,54 +144,30 @@ export default function FiltersMisCompras() {
         title='Mis Compras'
         icon={<FaCartShopping className='text-cyan-600' />}
         extra={
-          <div className='hidden lg:flex items-center gap-6 ml-6'>
-            <ConfigurableElement componentId='gestion-comercial.mis-compras.total-compras' label='Total Compras'>
-              <TotalCompras />
-            </ConfigurableElement>
-          </div>
+          <ConfigurableElement
+            componentId='gestion-comercial.mis-compras.filtro-fecha-desde'
+            label='Campos Fecha Compra'
+          >
+            <div className='hidden shrink-0 grid-cols-2 gap-1 text-sm font-normal lg:ml-4 lg:grid'>
+              <FilterDateRangeFields
+                fromName='desde'
+                toName='hasta'
+                fromLabel='Desde:'
+                toLabel='Hasta:'
+                fromFieldClassName='!w-[136px]'
+                toFieldClassName='!w-[136px]'
+                itemClassName='flex min-w-0 items-center gap-1'
+                fromPlaceholder='Fecha'
+                toPlaceholder='Fecha'
+              />
+            </div>
+          </ConfigurableElement>
         }
       >
         {/* Filtros principales - Responsivos */}
         <div className='flex flex-wrap items-center gap-2 sm:gap-3 md:gap-4 w-full'>
           {/* Desktop: Mostrar todos los filtros principales */}
           <div className='hidden lg:flex items-center gap-4'>
-            <ConfigurableElement componentId='gestion-comercial.mis-compras.filtro-almacen' label='Filtro Almacén'>
-              <SelectAlmacen
-                propsForm={{
-                  name: 'almacen_id',
-                  hasFeedback: false,
-                  className: '!min-w-[220px] !w-[220px] !max-w-[220px]',
-                  rules: [{ required: true, message: '' }],
-                }}
-                className='w-full'
-                formWithMessage={false}
-                form={form}
-              />
-            </ConfigurableElement>
-            <ConfigurableElement componentId='gestion-comercial.mis-compras.filtro-proveedor' label='Filtro Proveedor'>
-              <SelectProveedores
-                autoFocus
-                propsForm={{
-                  name: 'proveedor_id',
-                  hasFeedback: false,
-                  className: '!min-w-[400px] !w-[400px] !max-w-[400px]',
-                }}
-                size='large'
-                className='w-full'
-                classIconSearch='!mb-0'
-                formWithMessage={false}
-                allowClear
-                form={form}
-                onSearchChange={(text) => {
-                  setSearchValue(text)
-                }}
-                onChange={(value) => {
-                  if (value) {
-                    setSearchValue('')
-                  }
-                }}
-              />
-            </ConfigurableElement>
             <ConfigurableElement componentId='gestion-comercial.mis-compras.boton-crear-compra' label='Botón Crear Compra'>
               <Link href='/ui/gestion-comercial-e-inventario/mis-compras/crear-compra'>
                 <ButtonBase
@@ -271,34 +248,29 @@ export default function FiltersMisCompras() {
       </TituloModulos>
 
       {/* Filtros secundarios - Solo desktop */}
-      <div className='hidden lg:flex items-center gap-4 mt-4'>
-        <ConfigurableElement componentId='gestion-comercial.mis-compras.filtro-fecha-desde' label='Filtro Fecha Compra'>
-          <LabelBase label='Fecha Compra:'>
-            <DatePickerBase
+      <div className='hidden lg:flex flex-wrap items-center gap-4 mt-4'>
+        <ConfigurableElement componentId='gestion-comercial.mis-compras.filtro-proveedor' label='Filtro Proveedor'>
+          <LabelBase label='Proveedor:'>
+            <SelectProveedores
+              autoFocus
               propsForm={{
-                name: 'desde',
+                name: 'proveedor_id',
                 hasFeedback: false,
-                className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
+                className: '!min-w-[400px] !w-[400px] !max-w-[400px]',
               }}
-              placeholder='Fecha Compra'
+              className='w-full'
+              classIconSearch='!mb-0'
               formWithMessage={false}
-              prefix={<FaCalendar size={15} className='text-cyan-600 mx-1' />}
               allowClear
-            />
-          </LabelBase>
-        </ConfigurableElement>
-        <ConfigurableElement componentId='gestion-comercial.mis-compras.filtro-fecha-hasta' label='Filtro Hasta'>
-          <LabelBase label='Hasta:'>
-            <DatePickerBase
-              propsForm={{
-                name: 'hasta',
-                hasFeedback: false,
-                className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
+              form={form}
+              onSearchChange={(text) => {
+                setSearchValue(text)
               }}
-              placeholder='Hasta'
-              formWithMessage={false}
-              prefix={<FaCalendar size={15} className='text-cyan-600 mx-1' />}
-              allowClear
+              onChange={(value) => {
+                if (value) {
+                  setSearchValue('')
+                }
+              }}
             />
           </LabelBase>
         </ConfigurableElement>
@@ -331,16 +303,31 @@ export default function FiltersMisCompras() {
           </LabelBase>
         </ConfigurableElement>
         <ConfigurableElement componentId='gestion-comercial.mis-compras.filtro-usuario' label='Filtro Usuario'>
-          <LabelBase label='Usuario:'>
+          <LabelBase
+            label='Usuario:'
+            className='!gap-1'
+            classNames={{ label: '!text-xs !text-gray-700' }}
+          >
             <SelectUsuarios
               propsForm={{
                 name: 'user_id',
                 hasFeedback: false,
-                className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
+                className: '!min-w-[220px] !w-[220px] !max-w-[220px]',
               }}
               className='w-full'
               formWithMessage={false}
               allowClear
+              popupMatchSelectWidth
+              optionRender={(option) => (
+                <div className='whitespace-normal break-words leading-tight'>
+                  {option.label}
+                </div>
+              )}
+              classNames={{
+                popup: {
+                  root: '[&_.ant-select-item-option-content]:!whitespace-normal [&_.ant-select-item-option-content]:!overflow-visible [&_.ant-select-item-option-content]:!text-clip',
+                },
+              }}
             />
           </LabelBase>
         </ConfigurableElement>
