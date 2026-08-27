@@ -381,9 +381,9 @@ export default function TableVender({
         // fila en el momento en que se crea (ver store-producto-agregado-venta.ts).
         getRowId={(params) => String(params.data?._row_id)}
         // Reemplaza wrapText+autoHeight de las columnas Producto/Cantidad (ver
-        // columns-vender.tsx): altura fija con lugar para 2 líneas, en vez de
+        // columns-vender.tsx): altura fija compacta, en vez de
         // que AG Grid mida cada fila contra el DOM en cada actualización.
-        rowHeight={56}
+        rowHeight={52}
         rowSelection={false}
         suppressCellFocus={true}
         withNumberColumn={false}

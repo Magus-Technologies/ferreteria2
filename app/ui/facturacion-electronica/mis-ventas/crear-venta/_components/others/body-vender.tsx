@@ -206,7 +206,7 @@ function FormVentaInternal({
     <FormBase<FormCreateVenta>
       form={form}
       name='venta'
-      className='flex flex-col xl:flex-row gap-4 xl:gap-6 w-full xl:h-full'
+      className='flex flex-col xl:flex-row gap-4 xl:gap-6 w-full xl:flex-1 xl:min-h-0'
       onFinish={(values) => handleSubmit({
           ...values,
           // La tabla de productos vive en Zustand, no en el form (ver
@@ -235,7 +235,7 @@ function FormVentaInternal({
           diferencia_pago: form.getFieldValue('diferencia_pago') || undefined,
         })}
     >
-      <div className='xl:flex-1 flex flex-col gap-4 xl:gap-6 min-w-0 xl:min-h-0'>
+      <div className='xl:flex-1 flex flex-col gap-0 min-w-0 xl:min-h-0'>
         <AlertaPreciosActualizados />
         <div className='xl:flex-1 xl:min-h-0 min-w-0'>
           <FormTableVender form={form} venta={venta} />

@@ -12,6 +12,7 @@ interface SelectServiciosProps {
   className?: string
   classNameIcon?: string
   sizeIcon?: number
+  size?: 'small' | 'middle' | 'large'
   onSelect?: (servicio: Servicio) => void
   onOpenModal?: () => void
   disabled?: boolean
@@ -23,6 +24,7 @@ export default function SelectServicios({
   className = '',
   classNameIcon = 'text-violet-600',
   sizeIcon = 18,
+  size = 'large',
   onSelect,
   onOpenModal,
   disabled = false,
@@ -55,7 +57,7 @@ export default function SelectServicios({
         showSearch
         placeholder={placeholder}
         className={`flex-1 ${className}`}
-        size="large"
+        size={size}
         value={null}
         searchValue={searchText}
         onSearch={setSearchText}

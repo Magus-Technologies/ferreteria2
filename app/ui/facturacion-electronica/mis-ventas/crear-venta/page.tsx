@@ -178,9 +178,11 @@ export default function CrearVenta() {
   }
 
   return (
-    <ContenedorGeneral className='h-full'>
+    <ContenedorGeneral className='h-full min-h-0 xl:overflow-hidden'>
+      <div className='w-full shrink-0'>
         <HeaderCrearVenta venta={notasMerged || undefined} />
-        <BodyVender cotizacion={cotizacionData} venta={notasMerged || undefined} />
+      </div>
+      <BodyVender cotizacion={cotizacionData} venta={notasMerged || undefined} />
     </ContenedorGeneral>
   )
 }

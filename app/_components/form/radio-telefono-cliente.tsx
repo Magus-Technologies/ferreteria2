@@ -39,7 +39,7 @@ export default function RadioTelefonoCliente({ form }: RadioTelefonoClienteProps
     <Radio.Group
       value={activo}
       onChange={(e) => cambiar(e.target.value as TipoTelefono)}
-      className="whitespace-nowrap flex items-center h-8"
+      className="whitespace-nowrap flex items-center h-8 [&_.ant-radio-wrapper]:!me-0 [&_.ant-radio-wrapper]:!mr-0"
     >
       {TIPOS_TELEFONO_LIST.map((tipo) => (
         <Radio key={tipo} value={tipo}>

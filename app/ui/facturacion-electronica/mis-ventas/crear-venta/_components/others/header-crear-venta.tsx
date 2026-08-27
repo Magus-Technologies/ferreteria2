@@ -325,7 +325,7 @@ export default function HeaderCrearVenta({
                 ref={selectProductosRef}
                 autoFocus
                 allowClear
-                size="large"
+                size="middle"
                 className="w-full lg:!min-w-[300px] lg:!w-[300px] lg:!max-w-[300px] font-normal!"
                 classNameIcon="text-cyan-600 mx-1"
                 classIconSearch="!mb-0"
@@ -357,7 +357,7 @@ export default function HeaderCrearVenta({
             >
               <SelectPaquetes
                 placeholder="Buscar Paquete..."
-                size="large"
+                size="middle"
                 className="w-full"
                 classNameIcon="text-cyan-600"
                 onSelect={(paquete) => {
@@ -374,6 +374,7 @@ export default function HeaderCrearVenta({
             >
               <SelectServicios
                 placeholder="Buscar Servicio..."
+                size="middle"
                 className="w-full"
                 classNameIcon="text-violet-600"
                 onSelect={(servicio) => {

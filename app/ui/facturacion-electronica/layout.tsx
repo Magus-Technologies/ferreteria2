@@ -10,7 +10,7 @@ export default function FacturacionElectronicaLayout({
   return (
     <>
       <TopNav className="animate-fade-down animate-ease-in-out" />
-     <div className='flex-1 flex items-start justify-center w-full
+      <div className='flex-1 min-h-0 flex items-start justify-center w-full
                 px-2 sm:px-3 md:px-4 lg:px-6 xl:px-8
                 py-0 lg:py-0
                 overflow-y-auto overflow-x-hidden'>

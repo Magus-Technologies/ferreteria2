@@ -122,7 +122,10 @@ export default function FormCrearVenta({
   useEffect(() => {
     if (esEdicion) {
       // Si el tipo de documento cambió respecto al original, refrescar serie
-      if (tipoDocOriginalRef.current && tipoDocOriginalRef.current !== tipoDocumento) {
+      if (
+        tipoDocOriginalRef.current &&
+        tipoDocOriginalRef.current !== tipoDocumento
+      ) {
         cargarSiguienteNumero();
       } else {
         form.setFieldValue(
@@ -152,7 +155,7 @@ export default function FormCrearVenta({
   }, [form, setValeForm]);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-0">
       <FloatingCalificacionCliente
         calificacion={calificacionResponse?.data?.data}
         loading={loadingCalificacion}
@@ -187,7 +190,7 @@ export default function FormCrearVenta({
       </Form.Item>
 
       {/* Primera fila: Fecha, Tipo Moneda, Tipo de Cambio */}
-      <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 lg:gap-6">
+      <div className="flex flex-col sm:flex-row flex-wrap gap-x-3 gap-y-0 sm:gap-x-4 lg:gap-x-6 lg:-mb-6">
         <ConfigurableElement
           componentId="crear-venta.fecha"
           label="Campo Fecha"
@@ -247,33 +250,11 @@ export default function FormCrearVenta({
           </LabelBase>
         </ConfigurableElement>
 
-        <ConfigurableElement
-          componentId="crear-venta.tipo-cambio"
-          label="Campo Tipo de Cambio"
-        >
-          <LabelBase
-            label="Tipo de Cambio:"
-            classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}
-            className="w-full sm:w-auto"
-          >
-            <InputNumberBase
-              propsForm={{
-                name: "tipo_de_cambio",
-                rules: [
-                  {
-                    required: true,
-                    message: "Por favor, ingresa el tipo de cambio",
-                  },
-                ],
-              }}
-              prefix={<span className="text-rose-700 font-bold">S/. </span>}
-              precision={4}
-              min={1}
-              className="w-full sm:!w-[100px] sm:!min-w-[100px] sm:!max-w-[100px]"
-            />
-          </LabelBase>
-        </ConfigurableElement>
+        <FormFormaDePago form={form} />
+      </div>
 
+      {/* 2da fila */}
+      <div className="flex gap-x-3 gap-y-0 sm:gap-x-4 lg:gap-x-6 items-end flex-wrap lg:-mb-6">
         <ConfigurableElement
           componentId="crear-venta.tipo-documento"
           label="Campo Tipo Documento"
@@ -328,11 +309,32 @@ export default function FormCrearVenta({
             readOnly
           />
         </ConfigurableElement>
-      </div>
-
-      {/* 2da fila */}
-      <div className="flex gap-3 sm:gap-4 lg:gap-6 items-end flex-wrap">
-        <FormFormaDePago form={form} />
+              <ConfigurableElement
+          componentId="crear-venta.tipo-cambio"
+          label="Campo Tipo de Cambio"
+        >
+          <LabelBase
+            label="Tipo de Cambio:"
+            classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}
+            className="w-full sm:w-auto"
+          >
+            <InputNumberBase
+              propsForm={{
+                name: "tipo_de_cambio",
+                rules: [
+                  {
+                    required: true,
+                    message: "Por favor, ingresa el tipo de cambio",
+                  },
+                ],
+              }}
+              prefix={<span className="text-rose-700 font-bold">S/. </span>}
+              precision={4}
+              min={1}
+              className="w-full sm:!w-[100px] sm:!min-w-[100px] sm:!max-w-[100px]"
+            />
+          </LabelBase>
+        </ConfigurableElement>
 
         <ConfigurableElement
           componentId="crear-venta.tipo-despacho"
@@ -365,7 +367,7 @@ export default function FormCrearVenta({
       </div>
 
       {/* 3ra fila: DNI/RUC (con lupa), Cliente (nombre más grande) y direccion*/}
-      <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 lg:gap-6 items-star">
+      <div className="flex flex-col sm:flex-row flex-wrap gap-x-3 gap-y-0 sm:gap-x-4 lg:gap-x-6 items-start lg:-mb-6">
         <ConfigurableElement
           componentId="crear-venta.dni-ruc"
           label="Campo DNI/RUC"
@@ -382,7 +384,7 @@ export default function FormCrearVenta({
                 name: "cliente_id",
                 hasFeedback: false,
                 className:
-                  "w-full sm:!min-w-[150px] sm:!w-[150px] sm:!max-w-[150px]",
+                  "w-full sm:!min-w-[130px] sm:!w-[130px] sm:!max-w-[130px]",
               }}
               className={`w-full ${clienteTieneDeuda ? "[&_.ant-select-selection-item]:!text-red-600 [&_.ant-select-selection-search-input]:!text-red-600 [&_.ant-select-selection-placeholder]:!text-red-600" : ""}`}
               classNameIcon="text-rose-700 mx-1"
@@ -542,7 +544,7 @@ export default function FormCrearVenta({
       />
 
       {/* ultima fila: Teléfono, Email, Recomendado por */}
-      <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 lg:gap-6">
+      <div className="flex flex-col sm:flex-row flex-wrap gap-x-3 gap-y-0 sm:gap-x-4 lg:gap-x-6 lg:-mb-6">
         <ConfigurableElement
           componentId="crear-venta.telefono"
           label="Campo Teléfono"
@@ -552,13 +554,13 @@ export default function FormCrearVenta({
             classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}
             className="w-full sm:w-auto"
           >
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-row flex-wrap items-center gap-x-2 gap-y-0">
               <InputBase
                 propsForm={{
                   name: "telefono",
                   hasFeedback: false,
                   className:
-                    "w-full sm:!min-w-[150px] sm:!w-[150px] sm:!max-w-[150px] !mb-0",
+                    "w-full sm:!min-w-[130px] sm:!w-[130px] sm:!max-w-[130px] !mb-0",
                 }}
                 placeholder="Teléfono"
                 className="w-full"
@@ -585,7 +587,7 @@ export default function FormCrearVenta({
                 name: "email",
                 hasFeedback: false,
                 className:
-                  "w-full sm:!min-w-[250px] sm:!w-[250px] sm:!max-w-[250px]",
+                  "w-full sm:!min-w-[240px] sm:!w-[240px] sm:!max-w-[240px]",
               }}
               placeholder="Email del cliente"
               className="w-full"
@@ -649,7 +651,7 @@ export default function FormCrearVenta({
                 hasFeedback: false,
                 initialValue: "si",
                 className:
-                  "w-full sm:!min-w-[120px] sm:!w-[120px] sm:!max-w-[120px]",
+                  "w-full sm:!min-w-[70px] sm:!w-[70px] sm:!max-w-[70px]",
               }}
               options={[
                 { value: "si", label: "Sí" },
