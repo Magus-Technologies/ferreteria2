@@ -16,11 +16,19 @@ export default function useCreateGuia(form: FormInstance<FormCreateGuia>) {
   // venta_id de la URL: el form no lo setea, así la guía quedaba con venta_id=NULL.
   const ventaIdParam = searchParams.get('venta_id')
   const cotizacionIdParam = searchParams.get('cotizacion_id')
+  // guia_id en la URL = se está EDITANDO una guía existente.
+  //
+  // La pantalla ya cargaba la guía por este parámetro para precargar el
+  // formulario, pero el submit llamaba siempre a `create`: editar terminaba
+  // creando una guía NUEVA en vez de actualizar la que se estaba viendo.
+  const guiaIdParam = searchParams.get('guia_id')
+  const esEdicion = !!guiaIdParam
 
   const mutation = useMutation({
     mutationFn: async (data: CreateGuiaRemisionRequest) => {
-      
-      const response = await guiaRemisionApi.create(data)
+      const response = esEdicion
+        ? await guiaRemisionApi.update(guiaIdParam!, data as any)
+        : await guiaRemisionApi.create(data)
 
       if (response.error) {
         throw new Error(response.error.message)
@@ -29,8 +37,11 @@ export default function useCreateGuia(form: FormInstance<FormCreateGuia>) {
       return response.data
     },
     onSuccess: (data) => {
-      
-      message.success('Guía de remisión creada exitosamente')
+      message.success(
+        esEdicion
+          ? 'Guía de remisión actualizada exitosamente'
+          : 'Guía de remisión creada exitosamente',
+      )
 
       // Invalidar caché de guías
       queryClient.invalidateQueries({ queryKey: [QueryKeys.GUIAS_REMISION] })
@@ -47,8 +58,11 @@ export default function useCreateGuia(form: FormInstance<FormCreateGuia>) {
       router.push('/ui/facturacion-electronica/mis-guias')
     },
     onError: (error: Error) => {
-      console.error('❌ Error al crear guía:', error)
-      message.error(error.message || 'Error al crear guía de remisión')
+      console.error(esEdicion ? '❌ Error al actualizar guía:' : '❌ Error al crear guía:', error)
+      message.error(
+        error.message ||
+          (esEdicion ? 'Error al actualizar la guía' : 'Error al crear guía de remisión'),
+      )
     },
   })
 

@@ -95,12 +95,14 @@ export default function useInitGuia({
   })
   const cotizacion = cotizacionResponse?.data as Cotizacion | undefined
 
-  // Entregas de la venta — solo cuando se crea la guía desde una entrega puntual.
+  // Entregas de la venta. Se piden SIEMPRE que haya venta_id, no solo cuando
+  // viene `entrega_id`: aunque no se cree desde una entrega puntual, se usan
+  // para precargar chofer y vehículo (ver `entregaTransporte` más abajo).
   // Reusa el mismo query key que useEntregasDeVenta (cache compartido).
   const { data: entregasVentaList, isLoading: isLoadingEntregasVenta } = useQuery({
     queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, 'por-venta', ventaId],
     queryFn: () => entregasNuevasApi.porVenta(ventaId!),
-    enabled: !!ventaId && !!entregaIdParam && !guia,
+    enabled: !!ventaId && !guia,
     // La respuesta es { data: { data: [...] } } — mismo select que useEntregasDeVenta.
     select: (res) => ((res.data as any)?.data ?? []) as any[],
   })
@@ -237,10 +239,26 @@ export default function useInitGuia({
       const direccionSeleccionada = cliente?.direcciones?.find(
         (d: any) => d.direccion === entregaSeleccionada?.direccion_entrega,
       )?.tipo || 'D1'
-      const choferId = entregaSeleccionada?.chofer_id || userChoferIdParam
-      const choferNombre = entregaSeleccionada?.chofer_name || userChoferNombreParam || ''
-      const vehiculoId = entregaSeleccionada?.vehiculo_id
-      const vehiculoPlaca = entregaSeleccionada?.vehiculo_placa || vehiculoPlacaParam
+      // Fuente de los datos de TRANSPORTE (chofer y vehículo).
+      //
+      // Viniendo de Mis Entregas llegan por la URL o por la entrega puntual.
+      // Pero desde Mis Ventas solo llega `venta_id` (ver
+      // cell-acciones-venta-dropdown), así que no había ni params ni
+      // `entregaSeleccionada` y el chofer quedaba vacío aunque la venta ya
+      // tuviera su entrega a domicilio con despachador y vehículo asignados.
+      // Se cae a la primera entrega de la venta que tenga chofer.
+      //
+      // OJO: esto NO toca las cantidades. `entregaSeleccionada` sigue
+      // resolviéndose solo con `entrega_id`, porque sin una entrega puntual
+      // hay que guiar el total de la venta, no el de una entrega cualquiera.
+      const entregaTransporte =
+        entregaSeleccionada ??
+        ((entregasVentaList ?? []) as any[]).find((e) => e?.chofer_id)
+
+      const choferId = entregaTransporte?.chofer_id || userChoferIdParam
+      const choferNombre = entregaTransporte?.chofer_name || userChoferNombreParam || ''
+      const vehiculoId = entregaTransporte?.vehiculo_id
+      const vehiculoPlaca = entregaTransporte?.vehiculo_placa || vehiculoPlacaParam
 
       const empresaSlots = buildSlotsDireccionEmpresa(empresa?.direcciones)
       const primerSlot = empresaSlots.find((s) => s.direccion)

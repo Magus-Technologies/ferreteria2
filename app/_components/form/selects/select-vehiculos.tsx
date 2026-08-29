@@ -26,7 +26,7 @@ interface SelectVehiculosProps {
 
 export default function SelectVehiculos({
   placeholder = 'Buscar Vehículo...',
-  classNameIcon = 'text-orange-600',
+  classNameIcon = 'text-rose-700',
   sizeIcon = 16,
   showCreate = true,
   propsForm,

@@ -643,6 +643,11 @@ export default function FormCrearGuia({
                 disabled={sinModalidad}
                 propsForm={{
                   name: 'vehiculo_placa',
+                  // SUNAT exige la placa en la GRE. Normalmente se autocompleta
+                  // al elegir el despachador, pero si ese no tiene vehículo
+                  // asignado hay que cargarla a mano — antes se podía emitir sin
+                  // ella y la guía salía incompleta.
+                  rules: [{ required: true, message: 'Ingresá la placa del vehículo' }],
                 }}
                 placeholder={sinModalidad ? 'Seleccione modalidad' : 'ABC-123'}
                 prefix={<FaTruck className='text-cyan-700 mx-1' />}
@@ -671,9 +676,18 @@ export default function FormCrearGuia({
                   name: 'user_chofer_id',
                   hasFeedback: false,
                   className: 'w-full',
+                  // Obligatorio en transporte PRIVADO: los datos SUNAT del
+                  // chofer (DNI, nombre, licencia) salen de este user, y sin
+                  // ellos la GRE es rechazada. No lo era, y por eso se
+                  // emitieron guías sin chofer ni placa.
+                  // En PÚBLICO el chofer es externo (`chofer_id`), no este.
+                  rules:
+                    modalidad === 'PRIVADO'
+                      ? [{ required: true, message: 'Seleccioná el despachador que transporta' }]
+                      : [],
                 }}
                 placeholder={sinModalidad ? 'Seleccione modalidad primero' : 'Seleccionar despachador...'}
-                classNameIcon='text-cyan-600 mx-1'
+                classNameIcon='text-rose-700 mx-1'
                 onChange={(_id, usuario) => {
                   // Auto-rellenar placa con el vehículo asignado al despachador
                   // (el usuario puede cambiarlo desde la lupa de Vehículo).

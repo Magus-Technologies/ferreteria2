@@ -106,6 +106,11 @@ export interface UpdateGuiaRemisionRequest {
   modalidad_transporte?: ModalidadTransporte;
   vehiculo_placa?: string;
   chofer_id?: number;
+  /** Despachador interno (user) — el chofer en transporte PRIVADO. */
+  user_chofer_id?: string;
+  transportista_ruc?: string;
+  transportista_razon_social?: string;
+  transportista_nro_mtc?: string;
   punto_partida?: string;
   punto_llegada?: string;
   almacen_origen_id?: number;

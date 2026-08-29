@@ -425,6 +425,22 @@ export default function CellAccionesGuia({ guia, onRefetch }: CellAccionesGuiaPr
       })
     }
 
+    // Editar una guía EMITIDA mientras SUNAT no la tenga. Abre el mismo
+    // formulario completo que la creación (igual que mis-ventas), con todo
+    // precargado: sirve para cargarle el despachador a una guía que se emitió
+    // sin él — sin chofer ni placa, SUNAT rechaza una GRE de transporte privado.
+    if (sunatEstado !== 'ACEPTADO' && sunatEstado !== 'PENDIENTE') {
+      menuItems.push({
+        key: 'editar-emitida',
+        label: (
+          <span className="flex items-center gap-2">
+            <FaEdit className="text-blue-600" /> Editar
+          </span>
+        ),
+        onClick: handleEditar,
+      })
+    }
+
     // Solo mientras SUNAT no la tenga: aceptada, el XML vigente es el que ella
     // selló; pendiente, hay un ticket en curso.
     if (esElectronica && sunatEstado !== 'ACEPTADO' && sunatEstado !== 'PENDIENTE') {
