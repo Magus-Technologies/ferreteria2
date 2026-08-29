@@ -120,20 +120,26 @@ export default function FiltersMisPrestamos() {
       <TituloModulos
         title='Mis Préstamos'
         icon={<MdPointOfSale className='text-amber-600' />}
+        extra={
+          <ConfigurableElement
+            componentId='mis-prestamos.filtro-rango-fechas'
+            label='Campo Fecha Desde y Hasta'
+          >
+            <div className='hidden shrink-0 grid-cols-2 gap-1 text-sm font-normal md:ml-4 md:grid'>
+              <FilterDateRangeFields
+                fromName='desde'
+                toName='hasta'
+                fromLabel='Desde:'
+                fromFieldClassName='!w-[136px]'
+                toFieldClassName='!w-[136px]'
+                itemClassName='flex min-w-0 items-center gap-1'
+                fromPlaceholder='Fecha'
+              />
+            </div>
+          </ConfigurableElement>
+        }
       >
         <div className='flex items-center gap-2 flex-wrap'>
-          <SelectAlmacen
-            propsForm={{
-              name: 'almacen_id',
-              hasFeedback: false,
-              className: 'w-full sm:!min-w-[220px] sm:!w-[220px]',
-              rules: [{ required: true, message: '' }],
-            }}
-            className='w-full'
-            formWithMessage={false}
-            form={form}
-          />
-
           {/* Mobile/Tablet: Botón para abrir drawer */}
           <div className='flex md:hidden items-center gap-2'>
             <ButtonBase
@@ -161,17 +167,9 @@ export default function FiltersMisPrestamos() {
       </TituloModulos>
 
       {/* Filtros Desktop - Ocupan todo el espacio */}
-      <div className='hidden md:block mt-4'>
-        <div className='grid grid-cols-12 gap-x-3 gap-y-2.5'>
-          {/* Fila 1 */}
-          <div className='col-span-4 grid grid-cols-2 gap-3'>
-            <FilterDateRangeFields
-              fromName='desde'
-              toName='hasta'
-              itemClassName='flex items-center gap-2'
-            />
-          </div>
-          <div className='col-span-4 flex items-center gap-2'>
+      <div className='hidden md:block mt-2'>
+        <div className='flex flex-wrap items-center gap-x-2 gap-y-2'>
+          <div className='flex w-[300px] shrink-0 min-w-0 items-center gap-2'>
             <label className='text-xs font-semibold text-gray-700 whitespace-nowrap'>
               Cliente:
             </label>
@@ -180,9 +178,10 @@ export default function FiltersMisPrestamos() {
               propsForm={{
                 name: 'cliente_id',
                 hasFeedback: false,
-                className: '!w-full',
+                className: '!min-w-0 !flex-1 !w-auto',
               }}
-              className='w-full'
+              className='min-w-0 !w-full'
+              classNameContainer='min-w-0 !gap-1'
               classIconSearch='!mb-0'
               formWithMessage={false}
               allowClear
@@ -201,7 +200,8 @@ export default function FiltersMisPrestamos() {
               }}
             />
           </div>
-          <div className='col-span-2 flex items-center gap-2'>
+
+          <div className='flex shrink-0 items-center gap-1'>
             <label className='text-xs font-semibold text-gray-700 whitespace-nowrap'>
               N° Préstamo:
             </label>
@@ -210,28 +210,15 @@ export default function FiltersMisPrestamos() {
               propsForm={{
                 name: 'numero',
                 hasFeedback: false,
-                className: '!w-full',
+                className: '!w-[160px] !min-w-[160px] !max-w-[160px]',
               }}
               placeholder='PRE-2025-001'
               formWithMessage={false}
+              className='!w-[160px]'
             />
           </div>
-          <div className='col-span-2 flex items-center gap-2'>
-            <ConfigurableElement componentId="mis-prestamos.boton-buscar" label="Botón Buscar">
-              <ButtonBase
-                color='info'
-                size='md'
-                type='submit'
-                className='flex items-center gap-2 w-full justify-center'
-              >
-                <FaSearch />
-                Buscar
-              </ButtonBase>
-            </ConfigurableElement>
-          </div>
 
-          {/* Fila 2 */}
-          <div className='col-span-2 flex items-center gap-2'>
+          <div className='flex shrink-0 items-center gap-1'>
             <label className='text-xs font-semibold text-gray-700 whitespace-nowrap'>
               Tipo:
             </label>
@@ -239,7 +226,7 @@ export default function FiltersMisPrestamos() {
               propsForm={{
                 name: 'tipo_operacion',
                 hasFeedback: false,
-                className: '!w-full',
+                 className: 'w-full sm:!min-w-[140px] sm:!w-[140px] sm:!max-w-[140px]',
               }}
               placeholder='Todos'
               formWithMessage={false}
@@ -250,7 +237,8 @@ export default function FiltersMisPrestamos() {
               ]}
             />
           </div>
-          <div className='col-span-2 flex items-center gap-2'>
+
+          <div className='flex shrink-0 items-center gap-1'>
             <label className='text-xs font-semibold text-gray-700 whitespace-nowrap'>
               Estado:
             </label>
@@ -258,7 +246,7 @@ export default function FiltersMisPrestamos() {
               propsForm={{
                 name: 'estado_prestamo',
                 hasFeedback: false,
-                className: '!w-full',
+                className: 'w-full sm:!min-w-[150px] sm:!w-[150px] sm:!max-w-[150px]',
               }}
               placeholder='Todos'
               formWithMessage={false}
@@ -272,44 +260,52 @@ export default function FiltersMisPrestamos() {
             />
           </div>
 
-          {/* Fila 3 - Botones de acción */}
-          <div className='col-span-2 flex items-center gap-2'>
-            <ConfigurableElement componentId="mis-prestamos.boton-registrar-devolucion" label="Botón Registrar Devolución">
-              <ButtonBase
-                color='success'
-                size='md'
-                type='button'
-                className='flex items-center gap-2 whitespace-nowrap w-full justify-center'
-                onClick={() =>
-                  prestamoSeleccionado && !todoDevuelto && setModalDevolucionOpen(true)
-                }
-                disabled={!prestamoSeleccionado || todoDevuelto}
-                title={
-                  todoDevuelto
-                    ? 'Este préstamo ya fue devuelto en su totalidad'
-                    : undefined
-                }
-              >
-                <FaBoxOpen />
-                Registrar Devolución
-              </ButtonBase>
-            </ConfigurableElement>
-          </div>
-          <div className='col-span-2 flex items-center gap-2'>
-            <ConfigurableElement componentId="mis-prestamos.boton-ver-devoluciones" label="Botón Ver Devoluciones">
-              <ButtonBase
-                color='info'
-                size='md'
-                type='button'
-                className='flex items-center gap-2 whitespace-nowrap w-full justify-center'
-                onClick={() => prestamoSeleccionado && setModalVerDevolucionesOpen(true)}
-                disabled={!prestamoSeleccionado}
-              >
-                <FaClockRotateLeft />
-                Ver Devoluciones
-              </ButtonBase>
-            </ConfigurableElement>
-          </div>
+          <ConfigurableElement componentId="mis-prestamos.boton-buscar" label="Botón Buscar">
+            <ButtonBase
+              color='info'
+              size='sm'
+              type='submit'
+              className='!w-auto !min-w-0 !max-w-none !px-3 flex shrink-0 items-center justify-center gap-2 whitespace-nowrap'
+            >
+              <FaSearch />
+              Buscar
+            </ButtonBase>
+          </ConfigurableElement>
+
+          <ConfigurableElement componentId="mis-prestamos.boton-registrar-devolucion" label="Botón Registrar Devolución">
+            <ButtonBase
+              color='success'
+              size='sm'
+              type='button'
+              className='!w-auto !min-w-0 !max-w-none !px-3 flex shrink-0 items-center justify-center gap-2 whitespace-nowrap'
+              onClick={() =>
+                prestamoSeleccionado && !todoDevuelto && setModalDevolucionOpen(true)
+              }
+              disabled={!prestamoSeleccionado || todoDevuelto}
+              title={
+                todoDevuelto
+                  ? 'Este préstamo ya fue devuelto en su totalidad'
+                  : undefined
+              }
+            >
+              <FaBoxOpen />
+              Registrar Devolución
+            </ButtonBase>
+          </ConfigurableElement>
+
+          <ConfigurableElement componentId="mis-prestamos.boton-ver-devoluciones" label="Botón Ver Devoluciones">
+            <ButtonBase
+              color='info'
+              size='sm'
+              type='button'
+              className='!w-auto !min-w-0 !max-w-none !px-3 flex shrink-0 items-center justify-center gap-2 whitespace-nowrap'
+              onClick={() => prestamoSeleccionado && setModalVerDevolucionesOpen(true)}
+              disabled={!prestamoSeleccionado}
+            >
+              <FaClockRotateLeft />
+              Ver Devoluciones
+            </ButtonBase>
+          </ConfigurableElement>
         </div>
       </div>
 
@@ -371,6 +367,7 @@ export default function FiltersMisPrestamos() {
               propsForm={{ name: 'numero', hasFeedback: false }}
               placeholder='PRE-2025-001'
               formWithMessage={false}
+              className='w-full sm:!min-w-[130px] sm:!w-[130px] sm:!max-w-[130px]'
             />
           </div>
           <div>
