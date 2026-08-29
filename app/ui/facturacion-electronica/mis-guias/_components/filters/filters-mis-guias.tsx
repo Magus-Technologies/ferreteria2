@@ -63,26 +63,29 @@ export default function FiltersMisGuias() {
       <TituloModulos
         title="Mis Guías"
         icon={<FaTruckLoading className="text-orange-600" />}
+        extra={
+          <ConfigurableElement
+            componentId="mis-guias.filtro-rango-fechas"
+            label="Campo Fecha Desde y Hasta"
+          >
+            <div className="hidden shrink-0 grid-cols-2 gap-1 text-sm font-normal lg:ml-4 lg:grid">
+              <FilterDateRangeFields
+                fromName="fecha_desde"
+                toName="fecha_hasta"
+                fromLabel="Desde:"
+                fromFieldClassName="!w-[136px]"
+                toFieldClassName="!w-[136px]"
+                itemClassName="flex min-w-0 items-center gap-1"
+                fromPlaceholder="Fecha"
+              />
+            </div>
+          </ConfigurableElement>
+        }
       />
 
       {/* Filtros Desktop */}
       <div className="mt-4">
         <div className="grid grid-cols-12 gap-x-3 gap-y-2.5">
-          {/* Fila 1 */}
-          <ConfigurableElement
-            componentId="mis-guias.filtro-rango-fechas"
-            label="Campo Fecha Desde y Hasta"
-          >
-            <div className="col-span-4 grid grid-cols-2 gap-3">
-              <FilterDateRangeFields
-                fromName="fecha_desde"
-                toName="fecha_hasta"
-                itemClassName="flex items-center gap-2"
-                fromPlaceholder="Fecha"
-              />
-            </div>
-          </ConfigurableElement>
-
           <div className="col-span-2 flex items-center gap-2">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
               Estado:
