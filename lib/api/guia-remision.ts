@@ -391,6 +391,16 @@ export const guiaRemisionApi = {
   },
 
   /**
+   * Regenerar el XML y el QR de una guía electrónica.
+   * Útil cuando el XML quedó pisado por otra guía con la misma serie-número.
+   */
+  async regenerarXml(id: string): Promise<ApiResponse<{ data: GuiaRemision; message: string }>> {
+    return apiRequest(`/guias-remision/${id}/regenerar-xml`, {
+      method: 'POST',
+    });
+  },
+
+  /**
    * Obtener datos de la guía para generar PDF (incluye QR y empresa)
    */
   async getPdfData(id: string): Promise<ApiResponse<{ data: { guia: GuiaRemision; empresa: { ruc: string; razon_social: string; nombre_comercial: string; direccion: string; ubigeo: string; departamento: string; provincia: string; distrito: string } } }>> {

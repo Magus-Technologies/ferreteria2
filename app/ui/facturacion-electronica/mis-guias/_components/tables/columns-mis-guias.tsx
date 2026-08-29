@@ -105,7 +105,9 @@ export function useColumnsMisGuias(onRefetch?: () => void) {
     {
       headerName: 'Acciones',
       field: 'id',
-      width: 150,
+      // Mismo ancho que mis-ventas: ahora es un solo botón de dropdown, no
+      // una fila de botones sueltos.
+      width: 110,
       pinned: 'right',
       cellRenderer: CellAccionesGuia,
       cellRendererParams: (params: { data?: any }) => ({
