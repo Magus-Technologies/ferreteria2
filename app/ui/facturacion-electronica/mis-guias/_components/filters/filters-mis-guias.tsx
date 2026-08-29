@@ -110,6 +110,39 @@ export default function FiltersMisGuias() {
             </ConfigurableElement>
           </div>
 
+          {/* Estado ante SUNAT, aparte del estado interno de arriba. Mismo
+              criterio que el filtro SUNAT de mis-ventas. */}
+          <div className="col-span-2 flex items-center gap-2">
+            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
+              SUNAT:
+            </label>
+            <ConfigurableElement
+              componentId="mis-guias.filtro-estado-sunat"
+              label="Campo Estado SUNAT"
+            >
+              <SelectBase
+                propsForm={{
+                  name: "estado_sunat",
+                  hasFeedback: false,
+                  className: "!w-full",
+                }}
+                className="w-full"
+                formWithMessage={false}
+                allowClear
+                placeholder="Todos"
+                options={[
+                  // 'sin_enviar' no es un valor de la columna: son las
+                  // electrónicas con sunat_estado NULL. Lo resuelve el backend.
+                  { label: "Sin enviar", value: "sin_enviar" },
+                  { label: "Procesando", value: "PENDIENTE" },
+                  { label: "Aceptado", value: "ACEPTADO" },
+                  { label: "Rechazado", value: "RECHAZADO" },
+                  { label: "Observado", value: "OBSERVADO" },
+                ]}
+              />
+            </ConfigurableElement>
+          </div>
+
           <div className="col-span-2 flex items-center gap-2">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
               Tipo de Guía:

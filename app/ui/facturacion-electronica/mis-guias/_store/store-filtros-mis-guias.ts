@@ -6,6 +6,8 @@ type UseStoreFiltrosMisGuiasProps = {
     fecha_desde?: Dayjs
     fecha_hasta?: Dayjs
     estado?: string // 'BORRADOR' | 'EMITIDA' | 'ANULADA'
+    // Estado ante SUNAT. 'sin_enviar' = electrónicas todavía no declaradas.
+    estado_sunat?: string
     tipo_guia?: string // 'ELECTRONICA_REMITENTE' | 'ELECTRONICA_TRANSPORTISTA' | 'FISICA'
     search?: string
   }

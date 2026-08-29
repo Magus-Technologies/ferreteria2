@@ -130,6 +130,8 @@ export interface GuiaRemisionFilters {
   almacen_destino_id?: number;
   tipo_guia?: TipoGuia;
   estado?: EstadoGuia;
+  /** Estado ante SUNAT. `sin_enviar` = electrónicas aún no declaradas. */
+  estado_sunat?: EstadoSunat | 'sin_enviar';
   motivo_traslado_id?: number;
   modalidad_transporte?: ModalidadTransporte;
   fecha_emision_desde?: string;
@@ -244,6 +246,12 @@ export interface GuiaRemision {
   sunat_estado?: EstadoSunat;
   sunat_ticket?: string;
   sunat_mensaje?: string;
+  /**
+   * Observaciones del CDR (notas 4xxx). SUNAT acepta el documento igual —son
+   * avisos de lo que no pudo validar contra el MTC, como una placa o licencia
+   * que no figura en sus bases.
+   */
+  sunat_observaciones?: string[];
   user_id: string;
   created_at: string;
   updated_at: string;
