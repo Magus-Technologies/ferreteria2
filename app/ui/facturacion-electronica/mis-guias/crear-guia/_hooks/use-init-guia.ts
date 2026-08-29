@@ -153,14 +153,31 @@ export default function useInitGuia({
         unidad_derivada_venta_id: d.unidad_derivada_venta_id,
       }))
 
+      // El nombre del cliente NO viene como campo plano en la guía (está en la
+      // relación `cliente`), así que `...guia` lo dejaba vacío y el formulario
+      // mostraba el destinatario en blanco al editar.
+      const clienteGuia = guia.cliente
+      const nombreClienteGuia = clienteGuia
+        ? clienteGuia.razon_social ||
+          `${clienteGuia.nombres || ''} ${clienteGuia.apellidos || ''}`.trim()
+        : ''
+
       form.setFieldsValue({
         ...guia,
         fecha_emision: dayjs(guia.fecha_emision),
         fecha_traslado: dayjs(guia.fecha_traslado),
         motivo_traslado: guia.motivo_traslado_id ?? guia.motivo_traslado?.id,
         afecta_stock: String(guia.afecta_stock),
+        cliente_nombre: nombreClienteGuia,
         productos,
       })
+
+      // Direcciones del cliente: alimentan el radio D1..DN y el punto de
+      // llegada. Sin esto, al editar quedaban vacías y cambiar de dirección
+      // no ofrecía ninguna opción.
+      if (clienteGuia) {
+        setDireccionesClienteToForm(form, clienteGuia)
+      }
     } else if (venta && !isLoading && (!entregaIdParam || !isLoadingEntregasVenta)) {
       // Inicializar formulario con datos de la venta
       const cliente = venta.cliente

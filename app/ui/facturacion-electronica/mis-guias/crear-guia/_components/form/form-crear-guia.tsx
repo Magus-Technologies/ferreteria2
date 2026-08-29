@@ -65,6 +65,11 @@ export default function FormCrearGuia({
   // Watch sobre modalidad_transporte: si es PRIVADO, el chofer es un USER
   // (despachador interno, datos vienen de tabla `user`). Si es PUBLICO o
   // GRE-Transportista, se usa la tabla externa `chofer` con MTC.
+  // Alimentan el display "Serie y Número" de arriba: se actualizan solos
+  // cuando el preview o la carga de la guía escriben esos campos.
+  const serieActual = Form.useWatch('serie', form) as string | undefined
+  const numeroActual = Form.useWatch('numero', form) as number | string | undefined
+
   const modalidad = Form.useWatch('modalidad_transporte', form) as string | undefined
   const choferEsInterno = modalidad === 'PRIVADO' && !esTransportista
   // Sin modalidad seleccionada, los campos de vehículo y chofer se bloquean
@@ -288,34 +293,69 @@ export default function FormCrearGuia({
             prefix={<FaCalendar size={15} className='text-cyan-700 mx-1' />}
           />
         </LabelBase>
-        <LabelBase label='Serie:' orientation='column' className='w-full'>
-          <InputBase
-            propsForm={{
-              name: 'serie',
-            }}
-            placeholder='T001'
-            className='w-full'
-          />
-        </LabelBase>
-        <LabelBase label='Número:' orientation='column' className='w-full'>
-          <InputNumberBase
-            propsForm={{
-              name: 'numero',
-            }}
-            placeholder='000012'
-            className='w-full'
-            suffix={
-              !guia ? (
-                <IoReload
-                  size={14}
-                  title='Actualizar número'
-                  className='cursor-pointer text-gray-400 hover:text-cyan-700 transition-colors'
-                  onClick={() => cargarSiguienteNumero(true)}
-                />
-              ) : undefined
-            }
-          />
-        </LabelBase>
+        {/*
+          Guía ELECTRÓNICA: se muestra el número completo ya formateado
+          (TG01-00000004), como en crear-venta. Antes eran dos cajas sueltas
+          —"TG01" y "4"— y no se leía de un vistazo cuál iba a ser el próximo
+          documento. Va en solo lectura porque el correlativo lo asigna el
+          SERVIDOR al guardar (ver GuiaRemisionService::crear): lo que se ve
+          acá es una previsualización, no un campo editable.
+
+          Guía FÍSICA: sí es editable. Son talonarios preimpresos y el número
+          lo pone el papel, no el sistema.
+        */}
+        {tipoGuia !== 'FISICA' ? (
+          <LabelBase
+            label='Serie y Número:'
+            orientation='column'
+            className='w-full col-span-2'
+          >
+            <Input
+              readOnly
+              value={
+                serieActual
+                  ? `${serieActual}-${String(numeroActual ?? '').padStart(8, '0')}`
+                  : ''
+              }
+              placeholder='Se asigna al guardar'
+              className='w-full'
+              suffix={
+                !guia ? (
+                  <IoReload
+                    size={14}
+                    title='Actualizar número'
+                    className='cursor-pointer text-gray-400 hover:text-cyan-700 transition-colors'
+                    onClick={() => cargarSiguienteNumero(true)}
+                  />
+                ) : undefined
+              }
+            />
+            {/* Los valores reales siguen viviendo en el form. */}
+            <Form.Item name='serie' hidden noStyle>
+              <Input type='hidden' />
+            </Form.Item>
+            <Form.Item name='numero' hidden noStyle>
+              <Input type='hidden' />
+            </Form.Item>
+          </LabelBase>
+        ) : (
+          <>
+            <LabelBase label='Serie:' orientation='column' className='w-full'>
+              <InputBase
+                propsForm={{ name: 'serie' }}
+                placeholder='TF01'
+                className='w-full'
+              />
+            </LabelBase>
+            <LabelBase label='Número:' orientation='column' className='w-full'>
+              <InputNumberBase
+                propsForm={{ name: 'numero' }}
+                placeholder='000012'
+                className='w-full'
+              />
+            </LabelBase>
+          </>
+        )}
         <LabelBase label='Referencia (Comprobante):' orientation='column' className='w-full col-span-2'>
           <InputBase
             propsForm={{ name: 'referencia' }}
@@ -364,7 +404,19 @@ export default function FormCrearGuia({
               <SelectClientes
                 form={form}
                 showOnlyDocument={true}
-                clienteOptionsDefault={venta?.cliente ? [venta.cliente] : cotizacion?.cliente ? [cotizacion.cliente] : []}
+                // `guia?.cliente` primero: al EDITAR no hay venta ni cotización
+                // en contexto, así que el select se quedaba sin la opción del
+                // cliente y mostraba el `cliente_id` crudo (un número suelto)
+                // en vez del DNI/RUC.
+                clienteOptionsDefault={
+                  guia?.cliente
+                    ? [guia.cliente]
+                    : venta?.cliente
+                      ? [venta.cliente]
+                      : cotizacion?.cliente
+                        ? [cotizacion.cliente]
+                        : []
+                }
                 propsForm={{
                   name: 'cliente_id',
                   hasFeedback: false,
