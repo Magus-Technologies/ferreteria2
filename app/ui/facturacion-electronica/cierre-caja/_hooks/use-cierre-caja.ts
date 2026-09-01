@@ -1,78 +1,62 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { message } from 'antd'
+import { useQuery } from '@tanstack/react-query'
 import { cajaApi } from '~/lib/api/caja'
 import { cierreCajaApi } from '~/lib/api/cierre-caja'
+import { QueryKeys } from '~/app/_lib/queryKeys'
 
 export function useCierreCaja(cierreId?: string, options?: { optional?: boolean }) {
-  const [loading, setLoading] = useState(false)
-  const [cajaActiva, setCajaActiva] = useState<any | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [esEdicion, setEsEdicion] = useState(false)
+  const esEdicion = Boolean(cierreId)
 
-  const cargarCaja = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-
+  // Bajo la clave CAJA_ACTIVA para que las acciones que cambian la caja
+  // (registrar un traslado a bóveda, cerrar, etc.) refresquen esta vista con
+  // una invalidación de react-query. Antes era useState/useEffect manual y el
+  // usuario tenía que recargar la página (F5) para ver el traslado reflejado.
+  const {
+    data: cajaActiva = null,
+    isLoading: loading,
+    error: queryError,
+    refetch,
+  } = useQuery({
+    queryKey: [QueryKeys.CAJA_ACTIVA, 'cierre-view', cierreId ?? 'activa'],
+    queryFn: async () => {
       // Si hay cierreId, cargar ese cierre específico para edición
       if (cierreId) {
-        setEsEdicion(true)
-        // Cargar el cierre completo con su resumen desde el endpoint específico
         const response = await cajaApi.obtenerCierre(cierreId)
-
-        console.log('📦 Respuesta de obtenerCierre:', response)
-
         if (response.data?.data) {
-          console.log('✅ Caja cargada:', response.data.data)
-          console.log('📊 Estado de la caja:', response.data.data.estado)
-          setCajaActiva(response.data.data)
-        } else {
-          setError('No se encontró el cierre')
-          if (!options?.optional) {
-            message.error('No se encontró el cierre')
-          }
+          return response.data.data
         }
-      } else {
-        // Cargar caja activa usando el endpoint refactorizado
-        const response: any = await cierreCajaApi.obtenerCajaActiva()
-
-        console.log('📦 Respuesta de obtenerCajaActiva:', response)
-
-        if (response.success && response.data) {
-          console.log('✅ Caja activa cargada:', response.data)
-          console.log('📊 Estado de la caja:', response.data.estado)
-          setCajaActiva(response.data)
-        } else {
-          const errorMsg = response.error?.message || response.message || 'No tienes una caja abierta o hubo un problema al consultarla'
-          setError(errorMsg)
-          // Solo mostrar error si no es opcional
-          if (!options?.optional) {
-            message.warning(errorMsg)
-          }
-        }
+        throw new Error('No se encontró el cierre')
       }
-    } catch (err: any) {
-      const errorMsg = err.response?.data?.message || 'Error al cargar caja'
-      setError(errorMsg)
-      console.error('Error al cargar caja:', err)
-      // Solo mostrar error si no es opcional
-      if (!options?.optional) {
-        message.error(errorMsg)
+
+      // Cargar caja activa usando el endpoint refactorizado
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response: any = await cierreCajaApi.obtenerCajaActiva()
+      if (response.success && response.data) {
+        return response.data
       }
-    } finally {
-      setLoading(false)
-    }
-  }
+      throw new Error(
+        response.error?.message || response.message || 'No tienes una caja abierta o hubo un problema al consultarla'
+      )
+    },
+    refetchOnWindowFocus: false,
+    retry: false,
+  })
+
+  const error = queryError ? (queryError as Error).message : null
 
   useEffect(() => {
-    cargarCaja()
-  }, [cierreId])
+    if (error && !options?.optional) {
+      message.warning(error)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [error])
 
   return {
     loading,
     cajaActiva,
     error,
     esEdicion,
-    recargar: cargarCaja,
+    recargar: refetch,
   }
 }
