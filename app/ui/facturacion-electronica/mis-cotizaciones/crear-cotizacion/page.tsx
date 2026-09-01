@@ -25,10 +25,12 @@ export default function CrearCotizacion() {
   // const canAccess = true // Temporal para desarrollo
 
   return (
-    <ContenedorGeneral className='h-full'>
-      <Suspense fallback={<ComponentLoading />}>
-        <HeaderCrearCotizacion />
-      </Suspense>
+    <ContenedorGeneral className='h-full min-h-0 xl:overflow-hidden'>
+      <div className='w-full shrink-0'>
+        <Suspense fallback={<ComponentLoading />}>
+          <HeaderCrearCotizacion />
+        </Suspense>
+      </div>
       <Suspense fallback={<ComponentLoading />}>
         <BodyCotizar />
       </Suspense>

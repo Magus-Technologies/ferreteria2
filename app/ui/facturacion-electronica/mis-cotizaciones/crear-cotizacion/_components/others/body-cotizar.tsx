@@ -259,15 +259,15 @@ export default function BodyCotizar() {
       <FormBase<FormCreateCotizacion>
         form={form}
         name="cotizacion"
-        className="flex gap-6 size-full"
+        className='flex flex-col xl:flex-row gap-4 xl:gap-6 w-full xl:flex-1 xl:min-h-0'
         onFinish={handleSubmit}
         onFinishFailed={() => {
           message.error('Por favor completa todos los campos requeridos');
         }}
         disabled={loading}
       >
-        <div className="flex-1 flex flex-col gap-6 min-w-0 min-h-0">
-          <div className="flex-1 min-h-0">
+        <div className='xl:flex-1 flex flex-col gap-0 min-w-0 xl:min-h-0'>
+          <div className='xl:flex-1 xl:min-h-0 min-w-0'>
             <FormTableCotizar />
           </div>
           <FormCrearCotizacion
@@ -276,7 +276,9 @@ export default function BodyCotizar() {
             initialRecomendadoPor={cotizacionActual?.recomendado_por ?? undefined}
           />
         </div>
-        <CardsInfoCotizacion form={form} />
+        <div className='w-full xl:w-auto'>
+          <CardsInfoCotizacion form={form} />
+        </div>
       </FormBase>
     </>
   );

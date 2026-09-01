@@ -100,20 +100,32 @@ export default function FiltersMisCotizaciones() {
       <TituloModulos
         title="Mis Cotizaciones"
         icon={<MdPointOfSale className="text-amber-600" />}
+        // `extra` renderiza DENTRO del bloque del titulo, pegado al texto.
+        // Como `children` va al area de acciones y el contenedor usa
+        // justify-between, ahi las fechas quedaban tiradas al extremo derecho.
+        extra={
+          <ConfigurableElement
+            componentId="mis-cotizaciones.filtro-rango-fechas"
+            label="Campo Fecha Desde y Hasta"
+          >
+            {/* Sin `hidden lg:grid` a proposito: esta vista NO tiene drawer
+                movil, asi que ocultarlas en pantallas chicas dejaria la
+                cotizacion sin filtro de fechas. Al envolver, bajan solas. */}
+            <div className="grid shrink-0 grid-cols-2 gap-1 text-sm font-normal lg:ml-4">
+              <FilterDateRangeFields
+                fromName="desde"
+                toName="hasta"
+                fromLabel="Desde:"
+                fromFieldClassName="!w-[136px]"
+                toFieldClassName="!w-[136px]"
+                itemClassName="flex min-w-0 items-center gap-1"
+                fromPlaceholder="Fecha"
+              />
+            </div>
+          </ConfigurableElement>
+        }
       >
         <div className="flex items-center gap-2 flex-wrap">
-          <SelectAlmacen
-            propsForm={{
-              name: "almacen_id",
-              hasFeedback: false,
-              className: "!min-w-[220px] !w-[220px] !max-w-[220px]",
-              rules: [{ required: true, message: "" }],
-            }}
-            className="w-full"
-            formWithMessage={false}
-            form={form}
-          />
-
           <ButtonBase
             color="success"
             size="md"
@@ -128,14 +140,9 @@ export default function FiltersMisCotizaciones() {
 
       {/* Filtros con labels inline */}
       <div className="mt-4 space-y-2.5">
-        {/* Fila 1: Fecha Desde, Hasta, Cliente */}
+        {/* Fila 1: Cliente */}
         <div className="flex items-center gap-3 flex-wrap">
-          <FilterDateRangeFields
-            fromName="desde"
-            toName="hasta"
-            fromFieldClassName="!w-[150px]"
-            toFieldClassName="!w-[150px]"
-          />
+         
           <div className="flex items-center gap-2">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
               Cliente:

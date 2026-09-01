@@ -88,9 +88,9 @@ export default function FormCrearCotizacion({
       </Form.Item>
 
       {/* Fila 1: Fecha Proforma, Vendedor, N° Cotización, Moneda */}
-      <div className="flex gap-6">
+      <div className="flex flex-col sm:flex-row flex-wrap gap-x-3 gap-y-0 sm:gap-x-4 lg:gap-x-6 lg:-mb-6">
         {/* Fecha de la cotización (REQUERIDO) - Se usa como fecha y fecha_proforma */}
-        <LabelBase label="Fecha Cotización:" classNames={{ labelParent: "mb-6" }}>
+        <LabelBase label="Fecha Cotización:" classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}>
           <ConfigurableElement componentId="field-fecha-cotizacion" label="Campo Fecha Cotización">
             <DatePickerBase
               propsForm={{
@@ -116,7 +116,7 @@ export default function FormCrearCotizacion({
           </ConfigurableElement>
         </LabelBase>
 
-        <LabelBase label="Vendedor:" classNames={{ labelParent: "mb-6" }}>
+        <LabelBase label="Vendedor:" classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}>
           <ConfigurableElement componentId="field-vendedor-cotizacion" label="Campo Vendedor">
             <InputBase
               propsForm={{
@@ -131,7 +131,7 @@ export default function FormCrearCotizacion({
         </LabelBase>
 
         {/* N° Cotización: Generado automáticamente (COT-2025-001) */}
-        <LabelBase label="N° Cotización:" classNames={{ labelParent: "mb-6" }}>
+        <LabelBase label="N° Cotización:" classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}>
           <ConfigurableElement componentId="field-numero-cotizacion" label="Campo N° Cotización">
             <InputBase
               propsForm={{
@@ -153,7 +153,7 @@ export default function FormCrearCotizacion({
             />
           </ConfigurableElement>
         </LabelBase>
-        <LabelBase label="T.Doc:" classNames={{ labelParent: "mb-6" }}>
+        <LabelBase label="T.Doc:" classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}>
           <ConfigurableElement componentId="field-tipo-documento-cotizacion" label="Campo Tipo Documento">
             <SelectTipoDocumento
               propsForm={{
@@ -169,7 +169,7 @@ export default function FormCrearCotizacion({
         </LabelBase>
 
         {/* TODO: Agregar campo Tipo de Moneda cuando sea necesario */}
-        {/* <LabelBase label="Moneda:" classNames={{ labelParent: "mb-6" }}>
+        {/* <LabelBase label="Moneda:" classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}>
           <select
             className="h-[40px] px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-rose-500 !min-w-[120px] !w-[120px] !max-w-[120px]"
             onChange={(e) => {
@@ -184,15 +184,22 @@ export default function FormCrearCotizacion({
       </div>
 
       {/* Fila 2: f.pago, n dias, f vence */}
-      <div className="flex gap-6">
+      <div className="flex flex-col sm:flex-row flex-wrap gap-x-3 gap-y-0 sm:gap-x-4 lg:gap-x-6 lg:-mb-6">
         <FormFormaDePago
           form={form}
           fieldNames={{ numeroDias: "vigencia_dias" }}
           labelNumeroDias="N° DIAS:"
         />
 
+        {/*
+          "Reservar Stock" y "Vence Reserva" van en su propio contenedor: el
+          segundo solo tiene sentido con el primero activo, asi que se agrupan
+          para que la fila no los separe al envolverse (antes "FormaDePago"
+          empujaba la fecha a la linea de abajo, lejos de su checkbox).
+        */}
+        <div className="flex flex-wrap items-center gap-x-3 sm:gap-x-4 lg:gap-x-6">
         {/* Checkbox: Reservar Stock */}
-        <LabelBase label="Opciones:" classNames={{ labelParent: "mb-6" }}>
+        <LabelBase label="" classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}>
           <ConfigurableElement componentId="field-reservar-stock-cotizacion" label="Checkbox Reservar Stock">
             <Form.Item
               name="reservar_stock"
@@ -201,7 +208,7 @@ export default function FormCrearCotizacion({
               className="mb-0"
             >
               <Checkbox className="text-sm font-medium text-gray-700 cursor-pointer select-none">
-                📦 Reservar Stock
+                 Reservar Stock
               </Checkbox>
             </Form.Item>
           </ConfigurableElement>
@@ -216,7 +223,7 @@ export default function FormCrearCotizacion({
               form.setFieldValue("fecha_vencimiento_reserva", dayjs().endOf("day"));
             }
             return (
-              <LabelBase label="Vence Reserva:" classNames={{ labelParent: "mb-6" }}>
+              <LabelBase label="Vence Reserva:" classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}>
                 <ConfigurableElement componentId="field-fecha-vencimiento-reserva-cotizacion" label="Campo Fecha Vencimiento Reserva">
                   <DatePickerBase
                     propsForm={{
@@ -238,11 +245,12 @@ export default function FormCrearCotizacion({
             );
           }}
         </Form.Item>
+        </div>
       </div>
 
       {/* Fila 3: DNI/RUC (con lupa), Cliente y direccion*/}
-      <div className="flex gap-6 items-end">
-        <LabelBase label="DNI/RUC:" classNames={{ labelParent: "mb-6" }}>
+      <div className="flex flex-wrap gap-x-3 gap-y-0 sm:gap-x-4 lg:gap-x-6 items-end lg:-mb-6">
+        <LabelBase label="DNI/RUC:" classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}>
           <ConfigurableElement componentId="field-cliente-cotizacion" label="Campo Cliente (DNI/RUC)">
             <SelectClientes
               form={form}
@@ -295,7 +303,7 @@ export default function FormCrearCotizacion({
           </ConfigurableElement>
         </LabelBase>
 
-        <LabelBase label="Cliente:" classNames={{ labelParent: "mb-6" }}>
+        <LabelBase label="Cliente:" classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}>
           <ConfigurableElement componentId="field-nombre-cliente-cotizacion" label="Campo Nombre Cliente">
             <InputBase
               propsForm={{
@@ -311,38 +319,50 @@ export default function FormCrearCotizacion({
           </ConfigurableElement>
         </LabelBase>
 
-        <LabelBase label="Dirección:" classNames={{ labelParent: "mb-6" }}>
+        <LabelBase
+          label="Dirección:"
+          classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}
+          className="w-full sm:w-auto sm:flex-1 min-w-[280px]"
+        >
           <ConfigurableElement componentId="field-direccion-cotizacion" label="Campo Dirección">
             <InputBase
               propsForm={{
                 name: "direccion",
                 hasFeedback: false,
-                className: "!min-w-[500px] !w-[500px] !max-w-[500px]",
               }}
               placeholder="Dirección del cliente"
               prefix={<BsGeoAltFill className="text-cyan-600 mx-1" />}
-             
+              className="w-full"
             />
           </ConfigurableElement>
         </LabelBase>
-        
-        <div className="mb-6">
+
+        {/* El selector D1..DN va pegado a Direccion: es el que decide QUE
+            direccion se muestra en ese campo. Mismo margen que el resto de la
+            fila para que quede alineado. */}
+        <div className="mb-3 sm:mb-4 lg:mb-6 shrink-0">
           <RadioDireccionCliente form={form} />
         </div>
       </div>
 
       {/* Fila 4: Telefono, Email, Recomendado por */}
-      <div className="flex gap-6">
-        <LabelBase label="Tele/Cel:" classNames={{ labelParent: "mb-6" }}>
+      <div className="flex flex-col sm:flex-row flex-wrap gap-x-3 gap-y-0 sm:gap-x-4 lg:gap-x-6 lg:-mb-6">
+        <LabelBase
+          label="Tele/Cel:"
+          classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}
+          className="w-full sm:w-auto"
+        >
           <ConfigurableElement componentId="field-telefono-cotizacion" label="Campo Teléfono">
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-row flex-wrap items-center gap-x-2 gap-y-0">
               <InputBase
                 propsForm={{
                   name: "telefono",
                   hasFeedback: false,
-                  className: "!min-w-[150px] !w-[150px] !max-w-[150px] !mb-0",
+                  className:
+                    "w-full sm:!min-w-[130px] sm:!w-[130px] sm:!max-w-[130px] !mb-0",
                 }}
                 placeholder="Teléfono"
+                className="w-full"
                 readOnly
                 uppercase={false}
               />
@@ -352,7 +372,7 @@ export default function FormCrearCotizacion({
           </ConfigurableElement>
         </LabelBase>
 
-        <LabelBase label="Email:" classNames={{ labelParent: "mb-6" }}>
+        <LabelBase label="Email:" classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}>
           <ConfigurableElement componentId="field-email-cotizacion" label="Campo Email">
             <InputBase
               propsForm={{
@@ -367,7 +387,7 @@ export default function FormCrearCotizacion({
           </ConfigurableElement>
         </LabelBase>
 
-        <LabelBase label="Recomendado por:" classNames={{ labelParent: "mb-6" }}>
+        <LabelBase label="Recomendado por:" classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}>
           <ConfigurableElement componentId="field-recomendado-cotizacion" label="Campo Recomendado Por">
             <SelectClientes
               form={form}
