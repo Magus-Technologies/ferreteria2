@@ -27,7 +27,13 @@ export default function MisProveedoresPage() {
 
   return (
     <ContenedorGeneral>
-      <div className="flex flex-col gap-4 w-full h-[calc(100vh-120px)]">
+      {/*
+        Los 155px que se restan son el alto de lo que va ARRIBA de este bloque
+        (header de la app + padding del contenedor). Estaban en 120px, o sea
+        ~35px de menos: el div terminaba pasado el borde inferior y la página
+        entera scrolleaba. Es el único número a tocar si sobra o falta aire.
+      */}
+      <div className="flex flex-col gap-3 w-full h-[calc(100vh-155px)]">
         <ConfigurableElement componentId="mis-proveedores.filtros" label="Filtros de Proveedores">
           <FiltersMisProveedores />
         </ConfigurableElement>
@@ -45,7 +51,7 @@ export default function MisProveedoresPage() {
             </ConfigurableElement>
           </div>
           <ConfigurableElement componentId="mis-proveedores.cards-info" label="Tarjetas de Resumen de Proveedores" noFullWidth>
-            <div className="w-64 flex-shrink-0">
+            <div className="w-64 flex-shrink-0 min-h-0 overflow-y-auto">
               <CardsInfoProveedores />
             </div>
           </ConfigurableElement>

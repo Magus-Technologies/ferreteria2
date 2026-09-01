@@ -179,6 +179,25 @@ export default function FiltersMisEntregas() {
           <TituloModulos
             title="Mis Entregas"
             icon={<FaTruck className="text-amber-600" />}
+            extra={
+              <ConfigurableElement
+                componentId="mis-entregas.filtro-rango-fechas"
+                label="Filtro Rango Fechas"
+              >
+                <div className="hidden shrink-0 grid-cols-2 gap-1 text-sm font-normal lg:ml-4 lg:grid">
+                  <FilterDateRangeFields
+                    fromName="fecha_desde"
+                    toName="fecha_hasta"
+                    fromLabel="Desde:"
+                    fromFieldClassName="!w-[136px]"
+                    toFieldClassName="!w-[136px]"
+                    itemClassName="flex min-w-0 items-center gap-1"
+                    fromPlaceholder="Fecha"
+                    inputReadOnly
+                  />
+                </div>
+              </ConfigurableElement>
+            }
           />
           {esAdmin && (
             <Button
@@ -210,7 +229,7 @@ export default function FiltersMisEntregas() {
             componentId="mis-entregas.filtro-rango-fechas"
             label="Filtro Rango Fechas"
           >
-            <div className="col-span-4 grid grid-cols-2 gap-3">
+            <div className="col-span-4 grid grid-cols-2 gap-3 lg:hidden">
               <FilterDateRangeFields
                 fromName="fecha_desde"
                 toName="fecha_hasta"

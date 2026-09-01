@@ -4,6 +4,8 @@ import { Form, Select, Drawer, Badge, Input } from 'antd'
 import { FaSearch, FaFilter, FaPlusCircle } from 'react-icons/fa'
 import { FaWrench, FaCalendar } from 'react-icons/fa6'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
+import FilterDateRangeFields from '~/app/_components/filters/filter-date-range-fields'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import ButtonBase from '~/components/buttons/button-base'
 import FormBase from '~/components/form/form-base'
 import LabelBase from '~/components/form/label-base'
@@ -75,29 +77,29 @@ export default function FiltersMisOS({
       <TituloModulos
         title="Mis Órdenes de Servicio"
         icon={<FaWrench className="text-emerald-600" />}
+        extra={
+          <ConfigurableElement
+            componentId="mis-ordenes-de-servicio.filtro-rango-fechas"
+            label="Campo Fecha Desde y Hasta"
+          >
+            <div className="hidden shrink-0 grid-cols-2 gap-1 text-sm font-normal lg:ml-4 lg:grid">
+              <FilterDateRangeFields
+                fromName="desde"
+                toName="hasta"
+                fromLabel="Desde:"
+                fromFieldClassName="!w-[136px]"
+                toFieldClassName="!w-[136px]"
+                itemClassName="flex min-w-0 items-center gap-1"
+                fromPlaceholder="Fecha"
+              />
+            </div>
+          </ConfigurableElement>
+        }
       />
 
       {/* Desktop filters */}
       <div className="flex items-center justify-between w-full mt-2 gap-2 flex-wrap">
         <div className="hidden lg:flex items-center gap-1.5 flex-nowrap shrink-0">
-          <div className="flex items-center gap-1 shrink-0">
-            <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Desde:</span>
-            <DatePickerBase
-              propsForm={{ name: "desde", hasFeedback: false, className: "!mb-0" }}
-              className="!w-[140px]"
-              prefix={<FaCalendar size={12} className="text-emerald-600" />}
-            />
-          </div>
-
-          <div className="flex items-center gap-1 shrink-0">
-            <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Hasta:</span>
-            <DatePickerBase
-              propsForm={{ name: "hasta", hasFeedback: false, className: "!mb-0" }}
-              className="!w-[140px]"
-              prefix={<FaCalendar size={12} className="text-emerald-600" />}
-            />
-          </div>
-
           <div className="flex items-center gap-1 shrink-0">
             <Form.Item name="search" className="!mb-0">
               <Input

@@ -4,8 +4,40 @@ import { useQuery } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { proveedorApi } from '~/lib/api/proveedor'
 import { proveedorCalificacionApi } from '~/lib/api/proveedor-calificacion'
-import { FaCheckCircle, FaTimesCircle, FaTruck, FaExclamationTriangle, FaUserPlus, FaStar } from 'react-icons/fa'
+import { FaCheckCircle, FaTimesCircle, FaExclamationTriangle, FaUserPlus, FaStar } from 'react-icons/fa'
 import { useStoreProveedorSeleccionado } from '../../_store/store-proveedor-seleccionado'
+
+/**
+ * Tarjeta de conteo, compacta y horizontal.
+ *
+ * Antes cada una era vertical (icono y etiqueta arriba, número debajo) y medía
+ * unos 92px. Siendo SIETE, la columna pasaba los 790px y desbordaba el alto de
+ * la pantalla: ese era el scroll.
+ *
+ * En horizontal el icono comparte línea con el texto y deja de sumar altura
+ * propia: cada tarjeta ronda los 60px y las siete entran de sobra.
+ */
+function CardConteo({
+  title,
+  value,
+  icon,
+  valueColor,
+}: {
+  title: string
+  value: number
+  icon: React.ReactNode
+  valueColor: string
+}) {
+  return (
+    <div className="flex items-center gap-3 bg-white border border-slate-200 rounded-lg px-3 py-2.5 shadow-sm transition-all hover:shadow-md">
+      <div className="flex-shrink-0">{icon}</div>
+      <div className="text-sm text-slate-600 font-medium flex-1 min-w-0 truncate">
+        {title}
+      </div>
+      <div className={`text-xl font-bold ${valueColor}`}>{value}</div>
+    </div>
+  )
+}
 
 export default function CardsInfoProveedores() {
   const { proveedorId } = useStoreProveedorSeleccionado()
@@ -61,69 +93,56 @@ export default function CardsInfoProveedores() {
   }
 
   return (
-    <div className="flex flex-col gap-3 w-full">
+    <div className="flex flex-col gap-2 w-full">
       {/* Sección de Estado */}
       <div className="text-xs font-bold text-slate-600 uppercase tracking-wide px-1">Estado</div>
-      
-      <div className="bg-white border border-slate-200 rounded-lg p-4">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <FaCheckCircle className="text-emerald-600" size={16} />
-          <div className="text-sm text-slate-600 font-medium">Activos</div>
-        </div>
-        <div className="text-2xl font-bold text-emerald-600 text-center">{estadisticas.activos}</div>
-      </div>
 
-      <div className="bg-white border border-slate-200 rounded-lg p-4">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <FaTimesCircle className="text-red-600" size={16} />
-          <div className="text-sm text-slate-600 font-medium">Inactivos</div>
-        </div>
-        <div className="text-2xl font-bold text-red-600 text-center">{estadisticas.inactivos}</div>
-      </div>
-
-      <div className="bg-white border border-slate-200 rounded-lg p-4">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <FaUserPlus className="text-cyan-600" size={16} />
-          <div className="text-sm text-slate-600 font-medium">Nuevos (30d)</div>
-        </div>
-        <div className="text-2xl font-bold text-cyan-600 text-center">{estadisticas.nuevos}</div>
-      </div>
+      <CardConteo
+        title="Activos"
+        value={estadisticas.activos}
+        icon={<FaCheckCircle className="text-emerald-600" size={16} />}
+        valueColor="text-emerald-600"
+      />
+      <CardConteo
+        title="Inactivos"
+        value={estadisticas.inactivos}
+        icon={<FaTimesCircle className="text-red-600" size={16} />}
+        valueColor="text-red-600"
+      />
+      <CardConteo
+        title="Nuevos (30d)"
+        value={estadisticas.nuevos}
+        icon={<FaUserPlus className="text-cyan-600" size={16} />}
+        valueColor="text-cyan-600"
+      />
 
       {/* Sección de Calificaciones */}
-      <div className="text-xs font-bold text-slate-600 uppercase tracking-wide px-1 mt-4">Calificaciones</div>
+      <div className="text-xs font-bold text-slate-600 uppercase tracking-wide px-1 mt-2">Calificaciones</div>
 
-      <div className="bg-white border border-slate-200 rounded-lg p-4">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <FaStar className="text-yellow-500" size={16} />
-          <div className="text-sm text-slate-600 font-medium">Excelente</div>
-        </div>
-        <div className="text-2xl font-bold text-yellow-500 text-center">{calificacionesCount.excelente}</div>
-      </div>
-
-      <div className="bg-white border border-slate-200 rounded-lg p-4">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <FaCheckCircle className="text-green-600" size={16} />
-          <div className="text-sm text-slate-600 font-medium">Bueno</div>
-        </div>
-        <div className="text-2xl font-bold text-green-600 text-center">{calificacionesCount.bueno}</div>
-      </div>
-
-      <div className="bg-white border border-slate-200 rounded-lg p-4">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <FaExclamationTriangle className="text-orange-500" size={16} />
-          <div className="text-sm text-slate-600 font-medium">Regular</div>
-        </div>
-        <div className="text-2xl font-bold text-orange-500 text-center">{calificacionesCount.regular}</div>
-      </div>
-
-      <div className="bg-white border border-slate-200 rounded-lg p-4">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <FaExclamationTriangle className="text-orange-600" size={16} />
-          <div className="text-sm text-slate-600 font-medium">Problemáticos</div>
-        </div>
-        <div className="text-2xl font-bold text-orange-600 text-center">{calificacionesCount.problematicos}</div>
-      </div>
-
+      <CardConteo
+        title="Excelente"
+        value={calificacionesCount.excelente}
+        icon={<FaStar className="text-yellow-500" size={16} />}
+        valueColor="text-yellow-500"
+      />
+      <CardConteo
+        title="Bueno"
+        value={calificacionesCount.bueno}
+        icon={<FaCheckCircle className="text-green-600" size={16} />}
+        valueColor="text-green-600"
+      />
+      <CardConteo
+        title="Regular"
+        value={calificacionesCount.regular}
+        icon={<FaExclamationTriangle className="text-orange-500" size={16} />}
+        valueColor="text-orange-500"
+      />
+      <CardConteo
+        title="Problemáticos"
+        value={calificacionesCount.problematicos}
+        icon={<FaExclamationTriangle className="text-orange-600" size={16} />}
+        valueColor="text-orange-600"
+      />
     </div>
   )
 }

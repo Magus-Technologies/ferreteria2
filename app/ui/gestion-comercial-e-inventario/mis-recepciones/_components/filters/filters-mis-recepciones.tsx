@@ -22,6 +22,7 @@ import SelectProveedores from '~/app/_components/form/selects/select-proveedores
 import SelectTipoDocumento from '~/app/_components/form/selects/select-tipo-documento'
 import { useDebounce } from 'use-debounce'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
+import FilterDateRangeFields from '~/app/_components/filters/filter-date-range-fields'
 
 interface ValuesFiltersMisRecepciones {
   almacen_recepcion_id: number
@@ -97,30 +98,33 @@ export default function FiltersMisRecepciones() {
       <TituloModulos
         title='Mis Recepciones'
         icon={<FaTruckLoading className='text-cyan-600' />}
+        extra={
+          <ConfigurableElement
+            componentId='mis-recepciones.filtro-rango-fechas'
+            label='Campo Fecha Desde y Hasta'
+          >
+            <div className='hidden shrink-0 grid-cols-2 gap-1 text-sm font-normal lg:ml-4 lg:grid'>
+              <FilterDateRangeFields
+                fromName='desde'
+                toName='hasta'
+                fromLabel='Desde:'
+                fromFieldClassName='!w-[136px]'
+                toFieldClassName='!w-[136px]'
+                itemClassName='flex min-w-0 items-center gap-1'
+                fromPlaceholder='Fecha'
+              />
+            </div>
+          </ConfigurableElement>
+        }
       />
       <ConfigurableElement componentId='mis-recepciones.filtros' label='Filtros de Recepciones'>
       <div className='flex items-center gap-4 mt-4'>
-        <LabelBase label='Almacén:'>
-          <SelectAlmacen
-            propsForm={{
-              name: 'almacen_recepcion_id',
-              hasFeedback: false,
-              className: '!min-w-[220px] !w-[220px] !max-w-[220px]',
-              rules: [{ required: true, message: '' }],
-            }}
-            className='w-full'
-            formWithMessage={false}
-            form={form}
-            afecta_store={false}
-            extraOptions={[{ value: ALMACEN_TODOS, label: 'Todos los almacenes' }]}
-            onChange={value => {
-              // Mantener sincronía con el store global solo al elegir un almacén real.
-              if (typeof value === 'number' && value !== ALMACEN_TODOS) {
-                setAlmacenId(value)
-              }
-            }}
-          />
-        </LabelBase>
+    
+        {/* Las fechas viven arriba, junto al titulo, desde `lg`. Aca se
+            mantienen para pantallas chicas, donde el encabezado las
+            oculta. Comparten `name` con las de arriba: antd las deja
+            sincronizadas, es un solo valor. */}
+        <div className='flex items-center gap-4 lg:hidden'>
         <LabelBase label='Desde:'>
           <DatePickerBase
             propsForm={{
@@ -147,35 +151,14 @@ export default function FiltersMisRecepciones() {
             allowClear
           />
         </LabelBase>
-        <LabelBase label='Usuario:'>
-          <SelectUsuarios
-            propsForm={{
-              name: 'user_id',
-              hasFeedback: false,
-              className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
-            }}
-            className='w-full'
-            formWithMessage={false}
-            allowClear
-          />
-        </LabelBase>
-        <LabelBase label='Estado:'>
-          <SelectEstado
-            propsForm={{
-              name: 'estado',
-              hasFeedback: false,
-              className: '!min-w-[120px] !w-[120px] !max-w-[120px]',
-            }}
-            className='w-full'
-            formWithMessage={false}
-          />
-        </LabelBase>
+        </div>
+      
         <LabelBase label='Proveedor:'>
           <SelectProveedores
             propsForm={{
               name: 'proveedor_id',
               hasFeedback: false,
-              className: '!min-w-[200px] !w-[200px] !max-w-[200px]',
+              className: '!min-w-[300px] !w-[300px] !max-w-[300px]',
             }}
             className='w-full'
             classIconSearch=''
@@ -191,6 +174,29 @@ export default function FiltersMisRecepciones() {
                 setSearchValue('')
               }
             }}
+          />
+        </LabelBase>
+          <LabelBase label='Usuario:'>
+          <SelectUsuarios
+            propsForm={{
+              name: 'user_id',
+              hasFeedback: false,
+              className: '!min-w-[250px] !w-[250px] !max-w-[250px]',
+            }}
+            className='w-full'
+            formWithMessage={false}
+            allowClear
+          />
+        </LabelBase>
+        <LabelBase label='Estado:'>
+          <SelectEstado
+            propsForm={{
+              name: 'estado',
+              hasFeedback: false,
+              className: '!min-w-[120px] !w-[120px] !max-w-[120px]',
+            }}
+            className='w-full'
+            formWithMessage={false}
           />
         </LabelBase>
         <LabelBase label='Tipo Doc.:'>

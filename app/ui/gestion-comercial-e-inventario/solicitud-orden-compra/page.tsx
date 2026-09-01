@@ -90,9 +90,22 @@ export default function SolicitudOrdenCompra() {
         <FiltersSolicitudOC onNueva={() => setModalNuevoOpen(true)} />
       </Suspense>
 
-      {/* ═══════ TABLA DE SOLICITUDES ═══════ */}
-      <div className="w-full mt-4">
-        <div className="h-[450px]">
+      {/*
+        Las dos tablas se reparten lo que queda de pantalla en vez de tener alto
+        fijo (eran 450px + 250px + margenes = 732px, y con los filtros arriba el
+        contenido pasaba el viewport: de ahi el scroll de la pagina).
+
+        Cada tabla scrollea internamente. Los 230px que se restan son el alto de
+        lo que va ARRIBA (header de la app, padding, titulo y fila de filtros):
+        es el unico numero a tocar si sobra o falta aire.
+
+        La lista va 2/3 y los productos 1/3, respetando la proporcion original.
+      */}
+      <div className="w-full mt-4 flex flex-col gap-4 h-[calc(100vh-230px)] min-h-[520px]">
+        {/* ═══════ TABLA DE SOLICITUDES ═══════ */}
+        {/* min-h-0: sin esto un hijo flex no se encoge por debajo de su
+            contenido y el reparto de altura no se respeta. */}
+        <div className="flex-[2] min-h-0">
           <Suspense fallback={<ComponentLoading />}>
             <TableSolicitudOC
               id="g-c-e-i.solicitud-orden-compra.lista"
@@ -116,11 +129,9 @@ export default function SolicitudOrdenCompra() {
             />
           </Suspense>
         </div>
-      </div>
 
-      {/* ═══════ TABLA DE PRODUCTOS SOLICITADOS ═══════ */}
-      <div className="w-full mt-4">
-        <div className="h-[250px]">
+        {/* ═══════ TABLA DE PRODUCTOS SOLICITADOS ═══════ */}
+        <div className="flex-1 min-h-0">
           <TableProductosSolicitudOC
             id="g-c-e-i.solicitud-orden-compra.productos"
             productos={productosRowData}

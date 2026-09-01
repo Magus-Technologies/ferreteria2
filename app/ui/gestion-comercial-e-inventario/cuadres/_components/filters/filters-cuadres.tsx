@@ -2,6 +2,10 @@
 
 import { Form } from "antd";
 import { FaSearch, FaCalendarAlt } from "react-icons/fa";
+import { FaCalculator } from "react-icons/fa6";
+import TituloModulos from "~/app/_components/others/titulo-modulos";
+import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
+import FilterDateRangeFields from "~/app/_components/filters/filter-date-range-fields";
 import { useState } from "react";
 import FormBase from "~/components/form/form-base";
 import LabelBase from "~/components/form/label-base";
@@ -71,7 +75,37 @@ export default function FiltersCuadres() {
                 onFinish={handleSearch}
                 className="w-full"
             >
-                <div className="flex flex-wrap gap-x-3 gap-y-2 items-center">
+                <TituloModulos
+                    title="Mis cuadres de Ingresos y Salidas"
+                    icon={<FaCalculator className="text-emerald-600" />}
+                    extra={
+                        <ConfigurableElement
+                            componentId="cuadres.filtro-rango-fechas"
+                            label="Campo Fecha Desde y Hasta"
+                        >
+                            <div className="hidden shrink-0 grid-cols-2 gap-1 text-sm font-normal lg:ml-4 lg:grid">
+                                <FilterDateRangeFields
+                                    fromName="desde"
+                                    toName="hasta"
+                                    fromLabel="Desde:"
+                                    fromFieldClassName="!w-[136px]"
+                                    toFieldClassName="!w-[136px]"
+                                    itemClassName="flex min-w-0 items-center gap-1"
+                                    fromPlaceholder="Fecha"
+                                />
+                            </div>
+                        </ConfigurableElement>
+                    }
+                />
+
+                <ConfigurableElement componentId="cuadres.filtros" label="Filtros de Cuadres">
+                <div className="mt-3 flex flex-wrap gap-x-3 gap-y-2 items-center">
+                    {/* Las fechas viven arriba junto al título desde `lg`. Acá se
+                        mantienen para pantallas chicas, donde el encabezado las
+                        oculta y —a diferencia de mis-ventas— no hay drawer que
+                        las reponga. Comparten `name` con las de arriba, así que
+                        antd las mantiene sincronizadas: es un solo valor. */}
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 lg:hidden">
                     <LabelBase label="Desde:" orientation="row" className="!text-[12px] font-semibold">
                         <DatePickerBase
                             propsForm={{ name: "desde", className: "!mb-0 w-[115px]" }}
@@ -90,34 +124,11 @@ export default function FiltersCuadres() {
                             formWithMessage={false}
                         />
                     </LabelBase>
-                    <LabelBase label="Sucursal:" orientation="row" className="!text-[12px] font-semibold">
-                        <SelectAlmacen
-                            propsForm={{ name: "almacen_id", className: "!mb-0 w-[145px]" }}
-                            className="!min-w-0 w-full !h-9"
-                            size="middle"
-                            sizeIcon={14}
-                            classNameIcon="text-emerald-600 mx-1"
-                            formWithMessage={false}
-                        />
-                    </LabelBase>
-                    <LabelBase label="Tipo:" orientation="row" className="!text-[12px] font-semibold">
-                        <SelectBase
-                            propsForm={{ name: "tipo", className: "!mb-0 w-[145px]" }}
-                            className="w-full !h-9"
-                            size="middle"
-                            options={[
-                                { label: 'TODOS', value: 'TODOS' },
-                                { label: 'AJUSTE', value: 'AJUSTE' },
-                                { label: 'CUADRE INVENTARIO', value: 'CUADRE INVENTARIO' },
-                                { label: 'MERMA', value: 'MERMA' },
-                                { label: 'PRESTAMO', value: 'PRESTAMO' },
-                            ]}
-                            formWithMessage={false}
-                        />
-                    </LabelBase>
+                    </div>
+
                     <LabelBase label="Producto:" orientation="row" className="!text-[12px] font-semibold">
                         <InputBase
-                            propsForm={{ name: "search_producto", className: "!mb-0 w-[145px]" }}
+                            propsForm={{ name: "search_producto", className: "!mb-0 w-[210px]" }}
                             placeholder="Buscar..."
                             className="w-full !h-9 bg-yellow-50/50"
                             formWithMessage={false}
@@ -140,7 +151,7 @@ export default function FiltersCuadres() {
                     </LabelBase>
                     <LabelBase label="Proveedor:" orientation="row" className="!text-[12px] font-semibold">
                         <InputBase
-                            propsForm={{ name: "search_proveedor", className: "!mb-0 w-[130px]" }}
+                            propsForm={{ name: "search_proveedor", className: "!mb-0 w-[190px]" }}
                             placeholder="F1..."
                             className="w-full !h-9 bg-yellow-50/50"
                             formWithMessage={false}
@@ -161,6 +172,21 @@ export default function FiltersCuadres() {
                             }}
                         />
                     </LabelBase>
+                    <LabelBase label="Tipo:" orientation="row" className="!text-[12px] font-semibold">
+                        <SelectBase
+                            propsForm={{ name: "tipo", className: "!mb-0 w-[145px]" }}
+                            className="w-full !h-9"
+                            size="middle"
+                            options={[
+                                { label: 'TODOS', value: 'TODOS' },
+                                { label: 'AJUSTE', value: 'AJUSTE' },
+                                { label: 'CUADRE INVENTARIO', value: 'CUADRE INVENTARIO' },
+                                { label: 'MERMA', value: 'MERMA' },
+                                { label: 'PRESTAMO', value: 'PRESTAMO' },
+                            ]}
+                            formWithMessage={false}
+                        />
+                    </LabelBase>
                     <LabelBase label="Observación:" orientation="row" className="!text-[12px] font-semibold">
                         <InputBase
                             propsForm={{ name: "observacion", className: "!mb-0 w-[145px]" }}
@@ -172,7 +198,7 @@ export default function FiltersCuadres() {
                     </LabelBase>
                     <LabelBase label="Estado:" orientation="row" className="!text-[12px] font-semibold">
                         <SelectBase
-                            propsForm={{ name: "estado_filtro", className: "!mb-0 w-[145px]" }}
+                            propsForm={{ name: "estado_filtro", className: "!mb-0 w-[125px]" }}
                             className="w-full !h-9"
                             size="middle"
                             options={[
@@ -192,6 +218,7 @@ export default function FiltersCuadres() {
                         <FaSearch size={13} /> Buscar
                     </ButtonBase>
                 </div>
+                </ConfigurableElement>
             </FormBase>
 
             <ModalProductoSearch

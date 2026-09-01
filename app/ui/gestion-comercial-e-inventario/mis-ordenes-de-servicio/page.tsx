@@ -301,8 +301,21 @@ export default function MisOrdenesDeServicio() {
       </Suspense>
       </ConfigurableElement>
 
-      <div className="w-full mt-4">
-        <div className="h-[450px]">
+      {/*
+        Las dos tablas se reparten lo que queda de pantalla en vez de tener alto
+        fijo (eran 450px + 250px + margenes = 732px, y con los filtros arriba el
+        contenido pasaba el viewport: de ahi el scroll de la pagina).
+
+        Cada tabla scrollea internamente, que es lo suyo. Los 230px que se restan
+        son el alto de lo que va ARRIBA (header de la app, padding, titulo y fila
+        de filtros): es el unico numero a tocar si sobra o falta aire.
+
+        La lista va 2/3 y el detalle 1/3, respetando la proporcion que tenian.
+      */}
+      <div className="w-full mt-4 flex flex-col gap-4 h-[calc(100vh-230px)] min-h-[520px]">
+        {/* min-h-0: sin esto un hijo flex no se encoge por debajo de su
+            contenido y el reparto de altura no se respeta. */}
+        <div className="flex-[2] min-h-0">
           <Suspense fallback={<ComponentLoading />}>
             <TableMisOS
               id="g-c-e-i.mis-ordenes-de-servicio.lista"
@@ -317,11 +330,9 @@ export default function MisOrdenesDeServicio() {
             />
           </Suspense>
         </div>
-      </div>
 
-      {/* ═══════ DETALLE DEL SERVICIO SELECCIONADO ═══════ */}
-      <div className="w-full mt-4">
-        <div className="h-[250px]">
+        {/* ═══════ DETALLE DEL SERVICIO SELECCIONADO ═══════ */}
+        <div className="flex-1 min-h-0">
           <TableWithTitle<RequerimientoInternoServicio>
             id="g-c-e-i.mis-ordenes-de-servicio.detalle-servicio"
             title="Servicio Requerido"

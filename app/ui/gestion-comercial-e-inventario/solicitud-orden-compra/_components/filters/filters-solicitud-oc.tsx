@@ -4,6 +4,7 @@ import { Form, Select, Drawer, Badge, Input } from 'antd'
 import { FaSearch, FaFilter, FaPlusCircle } from 'react-icons/fa'
 import { FaClipboardList, FaCalendar } from 'react-icons/fa6'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
+import FilterDateRangeFields from '~/app/_components/filters/filter-date-range-fields'
 import ButtonBase from '~/components/buttons/button-base'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import FormBase from '~/components/form/form-base'
@@ -91,6 +92,24 @@ export default function FiltersSolicitudOC({
       <TituloModulos
         title="Solicitudes de Compras"
         icon={<FaClipboardList className="text-emerald-600" />}
+        extra={
+          <ConfigurableElement
+            componentId="solicitud-orden-compra.filtro-rango-fechas"
+            label="Campo Fecha Desde y Hasta"
+          >
+            <div className="hidden shrink-0 grid-cols-2 gap-1 text-sm font-normal lg:ml-4 lg:grid">
+              <FilterDateRangeFields
+                fromName="desde"
+                toName="hasta"
+                fromLabel="Desde:"
+                fromFieldClassName="!w-[136px]"
+                toFieldClassName="!w-[136px]"
+                itemClassName="flex min-w-0 items-center gap-1"
+                fromPlaceholder="Fecha"
+              />
+            </div>
+          </ConfigurableElement>
+        }
       >
         <div className="hidden lg:flex items-center gap-4 ml-auto">
            <ConfigurableElement componentId="solicitud-orden-compra.boton-nueva" label="Botón Nueva Solicitud">
@@ -115,43 +134,6 @@ export default function FiltersSolicitudOC({
             />
           </Form.Item>
 
-          <div className="hidden lg:flex items-center gap-2">
-            <div className="flex items-center gap-1 shrink-0">
-              <span className="text-[11px] font-medium text-slate-500">Desde:</span>
-              <DatePickerBase
-                propsForm={{ name: 'desde', className: '!mb-0' }}
-                placeholder="Desde"
-                className="!w-[130px]"
-                size="middle"
-                prefix={<FaCalendar className="text-emerald-600" />}
-                allowClear
-              />
-            </div>
-
-            <div className="flex items-center gap-1 shrink-0">
-              <span className="text-[11px] font-medium text-slate-500">Hasta:</span>
-              <DatePickerBase
-                propsForm={{ name: 'hasta', className: '!mb-0' }}
-                placeholder="Hasta"
-                className="!w-[130px]"
-                size="middle"
-                prefix={<FaCalendar className="text-emerald-600" />}
-                allowClear
-              />
-            </div>
-
-            <div className="flex items-center gap-1 shrink-0">
-              <span className="text-[11px] font-medium text-slate-500">Prioridad:</span>
-              <Form.Item name="prioridad" className="!mb-0">
-                <Select
-                  placeholder="Todas"
-                  allowClear
-                  options={PRIORIDAD_OPTIONS}
-                  className="!w-[120px]"
-                />
-              </Form.Item>
-            </div>
-          </div>
 
           <ConfigurableElement componentId="solicitud-orden-compra.boton-buscar" label="Botón Buscar">
             <ButtonBase
