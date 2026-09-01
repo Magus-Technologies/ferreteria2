@@ -4,7 +4,7 @@ import { useState, useRef, useMemo } from "react";
 import { Modal, Form, InputNumber, Input, Select, App } from "antd";
 import { DollarOutlined } from "@ant-design/icons";
 import { trasladoBovedaApi } from "../../../../../../lib/api/traslado-boveda";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "~/lib/api";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 
@@ -40,6 +40,7 @@ export default function ModalTrasladoBoveda({
   aperturaCierreId,
 }: ModalTrasladoBovedaProps) {
   const { message, modal } = App.useApp();
+  const queryClient = useQueryClient();
   const [form] = Form.useForm<FormValues>();
   const [loading, setLoading] = useState(false);
   const [efectivoDisponible, setEfectivoDisponible] = useState<number>(0);
@@ -92,6 +93,18 @@ export default function ModalTrasladoBoveda({
       }
 
       message.success("Traslado a bóveda registrado exitosamente");
+
+      // Refrescar al toque todo lo que muestra el efecto del traslado — sin
+      // esto había que recargar la página (F5) para ver el cambio:
+      // - disponibles por vendedor/cajón (este mismo modal y el de bóveda)
+      // - caja activa / resumen del cierre (el esperado resta el traslado)
+      // - listas e historial de traslados a bóveda
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.SUB_CAJAS] });
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.CAJA_ACTIVA] });
+      queryClient.invalidateQueries({ queryKey: ["traslados-boveda"] });
+      queryClient.invalidateQueries({ queryKey: ["traslados-boveda-modal"] });
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.HISTORIAL_CIERRES] });
+
       form.resetFields();
       setEfectivoDisponible(0);
       efectivoDisponibleRef.current = 0;
