@@ -63,26 +63,29 @@ export default function FiltersMisGuias() {
       <TituloModulos
         title="Mis Guías"
         icon={<FaTruckLoading className="text-orange-600" />}
+        extra={
+          <ConfigurableElement
+            componentId="mis-guias.filtro-rango-fechas"
+            label="Campo Fecha Desde y Hasta"
+          >
+            <div className="hidden shrink-0 grid-cols-2 gap-1 text-sm font-normal lg:ml-4 lg:grid">
+              <FilterDateRangeFields
+                fromName="fecha_desde"
+                toName="fecha_hasta"
+                fromLabel="Desde:"
+                fromFieldClassName="!w-[136px]"
+                toFieldClassName="!w-[136px]"
+                itemClassName="flex min-w-0 items-center gap-1"
+                fromPlaceholder="Fecha"
+              />
+            </div>
+          </ConfigurableElement>
+        }
       />
 
       {/* Filtros Desktop */}
       <div className="mt-4">
         <div className="grid grid-cols-12 gap-x-3 gap-y-2.5">
-          {/* Fila 1 */}
-          <ConfigurableElement
-            componentId="mis-guias.filtro-rango-fechas"
-            label="Campo Fecha Desde y Hasta"
-          >
-            <div className="col-span-4 grid grid-cols-2 gap-3">
-              <FilterDateRangeFields
-                fromName="fecha_desde"
-                toName="fecha_hasta"
-                itemClassName="flex items-center gap-2"
-                fromPlaceholder="Fecha"
-              />
-            </div>
-          </ConfigurableElement>
-
           <div className="col-span-2 flex items-center gap-2">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
               Estado:
@@ -105,6 +108,39 @@ export default function FiltersMisGuias() {
                   { label: "Borrador", value: "BORRADOR" },
                   { label: "Emitida", value: "EMITIDA" },
                   { label: "Anulada", value: "ANULADA" },
+                ]}
+              />
+            </ConfigurableElement>
+          </div>
+
+          {/* Estado ante SUNAT, aparte del estado interno de arriba. Mismo
+              criterio que el filtro SUNAT de mis-ventas. */}
+          <div className="col-span-2 flex items-center gap-2">
+            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
+              SUNAT:
+            </label>
+            <ConfigurableElement
+              componentId="mis-guias.filtro-estado-sunat"
+              label="Campo Estado SUNAT"
+            >
+              <SelectBase
+                propsForm={{
+                  name: "estado_sunat",
+                  hasFeedback: false,
+                  className: "!w-full",
+                }}
+                className="w-full"
+                formWithMessage={false}
+                allowClear
+                placeholder="Todos"
+                options={[
+                  // 'sin_enviar' no es un valor de la columna: son las
+                  // electrónicas con sunat_estado NULL. Lo resuelve el backend.
+                  { label: "Sin enviar", value: "sin_enviar" },
+                  { label: "Procesando", value: "PENDIENTE" },
+                  { label: "Aceptado", value: "ACEPTADO" },
+                  { label: "Rechazado", value: "RECHAZADO" },
+                  { label: "Observado", value: "OBSERVADO" },
                 ]}
               />
             </ConfigurableElement>

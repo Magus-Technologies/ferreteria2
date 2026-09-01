@@ -26,6 +26,7 @@ type PartialCliente = Partial<Cliente>
 
 interface SelectClientesProps extends Omit<SelectBaseProps, 'onChange'> {
   classNameIcon?: string
+  classNameContainer?: string
   sizeIcon?: number
   onChange?: (value: number, cliente?: Cliente) => void
   onSearchChange?: (text: string) => void // Nuevo: callback para capturar el texto de búsqueda
@@ -57,6 +58,7 @@ export default function SelectClientes({
   placeholder = 'Buscar Cliente',
   variant = 'filled',
   classNameIcon = 'text-cyan-600 mx-1',
+  classNameContainer = '',
   sizeIcon = 18,
   showButtonCreate = false,
   classIconSearch = '',
@@ -368,7 +370,7 @@ setClienteSeleccionadoStore(undefined)
   }
 
   return (
-    <div className='flex items-center gap-4 w-full'>
+    <div className={`flex min-w-0 items-center gap-4 w-full ${classNameContainer}`}>
       <SelectBase
         ref={selectClientesRef}
         form={form}

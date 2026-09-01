@@ -25,6 +25,47 @@ function formatHora12(hora?: string | null): string | null {
   return `${hora12}:${m ?? '00'} ${sufijo}`
 }
 
+/** "HH:MM" → minutos desde medianoche. Null si no es una hora válida. */
+function aMinutos(hora?: string | null): number | null {
+  if (!hora) return null
+  const [h, m] = String(hora).split(':')
+  const hh = Number(h)
+  const mm = Number(m ?? 0)
+  if (Number.isNaN(hh)) return null
+  return hh * 60 + (Number.isNaN(mm) ? 0 : mm)
+}
+
+/** Minutos desde medianoche → "HH:MM". */
+function aHHMM(minutos: number): string {
+  const h = Math.floor(minutos / 60)
+  const m = minutos % 60
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+}
+
+/**
+ * Hora en que se REGISTRÓ la entrega, en minutos.
+ *
+ * Para un despacho en tienda no hay franja programada porque se entrega en el
+ * momento: su hora real es la de creación.
+ */
+function minutosDeRegistro(entrega: any): number | null {
+  const iso = entrega?.created_at
+  if (!iso) return null
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return null
+  return d.getHours() * 60 + d.getMinutes()
+}
+
+/**
+ * Valor por el que se ORDENA la columna Horario: la franja programada si
+ * existe, y si no la hora de registro. Así todas las filas tienen un valor
+ * comparable y el orden refleja la secuencia real del día — que es lo que
+ * permite ver de un vistazo dos entregas pisadas a la misma hora.
+ */
+function minutosHorarioEntrega(entrega: any): number | null {
+  return aMinutos(entrega?.hora_inicio) ?? minutosDeRegistro(entrega)
+}
+
 export function useColumnsMisEntregas(onRefetch?: () => void) {
   const columnDefs: ColDef<any>[] = [
     {
@@ -183,14 +224,35 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
       headerName: 'Horario',
       colId: 'horario',
       field: 'hora_inicio',
-      width: 120,
+      width: 140,
+      sortable: true,
       valueGetter: (params) => {
         const horaInicio = formatHora12(params.data?.hora_inicio)
         const horaFin = formatHora12(params.data?.hora_fin)
-        if (horaInicio && horaFin) {
-          return `${horaInicio} - ${horaFin}`
-        }
-        return horaInicio || horaFin || '-'
+
+        if (horaInicio && horaFin) return `${horaInicio} - ${horaFin}`
+        if (horaInicio || horaFin) return horaInicio || horaFin
+
+        // Sin franja programada (despacho en tienda: se entrega al momento).
+        // Antes iba un guion, y al ordenar por horario esas filas quedaban
+        // todas juntas sin decir NADA de cuándo se despacharon. Se cae a la
+        // hora en que se registró la entrega — que para una entrega inmediata
+        // ES su hora real — con "~" para no confundirla con una franja pactada.
+        const registrada = minutosDeRegistro(params.data)
+        return registrada !== null ? `~ ${formatHora12(aHHMM(registrada))}` : '-'
+      },
+      // Ordenar por el VALOR de la hora, no por el texto. Como string,
+      // "01:00 PM" se ordena antes que "10:00 AM" (gana el "0"), así que dos
+      // entregas de las 10 AM podían quedar separadas por una de 9:15 — que es
+      // justo el caso que hizo que no se viera el choque de dos pedidos a la
+      // misma hora en la misma unidad.
+      comparator: (_a, _b, nodeA, nodeB) => {
+        const ma = minutosHorarioEntrega(nodeA?.data)
+        const mb = minutosHorarioEntrega(nodeB?.data)
+        if (ma === null && mb === null) return 0
+        if (ma === null) return 1 // sin hora, al final
+        if (mb === null) return -1
+        return ma - mb
       },
     },
     {

@@ -1,9 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { FaFilePdf, FaEdit, FaCheckCircle, FaBan, FaTrash, FaCloudUploadAlt, FaFileCode, FaDownload, FaSyncAlt } from 'react-icons/fa'
-import { Button, Space, Modal } from 'antd'
+import { FaFilePdf, FaEdit, FaCheckCircle, FaBan, FaTrash, FaCloudUploadAlt, FaFileCode, FaDownload, FaSyncAlt, FaRedo } from 'react-icons/fa'
+import { Dropdown, type MenuProps } from 'antd'
+import { MoreOutlined } from '@ant-design/icons'
 import useApp from 'antd/es/app/useApp'
+import ButtonBase from '~/components/buttons/button-base'
 import { guiaRemisionApi } from '~/lib/api/guia-remision'
 import { useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
@@ -91,6 +93,38 @@ export default function CellAccionesGuia({ guia, onRefetch }: CellAccionesGuiaPr
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleRegenerarXml = () => {
+    modal.confirm({
+      title: 'Regenerar XML de la guía',
+      content: `Se volverá a generar el XML y el QR de ${guia.serie || 'T001'}-${guia.numero || '0'} con los datos actuales. ¿Continuar?`,
+      okText: 'Sí, regenerar',
+      cancelText: 'Cancelar',
+      onOk: async () => {
+        setLoading(true)
+        try {
+          const response = await guiaRemisionApi.regenerarXml(guia.id)
+
+          if (response.error) {
+            message.error(response.error.message || 'Error al regenerar el XML')
+            return
+          }
+
+          message.success('XML regenerado correctamente')
+          queryClient.invalidateQueries({ queryKey: [QueryKeys.GUIAS_REMISION] })
+
+          if (onRefetch) {
+            onRefetch()
+          }
+        } catch (error) {
+          console.error('Error al regenerar XML:', error)
+          message.error('Error al regenerar el XML')
+        } finally {
+          setLoading(false)
+        }
+      },
+    })
   }
 
   const handleEditar = () => {
@@ -304,161 +338,171 @@ export default function CellAccionesGuia({ guia, onRefetch }: CellAccionesGuiaPr
   }
 
   const estado = guia.estado
+  const esElectronica = guia.tipo_guia !== 'FISICA'
+  const sunatEstado = guia.sunat_estado
+
+  // Menú de acciones, con el MISMO criterio de visibilidad que tenían los
+  // botones sueltos: cada ítem se agrega solo si corresponde al estado de la
+  // guía, así el dropdown nunca muestra una acción inválida.
+  const menuItems: MenuProps['items'] = [
+    {
+      key: 'ver-pdf',
+      label: (
+        <span className="flex items-center gap-2">
+          <FaFilePdf className="text-red-600" /> Ver PDF
+        </span>
+      ),
+      onClick: handleVerPDF,
+    },
+  ]
+
+  if (estado === 'BORRADOR') {
+    menuItems.push(
+      {
+        key: 'editar',
+        label: (
+          <span className="flex items-center gap-2">
+            <FaEdit className="text-blue-600" /> Editar
+          </span>
+        ),
+        onClick: handleEditar,
+      },
+      {
+        key: 'emitir',
+        label: (
+          <span className="flex items-center gap-2">
+            <FaCheckCircle className="text-green-600" /> Emitir
+          </span>
+        ),
+        onClick: handleEmitir,
+      },
+      {
+        key: 'eliminar',
+        label: (
+          <span className="flex items-center gap-2">
+            <FaTrash className="text-red-600" /> Eliminar
+          </span>
+        ),
+        onClick: handleEliminar,
+      },
+    )
+  }
+
+  if (estado === 'EMITIDA') {
+    if (esElectronica && guia.sunat_xml_path) {
+      menuItems.push({
+        key: 'ver-xml',
+        label: (
+          <span className="flex items-center gap-2">
+            <FaFileCode className="text-green-600" /> Ver XML
+          </span>
+        ),
+        onClick: handleVerXML,
+      })
+    }
+
+    if (esElectronica && (guia.sunat_cdr_xml || guia.sunat_cdr_path)) {
+      menuItems.push({
+        key: 'descargar-cdr',
+        label: (
+          <span className="flex items-center gap-2">
+            <FaDownload className="text-blue-600" /> Descargar CDR
+          </span>
+        ),
+        onClick: handleDescargarCDR,
+      })
+    }
+
+    if (esElectronica && (!sunatEstado || sunatEstado === 'RECHAZADO' || sunatEstado === 'OBSERVADO')) {
+      menuItems.push({
+        key: 'enviar-sunat',
+        label: (
+          <span className="flex items-center gap-2">
+            <FaCloudUploadAlt className="text-purple-600" /> Enviar a SUNAT
+          </span>
+        ),
+        onClick: handleEnviarSunat,
+      })
+    }
+
+    // Editar una guía EMITIDA mientras SUNAT no la tenga. Abre el mismo
+    // formulario completo que la creación (igual que mis-ventas), con todo
+    // precargado: sirve para cargarle el despachador a una guía que se emitió
+    // sin él — sin chofer ni placa, SUNAT rechaza una GRE de transporte privado.
+    if (sunatEstado !== 'ACEPTADO' && sunatEstado !== 'PENDIENTE') {
+      menuItems.push({
+        key: 'editar-emitida',
+        label: (
+          <span className="flex items-center gap-2">
+            <FaEdit className="text-blue-600" /> Editar
+          </span>
+        ),
+        onClick: handleEditar,
+      })
+    }
+
+    // Solo mientras SUNAT no la tenga: aceptada, el XML vigente es el que ella
+    // selló; pendiente, hay un ticket en curso.
+    if (esElectronica && sunatEstado !== 'ACEPTADO' && sunatEstado !== 'PENDIENTE') {
+      menuItems.push({
+        key: 'regenerar-xml',
+        label: (
+          <span className="flex items-center gap-2">
+            <FaRedo className="text-amber-600" /> Regenerar XML
+          </span>
+        ),
+        onClick: handleRegenerarXml,
+      })
+    }
+
+    if (esElectronica && sunatEstado === 'PENDIENTE') {
+      menuItems.push({
+        key: 'consultar-sunat',
+        label: (
+          <span className="flex items-center gap-2">
+            <FaSyncAlt className="text-purple-600" /> Consultar estado SUNAT
+          </span>
+        ),
+        onClick: handleConsultarEstado,
+      })
+    }
+
+    menuItems.push({
+      key: 'anular',
+      label: (
+        <span className="flex items-center gap-2">
+          <FaBan className="text-orange-600" /> Anular
+        </span>
+      ),
+      onClick: handleAnular,
+    })
+  }
 
   return (
-    <Space size="small" className="flex items-center justify-center h-full">
+    <div className="flex items-center justify-center h-full">
       <ConfigurableElement
-        componentId="mis-guias.boton-ver-pdf"
-        label="Botón Ver PDF"
+        componentId="mis-guias.dropdown-acciones"
+        label="Dropdown Acciones"
         noFullWidth
       >
-        <Button
-          type="link"
-          size="small"
-          icon={<FaFilePdf />}
-          onClick={handleVerPDF}
-          title="Ver PDF"
-          className="text-red-600"
-        />
+        <Dropdown
+          menu={{ items: menuItems }}
+          trigger={['click']}
+          placement="bottomRight"
+        >
+          <ButtonBase
+            color="info"
+            size="md"
+            // `!py-0` por la fila compacta de 28px (ver table-base): con el
+            // padding que trae `size="md"` el botón mide ~32px y se recorta.
+            className="flex items-center justify-center !px-2 !py-0"
+            title="Acciones"
+            disabled={loading}
+          >
+            <MoreOutlined style={{ fontSize: '18px' }} />
+          </ButtonBase>
+        </Dropdown>
       </ConfigurableElement>
-      
-      {estado === 'BORRADOR' && (
-        <>
-          <ConfigurableElement
-            componentId="mis-guias.boton-editar"
-            label="Botón Editar"
-            noFullWidth
-          >
-            <Button
-              type="link"
-              size="small"
-              icon={<FaEdit />}
-              onClick={handleEditar}
-              loading={loading}
-              title="Editar"
-              className="text-blue-600"
-            />
-          </ConfigurableElement>
-
-          <ConfigurableElement
-            componentId="mis-guias.boton-emitir"
-            label="Botón Emitir"
-            noFullWidth
-          >
-            <Button
-              type="link"
-              size="small"
-              icon={<FaCheckCircle />}
-              onClick={handleEmitir}
-              loading={loading}
-              title="Emitir"
-              className="text-green-600"
-            />
-          </ConfigurableElement>
-
-          <ConfigurableElement
-            componentId="mis-guias.boton-eliminar"
-            label="Botón Eliminar"
-            noFullWidth
-          >
-            <Button
-              type="link"
-              size="small"
-              icon={<FaTrash />}
-              onClick={handleEliminar}
-              loading={loading}
-              title="Eliminar"
-              className="text-red-600"
-            />
-          </ConfigurableElement>
-        </>
-      )}
-      
-      {estado === 'EMITIDA' && (
-        <>
-          {guia.tipo_guia !== 'FISICA' && guia.sunat_xml_path && (
-            <ConfigurableElement
-              componentId="mis-guias.boton-ver-xml"
-              label="Botón Ver XML"
-              noFullWidth
-            >
-              <Button
-                type="link"
-                size="small"
-                icon={<FaFileCode />}
-                onClick={handleVerXML}
-                title="Ver XML"
-                className="text-green-600"
-              />
-            </ConfigurableElement>
-          )}
-          {guia.tipo_guia !== 'FISICA' && (guia.sunat_cdr_xml || guia.sunat_cdr_path) && (
-            <ConfigurableElement
-              componentId="mis-guias.boton-descargar-cdr"
-              label="Botón Descargar CDR"
-              noFullWidth
-            >
-              <Button
-                type="link"
-                size="small"
-                icon={<FaDownload />}
-                onClick={handleDescargarCDR}
-                title="Descargar CDR"
-                className="text-blue-600"
-              />
-            </ConfigurableElement>
-          )}
-          {guia.tipo_guia !== 'FISICA' && (!guia.sunat_estado || guia.sunat_estado === 'RECHAZADO' || guia.sunat_estado === 'OBSERVADO') && (
-            <ConfigurableElement
-              componentId="mis-guias.boton-enviar-sunat"
-              label="Boton Enviar SUNAT"
-              noFullWidth
-            >
-              <Button
-                type="link"
-                size="small"
-                icon={<FaCloudUploadAlt />}
-                onClick={handleEnviarSunat}
-                loading={loading}
-                title="Enviar a SUNAT"
-                className="text-purple-600"
-              />
-            </ConfigurableElement>
-          )}
-          {guia.tipo_guia !== 'FISICA' && guia.sunat_estado === 'PENDIENTE' && (
-            <ConfigurableElement
-              componentId="mis-guias.boton-consultar-sunat"
-              label="Boton Consultar SUNAT"
-              noFullWidth
-            >
-              <Button
-                type="link"
-                size="small"
-                icon={<FaSyncAlt />}
-                onClick={handleConsultarEstado}
-                loading={loading}
-                title="Consultar estado en SUNAT (ticket pendiente)"
-                className="text-purple-600"
-              />
-            </ConfigurableElement>
-          )}
-          <ConfigurableElement
-            componentId="mis-guias.boton-anular"
-            label="Boton Anular"
-            noFullWidth
-          >
-            <Button
-              type="link"
-              size="small"
-              icon={<FaBan />}
-              onClick={handleAnular}
-              loading={loading}
-              title="Anular"
-              className="text-orange-600"
-            />
-          </ConfigurableElement>
-        </>
-      )}
-    </Space>
+    </div>
   )
 }

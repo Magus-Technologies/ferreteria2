@@ -892,17 +892,41 @@ export default function useCreateVenta({
             const productosVenta = ventaCreada.productos_por_almacen || []
             const unidadesDerivadas: any[] = []
 
-            // Mapeo POSICIONAL a propósito: `cantidades_parciales` se arma en el
-            // modal ANTES de crear la venta, así que sus ids NO coinciden con los
-            // `unidad.id` que el backend asigna al crear. La única correspondencia
-            // estable es el orden: cantidades_parciales incluye TODOS los productos
-            // (los excluidos con entregar:0), alineado con productos_por_almacen.
-            let parcialIdx = 0
+            // Emparejado por NOMBRE de producto, igual que el bloque de
+            // Domicilio (ver el comentario extenso allá arriba).
+            //
+            // Antes esto era un mapeo POSICIONAL: asumía que
+            // `productos_por_almacen` volviera del backend en el MISMO orden en
+            // que el modal armó `cantidades_parciales`. Cuando ese orden no
+            // coincide, cada cantidad se asigna a la línea equivocada y pasa una
+            // de dos cosas: el backend rechaza con "supera la cantidad
+            // pendiente" (de ahí el "no se pudo programar, hazlo manualmente"
+            // intermitente), o —si los números resultan compatibles entre sí—
+            // la entrega se guarda MAL en silencio, con cantidades cruzadas
+            // entre productos.
+            //
+            // Los ids no sirven como clave: `cantidades_parciales` se arma antes
+            // de crear la venta, así que sus `unidad_derivada_id` no son los
+            // `unidad.id` que asigna el backend.
+            const nuevoLookupParcial = () => {
+              const m = new Map<string, NonNullable<typeof cantidades_parciales>[number][]>()
+              for (const c of cantidades_parciales ?? []) {
+                const key = c.producto_name ?? ''
+                const arr = m.get(key) ?? []
+                arr.push(c)
+                m.set(key, arr)
+              }
+              return m
+            }
+
+            // Un lookup NUEVO por recorrido: se consume con shift(), así que
+            // reusarlo dejaría el segundo recorrido sin elementos.
+            const lookupInmediata = nuevoLookupParcial()
             productosVenta.forEach((productoAlmacen: any) => {
               if (productoAlmacen.unidades_derivadas) {
+                const prodName = productoAlmacen.producto_almacen?.producto?.name ?? ''
                 productoAlmacen.unidades_derivadas.forEach((unidad: any) => {
-                  const parcial = cantidades_parciales[parcialIdx]
-                  parcialIdx++
+                  const parcial = lookupInmediata.get(prodName)?.shift()
                   if (parcial && parcial.entregar > 0) {
                     unidadesDerivadas.push({
                       unidad_derivada_venta_id: unidad.id,
@@ -958,12 +982,14 @@ export default function useCreateVenta({
                 if (parcial_resto_programado && (parcial_resto_programado.despachador_id || parcial_resto_programado.cargo_destino)) {
                   const unidadesDerivadas2: any[] = []
 
-                  let parcialIdx2 = 0
+                  // Mismo emparejado por nombre que el recorrido de arriba, con
+                  // su propio lookup porque el anterior ya quedó consumido.
+                  const lookupProgramada = nuevoLookupParcial()
                   productosVenta.forEach((productoAlmacen: any) => {
                     if (productoAlmacen.unidades_derivadas) {
+                      const prodName = productoAlmacen.producto_almacen?.producto?.name ?? ''
                       productoAlmacen.unidades_derivadas.forEach((unidad: any) => {
-                        const parcial = cantidades_parciales[parcialIdx2]
-                        parcialIdx2++
+                        const parcial = lookupProgramada.get(prodName)?.shift()
                         const programar = parcial?.entregar_programado ?? 0
                         if (parcial && programar > 0) {
                           unidadesDerivadas2.push({

@@ -64,6 +64,37 @@ export function calcularTotalesVentaConVales(data: any) {
   };
 }
 
+/**
+ * Efectivo recibido y vuelto de una venta.
+ *
+ * `recibe_efectivo` es lo que el cliente ENTREGA por ese método de pago (cubre
+ * el principal + su sobrecargo) y viene NULL en tarjeta/transferencia, así que
+ * solo suman los pagos donde de verdad hubo efectivo.
+ *
+ * Es la MISMA fórmula del modal de métodos de pago y del ticket
+ * (VentaPdfService): vuelto = recibido − (monto + sobrecargo), nunca negativo.
+ * Si se cambia acá, hay que cambiarla en los tres lados o los números dejan de
+ * coincidir entre la pantalla, el ticket y lo que se cobró.
+ */
+function calcularEfectivoVenta(venta: any): { recibido: number; vuelto: number } {
+  const pagos = venta?.despliegue_de_pago_ventas ?? [];
+
+  return pagos.reduce(
+    (acc: { recibido: number; vuelto: number }, pago: any) => {
+      const recibido = Number(pago?.recibe_efectivo ?? 0);
+      if (!(recibido > 0)) return acc;
+
+      const cubierto = Number(pago?.monto ?? 0) + Number(pago?.sobrecargo_aplicado ?? 0);
+
+      return {
+        recibido: acc.recibido + recibido,
+        vuelto: acc.vuelto + Math.max(0, recibido - cubierto),
+      };
+    },
+    { recibido: 0, vuelto: 0 },
+  );
+}
+
 export function useColumnsMisVentas() {
   const columnDefs: ColDef<getVentaResponseProps>[] = [
     // Checkbox solo visible en filas con tipo_documento = 'nv' (Nota de Venta).
@@ -265,6 +296,45 @@ export function useColumnsMisVentas() {
         return total;
       },
       valueFormatter: (params) => `S/. ${Number(params.value || 0).toFixed(2)}`,
+    },
+    {
+      // Efectivo que entregó el cliente. Ya venía guardado en
+      // `desplieguedepagoventa.recibe_efectivo` y se imprime en el ticket;
+      // acá se expone en la lista.
+      //
+      // Solo suman los pagos EN EFECTIVO: en tarjeta/transferencia el campo
+      // viene NULL, y sumarlos como 0 daría un "recibido" menor al total y
+      // confundiría más que ayudar.
+      headerName: "Recibido",
+      colId: "recibido",
+      field: "despliegue_de_pago_ventas",
+      width: 110,
+      filter: 'agNumberColumnFilter',
+      filterParams: { inRangeInclusive: true },
+      cellStyle: { textAlign: "right" },
+      valueGetter: (params) => calcularEfectivoVenta(params.data).recibido,
+      valueFormatter: (params) =>
+        params.value > 0 ? `S/. ${Number(params.value).toFixed(2)}` : "—",
+    },
+    {
+      // Vuelto = recibido − (monto + sobrecargo) de cada pago en efectivo,
+      // nunca negativo. Misma fórmula que el modal de métodos de pago y que
+      // el ticket, para que los tres números coincidan siempre.
+      headerName: "Vuelto",
+      colId: "vuelto",
+      field: "despliegue_de_pago_ventas",
+      width: 110,
+      filter: 'agNumberColumnFilter',
+      filterParams: { inRangeInclusive: true },
+      cellStyle: { textAlign: "right" },
+      valueGetter: (params) => calcularEfectivoVenta(params.data).vuelto,
+      valueFormatter: (params) => {
+        const { recibido } = calcularEfectivoVenta(params.data);
+        // Sin pago en efectivo no hay vuelto que mostrar: un "0.00" ahí
+        // haría pensar que se pagó justo cuando en realidad fue con tarjeta.
+        if (recibido <= 0) return "—";
+        return `S/. ${Number(params.value || 0).toFixed(2)}`;
+      },
     },
     {
       // Descuentos: sumatoria de TODOS los descuentos de la venta —

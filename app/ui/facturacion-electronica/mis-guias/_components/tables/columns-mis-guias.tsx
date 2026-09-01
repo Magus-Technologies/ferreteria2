@@ -1,6 +1,7 @@
 'use client'
 
 import { ColDef } from 'ag-grid-community'
+import { Tag, Tooltip } from 'antd'
 import dayjs from 'dayjs'
 import { formatFechaPeru } from '~/utils/fechas'
 import CellAccionesGuia from './cell-acciones-guia'
@@ -96,6 +97,75 @@ export function useColumnsMisGuias(onRefetch?: () => void) {
       },
     },
     {
+      // Estado ante SUNAT. La columna "Estado" de al lado es el estado INTERNO
+      // (borrador/emitida/anulada) y no dice nada de SUNAT: hasta ahora no
+      // había forma de ver desde la lista si una guía fue aceptada, rechazada
+      // o sigue con un ticket en curso.
+      headerName: 'SUNAT',
+      field: 'sunat_estado',
+      width: 150,
+      cellRenderer: (params: any) => {
+        const guia = params.data
+        if (!guia) return null
+
+        // Las físicas no se declaran.
+        if (guia.tipo_guia === 'FISICA') {
+          return <span className="text-slate-400">No aplica</span>
+        }
+
+        const estado: string | null = guia.sunat_estado
+        const observaciones: string[] = guia.sunat_observaciones ?? []
+
+        if (!estado) {
+          return <Tag color="default">Sin enviar</Tag>
+        }
+
+        const color =
+          estado === 'ACEPTADO'
+            ? 'success'
+            : estado === 'RECHAZADO'
+              ? 'error'
+              : estado === 'PENDIENTE'
+                ? 'warning'
+                : 'default'
+
+        const etiqueta =
+          estado === 'PENDIENTE' ? 'Procesando' : estado.charAt(0) + estado.slice(1).toLowerCase()
+
+        // Aceptada CON observaciones: SUNAT igual la aceptó (código 0), así que
+        // el tag sigue en verde. El ⚠ avisa que hay avisos del CDR —
+        // típicamente placa o licencia que no encontró en las bases del MTC.
+        if (observaciones.length > 0) {
+          return (
+            <Tooltip
+              title={
+                <div className="flex flex-col gap-1">
+                  <strong>Observaciones de SUNAT:</strong>
+                  {observaciones.map((obs, i) => (
+                    <span key={i}>• {obs}</span>
+                  ))}
+                </div>
+              }
+            >
+              <Tag color={color} className="cursor-help">
+                {etiqueta} ⚠ {observaciones.length}
+              </Tag>
+            </Tooltip>
+          )
+        }
+
+        return guia.sunat_mensaje ? (
+          <Tooltip title={guia.sunat_mensaje}>
+            <Tag color={color} className="cursor-help">
+              {etiqueta}
+            </Tag>
+          </Tooltip>
+        ) : (
+          <Tag color={color}>{etiqueta}</Tag>
+        )
+      },
+    },
+    {
       headerName: 'Referencia',
       field: 'referencia',
       flex: 1,
@@ -105,7 +175,9 @@ export function useColumnsMisGuias(onRefetch?: () => void) {
     {
       headerName: 'Acciones',
       field: 'id',
-      width: 150,
+      // Mismo ancho que mis-ventas: ahora es un solo botón de dropdown, no
+      // una fila de botones sueltos.
+      width: 110,
       pinned: 'right',
       cellRenderer: CellAccionesGuia,
       cellRendererParams: (params: { data?: any }) => ({
