@@ -87,22 +87,6 @@ export default function TableDetalleCompra() {
 
   return (
     <div className='w-full'>
-      {/* Info del proveedor */}
-      {compraSeleccionada && (
-        <div className='flex items-center gap-4 mb-3'>
-          <div className='text-sm'>
-            <span className='font-semibold'>Proveedor: </span>
-            <span>
-              {compraSeleccionada?.proveedor?.razon_social || 'Sin proveedor'}
-            </span>
-          </div>
-          <div className='text-sm'>
-            <span className='font-semibold'>RUC: </span>
-            <span>{compraSeleccionada?.proveedor?.ruc || '-'}</span>
-          </div>
-        </div>
-      )}
-
       <TableWithTitle<DetalleProducto>
         id='table-detalle-compra-por-pagar'
         title='Detalle de Compra'

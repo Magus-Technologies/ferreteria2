@@ -46,6 +46,34 @@ export default function ComprasPorPagarPage() {
             <div className='h-[calc(50vh-140px)]'>
               <TableComprasPorPagar />
             </div>
+
+            {/* Botones de acción */}
+            <div className='flex flex-wrap gap-2'>
+              <ButtonBase
+                className='flex items-center justify-center gap-2 !rounded-md h-10 px-4 border-red-500 !text-red-700 font-semibold hover:bg-red-50'
+                onClick={handleRegistrarPago}
+              >
+                <FaMoneyCheckAlt size={18} />
+                Registro y Detalle de Pagos
+              </ButtonBase>
+
+              <ButtonBase
+                className='flex items-center justify-center gap-2 !rounded-md h-10 px-4 border-rose-500 !text-rose-700 font-semibold hover:bg-rose-50'
+                onClick={() => setOpenPagoMultiple(true)}
+              >
+                <FaUsers size={18} />
+                Pago Múltiple por Proveedor
+              </ButtonBase>
+
+              <ButtonBase
+                className='flex items-center justify-center gap-2 !rounded-md h-10 px-4 border-red-500 !text-red-700 font-semibold hover:bg-red-50'
+                onClick={() => setOpenConsultarPagos(true)}
+              >
+                <FaCalendarCheck size={16} />
+                Consultar Pagos por Fecha
+              </ButtonBase>
+            </div>
+
             <div className='h-[calc(50vh-140px)]'>
               <TableDetalleCompra />
             </div>
@@ -54,33 +82,6 @@ export default function ComprasPorPagarPage() {
           {/* Cards - Columna vertical a la derecha */}
           <div className='w-80 flex-shrink-0 flex flex-col gap-3'>
             <CardsInfoComprasPorPagar />
-
-            {/* Botones de acción */}
-            <div className='flex flex-col gap-2 mt-0'>
-              <ButtonBase
-                className='flex items-center justify-center gap-2 !rounded-md w-full h-10 border-red-500 !text-red-700 font-semibold hover:bg-red-50'
-                onClick={handleRegistrarPago}
-              >
-                <FaMoneyCheckAlt size={18} />
-                Registro y Detalle de Pagos
-              </ButtonBase>
-
-              <ButtonBase
-                className='flex items-center justify-center gap-2 !rounded-md w-full h-10 border-rose-500 !text-rose-700 font-semibold hover:bg-rose-50'
-                onClick={() => setOpenPagoMultiple(true)}
-              >
-                <FaUsers size={18} />
-                Pago Múltiple por Proveedor
-              </ButtonBase>
-
-              <ButtonBase
-                className='flex items-center justify-center gap-2 !rounded-md w-full h-10 border-red-500 !text-red-700 font-semibold hover:bg-red-50'
-                onClick={() => setOpenConsultarPagos(true)}
-              >
-                <FaCalendarCheck size={16} />
-                Consultar Pagos por Fecha
-              </ButtonBase>
-            </div>
           </div>
         </div>
       </div>
