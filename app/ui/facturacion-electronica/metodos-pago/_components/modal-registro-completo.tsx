@@ -114,15 +114,20 @@ export default function ModalRegistroCompleto({
       tiene_numero_celular: false,
       numero_celular: '',
     }
-    setMetodosPago([...metodosPago, nuevoMetodo])
+    setMetodosPago(prev => [...prev, nuevoMetodo])
   }
 
   const eliminarMetodo = (id: string) => {
-    setMetodosPago(metodosPago.filter(m => m.id !== id))
+    setMetodosPago(prev => prev.filter(m => m.id !== id))
   }
 
+  // Updater funcional: si el usuario cambia dos campos seguidos (ej. dos
+  // switches) antes de que React re-renderice, usar `metodosPago` del
+  // closure aquí perdía el primer cambio — el segundo setState partía de un
+  // snapshot viejo y lo pisaba. Con `prev` cada actualización parte siempre
+  // del estado más reciente.
   const actualizarMetodo = (id: string, campo: keyof MetodoPagoItem, valor: any) => {
-    setMetodosPago(metodosPago.map(m =>
+    setMetodosPago(prev => prev.map(m =>
       m.id === id ? { ...m, [campo]: valor } : m
     ))
   }
@@ -429,7 +434,7 @@ export default function ModalRegistroCompleto({
                       checked={metodo.tiene_numero_celular}
                       onChange={(checked) => {
                         // Actualizar el estado del switch
-                        const nuevosMetodos = metodosPago.map(m => {
+                        setMetodosPago(prev => prev.map(m => {
                           if (m.id === metodo.id) {
                             return {
                               ...m,
@@ -438,8 +443,7 @@ export default function ModalRegistroCompleto({
                             }
                           }
                           return m
-                        })
-                        setMetodosPago(nuevosMetodos)
+                        }))
                       }}
                       checkedChildren="Sí"
                       unCheckedChildren="No"
