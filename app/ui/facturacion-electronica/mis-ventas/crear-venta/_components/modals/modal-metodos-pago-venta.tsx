@@ -208,6 +208,12 @@ export default function ModalMetodosPagoVenta({
     )
   }, [metodoPagoSeleccionado])
 
+  // El método de pago (banco/billetera) define si pide N° de Operación. Si no
+  // lo requiere (ej. Yape sin validar operación), el campo Referencia queda opcional.
+  const requiereNumeroOperacion = useMemo(() => {
+    return Boolean(metodoPagoSeleccionado?.requiere_numero_serie)
+  }, [metodoPagoSeleccionado])
+
   // Vuelto del formulario actual (antes de confirmar agregar) — usa saldoBase porque
   // el sobrecargo se suma aparte; recibe_efectivo cubre el principal.
   const vuelto = useMemo(() => {
@@ -295,7 +301,9 @@ export default function ModalMetodosPagoVenta({
 
   const handleAgregarMetodo = async () => {
     try {
-      await modalForm.validateFields(['referencia', 'recibe_efectivo'])
+      await modalForm.validateFields(
+        requiereNumeroOperacion ? ['referencia', 'recibe_efectivo'] : ['recibe_efectivo']
+      )
       const values = modalForm.getFieldsValue()
 
       if (!selectedDespliegueValue || !metodoPagoSeleccionado) {
@@ -644,7 +652,9 @@ export default function ModalMetodosPagoVenta({
                     uppercase={false}
                     propsForm={{
                       name: 'referencia',
-                      rules: [{ required: true, message: 'Requerido' }],
+                      rules: requiereNumeroOperacion
+                        ? [{ required: true, message: 'Requerido' }]
+                        : [],
                     }}
                   />
                 </div>
