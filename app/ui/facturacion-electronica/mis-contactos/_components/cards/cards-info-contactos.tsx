@@ -42,26 +42,24 @@ export default function CardsInfoContactos() {
   }
 
   return (
-    <div className="flex flex-col gap-3 w-full">
+    <div className="flex flex-col gap-3 w-full max-h-full overflow-y-auto pr-1">
       {/* Card recomendaciones del cliente seleccionado */}
-      {clienteId && (
-        <div className='bg-purple-50 border border-purple-200 rounded-lg p-4'>
-          <div className='flex items-center justify-center gap-2 mb-3'>
-            <FaHandshake className='text-purple-600' size={16} />
-            <div className='text-sm text-purple-700 font-semibold'>Recomendaciones</div>
+      <div className='bg-purple-50 border border-purple-200 rounded-lg p-4'>
+        <div className='flex items-center justify-center gap-2 mb-3'>
+          <FaHandshake className='text-purple-600' size={16} />
+          <div className='text-sm text-purple-700 font-semibold'>Recomendaciones</div>
+        </div>
+        <div className='flex justify-around'>
+          <div className='text-center'>
+            <div className='text-2xl font-bold text-purple-700'>{recomendacionesResp?.total_ventas ?? 0}</div>
+            <div className='text-xs text-purple-500'>Ventas</div>
           </div>
-          <div className='flex justify-around'>
-            <div className='text-center'>
-              <div className='text-2xl font-bold text-purple-700'>{recomendacionesResp?.total_ventas ?? 0}</div>
-              <div className='text-xs text-purple-500'>Ventas</div>
-            </div>
-            <div className='text-center'>
-              <div className='text-lg font-bold text-purple-700'>S/. {(recomendacionesResp?.monto_total ?? 0).toFixed(2)}</div>
-              <div className='text-xs text-purple-500'>Monto</div>
-            </div>
+          <div className='text-center'>
+            <div className='text-lg font-bold text-purple-700'>S/. {(recomendacionesResp?.monto_total ?? 0).toFixed(2)}</div>
+            <div className='text-xs text-purple-500'>Monto</div>
           </div>
         </div>
-      )}
+      </div>
 
       {/* Sección de Estado */}
       <div className="text-xs font-bold text-slate-600 uppercase tracking-wide px-1">Estado</div>

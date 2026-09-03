@@ -128,19 +128,11 @@ export default function VentasPorCobrarPage() {
             <div className='h-[calc(50vh-140px)]'>
               <TableVentasPorCobrar />
             </div>
-            <div className='h-[calc(50vh-140px)]'>
-              <TableDetalleVenta />
-            </div>
-          </div>
-
-          {/* Cards - Columna vertical a la derecha */}
-          <div className='w-80 flex-shrink-0 flex flex-col gap-3'>
-            <CardsInfoVentasPorCobrar />
 
             {/* Botones de acción */}
-            <div className='flex flex-col gap-2 mt-0'>
+            <div className='flex flex-wrap gap-2'>
               <ButtonBase
-                className='flex items-center justify-center gap-2 !rounded-md w-full h-10 border-green-500 !text-green-700 font-semibold hover:bg-green-50'
+                className='flex items-center justify-center gap-2 !rounded-md h-10 px-4 border-green-500 !text-green-700 font-semibold hover:bg-green-50'
                 onClick={handleRegistrarCobro}
               >
                 <FaMoneyCheckAlt size={18} />
@@ -148,7 +140,7 @@ export default function VentasPorCobrarPage() {
               </ButtonBase>
 
               <ButtonBase
-                className='flex items-center justify-center gap-2 !rounded-md w-full h-10 border-emerald-500 !text-emerald-700 font-semibold hover:bg-emerald-50'
+                className='flex items-center justify-center gap-2 !rounded-md h-10 px-4 border-emerald-500 !text-emerald-700 font-semibold hover:bg-emerald-50'
                 onClick={() => setOpenCobroMultiple(true)}
               >
                 <FaUsers size={18} />
@@ -165,13 +157,22 @@ export default function VentasPorCobrarPage() {
               </ButtonBase> */}
 
               <ButtonBase
-                className='flex items-center justify-center gap-2 !rounded-md w-full h-10 border-orange-500 !text-orange-700 font-semibold hover:bg-orange-50'
+                className='flex items-center justify-center gap-2 !rounded-md h-10 px-4 border-orange-500 !text-orange-700 font-semibold hover:bg-orange-50'
                 onClick={() => setOpenConsultarPagos(true)}
               >
                 <FaCalendarCheck size={16} />
                 Consultar Pagos por Fecha
               </ButtonBase>
             </div>
+
+            <div className='h-[calc(50vh-140px)]'>
+              <TableDetalleVenta />
+            </div>
+          </div>
+
+          {/* Cards - Columna vertical a la derecha */}
+          <div className='w-80 flex-shrink-0 flex flex-col gap-3'>
+            <CardsInfoVentasPorCobrar />
           </div>
         </div>
       </div>

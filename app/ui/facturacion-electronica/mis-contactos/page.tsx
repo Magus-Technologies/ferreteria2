@@ -47,7 +47,7 @@ export default function MisContactosPage() {
             </ConfigurableElement>
           </div>
           <ConfigurableElement componentId="mis-contactos.cards-info" label="Tarjetas de Resumen de Contactos" noFullWidth>
-            <div className="w-64 flex-shrink-0">
+            <div className="w-64 flex-shrink-0 h-full">
               <CardsInfoContactos />
             </div>
           </ConfigurableElement>

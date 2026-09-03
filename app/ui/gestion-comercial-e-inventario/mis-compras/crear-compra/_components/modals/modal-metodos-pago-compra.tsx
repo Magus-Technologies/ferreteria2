@@ -16,6 +16,7 @@ import { apiRequest } from '~/lib/api'
 import { TipoMoneda } from '~/types'
 import type { GastoExtraDisponible } from '~/app/_components/form/selects/select-egresos-dinero'
 import ModalSeleccionarEgreso from './modal-seleccionar-egreso'
+import { compraApi, type Compra } from '~/lib/api/compra'
 
 
 interface MetodoPago {
@@ -32,6 +33,7 @@ export default function ModalMetodosPagoCompra({
   open,
   onCancel,
   form: compraForm,
+  compra,
   totalAPagar,
   montoEgresoAsociado,
   gastoExtraInfo,
@@ -42,6 +44,9 @@ export default function ModalMetodosPagoCompra({
   open: boolean
   onCancel: () => void
   form: FormInstance
+  /** Compra ya existente (editar): precarga sus pagos ya registrados en la
+   * lista, para poder anular (quitarlos) o agregar otros antes de confirmar. */
+  compra?: Compra
   totalAPagar: number
   montoEgresoAsociado: number
   gastoExtraInfo?: GastoExtraDisponible
@@ -124,6 +129,28 @@ export default function ModalMetodosPagoCompra({
       setEgresosSeleccionados([])
     }
   }, [open, modalForm])
+
+  // Editar compra ya existente: precargar sus pagos ya registrados en la
+  // misma lista de "Métodos de Pago Agregados" — así el usuario puede
+  // anularlos (botón quitar) o agregar otros antes de "Confirmar Pago",
+  // que reenvía la lista completa (el backend anula los pagos previos y
+  // recrea exactamente lo que se envíe).
+  useEffect(() => {
+    if (!open || !compra?.id) return
+    compraApi.getPagos(compra.id).then(res => {
+      const pagosActivos = (res.data?.data || []).filter(p => p.estado)
+      if (pagosActivos.length === 0) return
+      setMetodosPago(pagosActivos.map(p => ({
+        id: p.id,
+        despliegue_de_pago_id: p.despliegue_de_pago_id,
+        despliegue_name: p.despliegue_de_pago?.metodo_de_pago?.name || 'Método de pago',
+        monto: Number(p.monto),
+        referencia: p.numero_operacion || undefined,
+        fecha_pago_referencial: p.fecha_pago_referencial || undefined,
+      })))
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, compra?.id])
 
   useEffect(() => {
     if (open && desplieguesPago && desplieguesPago.length > 0) {

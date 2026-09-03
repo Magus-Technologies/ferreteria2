@@ -114,15 +114,20 @@ export default function ModalRegistroCompleto({
       tiene_numero_celular: false,
       numero_celular: '',
     }
-    setMetodosPago([...metodosPago, nuevoMetodo])
+    setMetodosPago(prev => [...prev, nuevoMetodo])
   }
 
   const eliminarMetodo = (id: string) => {
-    setMetodosPago(metodosPago.filter(m => m.id !== id))
+    setMetodosPago(prev => prev.filter(m => m.id !== id))
   }
 
+  // Updater funcional: si el usuario cambia dos campos seguidos (ej. dos
+  // switches) antes de que React re-renderice, usar `metodosPago` del
+  // closure aquí perdía el primer cambio — el segundo setState partía de un
+  // snapshot viejo y lo pisaba. Con `prev` cada actualización parte siempre
+  // del estado más reciente.
   const actualizarMetodo = (id: string, campo: keyof MetodoPagoItem, valor: any) => {
-    setMetodosPago(metodosPago.map(m =>
+    setMetodosPago(prev => prev.map(m =>
       m.id === id ? { ...m, [campo]: valor } : m
     ))
   }
@@ -225,22 +230,34 @@ export default function ModalRegistroCompleto({
 
         // Actualizar métodos existentes
         if (metodosExistentes.length > 0) {
-          const promesasActualizar = metodosExistentes.map(metodo =>
-            apiRequest(`/despliegues-de-pago/${metodo.id}`, {
-              method: 'PUT',
-              body: JSON.stringify({
-                name: metodo.nombre,
-                requiere_numero_serie: metodo.requiere_numero_serie,
-                tipo_sobrecargo: metodo.tipo_sobrecargo,
-                sobrecargo_porcentaje: metodo.sobrecargo_porcentaje,
-                adicional: metodo.adicional,
-                mostrar: metodo.mostrar,
-                distribuir_en_precios: metodo.distribuir_en_precios,
-                numero_celular: metodo.tiene_numero_celular ? (metodo.numero_celular || null) : null,
-              }),
-            })
+          const resultadosActualizar = await Promise.all(
+            metodosExistentes.map(metodo =>
+              apiRequest(`/despliegues-de-pago/${metodo.id}`, {
+                method: 'PUT',
+                body: JSON.stringify({
+                  name: metodo.nombre,
+                  requiere_numero_serie: metodo.requiere_numero_serie,
+                  tipo_sobrecargo: metodo.tipo_sobrecargo,
+                  sobrecargo_porcentaje: metodo.sobrecargo_porcentaje,
+                  adicional: metodo.adicional,
+                  mostrar: metodo.mostrar,
+                  distribuir_en_precios: metodo.distribuir_en_precios,
+                  numero_celular: metodo.tiene_numero_celular ? (metodo.numero_celular || null) : null,
+                }),
+              }).then(res => ({ metodo, res }))
+            )
           )
-          await Promise.all(promesasActualizar)
+
+          // apiRequest no lanza en errores HTTP (ej. 422 de validación) — sin
+          // esto, un fallo se guardaba en silencio y el modal igual mostraba
+          // "actualizado exitosamente" aunque el cambio nunca se haya persistido.
+          const fallidosActualizar = resultadosActualizar.filter(r => r.res.error)
+          if (fallidosActualizar.length > 0) {
+            fallidosActualizar.forEach(({ metodo, res }) => {
+              message.error(`${metodo.nombre}: ${res.error?.message || 'Error al actualizar'}`)
+            })
+            return
+          }
         }
       }
 
@@ -429,7 +446,7 @@ export default function ModalRegistroCompleto({
                       checked={metodo.tiene_numero_celular}
                       onChange={(checked) => {
                         // Actualizar el estado del switch
-                        const nuevosMetodos = metodosPago.map(m => {
+                        setMetodosPago(prev => prev.map(m => {
                           if (m.id === metodo.id) {
                             return {
                               ...m,
@@ -438,8 +455,7 @@ export default function ModalRegistroCompleto({
                             }
                           }
                           return m
-                        })
-                        setMetodosPago(nuevosMetodos)
+                        }))
                       }}
                       checkedChildren="Sí"
                       unCheckedChildren="No"
