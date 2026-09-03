@@ -23,6 +23,7 @@ import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_compo
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import ModalMetodosPagoCompra from '../modals/modal-metodos-pago-compra'
 import useApp from 'antd/es/app/useApp'
+import { FaMoneyCheckAlt } from 'react-icons/fa'
 
 export default function CardsInfoCompra({
   form,
@@ -85,6 +86,10 @@ export default function CardsInfoCompra({
   const totalAPagar = subTotal + flete + (percepcion ?? 0)
   const esContado = forma_de_pago === FormaDePago.Contado
   const esRecepcionada = (compra?.recepciones_almacen_count ?? 0) > 0
+  // Compra que ya tiene pagos registrados: editar (ej. solo cambiar el tipo de
+  // documento) no debe volver a pedir el pago completo. Los pagos se gestionan
+  // aparte, solo cuando el usuario presiona "Ver Pagos" explícitamente.
+  const yaTienePagos = (compra?.pagos_de_compras_count ?? 0) > 0
   const mostrarBotonPonerEnEspera =
     !esRecepcionada &&
     (compra?.pagos_de_compras_count ?? 0) === 0 &&
@@ -113,9 +118,10 @@ export default function CardsInfoCompra({
       return
     }
 
-    // Compra recepcionada: solo se edita la información; los productos están
-    // bloqueados y el pago ya registrado se conserva, no se vuelve a pedir.
-    if (esRecepcionada) {
+    // Compra recepcionada, o que ya tiene pagos registrados: solo se edita la
+    // información. Los pagos ya hechos se conservan tal cual — para anularlos
+    // o agregar otros el usuario debe usar el botón "Ver Pagos" a propósito.
+    if (esRecepcionada || yaTienePagos) {
       form.submit()
       return
     }
@@ -204,10 +210,27 @@ export default function CardsInfoCompra({
         </ButtonBase>
       </ConfigurableElement>
 
+      {/* Solo al editar una compra ya existente: abre el mismo modal de pago
+          para anular (quitar de la lista) o agregar otro método, sin que se
+          dispare nada al presionar "Editar Compra". */}
+      {compra?.id && (
+        <ConfigurableElement componentId='gestion-comercial.crear-compra.boton-ver-pagos' label='Botón Ver Pagos'>
+          <ButtonBase
+            onClick={() => setModalPagoOpen(true)}
+            color='warning'
+            className='flex items-center justify-center gap-2 !rounded-md w-full h-10'
+          >
+            <FaMoneyCheckAlt size={16} />
+            Ver Pagos
+          </ButtonBase>
+        </ConfigurableElement>
+      )}
+
       <ModalMetodosPagoCompra
         open={modalPagoOpen}
         onCancel={() => setModalPagoOpen(false)}
         form={form}
+        compra={compra}
         totalAPagar={totalAPagar}
         montoEgresoAsociado={montoGastoExtra}
         gastoExtraInfo={gastoExtraInfo}
