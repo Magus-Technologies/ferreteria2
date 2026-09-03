@@ -165,11 +165,9 @@ export default function MapaDireccionMapbox({
 
     const coordenadasDefault: [number, number] = [-79.063692, -8.033405] // Trujillo - El Milagro [lng, lat] (fallback)
 
-    // Función para inicializar el mapa con un centro dado.
-    // `centroEsGpsReal` distingue el GPS real del usuario (se confirma como
-    // coordenada del cliente) del centro por defecto Trujillo/El Milagro
-    // (solo referencia visual: no se guarda hasta que el usuario la ajuste).
-    const inicializarMapa = (centro: [number, number], centroEsGpsReal = false) => {
+    // Inicializa el mapa con un centro dado. El centro es solo la VISTA:
+    // no define ni guarda la ubicación de entrega.
+    const inicializarMapa = (centro: [number, number]) => {
       if (!mapContainer.current) return
 
       if (!mapboxgl.supported()) {
@@ -227,13 +225,18 @@ export default function MapaDireccionMapbox({
           return
         }
 
-        // Cliente nuevo sin dirección ni coordenadas iniciales: antes no se
-        // dejaba ningún marcador acá (el mapa quedaba centrado pero "vacío").
-        // Se deja uno de partida en el centro ya resuelto (GPS real o
-        // fallback) para que siempre haya algo que arrastrar/ajustar.
-        if (editable) {
-          actualizarMarcador({ lng: centro[0], lat: centro[1] }, centroEsGpsReal)
-        }
+        // Cliente nuevo sin dirección ni coordenadas: NO se planta ningún
+        // marcador y NO se emite ninguna coordenada.
+        //
+        // Antes se dejaba uno en el centro del mapa y, cuando ese centro venía
+        // del GPS del navegador, se emitía como ubicación de entrega. En una PC
+        // de escritorio ese "GPS" es la geolocalización por IP/WiFi —la de la
+        // oficina— así que con solo ABRIR el mapa el pedido quedaba apuntando
+        // ahí. Pasó de verdad: pedidos programados con la ubicación de Trujillo
+        // y despachadores por salir hacia esa dirección.
+        //
+        // La ubicación de entrega ahora se fija SOLO con una acción explícita:
+        // click en el mapa o arrastre del marcador. Ver el mapa no guarda nada.
       })
     }
 
@@ -243,10 +246,13 @@ export default function MapaDireccionMapbox({
     } else if (direccion) {
       inicializarMapa(coordenadasDefault)
     } else {
-      // Sin coordenadas ni dirección: intentar obtener GPS antes de crear el mapa
+      // Sin coordenadas ni dirección: el GPS del navegador se usa solo para
+      // CENTRAR la vista en una zona razonable, nunca como ubicación de
+      // entrega (de ahí el `false`). En una PC ese GPS es la posición de la
+      // oficina, no la del cliente.
       navigator.geolocation.getCurrentPosition(
         (pos) => {
-          inicializarMapa([pos.coords.longitude, pos.coords.latitude], true)
+          inicializarMapa([pos.coords.longitude, pos.coords.latitude])
         },
         () => {
           // GPS no disponible o denegado: usar fallback
