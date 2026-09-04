@@ -193,11 +193,12 @@ export function useColumnsMisOS({
                 style={{ fontSize: 16, color: '#dc2626' }}
               />
             </Tooltip>
-            {/* Aprobar/Desaprobar es un toggle: se apaga el botón del estado
-                actual — aprobada → check gris y desaprobar activo, y viceversa.
-                Rechazada es un estado terminal: ningún botón de acción queda
-                activo, solo Ver y Ver PDF (para eso está `!isRechazado` en
-                ambos casos, ya que antes "Aprobar" seguía habilitado). */}
+            {/* Pendiente: Aprobar + Desaprobar + Rechazar activos (los tres).
+                Aprobada: se apaga Aprobar (ya está), quedan Desaprobar + Rechazar.
+                Rechazada: estado terminal, nada de esto queda activo — solo
+                Ver y Ver PDF. Desaprobar YA NO depende de `isAprobado`: antes
+                solo se habilitaba si ya estaba aprobada, pero en pendiente
+                también debe poder usarse (ej. para limpiar un estado inconsistente). */}
             <Tooltip title={
               isRechazado
                 ? 'Está rechazada — no se puede aprobar'
@@ -218,14 +219,12 @@ export function useColumnsMisOS({
             <Tooltip title={
               isRechazado
                 ? 'Está rechazada — no se puede desaprobar'
-                : !isAprobado
-                  ? 'Aún no está aprobada'
-                  : (canApprove ? 'Desaprobar (vuelve a pendiente)' : 'No tienes autoridad para desaprobar')
+                : (canApprove ? 'Desaprobar (vuelve a pendiente)' : 'No tienes autoridad para desaprobar')
             }>
               <FaUndo
-                onClick={() => canApprove && isAprobado && !isRechazado && data && onDesaprobar?.(data)}
+                onClick={() => canApprove && !isRechazado && data && onDesaprobar?.(data)}
                 className={`transition-all ${
-                  canApprove && isAprobado && !isRechazado
+                  canApprove && !isRechazado
                     ? 'cursor-pointer hover:scale-110 text-rose-600'
                     : 'cursor-not-allowed text-gray-300'
                 }`}
