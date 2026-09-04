@@ -194,16 +194,21 @@ export function useColumnsMisOS({
               />
             </Tooltip>
             {/* Aprobar/Desaprobar es un toggle: se apaga el botón del estado
-                actual — aprobada → check gris y desaprobar activo, y viceversa. */}
+                actual — aprobada → check gris y desaprobar activo, y viceversa.
+                Rechazada es un estado terminal: ningún botón de acción queda
+                activo, solo Ver y Ver PDF (para eso está `!isRechazado` en
+                ambos casos, ya que antes "Aprobar" seguía habilitado). */}
             <Tooltip title={
-              isAprobado
-                ? 'Ya está aprobada'
-                : (canApprove ? 'Aprobar' : 'No tienes autoridad para aprobar')
+              isRechazado
+                ? 'Está rechazada — no se puede aprobar'
+                : isAprobado
+                  ? 'Ya está aprobada'
+                  : (canApprove ? 'Aprobar' : 'No tienes autoridad para aprobar')
             }>
               <FaCheck
-                onClick={() => canApprove && !isAprobado && data && onAprobar?.(data)}
+                onClick={() => canApprove && !isAprobado && !isRechazado && data && onAprobar?.(data)}
                 className={`transition-all ${
-                  canApprove && !isAprobado
+                  canApprove && !isAprobado && !isRechazado
                     ? 'cursor-pointer hover:scale-110 text-green-600'
                     : 'cursor-not-allowed text-gray-300'
                 }`}
@@ -211,14 +216,16 @@ export function useColumnsMisOS({
               />
             </Tooltip>
             <Tooltip title={
-              !isAprobado
-                ? 'Aún no está aprobada'
-                : (canApprove ? 'Desaprobar (vuelve a pendiente)' : 'No tienes autoridad para desaprobar')
+              isRechazado
+                ? 'Está rechazada — no se puede desaprobar'
+                : !isAprobado
+                  ? 'Aún no está aprobada'
+                  : (canApprove ? 'Desaprobar (vuelve a pendiente)' : 'No tienes autoridad para desaprobar')
             }>
               <FaUndo
-                onClick={() => canApprove && isAprobado && data && onDesaprobar?.(data)}
+                onClick={() => canApprove && isAprobado && !isRechazado && data && onDesaprobar?.(data)}
                 className={`transition-all ${
-                  canApprove && isAprobado
+                  canApprove && isAprobado && !isRechazado
                     ? 'cursor-pointer hover:scale-110 text-rose-600'
                     : 'cursor-not-allowed text-gray-300'
                 }`}

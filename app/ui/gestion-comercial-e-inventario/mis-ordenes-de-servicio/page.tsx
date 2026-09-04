@@ -84,15 +84,17 @@ export default function MisOrdenesDeServicio() {
       okType: 'primary',
       cancelText: 'Cancelar',
       async onOk() {
-        try {
-          await requerimientoInternoApi.aprobar(row.id)
-          message.success(`${row.codigo} aprobado correctamente`)
-          queryClient.invalidateQueries({ queryKey: [QueryKeys.ORDENES_DE_SERVICIO] })
-        } catch (error: any) {
-          const errorMsg = error?.response?.data?.message || 'Error al aprobar la orden de servicio'
-          message.error(errorMsg)
-          console.error(error)
+        // apiRequest no lanza en errores HTTP (403/500, etc.) — devuelve
+        // {data, error}. El try/catch de acá nunca se disparaba, así que un
+        // rechazo del backend (ej. sin autoridad) se mostraba igual como
+        // "aprobado correctamente" sin que nada cambiara realmente.
+        const res = await requerimientoInternoApi.aprobar(row.id)
+        if (res.error) {
+          message.error(res.error.message || 'Error al aprobar la orden de servicio')
+          return Promise.reject()
         }
+        message.success(`${row.codigo} aprobado correctamente`)
+        queryClient.invalidateQueries({ queryKey: [QueryKeys.ORDENES_DE_SERVICIO] })
       },
     })
   }, [modal, message, queryClient])
@@ -114,15 +116,13 @@ export default function MisOrdenesDeServicio() {
       okType: 'danger',
       cancelText: 'Cancelar',
       async onOk() {
-        try {
-          await requerimientoInternoApi.desaprobar(row.id)
-          message.success(`${row.codigo} desaprobado: volvió a pendiente`)
-          queryClient.invalidateQueries({ queryKey: [QueryKeys.ORDENES_DE_SERVICIO] })
-        } catch (error: any) {
-          const errorMsg = error?.response?.data?.message || 'Error al desaprobar la orden de servicio'
-          message.error(errorMsg)
-          console.error(error)
+        const res = await requerimientoInternoApi.desaprobar(row.id)
+        if (res.error) {
+          message.error(res.error.message || 'Error al desaprobar la orden de servicio')
+          return Promise.reject()
         }
+        message.success(`${row.codigo} desaprobado: volvió a pendiente`)
+        queryClient.invalidateQueries({ queryKey: [QueryKeys.ORDENES_DE_SERVICIO] })
       },
     })
   }, [modal, message, queryClient])
